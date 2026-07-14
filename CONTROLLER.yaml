@@ -31,6 +31,50 @@
 #      index, not a second copy of the detail.
 # ============================================================================
 
+# ----------------------------------------------------------------------------
+# INTAKE -> TIGHTEN -> DISPATCH -> SELF-AUDIT -> CLOSE LIFECYCLE
+# (added 2026-07-14, Owner directive: "controller and my instructions, rest
+# everything to be done by controller")
+#
+# Every new instruction the Owner gives, in ANY session, goes through this
+# before code is touched. A YAML file cannot act by itself -- this lifecycle
+# is carried out by whichever session (human-triggered or scheduled-wakeup,
+# see control/README.md "Automation") reads this file next.
+#
+#   1. INTAKE -- log the instruction as a new entry immediately, status:
+#      idea. `raw_instruction` holds the Owner's words verbatim, unedited.
+#      Do this before any research or code changes, even exploratory ones.
+#
+#   2. TIGHTEN -- rewrite raw_instruction into a scoped brief and store it
+#      in `tightened_prompt`: goal / files-or-paths / constraints /
+#      done-when. Flip status -> draft once this exists. A vague Owner
+#      instruction becomes a concrete, boundaried task here -- this is
+#      where scope creep gets cut, not left for the implementing session
+#      to guess at.
+#
+#   3. DISPATCH -- decide solo vs sub-agents and record it in `dispatch`:
+#        - solo               -- single file/concern, small enough to just do
+#        - subagents:N        -- N independent parallelizable pieces, or a
+#                                 task spanning >1 project (use the Agent
+#                                 tool, N scoped self-contained prompts)
+#      Flip status -> in-progress.
+#
+#   4. SELF-AUDIT -- before flipping to done, the SAME session that did the
+#      work re-checks its own diff/output against tightened_prompt's
+#      done-when criteria (self-review, not an independent second agent --
+#      Owner's explicit choice, 2026-07-14). Record `audit: pass` or
+#      `audit: pass-with-notes:<...>`. If it fails, status goes to
+#      `blocked`, not `done`.
+#
+#   5. CLOSE -- flip status -> done, fill `where` with the real pointer,
+#      update last_touched.
+#
+# A scheduled wakeup periodically starts a session that scans for entries
+# stuck at idea/draft/in-progress and drives them through this lifecycle
+# even if the Owner hasn't opened a chat that day. It only ever acts on
+# entries already logged here -- it does not invent new work.
+# ----------------------------------------------------------------------------
+
 meta:
   version: 1
   scope: "Everything raajat.agarwal@gmail.com has asked Claude across every project under C:\\Users\\Dell\\Downloads\\Claude Code\\"
@@ -67,14 +111,18 @@ meta:
 
 # ----------------------------------------------------------------------------
 # ENTRY SCHEMA
-#   id           -- stable, never reused, short prefix + number (e.g. CACHE-01)
-#   project      -- one of the ids under meta.projects
-#   type         -- feature | architecture-spec | governance | removal
-#                   | research | decision | bugfix
-#   status       -- idea | draft | in-progress | done | deferred | blocked
-#   summary      -- ONE line, plain language
-#   where        -- pointer only: PR number, artifact URL, memory filename
-#   last_touched -- date this entry was last edited
+#   id                -- stable, never reused, short prefix + number (e.g. CACHE-01)
+#   project           -- one of the ids under meta.projects
+#   type              -- feature | architecture-spec | governance | removal
+#                        | research | decision | bugfix
+#   status            -- idea | draft | in-progress | done | deferred | blocked
+#   summary           -- ONE line, plain language
+#   where             -- pointer only: PR number, artifact URL, memory filename
+#   last_touched      -- date this entry was last edited
+#   raw_instruction   -- (optional) Owner's original words, verbatim
+#   tightened_prompt  -- (optional) scoped brief: goal/paths/constraints/done-when
+#   dispatch          -- (optional) solo | subagents:N
+#   audit             -- (optional) pass | pass-with-notes:<...>
 # ----------------------------------------------------------------------------
 entries:
   - id: CONTROL-01
