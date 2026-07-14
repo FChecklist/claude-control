@@ -43,6 +43,7 @@ meta:
       own_tracker: "ai-os/MASTER-TRACKER.yaml"
       own_claims_registry: "ai-os/boss/ACTIVE-CLAIMS.yaml"
       own_constitution: "ai-os/CONSTITUTION.yaml"
+      own_x_files_index: "The Owner's ~24-file 'X-Files' metadata set, 2 layers -- Layer A is Claude's own memory (memory/INDEX.yaml, memory/rajat_claude_discussion_metadata_registry.md), Layer B is this repo's governance files (ai-os/OS.yaml is Layer B's own entry point, which already lists the rest: MASTER-TRACKER.yaml, CONSTITUTION.yaml, registry/knowledge-metadata-registry.yaml, registry/stale-doc-manifest.yaml, SELF-CHECK.md, docs/master/INDEX.md). See memory/x_files_registry_index.md for the full set and its honest coverage limits (not exhaustive, no full auto-update)."
     - id: projexa
       name: "PROJEXA Construction Intelligence OS"
       local_path: "projexa"
