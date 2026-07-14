@@ -610,6 +610,28 @@ self-serve "enable a module" flow so real PROJEXA customers aren't stuck contact
 administrator who themselves has no visible way to grant it, or (c) something else -- Part 2
 should decide scope, this session is registration-only.
 
+- **Working, no gap** -- **GRC / Risk & Compliance** (persona: Rajesh Kumar,
+  Compliance/Risk Officer). Full lifecycle verified real, not a demo shell: "Log Risk"
+  created row `gw1sjxmms5gucpl3lrz9uqhm` (likelihood=4, impact=5) -- **severity band
+  confirmed computed correctly**: UI displayed "4 x 5 = 20 -> High," matching the matrix's
+  stated verification target. "Plan Audit" created a real audit engagement
+  (`jw7b18t5yc68keu8zgygxxjw`, status `planned`). "Record Finding" against that engagement
+  created a real finding (`dngx9rm6x8v5qkjm67fulog8`, `capa_status='open'`). "Advance CAPA"
+  verified: `capa_status` moved `open` -> ... -> `closed` (advanced twice across two clicks,
+  confirmed via SQL both times) -- real CAPA workflow, matching the matrix's "advance CAPA
+  status" verification target. One of the two `PATCH /api/audit-findings/...` calls took
+  **35.4 seconds** to complete (per `preview_logs`) -- an extreme outlier even against this
+  session's general multi-second latency pattern (see cross-cutting note below), flagged here
+  since it's the single slowest write observed all session, not logged as its own gap.
+- **Cross-cutting observation, not a per-module gap**: nearly every write in this session took
+  1-3 seconds, several took 10-35 seconds (BOQ create 13.7s, Work Progress page load 9s,
+  audit-finding CAPA advance 35.4s), because `projexa/.env.local`'s
+  `VERIDIAN_API_BASE_URL` points at the **live deployed** `veridian-compliance-ai.vercel.app`,
+  not a local compliance-tracker instance -- every single PROJEXA action in dev is a real
+  round-trip over the public internet to a separate deployed service, not a same-machine
+  call. Worth Part 2 knowing this is the likely cause of the latency pattern observed
+  throughout this log, separate from any actual bug.
+
 ## Progress log
 
 - 2026-07-14: File created. Logged as CONTROLLER.yaml entry PRIORITY-16,
