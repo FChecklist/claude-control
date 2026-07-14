@@ -231,6 +231,150 @@ Query row counts per table above for the new demo org before starting, so
 "table has data after my action" checks aren't fooled by pre-existing rows
 from seed data.
 
+## Part 1 gap log
+
+Started 2026-07-14. Executor: Claude Desktop Sonnet 5 (this session, background sub-agent).
+Supabase project refs confirmed via `list_projects`: `evpckeuxgvahguwsaeul` = projexa's own
+DB (organizations/memberships/profiles only), `pcrjmlpuqsbocqfwoxod` = compliance-tracker
+("verdian-ai") DB (`compliance` schema, all business data).
+
+### Demo org build
+
+- Org: **Meridian Skyline Group**, id `f6b0df80-968f-4874-8884-2674cf5354d7`, slug
+  `meridian-skyline-group-demo`, created in projexa's own `public.organizations` table.
+  Existing orgs (Acme Test Construction, Wave4 QA Test Co, Skyline Builders) untouched.
+- **21 personas** created directly via SQL against `auth.users` (projexa's Supabase Auth),
+  covering every department/role row in the 50-user roster table above (not collapsed to
+  2-3 generic accounts): Founder/CEO(owner), COO(admin), Finance Manager(admin),
+  Accountant(member), HR Manager(admin), HR Executive(member), Payroll Admin(admin), Sales
+  Head(admin), Sales Executive(member), Compliance/Risk Officer(admin), Internal
+  Auditor(member), Project Manager(admin), Site Engineer(member), Architect(member),
+  Interior Designer(member), Procurement/Vendor Coordinator(member), QS/Estimator(member),
+  Front-desk/Admin(member), KPI/Reporting Analyst(member), AI Copilot power-user(member),
+  New-hire-empty-state(member). All emails `firstname.lastname@meridianskyline.demo`,
+  password `DemoProjexa2026!` for all. **Disclosure (per task instructions, same pattern as
+  the 2026-07-12/13 session)**: signup/email-confirmation was done directly via SQL
+  (`auth.users.encrypted_password` set with `crypt()`/pgcrypto, `email_confirmed_at` set to
+  `now()`) rather than a real inbox flow, since PROJEXA uses Supabase Auth's real
+  signup+confirm flow and there is no test inbox available. `handle_new_user()` trigger
+  auto-created `public.profiles` rows; `display_name` backfilled by a follow-up UPDATE.
+  Memberships inserted directly with the correct `owner`/`admin`/`member` role per persona.
+- **Projects**: 2 pre-existing shared-DB projects (Villa 21 - Whitefield, Meridian Business
+  Center) plus 3 newly created (Cedar Heights - Residential Tower A [construction], Lakeview
+  Corporate Park - Interior Fit-out [interior design], Meridian Boutique Hotel - Full
+  Renovation [mixed]) = 5 total, spanning both categories per the plan's requirement.
+  Pagination-worthy seed data added directly via SQL on 2 of the 5 (Cedar Heights + Meridian
+  Business Center): 45 BOQ line items (30+15), 25 RFIs (15+10), 20 expense entries, 12
+  labour roster rows. Schedule/pms_issues intentionally left to be created via real browser
+  actions in Step 2 (per-module test procedure requires a real create action anyway; FK
+  dependencies on issue-status/issue-type lookup rows made bulk SQL seeding not worth it
+  next to just doing the real UI action).
+
+### MAJOR FINDING (architecture, not a per-module bug) -- PROJEXA-NO-TENANT-ISOLATION-01
+
+Discovered during pre-flight, before any module testing started, by reading
+`projexa/src/lib/veridian-client.ts`, `projexa/.env.local`, and compliance-tracker's
+`compliance.api_keys` table directly. Registering this once, up front, exactly like
+PROJEXA-IDENTITY-BRIDGE-01, because it will otherwise look like 33 separate "wrong org
+scope" gaps.
+
+**What was intended** (per the multi-tenant premise of this whole test -- Owner explicitly
+asked for a demo org with real hierarchy, isolated from other orgs like the pre-existing
+"Skyline Builders"): each PROJEXA organization should see and write only its own
+construction/sales/HR/GRC/accounting data in compliance-tracker.
+
+**What actually happens**: `callVeridian()` in `projexa/src/lib/veridian-client.ts` defaults
+to a single `process.env.VERIDIAN_API_KEY` (`.env.local` line 7,
+`vk_EAbEplhmqchD8eUqPb9DPssn55hijmrk`) whenever no `organizationId` is passed -- and a
+scan of `projexa/src/app/api/**/route.ts` shows essentially none of the ~40+ alias routes
+pass `organizationId` to `callVeridian()`. `public.veridian_credentials` (the per-org
+API-key table `getVeridianApiKey()` would read from) has **zero rows** for every existing
+PROJEXA org, including the new Meridian Skyline Group. Confirmed on the compliance-tracker
+side: `compliance.api_keys` has **exactly one row**, `id='projexa_demo_key'`,
+`org_id='projexa_demo_org'`, matching that single env-configured key. Consequence: **every
+PROJEXA organization that has ever signed up -- Acme Test Construction, Wave4 QA Test Co,
+Skyline Builders, and now Meridian Skyline Group -- reads and writes the exact same
+underlying `projexa_demo_org` business data in compliance-tracker.** There is no per-tenant
+data isolation at all for any compliance-tracker-backed module (Schedule, BOQ, Work
+Progress, Site Diary, RFIs, Submittals, Punch List, Change Orders, Mood Boards, FF&E,
+Materials, Vendors, Sales/CRM, GRC, Budgets, Expenses, Accounting, Invoices, HR, Payroll,
+Recruitment, KPIs -- i.e. 25+ of the 33 nav pages). Only `organizations`/`memberships`/
+`profiles`/`todos`/`conversations` (PROJEXA's own tiny Supabase DB) are genuinely
+per-org-isolated.
+
+**Root cause relationship to PROJEXA-IDENTITY-BRIDGE-01**: same underlying architecture gap
+(the org-wide-API-key bridge to compliance-tracker was never built out to be per-tenant),
+but a distinct failure mode -- IDENTITY-BRIDGE-01 is about missing **per-user** identity
+within a session; this is about missing **per-org** data isolation across different
+customers. Both should likely be fixed together in Part 2 (the identity/tenancy bridge
+needs to carry both org and user), but they are logged separately since a fix for one does
+not automatically fix the other.
+
+**Practical effect on this test**: "verify the row landed in the correct table for MY org"
+is not a meaningful per-org check today, because there is only one possible org
+(`projexa_demo_org`) any row can land in regardless of which PROJEXA org/persona performed
+the action. Verification below is therefore done as "did a new row appear in the target
+table with the right values after my action" (count-diff + value-check against the
+pre-flight baseline), not "does it belong to Meridian Skyline Group specifically" -- that
+distinction is architecturally impossible to test right now. This also explains why the
+Dashboard and Sales Dashboard, tested as different Meridian personas, will show the exact
+same pre-existing cross-tenant data (Villa 21, MBC, etc.) alongside whatever this session
+adds.
+
+### Pre-flight baseline (compliance-tracker `compliance` schema, `org_id='projexa_demo_org'`, before Step 2 actions; PROJEXA's own DB counts also included)
+
+| Table | Baseline count |
+|---|---|
+| projexa `organizations` | 3 (before) -> 4 (after Meridian added) |
+| projexa `memberships` | 2 (before) -> 23 (after 21 personas added) |
+| projexa `profiles` | 2 (before) -> 23 |
+| `projects` | 2 (before) -> 5 (after 3 added) |
+| `pms_issues` | 5 |
+| `pms_meetings` | 0 |
+| `construction_boqs` | 0 (before) -> 2 (after seed) |
+| `construction_boq_line_items` | 0 (before) -> 45 (after seed) |
+| `construction_work_progress_entries` | 45 |
+| `construction_site_diaries` | 10 |
+| `documents` | 0 |
+| `construction_rfis` | 6 (before) -> 31 (after seed) |
+| `construction_submittals` | 6 |
+| `construction_punch_list_items` | 8 |
+| `construction_change_orders` | 4 |
+| `interior_mood_boards` | 4 |
+| `interior_ffe_items` | 11 |
+| `interior_floor_plans` | 1 |
+| `construction_labour_roster` | 14 (before) -> 26 (after seed) |
+| `construction_attendance` | 112 |
+| `interior_materials` | 2 |
+| `erp_suppliers` | 4 |
+| `crm_leads` / `crm_opportunities` / `crm_stage_history` | 0 / 0 / 0 |
+| `erp_quotations` / `erp_sales_orders` / `erp_customers` | 0 / 0 / 0 |
+| `risks` / `audit_engagements` / `audit_findings` / `policies` / `vendor_risk_profiles` / `fraud_cases` | all 0 |
+| `pms_budgets` | 0 |
+| `construction_expense_entries` | 12 (before) -> 32 (after seed) |
+| `erp_journal_entries` / `erp_sales_invoices` / `erp_sales_credit_notes` | 0 / 0 / 0 |
+| `employee_profiles` | 10 |
+| `erp_payroll_runs` / `erp_payslips` | 0 / 0 |
+| `job_openings` / `candidates` / `job_applications` | 0 / 0 / 0 |
+| `construction_kpi_entries` | not yet queried |
+
+### Module-by-module results
+
+(Executed as the relevant Meridian Skyline Group persona via `mcp__Claude_Browser__*`
+against `http://localhost:3100`, dev server started from `projexa/.claude/launch.json`
+[newly created, config `projexa-dev`, `npx next dev -p 3100`] via `preview_start`. Only
+divergences from stated intent are logged in detail below; modules that worked as intended
+are listed in the roll-up at the bottom of this section without a full write-up, per the
+per-module procedure's step 6.)
+
+- **Dashboard** (persona: Ananya Sharma, owner). Intent: read-only cross-project rollup.
+  Loaded real data: 2 pre-existing projects (Villa 21, Meridian Business Center) with real
+  revenue/expense numbers, "Total Revenue ₹0" with an honest inline explanation ("no
+  VERIDIAN ERP sales invoices exist yet for this org — create one..."), not a silent blank.
+  No gap. Login itself took ~5.4s server-side (`GET /dashboard` in preview_logs) on first
+  load -- noted, not logged as a gap (single cold-start compile, not reproduced on
+  subsequent loads).
+
 ## Progress log
 
 - 2026-07-14: File created. Logged as CONTROLLER.yaml entry PRIORITY-16,
