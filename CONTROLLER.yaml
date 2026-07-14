@@ -35,6 +35,10 @@ meta:
   version: 1
   scope: "Everything raajat.agarwal@gmail.com has asked Claude across every project under C:\\Users\\Dell\\Downloads\\Claude Code\\"
   owner: raajat.agarwal@gmail.com
+  org:
+    id: FChecklist
+    name: "FChecklist (GitHub org hosting compliance-tracker, projexa, veda-advisors)"
+    real_cross_repo_scope_declaration: "compliance-tracker/ai-os/sentinel/SENTINEL.yaml's scope.repositories list -- the one real, existing file that names all 3 repos together as one governed scope. No single org-wide governance file exists beyond this; each repo has its own AGENTS.md, not shared."
   projects:
     - id: veridian
       name: "VERIDIAN AI OS (compliance-tracker)"
@@ -48,10 +52,15 @@ meta:
       name: "PROJEXA Construction Intelligence OS"
       local_path: "projexa"
       repo: "FChecklist/projexa"
+      own_governance: "No ai-os/ layer, no CLAUDE.md, no MASTER-TRACKER.yaml/CONSTITUTION.yaml equivalent -- confirmed by direct directory listing 2026-07-14, not assumed. Real governance files at repo root: AGENTS.md (authorized agents), PROJEXA_TASK_GOVERNANCE.md (task lifecycle), PROJEXA_GAP_ANALYSIS.md (gap tracker, closest thing to a MASTER-TRACKER here)."
     - id: veda-advisors
       name: "Veda Advisors"
-      local_path: "veda-advisors"
+      local_path: "veda-advisors/code-by-zai"
+      local_path_note: "The real app code lives in the code-by-zai/ subfolder, NOT the veda-advisors/ repo root (which holds only prompt docs, marketing notes, and a separate website/ dir) -- a known gotcha, see memory/agent_access_and_tooling.md."
       repo: "FChecklist/veda-advisors"
+      own_governance: "AGENTS.md, CLAUDE.md, SENTINEL.md, VEDA_ADVISORS_GOVERNANCE.md -- all at code-by-zai/ root, confirmed present 2026-07-14."
+      own_tracker: "ai-os/boss/BOARD.yaml (open work) + ai-os/boss/COMPLETED.yaml (done work) -- no MASTER-TRACKER.yaml equivalent; BOARD.yaml is the real one here, unlike compliance-tracker where BOARD.yaml is stale. Do not assume the same staleness applies across repos."
+      own_os_index: "ai-os/OS.yaml"
     - id: content-pipeline
       name: "Content Pipeline"
       local_path: "content-pipeline"
