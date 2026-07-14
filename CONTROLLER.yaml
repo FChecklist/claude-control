@@ -164,3 +164,15 @@ entries:
     summary: "FM register photo digitization wired end to end (blur pre-check + minimal upload page/API), not LiteRT client-side chat"
     where: "compliance-tracker PR #322 (merged) -- src/lib/fm-photo-blur-check.ts (classical Laplacian-variance blur check, no ML model/license needed), new API routes wrapping the previously zero-caller parseAndExtractFromPhoto()/listDigitizationRows(), minimal /fm-register-digitization page (not yet linked from main nav). ai-os/CONSTITUTION.yaml fm_photo_digitization_wiring section (OCR-01..03); ai-os/MASTER-TRACKER.yaml closed_priorities #24. Evaluated and rejected the pre-existing litert-spike/ model (unlicensed third-party .tflite file) for this -- LiteRT.js itself remains a live option for a future genuinely vision-model-shaped task once a properly licensed model is found."
     last_touched: "2026-07-14"
+
+  - id: CACHE-02
+    project: veridian
+    type: research
+    status: done
+    summary: "Explained VERIDIAN's 2 real caches (response cache vs Anthropic prompt caching) and their (non-)release/loop-engineering semantics; corrected mid-answer when PR #321 landed concurrently"
+    where: "memory/veridian_llm_response_cache_explainer.md"
+    last_touched: "2026-07-14"
+    raw_instruction: "in cache management that we have implemented, when the activity, task is completed, and if it has used AI cache, will that AI cache get released after task, activity is completed automatically and its knowledge transferred into the table as cache knowledge, so that we dont have to pay for it? will this help, also will this make loop engineering better"
+    tightened_prompt: "Goal: answer whether the built LLM cache(s) release on task completion and transfer into a table, whether it saves cost, and whether it improves Loop Engineering. Paths: compliance-tracker/src/lib/llm-response-cache.ts, src/lib/prompt-cache/{compiler,fingerprint,metrics}.ts, src/lib/llm-client.ts's callAnthropic(), src/app/api/internal/loops/run/route.ts, src/lib/loops/loop-engineering-audit.ts. Constraint: ground every claim in current code, re-pull if the local checkout looks stale relative to origin/main. Done-when: Owner has an accurate mental model distinguishing the 2 caches, their release semantics, and the (non-)link to Loop 1."
+    dispatch: solo
+    audit: "pass-with-notes: initial answer was correct against the code as first read, but PR #321 merged concurrently mid-turn (Prompt & Cache Management Framework Phase 1) and made part of it stale; caught via git fetch showing origin/main ahead of local HEAD, re-verified against pulled code, and the answer to the Owner was corrected before this entry closed. Demonstrates the exact concurrent-session drift ACTIVE-CLAIMS.yaml/this controller exist to catch."
