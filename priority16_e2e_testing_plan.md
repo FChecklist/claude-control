@@ -480,6 +480,33 @@ per-module procedure's step 6.)
   decisions, department/employee creation, etc.) will be noted tersely below with a
   cross-reference to this entry instead of a full write-up.
 
+- **DESIGN DIVERGENCE (not a bug) -- Documents & Permits** (persona: Farhan Ali, Front-desk/
+  Admin). Matrix's stated intent was "Upload, category filter" (Documents) and "Create
+  permit, check expiry badge" (Permits). **Actual**: both are genuinely, deliberately
+  read-only in PROJEXA -- confirmed by an explicit in-code comment on
+  `projexa/src/app/api/documents/route.ts` ("Read-only by design... upload stays
+  internal-only") and by the live Permits page's own on-screen copy: "Listing only — upload a
+  permit document directly in VERIDIAN." Category filter (Documents) and the 90-day
+  expiring-window filter (Permits) both work as real, functioning read controls -- the empty
+  states rendered correctly ("No permits expiring in this window") rather than erroring. This
+  is flagged as a **documented design decision** (matches the "no drawing/image/rendering"
+  scope exclusion elsewhere in this project), not a defect -- but it does mean this specific
+  matrix action cannot be executed as originally written, and it's honestly unclear (Part 2
+  should judge, not this session) whether "upload internal-only" is still the right call now
+  that Documents/Permits are real first-class PROJEXA nav items a customer clicks directly,
+  rather than an internal-only compliance-tracker surface.
+- **Working, no gap** -- **Mood Boards** (persona: Ritu Singh, Interior Designer, on Lakeview
+  Corporate Park). "New Mood Board" create verified (row `zohmmyb37f1ny2tl1ibj2ytw`, correct
+  title/room). "Add Item" verified (row `vyn1fyqtuvufqb8xpk4c429w`, correct label). "Share
+  with Client" button present but not exercised (would send an external client-facing link --
+  out of scope to actually fire in a test run with no real client email).
+- **Working, no gap** -- **FF&E** (persona: Ritu Singh, Interior Designer, on Lakeview
+  Corporate Park). "New Item" create verified (row `em00t23qz8upmohwysur95ic`, qty=40,
+  unit_cost=8000, unit_price=11500). **Margin calc independently verified correct**: UI
+  showed Total Cost Rs 3,20,000 (=40x8000), Total Client Price Rs 4,60,000 (=40x11500),
+  Margin Rs 1,40,000 (30.4%) -- all arithmetically correct against the single seeded row for
+  this project, matching the matrix's stated verification target exactly.
+
 ## Progress log
 
 - 2026-07-14: File created. Logged as CONTROLLER.yaml entry PRIORITY-16,
