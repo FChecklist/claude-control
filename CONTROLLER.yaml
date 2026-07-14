@@ -188,3 +188,15 @@ entries:
     tightened_prompt: "Goal: ship both specs as one cohesive VeriComposer feature. Paths: new src/lib/browser-intent-cache.ts, new src/components/veri-chat/IntentCommandPalette.tsx, edit src/components/veri-chat/VeriComposer.tsx. Constraint: ground in real existing 'Dynamic Mode Pills' architecture before building (found: ForgeIntakeComposer.tsx is the public lead-gen variant, VeriComposer.tsx is the real one; chain-usage-ranking.ts already implements server-side per-user ranked library, unwired to any UI -- reuse as fallback, don't duplicate). Be honest in code/PR about spec items not meaningfully implementable (encrypted:true has no real client-side key source; same-project/client/time-of-day/day-of-week ranking signals; attachment restore, since VeriComposer has no real attachment upload yet). Done-when: tsc/eslint clean, PR open, memory + controller updated."
     dispatch: solo
     audit: "pass-with-notes: tsc --noEmit and eslint clean on all 3 files (0 new errors/errors); dev server boots and serves without runtime errors. Full authenticated browser click-through of the palette NOT completed -- login automation hit the same CDP flakiness already documented in memory/veridian_demo_company_2026-07-06.md, a pre-existing environment issue, not caused by this change. Flagged as an open manual-verification item in the PR description rather than claimed as done. Status left in-progress (not done) until PR #324 is reviewed/merged and someone confirms the palette visually."
+
+  - id: CACHE-03
+    project: veridian
+    type: research
+    status: done
+    summary: "Documented the 4-gate funnel that governs when Anthropic native prompt caching actually activates (call-site opt-in, provider, prompt-size, system-prompt-only)"
+    where: "memory/veridian_llm_response_cache_explainer.md"
+    last_touched: "2026-07-14"
+    raw_instruction: "at what level will the AI Cache kick in the system"
+    tightened_prompt: "Goal: enumerate every gating condition that must hold for src/lib/llm-client.ts's callAnthropic() to actually attach a cache_control breakpoint, as a follow-up to CACHE-02. Paths: llm-client.ts (cacheEligible logic), chat-service.ts (the only 2 call sites passing enablePromptCache). Constraint: re-verify against origin/main (no assumed carryover from CACHE-02) before answering, since concurrent drift already happened once this session. Done-when: Owner has the full funnel (opt-in call site -> provider -> prompt size -> system-prompt-only), not just the size threshold already covered in CACHE-02."
+    dispatch: solo
+    audit: "pass: git fetch confirmed no drift since CACHE-02/PALETTE-01 (local HEAD == origin/main), re-grepped cacheEligible/enablePromptCache call sites fresh rather than trusting the earlier read."
