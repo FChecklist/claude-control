@@ -1,0 +1,100 @@
+# ============================================================================
+# CONTROLLER.yaml -- cross-project requirements & decision catalog
+#
+# Created 2026-07-14 (Owner directive: a single controller that classifies
+# and catalogues requirements across every project, so a new session or
+# sub-agent doesn't have to re-derive context from scratch). This spans
+# EVERY project under C:\Users\Dell\Downloads\Claude Code\ -- it is
+# deliberately NOT inside any one project's own repo (compliance-tracker,
+# projexa, veda-advisors), because it has to sit one level above all of
+# them, the same way this folder sits one level above all of them on disk.
+#
+# THIS FILE DOES NOT REPLACE A PROJECT'S OWN TRACKER. VERIDIAN already has
+# ai-os/MASTER-TRACKER.yaml (open work) and ai-os/boss/ACTIVE-CLAIMS.yaml
+# (parallel-session coordination) -- this file POINTS at those, it never
+# duplicates their content. Same discipline that produced
+# ai-os/CONSTITUTION.yaml v2.0 this same day: one source of truth per
+# question, referenced, not restated in two places that can drift apart.
+#
+# PROTOCOL (every session, every sub-agent, every time):
+#   1. Read this file FIRST, before any research, before any project-
+#      specific tracker -- this is the outermost "read before starting
+#      work" layer, one level above CLAUDE.md's own list inside VERIDIAN.
+#   2. Starting new work: add a new entry under `entries` immediately
+#      (status: idea/draft/in-progress), not retroactively once finished.
+#   3. Finishing work: flip `status` to done/deferred/blocked and fill in
+#      `where` with the real pointer (PR number, artifact URL, memory
+#      filename) -- never restate the content itself here.
+#   4. Edit per-entry. Never rewrite this file wholesale.
+#   5. If an entry needs more than one line to explain, that explanation
+#      belongs at the `where` target, not here -- this file stays a fast
+#      index, not a second copy of the detail.
+# ============================================================================
+
+meta:
+  version: 1
+  scope: "Everything raajat.agarwal@gmail.com has asked Claude across every project under C:\\Users\\Dell\\Downloads\\Claude Code\\"
+  owner: raajat.agarwal@gmail.com
+  projects:
+    - id: veridian
+      name: "VERIDIAN AI OS (compliance-tracker)"
+      local_path: "compliance-tracker"
+      repo: "FChecklist/compliance-tracker"
+      own_tracker: "ai-os/MASTER-TRACKER.yaml"
+      own_claims_registry: "ai-os/boss/ACTIVE-CLAIMS.yaml"
+      own_constitution: "ai-os/CONSTITUTION.yaml"
+    - id: projexa
+      name: "PROJEXA Construction Intelligence OS"
+      local_path: "projexa"
+      repo: "FChecklist/projexa"
+    - id: veda-advisors
+      name: "Veda Advisors"
+      local_path: "veda-advisors"
+      repo: "FChecklist/veda-advisors"
+    - id: content-pipeline
+      name: "Content Pipeline"
+      local_path: "content-pipeline"
+
+# ----------------------------------------------------------------------------
+# ENTRY SCHEMA
+#   id           -- stable, never reused, short prefix + number (e.g. CACHE-01)
+#   project      -- one of the ids under meta.projects
+#   type         -- feature | architecture-spec | governance | removal
+#                   | research | decision | bugfix
+#   status       -- idea | draft | in-progress | done | deferred | blocked
+#   summary      -- ONE line, plain language
+#   where        -- pointer only: PR number, artifact URL, memory filename
+#   last_touched -- date this entry was last edited
+# ----------------------------------------------------------------------------
+entries:
+  - id: CONTROL-01
+    project: veridian
+    type: governance
+    status: done
+    summary: "Built this controller -- cross-project requirements catalog, own local git repo"
+    where: "C:\\Users\\Dell\\Downloads\\Claude Code\\control\\ (this repo)"
+    last_touched: "2026-07-14"
+
+  - id: CONST-01
+    project: veridian
+    type: governance
+    status: done
+    summary: "9 constitutional documents consolidated into ai-os/CONSTITUTION.yaml v2.0, sole authority"
+    where: "compliance-tracker PR #320"
+    last_touched: "2026-07-14"
+
+  - id: PAGEAGENT-01
+    project: veridian
+    type: removal
+    status: done
+    summary: "PageAgent fully removed per Owner directive (component, both API routes, table, column)"
+    where: "compliance-tracker PR #317, #318"
+    last_touched: "2026-07-14"
+
+  - id: CACHE-01
+    project: veridian
+    type: architecture-spec
+    status: draft
+    summary: "Prompt & Cache Management Framework -- layered prompt caching, provider-adapter requirements, client-side tooling stack"
+    where: "artifact https://claude.ai/code/artifact/4a64d0b1-1144-4960-9224-d7782de15582 (not yet scoped into an implementation wave)"
+    last_touched: "2026-07-14"
