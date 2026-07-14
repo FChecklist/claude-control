@@ -437,6 +437,49 @@ per-module procedure's step 6.)
   discovery/creation UI gap, same shape as the Schedule module's missing-UI finding above but
   a different root cause (no activity picker/creator vs. no task creator at all).
 
+- **Working, no gap** -- **RFIs** (persona: Sanjay Patil, Site Engineer, on Cedar Heights).
+  "New RFI" create verified (POST `/api/rfis` -> 201, row `y98fn9ytqo0b5qhkp0j291zu` confirmed
+  with correct subject/question). "Close" verified on a pre-existing seeded RFI (PATCH
+  `/api/rfis/msg_rfi_msg_project_cedar_14` -> 200, `status` confirmed changed `open` ->
+  `closed`).
+- **Working, no gap** -- **Submittals** (persona: Deepak Verma, PM, on Cedar Heights). "New
+  Submittal" create verified (row `wxo0ks1h390612g0f0jqnz2x`, `status='pending'`). Real
+  4-option review workflow found (Approve / Approve as Noted / Revise & Resubmit / Reject),
+  not just a binary toggle -- clicked "Approve", confirmed `status` -> `approved` via SQL.
+  Notably this manager-style approval action did **not** hit the identity-bridge gate (see
+  below) -- submittals approval is apparently not gated the same way quotation/payroll
+  approval is, worth Part 2 checking whether that's intentional or an inconsistency.
+- **Working, no gap** -- **Punch List** (persona: Sanjay Patil, Site Engineer, on Cedar
+  Heights). "New Item" create verified (row `vpzbq7xuth37yz7jxpzlrgfd`, correct
+  description/location). "Mark Done" verified: `status` moved `open` -> `ready_for_review`
+  (a real QA review step before final close-out, not a bug -- matches standard punch-list
+  workflow). Side finding, not a new gap (supporting evidence for
+  PROJEXA-NO-TENANT-ISOLATION-01 above): the created row's `created_by_id` is
+  `"projexa_demo_key"` -- the shared API key's own id, not Sanjay Patil's actual user id --
+  confirming attribution is lost end-to-end, not just data isolation.
+
+- **GAP -- Change Orders, first full PROJEXA-IDENTITY-BRIDGE-01 occurrence** (persona: Deepak
+  Verma, PM, on Cedar Heights). Intent (per matrix): "Send for approval, e-sign flow." "New
+  Change Order" create worked correctly (POST `/api/change-orders` -> 201, row
+  `uh1e959bn5ziyb6293hgitvm`, correct title/reason/cost_impact=450000/schedule_impact_days=7,
+  `status='draft'`). Clicked "Send for Approval," filled the real e-signature dialog
+  (signer name + email), submitted. **Actual**: `PATCH
+  /api/change-orders/uh1e959bn5ziyb6293hgitvm` returned **502 Bad Gateway** with body
+  `{"error":"Submitting for approval requires a real user session, not an API key"}`. This is
+  the known PROJEXA-IDENTITY-BRIDGE-01 root cause (CONTROLLER.yaml / this plan's KNOWN
+  RELATED FINDING callout) firing exactly as predicted: PROJEXA's server-to-server call
+  carries only the shared org API key, and compliance-tracker's e-signature-gated route
+  requires a real per-user session it structurally cannot receive. `status` remains `draft`,
+  `esignature_request_id` remains null -- confirmed via SQL, matching the UI's implied
+  failure. One additional wrinkle beyond the already-known root cause: the HTTP status
+  surfaced to the browser is **502**, not 401/403 -- i.e. on top of the real auth gap, the
+  error also presents as a generic gateway failure rather than a clear permission-denied,
+  which would likely confuse a real user/support agent further. Logging this once with full
+  evidence per the plan's own instruction; every subsequent hit of the identical "requires a
+  real user session, not an API key" failure (quotation approval, payroll run, leave
+  decisions, department/employee creation, etc.) will be noted tersely below with a
+  cross-reference to this entry instead of a full write-up.
+
 ## Progress log
 
 - 2026-07-14: File created. Logged as CONTROLLER.yaml entry PRIORITY-16,
