@@ -677,6 +677,60 @@ should decide scope, this session is registration-only.
   further: candidate creation and pipeline-stage movement, since job-opening creation (the
   prerequisite for a realistic pipeline test) itself doesn't work.
 
+- **Working, no gap** -- **KPIs** (persona: Sneha Reddy, KPI/Reporting Analyst, on Cedar
+  Heights). "New KPI" verified: created a real `construction_kpi_definitions` row
+  (`he6yjxtb6zy6c76bb7eqqcbc`, `metric_name="Schedule Variance - Level 4 Slab"`,
+  `target_value=-3.5`, `unit=days`) -- the create action produces a KPI target/definition
+  (not a bare "entry" against a pre-existing definition, a minor naming nuance vs the
+  matrix's "log KPI entry" phrasing, not a functional gap since no definition existed yet to
+  log an entry against).
+- **Working, no gap** -- **Reports** (persona: Sneha Reddy). "Run Report" (Project Status,
+  Lakeview) returned a **real structured JSON result** (budget/revenue/expenses/progressPercent/
+  taskCount fields, legitimately mostly 0 for a low-activity project) -- confirmed genuinely
+  computed, not a `data_gap` placeholder, matching the matrix's stated verification target.
+  First page load hit the same transient "Failed to load projects from VERIDIAN" error also
+  seen on AI Copilot's first load (see below) -- resolved on simple page reload both times,
+  consistent with the general network-latency/flakiness pattern already noted, not logged as
+  its own gap.
+- **Working, no gap** -- **AI Copilot** (persona: Rahul Bose, AI Copilot power-user, on Cedar
+  Heights). Confirmed all 7 named construction tools present (Project Dashboard, Budget
+  Status, KPI Status, AI Progress Summary, AI Budget/Schedule Risk, Delayed Activities,
+  Over-Budget Projects). Ran "Budget Status" -- **result used real underlying data, not
+  hallucinated**: `actual=187500` (matches the real sum of seeded `construction_expense_
+  entries` for this project), `budget=0` (correctly reflects no budget line exists for Cedar
+  Heights -- honest, not fabricated), `variance=-187500`, and a real `byHead` breakdown by
+  expense category (material/transport/equipment) that sums correctly. A "Recent Construction
+  Queries" log entry was also correctly written and shown. Matches the matrix's stated
+  verification target exactly. Took roughly 20-30s to complete (consistent with the
+  cross-cutting latency note above) -- during that window the "Run" button's text and the
+  result panel were both misleadingly invisible to this session's text-extraction tooling,
+  which initially looked like the tool had silently failed; a `data-sonner-toast` check and a
+  later re-read confirmed it had actually succeeded. Noting this only so a future session
+  doesn't misdiagnose a real success as a false gap due to the same tooling quirk.
+
+- **GAP -- Settings: Team member list is structurally broken for every PROJEXA org, not just
+  this one** (persona: Ananya Sharma, owner). Intent (per matrix): "View org settings, member
+  list." Organization name/slug/your-account fields all rendered correctly (Meridian Skyline
+  Group, correct slug, `ananya.sharma@meridianskyline.demo`, role `owner`). **Actual**: "Team"
+  section shows "No other teammates in this organization yet." despite this org having 21 real
+  members. Root-caused, not just observed: `GET /api/org-members` returns `{"members":[]}`
+  every time (confirmed via 15 repeated network log entries, all empty). Read
+  `projexa/src/app/api/org-members/route.ts` -- it queries `memberships` through the normal
+  RLS-scoped Supabase client. Queried `pg_policies` directly on `evpckeuxgvahguwsaeul`
+  (PROJEXA's own DB): the only SELECT policy on `public.memberships` is `"users can view their
+  own memberships"` with `qual: (user_id = auth.uid())` -- **there is no policy allowing a
+  user to see any other row in their own org's membership table at all.** Combined with the
+  API route's own `.filter((m) => m.user_id !== ctx.user!.id)` (removes the caller's own row
+  from the result), the query is guaranteed to return `user_id = auth.uid()` rows minus the
+  caller's own row -- i.e. **always exactly zero rows, for every org, unconditionally.** This
+  is not specific to Meridian Skyline Group or to this test session -- it means the Team list
+  has never shown a real teammate for any PROJEXA org since this RLS policy was written.
+  Broader impact, not separately verified this session but worth Part 2 checking: `/api/org-
+  members` is fetched on nearly every page load throughout this whole test session (per
+  `preview_logs`), suggesting it likely also feeds "assign to," "signer," or "select
+  teammate"-style pickers elsewhere in the app -- if so, this single RLS gap may silently
+  break more than just the Settings page.
+
 ## Progress log
 
 - 2026-07-14: File created. Logged as CONTROLLER.yaml entry PRIORITY-16,
