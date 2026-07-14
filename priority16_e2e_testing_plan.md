@@ -1,17 +1,22 @@
 # Priority 16 -- PROJEXA End-to-End Test + Multi-Stage Audit Pipeline
 
-STATUS: PART 1 SUBSTANTIALLY COMPLETE 2026-07-14 -- demo org built, full pre-flight
-baseline recorded, all 33 nav pages exercised (most with real create/write actions
-+ SQL verification, a handful confirmed-via-sibling-route-and-cross-referenced once
-a shared root cause was proven -- see "Part 1 close-out" note at the end of the
-Progress log for the exact resume point). 3 systemic architecture/config findings
-registered (PROJEXA-IDENTITY-BRIDGE-01 [pre-existing], PROJEXA-NO-TENANT-ISOLATION-01
-[new], PROJEXA-MODULE-ENTITLEMENT-01 [new]) plus 8 distinct per-module gaps, several
-fully root-caused down to the exact line/policy responsible (not just symptom
-reports). Next action: Claude Desktop should read the close-out note, decide whether
-the small remaining resume-point items are worth a short follow-up pass, then start
-Part 2 (analysis/root-cause/planning/implementation) per this file's own automatic
-hand-off design -- Part 1's gap log below is Part 2's entire input.
+STATUS: PART 2 SAFE FIXES COMPLETE 2026-07-15 -- Owner answered 3 scoping questions
+on the systemic findings (tenant isolation + identity bridge explicitly deferred to
+the other session's PLATFORM-01 multi-tenancy work; module entitlement approved to
+enable now). All 6 remaining Part 2 items (entitlement enable, 502-status-masking,
+Settings/Team RLS fix, Schedule create-task UI, Work Progress activity picker,
+Recruitment job-opening bug) shipped as 7 merged PRs across both repos, each
+independently audited before merge (see CONTROLLER.yaml PRIORITY-16's
+part_2_close_out for the full PR list). NOT done: PROJEXA-IDENTITY-BRIDGE-01 and
+PROJEXA-NO-TENANT-ISOLATION-01 remain open, owned by the other session -- Priority
+16 is not fully closeable until that work lands. Original Part 1 status (kept for
+history): PART 1 SUBSTANTIALLY COMPLETE 2026-07-14 -- demo org built, full
+pre-flight baseline recorded, all 33 nav pages exercised (most with real
+create/write actions + SQL verification, a handful confirmed-via-sibling-route
+once a shared root cause was proven). 3 systemic findings registered
+(PROJEXA-IDENTITY-BRIDGE-01 [pre-existing], PROJEXA-NO-TENANT-ISOLATION-01 [new],
+PROJEXA-MODULE-ENTITLEMENT-01 [new]) plus 8 distinct per-module gaps, several fully
+root-caused down to the exact line/policy responsible.
 
 KNOWN RELATED FINDING before Part 1 starts: PROJEXA-IDENTITY-BRIDGE-01
 (CONTROLLER.yaml) -- PROJEXA's server-to-server calls to compliance-tracker
@@ -867,3 +872,51 @@ should decide scope, this session is registration-only.
   incomplete coverage. Progress was committed to git after almost every module
   (see this file's own commit history in the `control` repo) specifically so an
   interrupted session could resume from exactly this state.
+
+- 2026-07-14 (Part 2, PROJEXA-MODULE-ENTITLEMENT-01 -- both halves fixed,
+  background sub-agent, "Priority 16 Part 2"): Owner pre-approved both fixes,
+  no further scoping needed.
+  - **Fix 1** (compliance-tracker, data-only): enabled the `erp`, `sales`,
+    and `hr` product-branch entitlements for `org_id='projexa_demo_org'` in
+    `compliance.org_product_branch_enablements`, applied live via Supabase
+    MCP `execute_sql` against project `pcrjmlpuqsbocqfwoxod` and verified
+    with a fresh join query after (5 branches now enabled: `veri_chat_v2`,
+    `construction` [pre-existing] + `erp`, `hr`, `sales` [new]). Matches
+    this repo's own established convention for org-branch enablement (grep
+    confirmed zero application-code call sites for
+    enableErpForOrg/enableSalesForOrg/enableConstructionForOrg/
+    enableVeriChatV2ForOrg -- every prior org-branch enablement, including
+    the 2 already active for this org, was applied the same way, as a
+    one-off DB write). `hr` is included per the Owner's explicit
+    instruction even though no code anywhere in compliance-tracker
+    currently gates on the `hr` branch key (confirmed by grep: no
+    hr-enablement-service.ts, no `requireBranchEnabled(orgId, "hr")` call
+    site) -- inert today, future-proofed for if/when an HR entitlement gate
+    is built. compliance-tracker PR #335 (claim registered + moved to
+    `recently_completed` in `ai-os/boss/ACTIVE-CLAIMS.yaml`, plus a
+    documentation-only `drizzle/0201_*.sql` recording the exact SQL applied
+    and verified -- not itself run by the migration runner, since no
+    scripts/migration convention exists for this table). NOT merged by this
+    session -- the data change is already live regardless of PR merge
+    status.
+  - **Fix 2** (projexa, real code fix): every route under
+    `projexa/src/app/api/**` that forwards an error from
+    `callVeridian()`/`callVeridianRaw()`/`callVeridianBinary()` was
+    discarding the real `VeridianApiError.status` and hardcoding
+    `{ status: 502 }` in the response sent to the browser -- masking real,
+    specific upstream errors (the ERP/Sales 403 above included) as a
+    generic gateway failure. Fixed mechanically: `status: 502` ->
+    `status: err instanceof VeridianApiError ? err.status : 502` (502
+    remains the fallback only for genuinely unexpected/non-VeridianApiError
+    failures). **179 occurrences across 123 files**, found via
+    `grep -rl "status: 502" src/app/api` (verified safe as a blanket
+    replace: every matching file imports `VeridianApiError`, every catch
+    clause uses the identifier `err`) and spot-checked by hand afterward,
+    including both `callVeridianRaw` binary/PDF-streaming routes and the 9
+    files using an intermediate `const message = ...` variable. `bunx tsc
+    --noEmit` clean, `bun run lint` clean (0 errors, 1 pre-existing
+    unrelated warning), `bun run build` succeeds (all routes compile).
+    projexa PR #13. NOT merged by this session.
+  - Both PRs left open for the supervising session to audit/merge per this
+    project's standard process (`mandatory-audit-check.yml` gate on the
+    compliance-tracker side).
