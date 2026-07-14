@@ -632,6 +632,34 @@ should decide scope, this session is registration-only.
   call. Worth Part 2 knowing this is the likely cause of the latency pattern observed
   throughout this log, separate from any actual bug.
 
+- **GAP -- Employees, second PROJEXA-IDENTITY-BRIDGE-01 occurrence, plus strong supporting
+  evidence for PROJEXA-NO-TENANT-ISOLATION-01** (persona: Kavita Desai, HR Manager). Employees
+  page itself is real (Directory/Departments/Org Chart/Leave tabs, not a stub -- an earlier
+  `get_page_text` call falsely showed an empty page for this URL; a direct DOM check found
+  38,738 characters of real rendered content, so that was a tool-extraction quirk on this
+  session's end, not a product bug -- noted so a future session doesn't waste time
+  re-investigating a false lead). Opened "Employee Profile" create dialog: its "User" field is
+  a **required select-existing-user dropdown, not a free-text name field** -- and critically,
+  every option in that dropdown is a `@skylinebuilders-demo.veridianai.dev` compliance-tracker
+  demo account (Arjun Mehta, Suresh Pillai, Vikram Singh Rathore, etc.) -- **none of Meridian
+  Skyline Group's 21 real personas appear as selectable options at all**, direct, concrete
+  proof of PROJEXA-NO-TENANT-ISOLATION-01 at this specific module: a real PROJEXA customer
+  cannot create an employee profile for their own actual staff, only for whichever generic
+  demo identities happen to already exist in the shared `projexa_demo_org`. Selected "Arjun
+  Mehta" (only way to complete the test) and submitted -- `POST /api/employees` returned
+  **502** with body `{"error":"This action requires a real user session, not an API key"}` --
+  this is PROJEXA-IDENTITY-BRIDGE-01 again (employee creation was explicitly one of the 17
+  originally-named affected routes). Logged tersely per this plan's own de-duplication
+  instruction; cross-reference the Change Orders entry above for full evidence of this root
+  cause.
+- **Working, no gap** -- **HR Dashboard** sub-routes spot-checked: `/api/employees`,
+  `/api/leave/requests`, `/api/recruitment/job-openings` all return real 200s with real data
+  (10 seeded employees, etc). `/api/hr/departments` returns a generic `{"error":"Failed to
+  fetch departments"}` 502 with an ambiguous root cause not conclusively identified this
+  session (unclear whether it's a third instance of the identity-bridge pattern with a
+  different message, a genuine hr-service.ts bug, or something else) -- flagged honestly as
+  unresolved rather than guessed, for Part 2 to root-cause properly.
+
 ## Progress log
 
 - 2026-07-14: File created. Logged as CONTROLLER.yaml entry PRIORITY-16,
