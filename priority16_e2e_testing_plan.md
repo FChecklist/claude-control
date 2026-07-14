@@ -507,6 +507,47 @@ per-module procedure's step 6.)
   Margin Rs 1,40,000 (30.4%) -- all arithmetically correct against the single seeded row for
   this project, matching the matrix's stated verification target exactly.
 
+- **Working, no gap** -- **Manpower & Attendance** (persona: Amit Shah, Procurement/Vendor
+  Coordinator acting for site records, on Cedar Heights). Roster tab shows the 6 seeded
+  workers correctly. "Mark Attendance" on the Attendance tab verified: selected worker
+  (Suresh Pal, `daily_rate=770`), status "Present," 8 hours -> row confirmed in
+  `compliance.construction_attendance` (id `xkibl0j1po93uxszckerlnvc`) with **daily_cost=770,
+  correctly equal to the worker's daily_rate for a full Present day** -- matches the matrix's
+  stated verification target. Side note, not logged as a gap: the *first* attempt at this
+  action failed with a transient `POST /api/attendance` 401 caused by the PROJEXA dev
+  server's middleware failing to reach Supabase Auth's remote JWKS endpoint
+  (`ConnectTimeoutError`, `ai-os`/network-level, not app logic) and `requireAuth()`
+  correctly-but-strictly treating that as "unauthenticated" rather than retrying -- a
+  fail-closed design choice that is defensible for security but means any transient network
+  blip between PROJEXA and Supabase Auth 401s a real user's action outright. Retried once and
+  it succeeded normally; noting the fail-closed behavior for Part 2's awareness, not
+  registering it as a reproducible product bug since it didn't reproduce on retry.
+
+- **GAP -- Vendors & Materials, both silently broken (module entitlement gate)** (persona:
+  Amit Shah, Procurement/Vendor Coordinator). Intent (per matrix): Vendors = "Create vendor"
+  (`erp-buying-service` / `erp_suppliers`); Materials = "Add material" (`erp-inventory`).
+  **Actual**: both the read (GET, on page load) and write (POST, on "Add Vendor") calls
+  return **502** with the identical underlying compliance-tracker error body: `{"error":"This
+  capability is not part of the Module your organization purchased. Please contact your
+  organization's administrator. This capability is already in the ERP module."}` -- i.e. the
+  shared `projexa_demo_org` API key/org does not have the ERP module entitlement enabled on
+  the compliance-tracker side, so these two nav pages are completely non-functional for every
+  PROJEXA customer, not just this test org. **Worse than a plain error**: neither page
+  surfaces this to the user at all -- both silently render their normal empty state
+  ("No vendors added yet." / "No material movements recorded yet.") indistinguishable from a
+  legitimately-empty-but-working page. This is exactly the "UI looks fine but the call
+  actually failed" failure class this test plan's own per-module procedure (step 5) warns
+  about -- confirmed only by checking `preview_logs`/network requests for the 502, not by
+  anything visible on screen. My attempted vendor create (Meridian Steel & Rebar Suppliers
+  Pvt Ltd) was silently lost -- confirmed zero matching row in `compliance.erp_suppliers`.
+  Materials additionally has no create UI at all regardless of entitlement (its own on-page
+  copy: "there's no self-serve create-form because the underlying warehouse/item IDs have no
+  discovery API exposed to PROJEXA yet" -- an honestly-disclosed, separate, pre-existing
+  limitation on top of the entitlement gate). Root cause is a compliance-tracker-side
+  module/plan configuration gap (ERP module not enabled for `projexa_demo_org`), not a
+  PROJEXA code bug per se, but the missing error surfacing in the PROJEXA UI is a real
+  PROJEXA-side gap regardless of the root cause.
+
 ## Progress log
 
 - 2026-07-14: File created. Logged as CONTROLLER.yaml entry PRIORITY-16,
