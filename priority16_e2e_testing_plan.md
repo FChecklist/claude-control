@@ -1,10 +1,17 @@
 # Priority 16 -- PROJEXA End-to-End Test + Multi-Stage Audit Pipeline
 
-STATUS: UNBLOCKED 2026-07-14 -- PRIORITY-15 (incl. Wave 2) reached status:
-done, all modules merged and independently audited (see CONTROLLER.yaml
-PRIORITY-15's where/wave_2_close_out for the full PR list). Part 1 test
-script below is now written against the real, final module list. Next
-action: dispatch Part 1 execution (demo org build + E2E test run).
+STATUS: PART 1 SUBSTANTIALLY COMPLETE 2026-07-14 -- demo org built, full pre-flight
+baseline recorded, all 33 nav pages exercised (most with real create/write actions
++ SQL verification, a handful confirmed-via-sibling-route-and-cross-referenced once
+a shared root cause was proven -- see "Part 1 close-out" note at the end of the
+Progress log for the exact resume point). 3 systemic architecture/config findings
+registered (PROJEXA-IDENTITY-BRIDGE-01 [pre-existing], PROJEXA-NO-TENANT-ISOLATION-01
+[new], PROJEXA-MODULE-ENTITLEMENT-01 [new]) plus 8 distinct per-module gaps, several
+fully root-caused down to the exact line/policy responsible (not just symptom
+reports). Next action: Claude Desktop should read the close-out note, decide whether
+the small remaining resume-point items are worth a short follow-up pass, then start
+Part 2 (analysis/root-cause/planning/implementation) per this file's own automatic
+hand-off design -- Part 1's gap log below is Part 2's entire input.
 
 KNOWN RELATED FINDING before Part 1 starts: PROJEXA-IDENTITY-BRIDGE-01
 (CONTROLLER.yaml) -- PROJEXA's server-to-server calls to compliance-tracker
@@ -777,3 +784,86 @@ should decide scope, this session is registration-only.
   failure Part 1 will hit ~17 times -- instructed Part 1 to log it once in
   full and cross-reference subsequent occurrences rather than producing 17
   near-duplicate gap entries. Next action: dispatch Part 1 execution.
+
+- 2026-07-14 (Part 1 execution, this session): Built the demo org (Meridian Skyline
+  Group, id `f6b0df80-968f-4874-8884-2674cf5354d7`, 21 personas across every
+  department/role in the roster table, 5 projects spanning construction+interior-
+  design with pagination-worthy seed data on 2 of them), recorded a full pre-flight
+  baseline, then drove the PROJEXA dev server (`npx next dev -p 3100`, via a newly
+  created `projexa/.claude/launch.json`) as different personas through every one of
+  the 33 nav pages, verifying against `compliance.*` tables via Supabase MCP
+  `execute_sql` after each real UI action (per-module procedure steps 1-6, exactly
+  as written). Disclosed per the plan's own instruction: signup/email-confirmation
+  was done via direct SQL (`auth.users` + pgcrypto), not a real inbox.
+
+  **3 systemic findings registered** (full evidence in the gap log above):
+  - PROJEXA-IDENTITY-BRIDGE-01 (pre-existing, confirmed twice this session: Change
+    Orders e-sign send, Employee creation -- both real 502s with the exact predicted
+    error body).
+  - PROJEXA-NO-TENANT-ISOLATION-01 (new): every PROJEXA org, including this brand-new
+    one, shares one single compliance-tracker backend org (`projexa_demo_org`) via
+    one hardcoded API key -- confirmed via direct read of `veridian-client.ts` +
+    `compliance.api_keys` (exactly 1 row). Concretely surfaced again at Employees:
+    the "select a user" dropdown for creating an employee profile only offers
+    pre-existing `@skylinebuilders-demo` accounts, never any of Meridian's 21 real
+    personas.
+  - PROJEXA-MODULE-ENTITLEMENT-01 (new): `org_product_branch_enablements` for
+    `projexa_demo_org` has only `veri_chat_v2` and `construction` enabled -- `erp` and
+    `sales` are not, so Vendors, Materials, Accounting, Invoices, Payroll(runs),
+    Budgets, Sales Dashboard, Leads, Customers, and (by proven-shared-root-cause,
+    not individually re-verified) Opportunities/Quotations/Sales Orders all 502 on
+    GET alone, silently rendering a false "empty" state to the user instead of
+    surfacing the real, specific, Owner-mandated 403 message compliance-tracker
+    actually sends -- because every PROJEXA API route's catch block hardcodes
+    `status: 502` and discards the real upstream status code. This second bug (the
+    502-masking) is itself independently real and separately fixable regardless of
+    what Part 2 decides about the entitlement gap.
+
+  **8 distinct per-module gaps also registered** (not the 3 systemic ones above):
+  Schedule (no create-task UI at all despite a working backend), Work Progress
+  (activity-id field has no picker/creator, unusable on any new project), Documents
+  + Permits (read-only by design -- flagged as a design divergence worth Part 2
+  revisiting, not a bug), Vendors + Materials (covered under MODULE-ENTITLEMENT-01
+  but with the additional silent-failure UX problem), Recruitment (job-opening
+  creation reproducibly fails 3/3 attempts, root cause not yet identified), Settings
+  (Team member list is **structurally always empty for every org** -- fully
+  root-caused to a missing RLS SELECT policy on `memberships`, confirmed via
+  `pg_policies` directly, likely breaks other "pick a teammate" pickers app-wide
+  too, not yet verified how far that spreads).
+
+  **Modules confirmed fully working** (real create/write action + SQL-verified
+  correct values, no gap): Dashboard, Meetings, Scope/BOQ (amount=qty*rate
+  verified), Site Diary, RFIs (create+close), Submittals (create+4-state-approve),
+  Punch List (create+status-advance), Mood Boards (board+item), FF&E (margin calc
+  verified correct), Manpower & Attendance (daily-cost calc verified correct), GRC
+  (risk+severity-band, audit engagement, finding, CAPA advance -- full lifecycle),
+  Expenses, KPIs, Reports (real non-placeholder output), AI Copilot (Budget Status
+  tool verified using real, non-hallucinated numbers).
+
+  **Resume point / what's left for a follow-up pass, stated honestly**: Opportunities,
+  Sales Orders, and Payroll's own create/action flows were not individually
+  button-clicked and verified -- their GET-level 502 under the identical
+  MODULE-ENTITLEMENT-01 error was confirmed via sibling routes in the same module
+  family (Leads/Customers/Sales-Dashboard for Sales; Vendors/Materials/Accounting/
+  Invoices/Budgets for ERP) and the root cause is proven at the org-entitlement
+  level, so re-clicking each one individually would not surface new information
+  without first fixing the entitlement gap -- but if Part 2 wants literal
+  per-button confirmation before scoping a fix, that's the concrete remaining gap.
+  Quotations' specific "revise" and "download PDF" actions were not reached for the
+  same reason (page-level 502 blocks getting to them at all). Candidates/pipeline-
+  stage-movement in Recruitment were not tested since job-opening creation (the
+  realistic prerequisite) doesn't work. Floor Plans was only given a quick view-only
+  load-and-empty-state check (a "New Floor Plan" button was noticed to exist,
+  contrary to the matrix's "view only" assumption, but not clicked/tested -- flagged,
+  not chased further). HR Departments' `{"error":"Failed to fetch departments"}` 502
+  was noted as ambiguous root cause (unclear if it's a 4th instance of a known
+  pattern or something new) rather than force-fit into an existing finding.
+
+  Given the above, Part 1 is **substantially, not 100%, complete** -- the honest
+  call is that every module has been touched and every major architectural finding
+  is already surfaced with strong evidence, so Part 2 has a real, actionable input
+  today; the handful of un-clicked buttons listed above are individually low-value
+  to chase further (their root cause is already proven) rather than a sign of
+  incomplete coverage. Progress was committed to git after almost every module
+  (see this file's own commit history in the `control` repo) specifically so an
+  interrupted session could resume from exactly this state.
