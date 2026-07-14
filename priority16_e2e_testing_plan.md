@@ -548,6 +548,68 @@ per-module procedure's step 6.)
   PROJEXA code bug per se, but the missing error surfacing in the PROJEXA UI is a real
   PROJEXA-side gap regardless of the root cause.
 
+### MAJOR FINDING #2 (architecture/config, not a per-module bug) -- PROJEXA-MODULE-ENTITLEMENT-01
+
+Discovered while investigating the Vendors/Materials 502s above, then confirmed systemically
+across the Sales and Finance sections before continuing further module-by-module testing.
+Registering this once, up front, exactly like the two findings above, so it doesn't turn into
+10+ near-duplicate gap entries as Sales/Finance/HR-payroll pages are reached.
+
+**Root cause, confirmed by direct SQL, not guessed**: compliance-tracker gates the `erp` and
+`sales`(CRM) product branches behind an explicit per-org entitlement check
+(`erp-enablement-service.ts` / `crm-enablement-service.ts`, `requireErpEnabled()` etc.,
+Owner directive 2026-07-13 per that file's own header comment -- "a polite, specific 403...
+naming the module... so an admin knows what to purchase/enable"). Queried
+`compliance.org_product_branch_enablements` for `org_id='projexa_demo_org'` directly: only
+**2** branches are enabled -- `veri_chat_v2` and `construction`. `erp`, `sales`, and `hr` are
+**not** in the enabled list at all. Since every PROJEXA org (Acme, Wave4, Skyline Builders,
+Meridian Skyline Group -- all of them, per PROJEXA-NO-TENANT-ISOLATION-01 above) shares this
+one `projexa_demo_org` backend identity, **this affects every PROJEXA customer that has ever
+signed up, not just this test org.**
+
+**Confirmed affected** (GET fails with 502 on page load alone, before any write is even
+attempted -- verified via `preview_logs`/network-request bodies, not assumed): Vendors,
+Materials (erp branch; already logged above), **Accounting** (`/api/finance-dashboard`),
+**Invoices** (`/api/sales-invoices`), **Payroll** (`/api/payroll/runs` specifically -- other
+HR routes are unaffected, see below), **Budgets** (`/api/project-budgets` -- the
+`erp-budget-service` half of the matrix's dual `pms-budget-service / erp-budget-service`
+mapping is what's actually wired, and it's gated), **Sales Dashboard**
+(`/api/sales-pipeline`), **Leads** (`/api/leads`), **Customers** (`/api/customers`). Every
+one of these returns the identical body: `{"error":"This capability is not part of the
+Module your organization purchased. Please contact your organization's administrator. This
+capability is already in the <ERP|Sales> module."}`. Opportunities, Quotations, and Sales
+Orders were not each individually re-verified after this pattern became clear (same `sales`
+branch, same route family as Leads/Customers/Sales Dashboard) -- logging tersely as "same
+root cause" per this plan's own de-duplication instruction rather than re-proving it 3 more
+times.
+
+**Confirmed NOT affected** (real 200s, work normally): GRC (`/api/grc-dashboard` -- GRC is
+bundled in the always-on `office` branch, not gated the same way), Expenses
+(`construction-expense-service`, not ERP-branch), HR's Employees/Leave/Recruitment routes
+(`/api/employees`, `/api/leave/requests`, `/api/recruitment/job-openings` all 200 -- these
+apparently don't route through the ERP-branch check even though the `hr` branch itself also
+isn't enabled for this org, suggesting inconsistent gating within HR itself, not a clean
+"HR is/isn't gated" story), all construction/field/design modules already verified above.
+
+**A second, distinct PROJEXA-side bug found while chasing this down**: the real
+compliance-tracker error is a **403** (`ServiceError(..., 403)` in `erp-enablement-
+service.ts`) with a genuinely helpful, specific message -- but every PROJEXA API route's
+catch block (confirmed by reading `vendors/route.ts`, and the identical pattern repeats
+across `materials`, `leads`, `customers`, `accounting`, etc.) discards the real
+`VeridianApiError.status` and hardcodes `{ status: 502 }` in the response sent to the
+browser. So on top of the real entitlement gap, every affected page in the browser looks
+like a generic infrastructure/gateway failure rather than a clear, actionable
+permission-denied -- actively hiding the specific, helpful message compliance-tracker went
+out of its way to construct. This is a real, separate, easily-scoped PROJEXA bug (fix: thread
+through the real status code instead of hardcoding 502) independent of whatever Part 2
+decides about the entitlement gap itself.
+
+**Not something this session can/should decide**: whether the fix is (a) grant `erp`+`sales`
+(+`hr`?) branch entitlement to `projexa_demo_org` as a config change, (b) build a genuine
+self-serve "enable a module" flow so real PROJEXA customers aren't stuck contacting an
+administrator who themselves has no visible way to grant it, or (c) something else -- Part 2
+should decide scope, this session is registration-only.
+
 ## Progress log
 
 - 2026-07-14: File created. Logged as CONTROLLER.yaml entry PRIORITY-16,
