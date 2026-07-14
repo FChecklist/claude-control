@@ -375,6 +375,68 @@ per-module procedure's step 6.)
   load -- noted, not logged as a gap (single cold-start compile, not reproduced on
   subsequent loads).
 
+- **GAP -- Schedule** (persona: Deepak Verma, PM/admin). Intent (per matrix): "Create task,
+  drag Gantt date," backed by `pms-issue-service` which has a real `createIssue()` (confirmed
+  by direct read, `compliance-tracker/src/lib/services/pms-issue-service.ts:93`). Selected
+  Villa 21 - Whitefield (`projectId=projexa_demo_project`, via URL search param -- the
+  project switcher `<Select>` in `ProjectSwitcher.tsx` renders a Radix portal the browser
+  tool's accessibility tree didn't surface reliably, so direct URL navigation was used
+  instead once `resolveSelectedProject`/`?projectId=` was found by reading the page source).
+  Loaded real data: 5 real tasks (Foundation, Framing, Electrical Rough-in, Roofing,
+  Finishing) rendered in the Gantt timeline and stat tiles (Tasks: 5). **Actual**: there is
+  no create-task control anywhere on the page. Confirmed two ways: (1) live UI -- Timeline
+  tab has exactly one button ("Capture Baseline"); Board tab (Kanban) supports dragging a
+  card between status columns via a "Move to..." dropdown but has no "new card"/"add task"
+  affordance either; (2) source read -- `ScheduleGanttClient.tsx` renders `<Gantt ... readonly
+  />` (line 156, `readonly` prop set, so no drag-to-reschedule either) and neither
+  `projexa/src/app/api/board/route.ts` (GET+PATCH only) nor any other PROJEXA route exposes
+  a POST to compliance-tracker's real `createIssue()`. So both matrix actions ("create task"
+  and "drag Gantt date") are impossible from the Schedule module as shipped, despite the
+  backing service fully supporting both. This is a missing-UI gap, not a missing-backend gap
+  -- `ScheduleBoardClient.tsx`'s own header comment ("Wave 141... a missing UI, not missing
+  data") independently corroborates the same pattern for the board view. Table checked:
+  `compliance.pms_issues` (5 rows before, 5 rows after -- confirmed no write occurred,
+  consistent with no create action being available to attempt).
+
+- **Working, no gap** -- **Meetings** (persona: Deepak Verma, PM). Real "New Meeting" dialog
+  create action verified: POST `/api/meetings` -> 201, row confirmed in
+  `compliance.pms_meetings` (id `os7xzzze0s9zpd80pu013b7l`, correct title/project/duration).
+  "Log outcome" also verified: POST `/api/meetings/[id]/outcomes` -> row confirmed in
+  `compliance.pms_meeting_outcomes` with correct `meeting_id` and notes text.
+- **Working, no gap** -- **Scope (BOQ)** (persona: Divya Menon, QS/Estimator, on Lakeview
+  Corporate Park). "New BOQ" dialog create action verified: POST `/api/scope` -> 201, BOQ
+  header + line item confirmed in `compliance.construction_boqs` /
+  `construction_boq_line_items` (id `hz88xfjwti1i6rvgra96sl9m`), **amount = quantity x rate
+  confirmed correct** (24 x 18500 = 444000) via direct SQL check, matching the matrix's
+  stated verification target exactly.
+- **Working, no gap** -- **Site Diary** (persona: Sanjay Patil, Site Engineer, on Cedar
+  Heights). "New Entry" dialog create action verified: row confirmed in
+  `compliance.construction_site_diaries` with correct `work_done`, `labour_count` (28),
+  `weather` values.
+
+- **GAP -- Work Progress** (persona: Sanjay Patil, Site Engineer). Intent (per matrix): "Log
+  progress entry." The create dialog's first field is a free-text box with placeholder
+  **"Paste the activity's ID from VERIDIAN"** -- confirmed live in the UI, not just a source
+  read. There is no dropdown/picker/autocomplete of the project's own activities anywhere in
+  this dialog or page; a real user has no in-product way to discover what value belongs
+  there. Confirmed by direct grep across `projexa/src/app/api/**`: **zero** PROJEXA routes
+  reference "activity" at all -- there is no list-activities endpoint and no
+  create-activity endpoint anywhere in PROJEXA, despite `construction_activities` being a
+  real, populated table in compliance-tracker. Consequence for this test specifically: none
+  of the 3 newly created projects (Cedar Heights, Lakeview, Meridian Boutique Hotel) have
+  **any** activities at all (`select ... from compliance.construction_activities where
+  project_id in (...)` returned 0 rows for all 3, vs. 7 rows for the pre-existing
+  `projexa_demo_project` and several for `pj_project_mbc`), so Work Progress logging is
+  completely unusable on any project created the normal way (through PROJEXA signup or this
+  test's own project creation) -- not a partial/rough-edge gap, a hard blocker for brand-new
+  projects. Isolated the backend from the UI gap by manually supplying a known-good
+  pre-seeded activity id (`pj_act_p2_col` on Meridian Business Center) instead: the POST then
+  succeeded and a correct row landed in `compliance.construction_work_progress_entries` (id
+  `ldlc8dt1a0ycbzo7f5a9x08o`, `quantity_done=35`, `percent_complete=72`, remarks matching
+  input) -- so the backend write path itself is correct; this is purely a missing
+  discovery/creation UI gap, same shape as the Schedule module's missing-UI finding above but
+  a different root cause (no activity picker/creator vs. no task creator at all).
+
 ## Progress log
 
 - 2026-07-14: File created. Logged as CONTROLLER.yaml entry PRIORITY-16,
