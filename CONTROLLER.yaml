@@ -211,3 +211,15 @@ entries:
     tightened_prompt: "Goal: enumerate every gating condition that must hold for src/lib/llm-client.ts's callAnthropic() to actually attach a cache_control breakpoint, as a follow-up to CACHE-02. Paths: llm-client.ts (cacheEligible logic), chat-service.ts (the only 2 call sites passing enablePromptCache). Constraint: re-verify against origin/main (no assumed carryover from CACHE-02) before answering, since concurrent drift already happened once this session. Done-when: Owner has the full funnel (opt-in call site -> provider -> prompt size -> system-prompt-only), not just the size threshold already covered in CACHE-02."
     dispatch: solo
     audit: "pass: git fetch confirmed no drift since CACHE-02/PALETTE-01 (local HEAD == origin/main), re-grepped cacheEligible/enablePromptCache call sites fresh rather than trusting the earlier read."
+
+  - id: CACHE-04
+    project: veridian
+    type: decision
+    status: done
+    summary: "Scored Owner's 9-point cache-management objective list against real state; only real open gap is server write-back for cross-device sync"
+    where: "memory/veridian_cache_objectives_evaluation.md"
+    last_touched: "2026-07-14"
+    raw_instruction: "9 numbered cache objectives (browser cache for user work, software-side memory-of-work-done, AI not re-reading instructions, token reduction, VERI/VERI Chat using browser cache, same-machine and cross-machine auto cache transfer without software, laptop/mobile separate caches) -- please evaluate and give suggestions, simple terms, few lines only."
+    tightened_prompt: "Goal: score each of the 9 objectives against PALETTE-01/CACHE-01..03's real, already-built state, correct any technically-impossible asks, answer in a few lines. Constraint: verify 'VERI - Your Assistant' isn't a distinct surface from VERI Chat before answering (grepped, confirmed same system). Done-when: Owner has a short per-point verdict plus one concrete next step, not a re-explanation of prior CACHE entries."
+    dispatch: solo
+    audit: "pass: cross-checked against CONTROLLER.yaml's own PALETTE-01/CACHE-01..03 entries plus a fresh grep rather than re-deriving from scratch; flagged objective 8 (cross-device, 'without software') as not technically achievable as literally worded, redirected to the existing server library's read-only fallback as the real mechanism."
