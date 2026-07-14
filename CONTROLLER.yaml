@@ -152,7 +152,15 @@ entries:
   - id: CACHE-01
     project: veridian
     type: architecture-spec
-    status: draft
-    summary: "Prompt & Cache Management Framework -- layered prompt caching, provider-adapter requirements, client-side tooling stack"
-    where: "artifact https://claude.ai/code/artifact/4a64d0b1-1144-4960-9224-d7782de15582 (not yet scoped into an implementation wave)"
+    status: done
+    summary: "Prompt & Cache Management Framework, Phase 1 shipped -- deterministic static-prefix compile+fingerprint, Anthropic cache_control wiring, metrics, wired into chat-service.ts's generateAiReply()"
+    where: "requirements artifact https://claude.ai/code/artifact/4a64d0b1-1144-4960-9224-d7782de15582 -- Phase 1 implemented in compliance-tracker PR #321 (merged); ai-os/CONSTITUTION.yaml prompt_cache_framework section (CACHE-01..04); ai-os/MASTER-TRACKER.yaml closed_priorities #23. Phase 2+ (metadata/sql/permission caches, other providers, other call sites) not yet scoped."
+    last_touched: "2026-07-14"
+
+  - id: LITERT-01
+    project: veridian
+    type: feature
+    status: done
+    summary: "FM register photo digitization wired end to end (blur pre-check + minimal upload page/API), not LiteRT client-side chat"
+    where: "compliance-tracker PR #322 (merged) -- src/lib/fm-photo-blur-check.ts (classical Laplacian-variance blur check, no ML model/license needed), new API routes wrapping the previously zero-caller parseAndExtractFromPhoto()/listDigitizationRows(), minimal /fm-register-digitization page (not yet linked from main nav). ai-os/CONSTITUTION.yaml fm_photo_digitization_wiring section (OCR-01..03); ai-os/MASTER-TRACKER.yaml closed_priorities #24. Evaluated and rejected the pre-existing litert-spike/ model (unlicensed third-party .tflite file) for this -- LiteRT.js itself remains a live option for a future genuinely vision-model-shaped task once a properly licensed model is found."
     last_touched: "2026-07-14"
