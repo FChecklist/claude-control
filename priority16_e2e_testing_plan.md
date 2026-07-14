@@ -660,6 +660,23 @@ should decide scope, this session is registration-only.
   different message, a genuine hr-service.ts bug, or something else) -- flagged honestly as
   unresolved rather than guessed, for Part 2 to root-cause properly.
 
+- **GAP -- Recruitment: "Create Job Opening" reproducibly fails** (persona: Kavita Desai, HR
+  Manager). Intent (per matrix): "Create job opening, move candidate through pipeline
+  stages." Job Openings/Candidates/Pipeline tabs all load real data (200s). "New Job Opening"
+  dialog opens correctly, title field accepts input. **Actual**: `POST
+  /api/recruitment/job-openings` failed on **all 3 attempts** across 2 separate page loads --
+  first attempt: 400 `{"error":"No organization"}` (after a 49s round-trip); second and third
+  (fresh page reload, clean retry): 502 `{"error":"Failed to create job opening"}` (generic
+  fallback message -- masks whatever compliance-tracker actually returned, same 502-masking
+  pattern as PROJEXA-MODULE-ENTITLEMENT-01 above, though the underlying cause here does not
+  match that finding's exact error text so it is **not** being merged into that entry).
+  `compliance.job_openings` confirmed to have zero matching rows after all 3 attempts. This
+  is a genuinely reproducible, distinct gap -- not diagnosed to root cause this session (that
+  needs compliance-tracker-side log/code access this session didn't dig into further given
+  time budget), flagged honestly as unresolved for Part 2 rather than guessed. Not tested
+  further: candidate creation and pipeline-stage movement, since job-opening creation (the
+  prerequisite for a realistic pipeline test) itself doesn't work.
+
 ## Progress log
 
 - 2026-07-14: File created. Logged as CONTROLLER.yaml entry PRIORITY-16,
