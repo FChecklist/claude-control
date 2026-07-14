@@ -189,6 +189,17 @@ entries:
     dispatch: solo
     audit: "pass-with-notes: tsc --noEmit and eslint clean on all 3 files (0 new errors/errors); dev server boots and serves without runtime errors. Full authenticated browser click-through of the palette NOT completed -- login automation hit the same CDP flakiness already documented in memory/veridian_demo_company_2026-07-06.md, a pre-existing environment issue, not caused by this change. Flagged as an open manual-verification item in the PR description rather than claimed as done. Status left in-progress (not done) until PR #324 is reviewed/merged and someone confirms the palette visually."
 
+  - id: PRIORITY-14
+    project: veridian
+    type: feature
+    status: in-progress
+    summary: "Owner named the 8 remaining real_gaps_not_yet_built (MASTER-TRACKER.yaml) as one initiative, 'Priority 14' -- completing all 8"
+    where: "See ai-os/MASTER-TRACKER.yaml's real_gaps_not_yet_built (GAP-DCMD, GAP-CONNECTOR-LAYERS, GAP-AUTH-REBUILD, GAP-MOM-VOICE-TICKETS, GAP-LITERT-EDGE-INFERENCE, GAP-NARROW-MONITOR-ESCALATION, GAP-AI-WORKFORCE-GOVERNANCE, GAP-UMR-TABLE-COVERAGE) and PLATFORM_STRATEGY.md sections 28-30 for the pre-existing phased plans on 3 of them. Wave 1 (4 worktree-isolated sub-agents dispatched 2026-07-14): GAP-UMR-TABLE-COVERAGE next batch, GAP-LITERT-EDGE-INFERENCE Phase 0 spike, GAP-NARROW-MONITOR-ESCALATION Phase 0, GAP-DCMD rich-schema design+first slice. Wave 2 (queued, after Wave 1 audited/merged): GAP-AI-WORKFORCE-GOVERNANCE (depends on Wave 1's monitor Phase 0 landing), GAP-AUTH-REBUILD (4-digit passcode, additive per Owner decision), GAP-MOM-VOICE-TICKETS (OpenAI Whisper per Owner decision, needs OPENAI_API_KEY provisioned -- owner_blocked sub-step), GAP-CONNECTOR-LAYERS (Office Add-in per Owner decision, real signing/distribution decisions needed before build)."
+    last_touched: "2026-07-14"
+    raw_instruction: "complete these its called Priority 14 [the 8 real_gaps_not_yet_built items]"
+    tightened_prompt: "Goal: close all 8 items in MASTER-TRACKER.yaml's real_gaps_not_yet_built list. Constraint: 3 of the 8 (connector layers, auth rebuild, voice vendor) were owner_blocked/ratified-against pending a decision -- Owner answered all 3 via AskUserQuestion 2026-07-14: connector layers -> Office Add-in first; auth rebuild -> proceed additively (passcode alongside existing methods, never replacing); voice vendor -> OpenAI Whisper API. Done-when: all 8 gap entries in MASTER-TRACKER.yaml move from real_gaps_not_yet_built to closed_priorities, each with a merged+audited PR, and this controller entry reflects the final state."
+    dispatch: "subagents:4 (wave 1), subagents:4 (wave 2, queued)"
+
   - id: CACHE-03
     project: veridian
     type: research
