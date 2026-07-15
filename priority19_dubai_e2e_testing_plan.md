@@ -551,17 +551,221 @@ PROJEXA-NO-TENANT-ISOLATION-01).
 ### Not yet tested this pass (see Resume point at the end)
 
 Meetings, Scope (BOQ) UI create (data exists via seed, UI create not
-exercised), Work Progress, Site Diary, Documents, Permits, Submittals, Punch
+exercised), Site Diary, Documents, Permits, Submittals, Punch
 List, Change Orders, Mood Boards, FF&E, Floor Plans, Manpower & Attendance,
 Materials, Vendors, Sales Dashboard, Leads, Opportunities, Sales Orders,
-Customers, Budgets, Expenses (module UI, distinct from the Expense report
-already run), Accounting, Invoices, HR Dashboard, Employees, Payroll,
-Recruitment, KPIs. Company/office-selector checks (PR #342/projexa#18, still
+Expenses (module UI, distinct from the Expense report
+already run), HR Dashboard, Recruitment, KPIs. Company/office-selector checks (PR #342/projexa#18, still
 unmerged per the real-time state check) not attempted. Full 50-persona
 walkthrough (as opposed to spot-checking as the CEO) not done -- only the
 CEO persona was actually driven through the browser this pass; the other 49
 were created and verified to exist/have correct roles/memberships but none
 were individually logged in.
+
+**(Resumed session, continued 2026-07-15 -- see new "Module-by-module results,
+continued" section below for Work Progress, Budgets, Accounting, Invoices,
+Customers, Employees, Payroll, all now tested. This "not yet tested" list is
+updated to remove those.)**
+
+## Module-by-module results, continued (resumed session, same day)
+
+**TOOLING LESSON, not a product bug (add to the existing TOOLING NOTE)**:
+the synthetic `pointerdown/mousedown/pointerup/mouseup/click` dispatch
+pattern occasionally fails on a freshly-hydrated page (dispatched too soon
+after navigation, before React finishes attaching listeners) and on Radix
+`Tabs` triggers specifically after a dev-server HMR recompile mid-session
+(stale element reference / re-mount race). Fix: add a ~2s wait after
+`navigate` before the first synthetic click, and re-query the element fresh
+(don't cache a JS variable across separate `javascript_tool` calls -- each
+call is a new top-level scope and `const`/`let` redeclarations across calls
+throw `SyntaxError: Identifier already declared`; wrap each call's script in
+an IIFE and use `window.__foo` for anything that must persist).
+`mcp__Claude_Browser__computer` (screenshot, left_click by ref) also timed
+out / silently no-op'd on this Radix Tabs component even via `ref_N` from
+`read_page` -- the JS-dispatch workaround remains necessary, this is not
+newly fixed.
+
+**LATENCY, confirmed again, worth Part 2 knowing precisely**: every write
+this session took 15-80+ seconds (`POST /api/work-progress/activities` 67s,
+`POST /api/work-progress` 81s, `POST /api/customers` 35s), consistent with
+Priority 16's already-documented "every PROJEXA dev-server action is a real
+round-trip to the live deployed `veridian-compliance-ai.vercel.app`, not a
+local call" finding -- not re-logged as a new issue, but confirms it's still
+true and a resuming session should budget wait times accordingly (30s is
+often not enough; some calls need 60-90s).
+
+- **REGRESSION-CONFIRMED-FIXED -- Work Progress activity picker** (persona:
+  Khalid Al Mheiri, on Marina Vista Tower). Priority 16 Part 2's PR #336
+  added an activity create-on-the-fly flow ("No activities yet for this
+  project. Create the first one.") to close the "Paste the activity's ID
+  from VERIDIAN" blocker Priority 16 Part 1 found. **Confirmed working
+  end-to-end on a brand-new Al Maha project that has genuinely zero
+  activities** (matching Priority 16's exact "none of the newly created
+  projects have any activities" starting condition): clicked "Create the
+  first one" -> "New Activity" sub-dialog -> created "RCC Column Casting -
+  Level 3" (unit "cum") -> `POST /api/work-progress/activities` 201,
+  real row confirmed via SQL. The now-populated Activity dropdown was then
+  used to log a real progress entry (qty=18, %complete=35, remarks
+  verbatim) -> `POST /api/work-progress` 201, confirmed via SQL against
+  `compliance.construction_work_progress_entries`
+  (id `gbf2sb0s1gvaday61dku0gq9`): `quantity_done="18"`,
+  `percent_complete=35`, `remarks` matches verbatim. **SEC-03 note (3rd
+  module occurrence this pass, after RFIs)**: `recorded_by_id` landed as
+  `"projexa_demo_key"`, not Khalid's real user id -- attribution loss still
+  universal, unaffected by this fix (expected, this fix touched activity
+  discovery, not the identity bridge).
+
+- **GAP -- Budgets: silent no-op when no fiscal year exists (every PROJEXA
+  org, confirmed systemic)** (persona: Khalid Al Mheiri, on Marina Vista
+  Tower). Page now loads (was a flat 502 under
+  PROJEXA-MODULE-ENTITLEMENT-01 at Priority 16 time -- entitlement enable
+  PR #335 confirmed fixed, REGRESSION-CONFIRMED-FIXED for reachability).
+  UI copy is honest about the remaining gap ("Fiscal year and cost center
+  are looked up live from VERIDIAN's ERP module below... The budget line
+  item's account ID still needs to come from VERIDIAN's own Chart of
+  Accounts... so paste that in directly for now"). **Actual, root-caused by
+  direct source read** (`projexa/src/components/BudgetsClient.tsx:74`):
+  `if (!name.trim() || !fiscalYearId || !accountId.trim() || !annualAmount)
+  return;` -- the "Create Budget" button silently does nothing (no toast,
+  no inline error, no network request at all) when `fiscalYearId` is empty,
+  and it can never be non-empty because **zero fiscal years exist for any
+  org in the entire compliance-tracker database except compliance-tracker's
+  own internal `demo_org`** (confirmed via SQL:
+  `select org_id, count(*) from compliance.erp_fiscal_years group by
+  org_id` -> only `demo_org`, count 1). Filled all 3 real inputs (Budget
+  Name, a fabricated Account ID since none exist to select, Annual Amount)
+  and clicked Create Budget twice -- confirmed via `read_network_requests`
+  that **no POST was ever sent**, matching the source read exactly. This is
+  a genuine, systemic, confirmed-via-source-and-behavior gap: Budgets has
+  never been creatable end-to-end for any real PROJEXA customer, because no
+  self-serve "set up your fiscal year" flow exists anywhere in PROJEXA, and
+  the failure is silent rather than explained.
+
+- **GAP -- Accounting: "New Journal Entry" account picker permanently shows
+  "Loading…" instead of an honest empty state (same root cause as Budgets,
+  different symptom)** (persona: Khalid Al Mheiri). Accounting page itself
+  now loads correctly (Dashboard/General Ledger/Trial Balance/P&L/Balance
+  Sheet/P&L by Project/Bank Reconciliation tabs all render --
+  REGRESSION-CONFIRMED-FIXED for reachability, same entitlement fix as
+  Budgets). General Ledger tab correctly shows "No journal entries found."
+  -- verified correct via SQL (`compliance.erp_journal_entries` has exactly
+  3 rows, all `org_id='demo_org'`, zero for `projexa_demo_org`), not a bug.
+  Opened "New Journal Entry": dialog renders correctly (Posting Date,
+  Remark, double-entry Lines UI with a running Debit/Credit balance
+  check -- structurally correct). **Actual**: both line items' account
+  selector shows "Loading…" as their placeholder indefinitely (confirmed
+  the underlying `GET /api/accounts` call itself completes with 200, so
+  this is not a stuck request). **Root-caused by direct source read**
+  (`projexa/src/components/AccountingClient.tsx:244`):
+  `placeholder={accounts.length ? "Account" : "Loading…"}` -- the
+  component conflates "still loading" with "loaded, zero results" and
+  always shows the loading label in the empty case, because (same root
+  cause as Budgets) `compliance.erp_accounts` has zero rows for
+  `projexa_demo_org` (confirmed via SQL, same query pattern as fiscal
+  years). A real user has no way to distinguish "still loading" from
+  "there is no chart of accounts for your org, contact support" -- and
+  since there is no self-serve chart-of-accounts setup UI either, journal
+  entry creation is blocked the same way Budgets is, just with a more
+  misleading (rather than silent) symptom. Not completed this pass (dialog
+  reset by an unrelated dev-server HMR recompile mid-session before a
+  create attempt could be made with a fabricated account id the way
+  Budgets was) -- Part 2 should treat both as the same underlying
+  "no ERP foundational setup (fiscal years / cost centers / chart of
+  accounts) exists for any real PROJEXA org" gap, not two separate bugs.
+
+- **NEW GAP -- Invoices: "Create Invoice" fails with a bare 500, twice,
+  reproducibly, same failure signature as the Schedule "New Task"
+  regression** (persona: Khalid Al Mheiri, on Marina Vista Tower). Customers
+  module tested first as a prerequisite (see below, working correctly) to
+  get a real customer to invoice. Invoices page loads correctly (Invoices /
+  Credit Notes / AR Aging tabs, "No invoices found." verified correct via
+  SQL -- all 8 pre-existing `erp_sales_invoices` rows belong to
+  `org_id='demo_org'`, zero for `projexa_demo_org`). No currency
+  field/selector in the Create Invoice dialog either (Customer / Posting
+  Date / Line Item Description / Quantity / Rate only) -- same
+  known-not-yet-shipped AED gap as Quotations, cross-ref PR #344, not
+  re-logged as new. Selected the real "Emaar Properties PJSC - Marina
+  District" customer (created moments earlier), filled a real line item
+  (qty=10, rate=85000), clicked "Create Invoice". **Actual**:
+  `POST /api/sales-invoices` returned a bare **500** (`{"error":"Failed to
+  create sales invoice"}`) -- **reproduced twice**, zero rows landed either
+  time (confirmed via SQL, `compliance.erp_sales_invoices` count for
+  `projexa_demo_org` = 0 after both attempts). **Root cause, likely shared
+  with the already-logged Schedule "New Task" 500 regression, not
+  independently diagnosed as a new bug class**: `projexa/src/app/api/
+  sales-invoices/route.ts`'s own `POST` catch block maps every
+  non-`VeridianApiError` exception to **502**, not 500 -- so a bare 500
+  proves the exception happened OUTSIDE that try/catch, i.e. in
+  `requireAuth()` or `request.json()`, exactly the same diagnosis already
+  written for the Schedule regression. **Directly corroborated this time
+  by `preview_logs`**: the log window around both failed attempts is
+  saturated with `[requireAuth] memberships query failed once, retrying:
+  TypeError: fetch failed` and raw `ConnectTimeoutError` entries against
+  Cloudflare-fronted IPs (`104.18.38.10:443` / `172.64.149.246:443`) --
+  i.e. this specific local dev environment currently has flaky/failing
+  network connectivity to Supabase Auth's remote endpoint, and
+  `requireAuth()`'s single retry is often not enough. **Important
+  correction-style caveat, same spirit as the DATA-01 correction above**:
+  this may be a **local-dev-environment network artifact**, not a confirmed
+  production code regression -- the Schedule 500 finding from earlier this
+  pass should be read with this same caveat attached, not as a confirmed
+  standalone regression, until re-tested against the live deployed
+  `veridian-compliance-ai.vercel.app` (or a dev environment with reliable
+  Supabase Auth connectivity) to rule out the network flakiness as the sole
+  cause. Recommend Part 2's first step on both findings be exactly that
+  re-test before spending implementation effort on either.
+
+- **Working, no gap -- Customers** (persona: Khalid Al Mheiri). "No
+  customers found." verified correct via SQL (zero `erp_customers` rows for
+  `projexa_demo_org` before this action). "New Customer" create verified:
+  `POST /api/customers` 201 (35.2s), real row confirmed via SQL
+  (id `qc20sxnp528aooxwlya7f5q8`, `customer_name="Emaar Properties PJSC -
+  Marina District"`, `credit_limit="500000"` both exactly matching input).
+  **UAE-leak finding**: the create form's second field is **"GSTIN
+  (optional)"** -- an Indian GST-registration-number field with no UAE
+  VAT/TRN (Tax Registration Number) equivalent offered anywhere, shown
+  unconditionally regardless of the org's country. Matches the plan's
+  explicit ask to log every India-tax-specific UI leak into a UAE org's
+  screens as a genuine gap.
+
+- **GAP (cross-ref, same root cause, not re-logged in full) -- Employees:
+  third PROJEXA-NO-TENANT-ISOLATION-01 occurrence, expected under known
+  shared-fallback behavior per the DATA-01 correction above** (persona:
+  Khalid Al Mheiri). Directory list still shows the same generic
+  `@skylinebuilders-demo.veridianai.dev` accounts Priority 16 found (Arjun
+  Mehta, Suresh Pillai, etc.), zero of Al Maha's 50 real personas. "Employee
+  Profile" create dialog's "User" field is still a required
+  select-existing-user dropdown populated with the same generic accounts,
+  nothing selectable for a real Al Maha staff member. **Per this session's
+  explicit instruction to apply the DATA-01 correction's lesson**: Al Maha
+  has zero row in `veridian_credentials` (confirmed earlier), so this is
+  expected shared-fallback behavior, not a fresh finding -- logged tersely,
+  not escalated.
+
+- **GAP (cross-ref PROJEXA-IDENTITY-BRIDGE-01, terse per plan's own
+  de-duplication instruction) -- Payroll: "New Payroll Run" still fails
+  identically** (persona: Khalid Al Mheiri). Payroll page loads correctly
+  now (Payroll Runs / Salary Structures / Salary Components / Statutory
+  Rules / Income Tax tabs all render -- REGRESSION-CONFIRMED-FIXED for
+  reachability, same entitlement fix). "No payroll runs yet." verified
+  correct via SQL (the one pre-existing `erp_payroll_runs` row belongs to
+  `org_id='demo_org'`, not `projexa_demo_org`). "New Payroll Run" (Month
+  Jul / Year) -> `POST /api/payroll/runs` returned **400** `{"error":"This
+  action requires a real user session, not an API key"}` -- the exact
+  identity-bridge failure text, matching the matrix's own explicit
+  prediction ("EXPECT this to fail per PROJEXA-IDENTITY-BRIDGE-01"). Zero
+  row confirmed via SQL. **UAE-leak finding, same class as Customers'
+  GSTIN field**: the Payroll module has a first-class "Income Tax" tab with
+  "Income Tax Slabs" / "Rate Bands" -- India's progressive income-tax-slab
+  concept, not applicable to UAE (no personal income tax), shown
+  unconditionally with no country-conditional hiding. "New Slab" dialog
+  confirmed to have Name/Effective From/Standard Deduction/Rate Bands
+  fields, an India-specific structure. Statutory Rules tab ("No statutory
+  rules yet.") is architecturally the same likely-India-only concept
+  (PF/ESI/PT, per Priority 16's own file header comments in
+  `erp-payroll-service.ts`) but has zero rows to confirm the leak
+  concretely this pass -- flagged as likely, not confirmed, since it's
+  currently empty.
 
 ## Correction to DATA-01 finding (verified live by the controlling session, 2026-07-15, after Part 1 handoff)
 
