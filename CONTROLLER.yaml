@@ -397,8 +397,79 @@ entries:
     where: "memory/veridian_priority21_litert_bonsai_memvid.md; artifact https://claude.ai/code/artifact/7ba2b61f-c943-4f5c-ab08-f8ceb0810e2a (now includes an addendum section). Research/strategy only, no code changes -- nothing dispatched yet, awaiting Owner review of the recommendation."
     last_touched: "2026-07-15"
     addendum_2026_07_15: "Owner relayed a second reviewer's critique of this brief: browser cache undersold (should be a 'Local Brain'/3-tier memory model), MCP missing entirely, 3 distinct memory layers recommended (Browser/Workspace/Enterprise). Evaluated point-by-point, not adopted uncritically: ADOPTED the 3-memory-layer restructuring (genuinely resolves the cross-device sync gap already named unsolved in memory/veridian_cache_objectives_evaluation.md via a Layer-2 memvid capsule) and the MCP correction (compliance-tracker/src/app/api/mcp/route.ts re-verified as a REAL live server, 7 tools, JSON-RPC -- but customer/external-AI-facing, the OPPOSITE direction from the reviewer's proposal; DEBT-02's described-but-nonexistent 'MCP Server 2' reconfirmed absent from src/ by grep). QUALIFIED the 14-item 'Local Brain' list -- 2 of 14 items (local embeddings/semantic index; cached recent-reports/SQL) are not peers of the rest, already blocked (GAP-LITERT-EDGE-INFERENCE) or already flagged with an unsolved encryption gap (PALETTE-01), not simple checkboxes. Full detail + updated diagram in the artifact's new addendum section."
-    implementation_2026_07_15: "Owner directed full implementation of the 3-layer model. Dispatched as 3 workstreams, staged by risk (per AUTH-07/ARCH discipline, not all bundled blindly): (A) Layer 1 foundation -- PR #324 (Browser Intent Cache + Spotlight palette, PALETTE-01) was still open/unmerged with a failing mandatory-audit-check; independently audited by this session (full diff read, tsc/eslint independently re-run in a fresh worktree rather than trusting the PR body, all CI cross-checked green) -- AUDIT: PASS posted, MERGED. (B) MCP DEBT-02 doc-drift fix -- found docs/master/INDEX.md was ALREADY corrected on a prior pass but CONSTITUTION.yaml's own DEBT-02 status field was never flipped to match (a real self-inconsistency); also found route.ts's own header comment was stale (missing 2 of 9 real tools, false 'Groq orchestrator' caller claim). Fixed MCP_PROTOCOL.md/ARCHITECTURE.md/route.ts comment/CONSTITUTION.yaml DEBT-02 (FLAGGED_NOT_FIXED -> FIXED), independently audited by a separate dispatched agent (not self-certified, per AUTH-03), MERGED as PR #359. (C) Layer 2 Workspace Memory (memvid) -- dispatched as a background worktree-isolated agent, scoped design-first (matching Priority 18b's own precedent for new-architecture work with security implications): verify @memvid/sdk actually works in this Vercel/Bun stack (real feasibility check found before dispatch: Apache-2.0, genuine N-API cross-platform binaries incl. linux-x64-gnu, should work in Node.js serverless runtime -- NOT Edge; bundle-size/tree-shaking behavior of its langchain/llamaindex peer deps left for the agent's own real `bun add` + build check, not assumed), write a design doc (RLS-safe capsule scope, export/import flow, audit logging), explicitly flag cross-device sync TRANSPORT as an open question for Owner sign-off rather than silently deciding, then implement the v1 scope only (capsule produce/consume, not the sync transport itself). Not yet complete -- background dispatch, will need independent audit + merge like (A)/(B) once it reports back. Layer 1's remaining 'rename to Browser Memory' framing was deliberately NOT done as a cosmetic renaming PR -- judged low-value/needless-churn against already-shipped working code; the 3-layer concept is now documented here and in memory instead."
+    implementation_2026_07_15: "Owner directed full implementation of the 3-layer model. Dispatched as 3 workstreams, staged by risk (per AUTH-07/ARCH discipline, not all bundled blindly): (A) Layer 1 foundation -- PR #324 (Browser Intent Cache + Spotlight palette, PALETTE-01) was still open/unmerged with a failing mandatory-audit-check; independently audited by this session (full diff read, tsc/eslint independently re-run in a fresh worktree rather than trusting the PR body, all CI cross-checked green) -- AUDIT: PASS posted, MERGED. (B) MCP DEBT-02 doc-drift fix -- found docs/master/INDEX.md was ALREADY corrected on a prior pass but CONSTITUTION.yaml's own DEBT-02 status field was never flipped to match (a real self-inconsistency); also found route.ts's own header comment was stale (missing 2 of 9 real tools, false 'Groq orchestrator' caller claim). Fixed MCP_PROTOCOL.md/ARCHITECTURE.md/route.ts comment/CONSTITUTION.yaml DEBT-02 (FLAGGED_NOT_FIXED -> FIXED), independently audited by a separate dispatched agent (not self-certified, per AUTH-03), MERGED as PR #359. (C) Layer 2 Workspace Memory (memvid) -- CLOSED 2026-07-15/16: background worktree-isolated agent completed the design-first pass (ai-os/priority21_workspace_memory_design.md, self-corrected once -- caught 3 real issues before implementation: reused the existing compliance-documents Storage bucket instead of provisioning a new one, found @memvid/sdk phones home telemetry by default (MEMVID_TELEMETRY=0 now set), and corrected conversation-import from reinsert-into-live-tables to read-only/count-only per SEC-04), then implemented v1: new workspace_memory_capsule_events table + RLS (ARCH-03 template), POST /api/workspace-memory/{export,import} + GET /api/workspace-memory, Settings > Workspace Memory UI section. Capsule v1 scope: a user's own saved report definitions (additive-only insert, name-collision-suffixed, never overwritten) + their own recent AI-thread conversations (read-only count, never reinjected into live tables). PR #367 (feature) + PR #368 (claims update) both independently audited by this supervising session (NOT self-certified) -- read every changed file in full, independently re-ran tsc/eslint myself in a fresh worktree, independently re-verified the telemetry finding by installing the package myself and reading node_modules/@memvid/sdk/dist/analytics.js directly (confirmed real: phones home to https://memvid.com/api/analytics/ingest by default) -- both MERGED. Migration drizzle/0211 applied live via Supabase MCP (project pcrjmlpuqsbocqfwoxod) by this session; get_advisors run post-migration, zero new findings on the new table (RLS clean). Cross-device sync TRANSPORT deliberately NOT built -- design doc §4 names 3 options, recommends starting with manual download/upload, but explicitly leaves the actual choice as an OPEN QUESTION for the Owner, not silently decided. Layer 1's 'rename to Browser Memory' framing was deliberately NOT done as a cosmetic renaming PR -- judged low-value/needless-churn against already-shipped working code; the 3-layer concept lives in this entry and memory instead. ALL 3 WORKSTREAMS NOW COMPLETE."
     audit: "pass: all 3 repos fetched live via gh CLI (READMEs, license files, org repo list), not recalled from model knowledge, per [[feedback_no_assumptions_full_file_reads]]. Constitution (ai_orchestra_tiers, policy_enforcement_engine, prompt_cache_framework, ARCH-06) and CLAUDE.md/AGENTS.md read fresh. Core finding independently verified, not asserted: LiteRT.js consumes .tflite/.litertlm only, Bonsai ships GGUF/MLX via a llama-server OpenAI-compatible API -- confirmed incompatible runtime families, and Bonsai 27B's HF weight repos confirmed still gated/private from the README's own wording. Grepped compliance-tracker/src for 'mermaid' (zero hits) and package.json (react-markdown already present) before claiming that gap+lift. Cross-referenced existing CONTROLLER.yaml entries (LITERT-01, PRIORITY-14's GAP-LITERT-EDGE-INFERENCE, PALETTE-01) rather than re-researching LiteRT.js history from zero."
     raw_instruction: "Task 1 - study these 3 technologies https://github.com/google-ai-edge/LiteRT, https://github.com/PrismML-Eng, https://github.com/Olow304/memvid. Task 2 - read the constitution and architecture. Task 3 - suggest the best way to use these 3 across FCHECKLIST, VERIDIAN AI OS. Task 4 - evaluate task 3 suggestions against this pipeline: User -> Browser -> 1. Web Cache (Memory) -> 2. LiteRT.js (AI Runtime) -> 3. Bonsai 27B (PrismML Model) -> 4. Mermaid (Visualization) -> 5. Software -> 6. VERIDIAN AI escalation. Task 5 - suggest the best way so we can use this effectively and make users' work very easy."
     tightened_prompt: "Goal: a grounded research+strategy memo, not code changes. Ground every technology claim in what was actually fetched (gh CLI repo views/READMEs), not assumed from model knowledge, since this is exactly the kind of external-tech claim [[feedback_no_assumptions_full_file_reads]] warns about. Cross-reference prior LiteRT work already done in this codebase (LITERT-01: FM photo blur-check shipped, GAP-LITERT-EDGE-INFERENCE: embeddings/vector-search spike PR #331 hit real @litertjs/core v2.5.2 API walls -- no dynamic-shape resize, no int64 support) rather than re-researching LiteRT.js from zero. Read ai-os/CONSTITUTION.yaml + BRAIN.md/OS.yaml (compliance-tracker) before proposing anything. Done-when: a single memory file (and optionally an Artifact) covers all 5 tasks, this controller entry flips to done with a real pointer."
     dispatch: solo
+
+  - id: PRIORITY-22
+    project: veridian
+    type: research
+    status: draft
+    summary: "Owner asked to study Soofi Project, Ling-2.6-1T/InclusionAI (AReaL/Ming/LLaDA2.X), iOfficeAI/OfficeCLI, and Claude Code's Prompt Library, then recommend and implement whatever is a genuine fit for VERIDIAN."
+    where: "Recommendation given in-chat this session (no memory file written yet -- pending). Implementation claims, once dispatched, go in ai-os/boss/ACTIVE-CLAIMS.yaml; this entry's own status/where updates as work lands."
+    last_touched: "2026-07-16"
+    raw_instruction: "study these [Soofi Project (GitHub org + Soofi-Pretraining repo + HF org); Ling-2.6-1T (inclusionAI/Ling repo + org + HF model) and also AReaL/Ming/LLaDA2.X] ... along with above also evaluate this https://github.com/iOfficeAI/OfficeCLI and https://code.claude.com/docs/en/prompt-library ... for all above discussions what do you recommend ... ok. implement it as you recommended. Check CONTROLLER.yaml first ... follow its pointers ... before doing any research."
+    tightened_prompt: |
+      Goal: implement the 3 actionable recommendations from the external-tooling
+      research (Soofi: no action, not agentic-tooling-shaped for VERIDIAN;
+      AReaL/Ming/LLaDA2.X: no action, no owned GPU infra to use AReaL's RL
+      training loop, no clear gap for the other two).
+
+      (1) Ling-2.6-1T trial: add as a candidate model for 2-3 real coding-role
+      tasks currently on deepseek/deepseek-v4-pro (Senior Backend Engineer/
+      DevOps/Architecture Compliance Reviewer) or deepseek/deepseek-r1-0528
+      (QA Engineer/AI Response Validator) in src/lib/ai-team/roster.ts, run
+      real OpenRouter API-call comparisons (cost/latency/quality/failure
+      behavior under a forced-provider-unavailable test), classify tier in
+      src/lib/model-tier-eligibility.ts as INTEGRATIVE_ELIGIBLE at most --
+      an unproven model cannot jump straight to JUDGMENT_ELIGIBLE per
+      AGENTS.md Rule 10 / CONSTITUTION.yaml's ai_orchestra_tiers (currently
+      only z-ai/glm-5.2 holds that tier). Do NOT roster-wide swap. Test the
+      single-OpenRouter-provider risk directly (same failure class already
+      hit once with the GLM-5.2/DeepInfra pin, see
+      memory/veridian_veri_rebrand_and_ai_routing_2026-07-10.md) rather than
+      assuming it away. 90-day quality mandate (Rule 8, through ~2026-10-08)
+      applies -- judge on quality/correctness, not cost; the OpenRouter
+      listing's "75% off" price is promotional, not a decision input.
+
+      (2) OfficeCLI trial: SCOPE CORRECTED after reading
+      ai-os/boss/ACTIVE-CLAIMS.yaml's recently_completed section -- this repo
+      already has a confirmed-broken, PRE-EXISTING mammoth/pptxgenjs
+      dependency pair (missing packages, blocking `next build` on
+      origin/main itself, independently confirmed by >=2 unrelated sessions,
+      tracked by dep-panels/dep-recharts/dep-ts worktrees) that predates this
+      task entirely. Before adding OfficeCLI as a brand-new 4th Office-doc
+      dependency, evaluate whether it can actually FIX/REPLACE that already-
+      broken mammoth (docx read) + pptxgenjs (pptx write) pair for one
+      concrete real document task (FM's Excel asset-register/checklist
+      digitization, or one Reports & Analysis Engine export) -- this is a
+      materially different, higher-value framing than the original "trial it
+      alongside existing skills" idea. Constraint: OfficeCLI ships as a
+      self-contained .NET 10 binary -- verify Vercel Node (NOT Edge) function
+      compatibility, deployment-size fit, and one-shot-CLI-call usage
+      (resident open/set/close sessions don't fit serverless's stateless
+      invocation model) via a real feasibility check BEFORE dispatching
+      further work, same discipline PRIORITY-21 used for memvid.
+
+      (3) Prompt Library patterns: no production code change. Adopt directly
+      in how sub-agents are briefed for the existing parallel-worktree
+      dispatch practice (matches
+      memory/feedback_parallel_subagent_compliance.md's drift problem).
+      Optionally a short CLAUDE.md/AGENTS.md note if a concrete rule emerges
+      -- low priority, no dispatch needed.
+
+      Constraints (workstreams 1+2): register ai-os/boss/ACTIVE-CLAIMS.yaml
+      entries before editing; do not touch src/lib/supabase/auth-guard.ts or
+      schema.ts's auth shape (no collision expected -- neither workstream
+      touches auth, re-verify against ACTIVE-CLAIMS.yaml immediately before
+      starting since PLATFORM-01 Wave 2 may still be in flight); PR/CI gate,
+      no self-merge, independent audit per Rule 6/7(c)/10.
+
+      Done-when: Ling-2.6-1T comparison results documented, and (only if it
+      genuinely wins on quality) a roster.ts + model-tier-eligibility.ts PR
+      opened, independently audited, not self-merged; OfficeCLI feasibility
+      check documented with an explicit go/no-go before any further
+      integration work; this entry closed with real PR/doc pointers.
+    dispatch: "TBD -- logged per this file's own INTAKE protocol before dispatch; see chat response this turn for what's already known/in-progress that reshaped scope"
