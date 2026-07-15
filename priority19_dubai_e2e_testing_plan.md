@@ -563,6 +563,78 @@ CEO persona was actually driven through the browser this pass; the other 49
 were created and verified to exist/have correct roles/memberships but none
 were individually logged in.
 
+## Correction to DATA-01 finding (verified live by the controlling session, 2026-07-15, after Part 1 handoff)
+
+Part 1's DATA-01 finding above was written from local-dev-server observation only and
+drew two conclusions that direct production testing does NOT support. Before this
+propagates into Part 2's implementation plan as an overstated emergency, here is what
+was independently re-verified against the REAL LIVE compliance-tracker API
+(`https://veridian-compliance-ai.vercel.app`), not local dev:
+
+1. **Vercel env vars ARE set in production**, contradicting Part 1's inference (which
+   was based on DOMAIN-02's older, pre-PLATFORM-01 memory note, not a live check):
+   `vercel env ls production` on the projexa project confirms `SUPABASE_DB_PASSWORD`
+   (set 2h before this check) and `NEXT_PUBLIC_SUPABASE_URL` both present. The
+   `getVeridianApiKey()` failure Part 1 observed is a **local dev-only** artifact
+   (this session's local `.env.local` lacks these), not necessarily present in prod.
+2. **Direct proof tenant isolation IS working correctly in production for a real
+   per-org key**: queried `public.veridian_credentials` -- exactly ONE real row
+   exists, for "Platform Test Org Alpha" (`veridian_org_id=xepoooh8p1iqm6eqjetbhuuc`,
+   real `vk_` key). Called the LIVE API directly with that real key (bypassing the
+   browser/local-dev-server path entirely):
+   - `GET /dashboard` -> `{"totalProjects":0,...,"projects":[]}` -- correctly isolated,
+     zero leaked projects from Meridian/Al Maha/the shared demo org.
+   - `GET /schedule/gantt?projectId=projexa_demo_project` (Meridian's own Villa 21
+     project id) -> `{"tasks":[],"dependencies":[],"milestones":[]}` -- **empty, not
+     Meridian's real 5-task Foundation/Framing/etc. data**. This directly
+     contradicts Part 1's claim of "no project-level access check of any kind" --
+     with a genuine per-org key, cross-org projectId access returns nothing, not a
+     leak.
+3. **Root cause of what Part 1 actually observed**: Al Maha Skyline was **SQL-bulk
+   provisioned** (the plan's own documented fallback after the real-signup path hit
+   Supabase's email rate limit) -- it never went through `provisionOrganisation()`,
+   so it has **zero row in `veridian_credentials`**, identical to every other
+   SQL-bulk-provisioned test org since Priority 15/16 (Meridian Skyline Group,
+   Skyline Builders, Acme Test Construction, Wave4 QA Test Co -- none of these have
+   a credential row either, confirmed by the single-row query above). Every one of
+   these orgs' API calls silently fall back to the single shared
+   `VERIDIAN_API_KEY`/`projexa_demo_org` identity by design (`callVeridian()`'s
+   documented fallback behavior) -- so "Al Maha's owner sees Meridian's projects" is
+   **the same known, expected shared-fallback behavior Priority 15/16 already
+   documented for every bulk-provisioned demo org**, not a new regression in
+   PLATFORM-01's fix. The fix was never actually exercised by this session's test
+   methodology (the real-signup path that would have exercised it was blocked by
+   the rate limit), so it cannot be said to have failed.
+
+**Real, narrower findings that DO survive this correction** (worth Part 2 acting on,
+lower severity than originally logged):
+- **Fail-open-by-identity, not fail-closed, when no per-org credential exists**:
+  `callVeridian()`'s fallback to a shared org-wide key when `getVeridianApiKey()`
+  finds no row is a deliberate, longstanding design choice (predates PLATFORM-01),
+  but it means any org that is somehow left without a credential row (bulk-test
+  orgs today; conceivably a real org if provisioning partially fails) silently reads
+  the shared demo org's data rather than erroring loudly. Worth PLATFORM-01/Part 2
+  considering whether this fallback should be dev/test-only (env-gated) rather than
+  unconditional, now that a real per-org path exists and is proven to work.
+  **Not fixed by this session** -- flagged for PLATFORM-01 since it touches
+  `veridian-client.ts`'s fallback logic, adjacent to that session's territory.
+- **Local dev environment gap**: this repo's local `.env.local` lacks
+  `DATABASE_URL`/`SUPABASE_DB_PASSWORD`, so any session testing locally will
+  reproduce the same misleading "isolation broken" signal Part 1 hit. Worth adding
+  to `projexa/.env.local` (or `.claude/launch.json`) so local testing matches prod
+  going forward -- low-risk, no production impact, safe for this session to do.
+- **Currency-display finding stands unmodified**: Al Maha's AED-priced data still
+  rendered in ₹ formatting -- unrelated to the credential issue, a real, separate,
+  narrower gap.
+
+**Net effect on Part 2 priority**: DATA-01 is NOT the five-alarm "any customer can
+see any other customer's data in production" finding Part 1's own wording implied.
+It is: real per-org isolation is proven correctly working for the one real-signup
+path that exists; the demo/test-org fallback behavior is a known, pre-existing,
+lower-severity design question. **Schedule "New Task" 500 regression and the
+Reports-UI-never-renders gap remain the two clearest, highest-value fixes for Part 2**
+-- both fully in this session's own scope (no auth-guard.ts/schema.ts involvement).
+
 ## Constitution Cross-Check
 
 - **DATA-01 (`ENFORCED_PRODUCTION_PROVEN` per `ai-os/CONSTITUTION.yaml` line
