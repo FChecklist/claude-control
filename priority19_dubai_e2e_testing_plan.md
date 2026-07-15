@@ -1474,34 +1474,139 @@ PROJEXA-IDENTITY-BRIDGE-01, since a real fix there -- per-user identity
 forwarded from PROJEXA -- would make this whole FK class moot rather than
 requiring either approach) rather than adopted here under time pressure.
 
-**Workstream B -- ERP foundational setup**: every real PROJEXA org has
-ZERO fiscal years/cost centers/chart-of-accounts rows, blocking Budgets
-(no fiscal year to attach a budget to) and Accounting (no COA to post a
-journal entry against) simultaneously -- the single highest-value fix in
-the gap log by modules unblocked. Root-cause first (this session hasn't
-yet): is this a missing auto-provisioning step (should seed a default COA
-+ current fiscal year automatically when an org's `erp` branch is
-enabled, mirroring how `provisionOrganisation()` auto-enables branches) or
-a missing self-serve setup UI (an admin should be able to define these,
-and today can't)? Likely needs both: auto-seed sensible defaults so a new
-org isn't blocked day one, AND a real settings UI for an admin to edit
-them (a construction firm's real chart of accounts will differ from a
-generic default eventually).
+**Workstream B -- ERP foundational setup: CLOSED, see compliance-tracker
+PR #353 / projexa PR #23.** Root-caused by direct SQL against
+`pcrjmlpuqsbocqfwoxod` before writing any fix: `compliance.erp_fiscal_years`
+and `compliance.erp_accounts` had exactly ONE org populated (`demo_org`,
+this codebase's own internal demo org -- 1 fiscal year, 12 accounts);
+`compliance.erp_cost_centers` was entirely empty, even for `demo_org` (0
+rows for any org). Root cause was cause (a) from this plan's own two
+candidates, confirmed by reading `erp-enablement-service.ts` itself --
+its own comment said outright: *"No org-owned defaults to seed on enable
+-- ERP has no equivalent of PMS's default issue types."* Comparing
+against `pms-enablement-service.ts`'s `seedDefaultIssueTypes` (a
+copy-on-enable seedFn, wired into the generic
+`enableProductBranchForOrg(ctx, branchKey, seedFn)` mechanism) confirmed
+the exact precedent pattern already existed in this codebase, just never
+applied to ERP. Cause (b) (missing self-serve setup UI) was also
+partially real but turned out much narrower than expected once (a) was
+understood: `listFiscalYears`/`createFiscalYear`/`listCostCenters`/
+`createCostCenter`/`listAccounts`/`createAccount` already existed as full
+service functions, and PROJEXA already had working GET routes + UI
+consumption for fiscal-years and cost-centers (`BudgetsClient.tsx`'s
+"New Budget" dialog) and for accounts (`AccountingClient.tsx`'s journal
+entry account picker) -- the "at least read access" bar this plan
+explicitly allowed as sufficient (deferring a full COA editor) was
+already met once real data existed to read. The one genuine
+missing-wiring gap on the UI side: `BudgetsClient.tsx`'s own account ID
+field was still free-text ("paste the VERIDIAN `erp_accounts.id`... there
+is no accounts lookup surfaced to PROJEXA yet") even though the same
+`/api/accounts` proxy `AccountingClient.tsx` already used was sitting
+right there unused -- fixed by wiring it in (small, in the spirit of
+"don't over-build," not a new editor).
 
-**Workstream C -- UAE tax-field leak**: 3 confirmed India-specific fields
-rendering unconditionally regardless of org country (Customers' GSTIN
-field, Vendors' GST field, Payroll's "India Income Tax Slabs" tab).
-PLATFORM-01 Wave 2 (merged 2026-07-15, compliance-tracker#347/projexa#20)
-already shipped the exact hook needed: `organizations.country` (nullable,
-default `'IN'`, real column, 18 orgs live-backfilled) and
-`getComplianceEngine(country)` throwing for any non-`'IN'` country rather
-than fabricating tax law. Fix: gate all 3 fields' rendering on
-`organizations.country === 'IN'` (hide, don't error, for non-IN orgs --
-matches the engine registry's own "don't fabricate" principle applied to
-UI instead of computation). Confirm PROJEXA's own API responses expose
-`country` on the organization/company object already (Companies alias from
-Priority 17 Wave 1 is the likely carrier) before wiring the UI condition,
-rather than assuming a new field needs adding.
+Fix, compliance-tracker PR #353: `erp-enablement-service.ts` gained
+`seedDefaultErpFoundation`, the same copy-on-enable pattern as PMS
+(idempotent per-table -- only seeds a table genuinely empty for that
+org), wired into `enableErpForOrg` via
+`enableProductBranchForOrg(ctx, "erp", seedDefaultErpFoundation)`. Seeds
+a calendar-year fiscal year (`FY <current year>`, Jan-Dec -- deliberately
+NOT India's April-March convention, since this now runs for orgs of any
+`organisations.country`), a minimal country-neutral chart of accounts
+(11 accounts: Bank Account/Cash in Hand/Accounts Receivable/Accounts
+Payable/Tax Payable/Owner's Capital/Sales Revenue/Cost of Goods
+Sold/Salaries & Wages/Rent Expense/Office & Admin Expense, with lowercase
+`accountType` values that actually match what
+`erp-financial-report-service.ts`'s cash-flow statement and
+`erp-invoicing-service.ts` switch on -- `demo_org`'s own seed data used
+capitalized strings that never actually matched those switches, a
+pre-existing inconsistency not repeated here), and one "Head Office" cost
+center. Already-enabled-but-empty real orgs backfilled live via Supabase
+MCP `execute_sql` (same precedent as Priority 16 Part 2's entitlement
+fix): `projexa_demo_org` (the shared backend identity every real PROJEXA
+org currently writes through, per PROJEXA-IDENTITY-BRIDGE-01) plus 2
+other erp-enabled orgs, and `demo_org`'s missing cost center. Verified
+after: all 4 erp-enabled orgs have exactly 1 fiscal year, 11-12 accounts,
+1 cost center each.
+
+Fix, projexa PR #23: `BudgetsClient.tsx`'s free-text Account ID field
+replaced with a real `Select` populated from `/api/accounts` (same proxy
+`AccountingClient.tsx` already used). `AccountingClient.tsx`'s account
+picker also got a small hardening -- a new `accountsLoaded` flag so a
+genuinely-empty chart of accounts (e.g. mid-migration, before this fix's
+backfill lands somewhere) reads as an honest "no chart of accounts found"
+state instead of conflating with "still loading" (both used to render
+the same "Loading…" placeholder).
+
+**Verified live**: ran the PROJEXA dev server against this worktree's own
+code with the real, already-live seeded data (no waiting for deployment,
+since the seed backfill was a direct DB write) -- Budgets' "New Budget"
+dialog's Fiscal Year/Cost Center/Account selects populate with real data
+(`FY 2026`, `Head Office`, all 11 default accounts); Accounting's "New
+Journal Entry" account picker shows real accounts instead of the old
+stuck "Loading…" placeholder. Deliberately NOT built: a full
+chart-of-accounts editor UI (create/edit accounts from PROJEXA) -- per
+this plan's own explicit allowance, "a working default + at least read
+access" was the bar for this pass, and both now exist; a real construction
+firm customizing its own COA beyond the seeded default remains a future
+gap, not an urgent one.
+
+**Workstream C -- UAE tax-field leak: CLOSED, see compliance-tracker PR
+#353 (schema comment only, see below) / projexa PR #23 (the actual
+fix).** This plan's own assumption -- that PLATFORM-01 Wave 2's
+`organisations.country` (compliance-tracker#347/projexa#20) was already
+"the exact hook needed" -- turned out NOT to work as assumed, and this is
+the single most important correction this closure makes. Root-caused by
+direct SQL before writing any fix: `compliance.organisations.country` for
+`org_id='projexa_demo_org'` reads `'IN'` -- and per
+PROJEXA-IDENTITY-BRIDGE-01 / PROJEXA-NO-TENANT-ISOLATION-01, EVERY real
+PROJEXA org's ERP write path shares that exact same `projexa_demo_org`
+backend identity (`select organization_id, veridian_org_id from
+public.veridian_credentials` on `evpckeuxgvahguwsaeul` confirms
+`veridian_org_id` is `null` for Al Maha Skyline, Meridian Skyline Group,
+Skyline Builders, Wave4 QA Test Co, and Acme Test Construction alike --
+only the 2 real-signup PLATFORM-01 verification orgs have a genuine
+dedicated `veridian_org_id`). So gating PROJEXA's UI on
+`compliance.organisations.country` would show or hide the 3 India-specific
+fields IDENTICALLY for every PROJEXA org -- it cannot distinguish Al Maha
+(UAE) from Meridian (India), which is the entire point of this fix.
+Confirmed the correct alternative by checking PROJEXA's OWN
+`organizations` table (`evpckeuxgvahguwsaeul`, the table Priority 19 Part
+1's own Settings/Team finding already proved is genuinely per-tenant --
+Al Maha's Team page does NOT show Meridian's members or vice versa): it
+had no `country` column at all before this fix.
+
+Fix: added `organizations.country` (nullable, defaults `'IN'`,
+`drizzle/0009_organizations_country.sql`, projexa PR #23) to PROJEXA's
+OWN tenant table instead -- genuinely per-tenant, deliberately independent
+of compliance-tracker's same-named column. Applied live via Supabase MCP
+against `evpckeuxgvahguwsaeul`. Exposed via `GET /api/organization`
+(small additive change, `country` added to the existing select) and
+`src/hooks/use-org-role.ts`'s new `isIndiaOrg` flag (reuses the hook's
+existing `/api/organization` fetch rather than adding a second one; fails
+toward hiding -- only shows India-specific content once `country` is
+positively confirmed `'IN'`, matching `getComplianceEngine()`'s own
+"don't fabricate, just don't offer" principle applied to UI instead of
+computation). `CustomersClient.tsx`'s GSTIN field, `VendorsClient.tsx`'s
+GST field, and `PayrollClient.tsx`'s "Income Tax" tab (both the
+`TabsTrigger` and its `TabsContent`) all gated on `isIndiaOrg`. Al Maha
+Skyline (`03483997-4a9d-4e07-b833-e5935101ed9a`, the confirmed E2E repro
+org) backfilled to `country = 'AE'`; every other existing org left at the
+default `'IN'` (no established country of record for the other test
+orgs, and `'IN'` matches this codebase's own existing default-safe
+convention).
+
+**Verified live**: real, already-live browser session as Khalid Al Mheiri
+(Al Maha Skyline) against this worktree's own code -- `/customers` renders
+Name/Credit Limit/Status only (no GSTIN column, GSTIN field gone from
+"New Customer"); `/vendors` renders Name/Type/Trade/Status only (no GST
+column); `/payroll`'s tab list is Payroll Runs/Salary Structures/Salary
+Components/Statutory Rules only ("Income Tax" tab absent). Deliberately
+NOT built: a country-selection UI at signup or in Settings (new orgs
+still default to `'IN'` until manually corrected, same opt-in-correction
+pattern PLATFORM-01 Wave 2's own column uses) -- out of this pass's named
+scope (3 field leaks), and building real country-selection UX is a
+bigger, separate feature.
 
 **Explicitly NOT in this wave** (per this session's own claimed scope
 boundary in ACTIVE-CLAIMS.yaml): PROJEXA-IDENTITY-BRIDGE-01/
