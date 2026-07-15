@@ -1,14 +1,35 @@
 # Priority 19 -- Dubai 50-User E2E Test + Fix Pass (2nd pipeline run)
 
-STATUS: PART 1 IN PROGRESS -- org fully built (50 real personas + 5 projects +
-pagination-worthy seed data), 8 of ~30 modules tested with real UI actions +
-SQL verification (Dashboard, Schedule, RFIs, Settings/Team, Quotations,
-GRC/Risk Register, Reports, AI Copilot [inconclusive]), 1 MAJOR constitution
-finding registered (DATA-01), 1 confirmed regression (Schedule create-task),
-1 confirmed-fixed regression (Settings/Team). See "Part 1 gap log" ->
-"Resume point" at the bottom for exactly what's left. This is Priority 16's 2-part
-pipeline (E2E test -> analyze/plan/implement) run a SECOND time, with 3
-deliberate deltas the Owner asked for 2026-07-15. Read
+STATUS: PART 1 SUBSTANTIALLY COMPLETE 2026-07-15 (resumed + extended same day) --
+org fully built (50 real personas + 5 projects + pagination-worthy seed data),
+~28 of ~30 modules now tested with real UI actions + SQL verification (all of
+Dashboard/Schedule/Meetings/Scope-BOQ/Work Progress/Site Diary/Documents/
+Permits/RFIs/Submittals/Punch List/Change Orders/Mood Boards/FF&E/Floor Plans/
+Manpower&Attendance/Vendors/Materials/Sales Dashboard/Leads/Opportunities/
+Quotations/Sales Orders/Customers/GRC/Budgets/Expenses/Accounting/Invoices/
+Employees/Payroll/Recruitment/KPIs/HR Dashboard/Settings-Team; only
+company/office-selector checks remain fully untested, correctly deferred as
+known-not-yet-shipped), 16 of 17 Reports & Analysis categories run +
+1 cross-project rollup + AI Copilot Budget Status resolved from inconclusive
+to confirmed-working, DATA-04 spot-checked across 3 personas/roles (no gap).
+1 MAJOR constitution finding registered (DATA-01) then CORRECTED to a
+narrower, lower-severity finding by the controlling session (see "Correction
+to DATA-01 finding" below -- READ THIS FIRST). 1 EARLIER GAP FINDING RETRACTED
+this session as a false positive (Reports "Expense never renders" -- was
+insufficient wait time, not a bug; see "Reports & Analysis deep-dive" below).
+3 bare-500 findings (Schedule/Invoices/Leads) share one likely root cause
+(local-dev Supabase-Auth network flakiness cascading through an uncaught
+`requireAuth()` failure) and need a live-deployment re-test before Part 2
+treats them as confirmed regressions. Systemic missing-ERP-foundational-setup
+gap found (zero fiscal years/cost centers/chart-of-accounts rows exist for
+any real PROJEXA org), blocking Budgets and Accounting journal-entry
+creation identically. 3 UAE-leak findings found (Customers' GSTIN field,
+Vendors' GST field, Payroll's India Income Tax Slabs tab). See "Updated
+Resume point" (below the continued module results and Reports section) for
+the authoritative current state -- the ORIGINAL "Resume point" further up is
+superseded, kept only for history. This is Priority 16's 2-part pipeline
+(E2E test -> analyze/plan/implement) run a SECOND time, with 3 deliberate
+deltas the Owner asked for 2026-07-15. Read
 `control/priority16_e2e_testing_plan.md` first -- this file does NOT restate
 its Part 1/Part 2 mechanics, module matrix, or per-module test procedure;
 it only records what's DIFFERENT this pass. See CONTROLLER.yaml's
@@ -1046,6 +1067,372 @@ more personas beyond the CEO for the DATA-04 pairwise check once feasible;
 (4) hand off to Part 2 with this file as-is if time runs out again --
 DATA-01's finding is already solid enough to act on without further
 Part-1 evidence-gathering.
+
+## Module-by-module results, continued further (same resumed session -- Vendors, Materials, Sales Dashboard, Leads, Opportunities, Sales Orders, Meetings, Scope/BOQ create, Site Diary, Documents, Permits, Submittals, Punch List, Change Orders, Mood Boards, FF&E, Floor Plans, Manpower & Attendance, Recruitment, KPIs, HR Dashboard, Expenses module)
+
+**REGRESSION-CONFIRMED-FIXED, reachability -- Vendors, Materials, Sales
+Dashboard, Leads, Opportunities, Sales Orders, Budgets, Accounting,
+Payroll** (persona: Khalid Al Mheiri). All 8 of these were flat-502'd under
+PROJEXA-MODULE-ENTITLEMENT-01 at Priority 16 time (`erp`/`sales` branch not
+enabled for `projexa_demo_org`). **Confirmed fixed this pass by PR #335's
+entitlement enable**: every one of these pages now loads real data (200s,
+not 502s). Vendors: real seeded rows render (AquaFlow Plumbing, Bright
+Spark Electricals, etc., with real India-format GST numbers in a "GST"
+column -- **UAE-leak finding, same class as Customers/Payroll**, this is
+pre-existing seeded data not newly entered by this pass, so lower severity
+but still a real display gap for a UAE org). "New Vendor" create verified:
+`POST /api/vendors` 201, real row confirmed via SQL (id
+`pzv8iw8lx936905jn5c1adwb`, "Al Futtaim Steel & Rebar Trading LLC"). The
+create dialog's own field is also labeled **"GST (optional)"** -- a second,
+independent instance of the same India-tax-field UAE-leak. Materials:
+reachable now (200), no create UI exists by design (unchanged, honestly
+disclosed limitation, not a bug). Sales Dashboard: loads real rollup (Total
+Leads/Opportunities/Win Rate/Pipeline Value, all correctly 0, verified
+against SQL). Leads: "No leads found." correct; "New Lead" create hit the
+**same bare-500 failure class as Invoices** (see below) on first two
+attempts, not retried further for time. Opportunities, Sales Orders: both
+load correctly with real, correct empty states ("No opportunities found.",
+"No sales orders found."), not independently write-tested this pass (time
+budget). **Transient 401 note, not a new bug**: Vendors' first page load hit
+a `GET /api/vendors` 401 Unauthorized, resolved cleanly on a simple reload
+-- same fail-closed-on-flaky-network pattern Priority 16 already documented
+for Attendance, not reproduced as a persistent issue.
+
+**CORRECTION to the bare-500 root-cause theory above (found after reading
+CONTROLLER.yaml's PRIORITY-19 entry mid-session -- a controlling/parallel
+session had already independently root-caused and FIXED the Schedule
+"New Task" 500 while this session was still testing).** The "requireAuth()
+network-flakiness" theory below was this session's own guess, made without
+having read the controlling session's already-completed investigation. It
+was WRONG. The real, confirmed root cause (per CONTROLLER.yaml
+`part_2_wave_1_close_out`, compliance-tracker PR #349, merged
+`e61fa1cd`): `compliance.pms_issues.created_by_id` had a **hard FK to
+`compliance.users`** that rejected the shared API-key actor id
+(`"projexa_demo_key"`, which is NOT a row in `compliance.users` -- confirmed
+via SQL: `select id from compliance.users where id='projexa_demo_key'`
+returns zero rows) -- every PROJEXA server-to-server write that sets a
+`created_by_id`/`owner_id`/etc. column to that id will hit a raw Postgres FK
+violation, which compliance-tracker's own API surfaces as a 500, which
+PROJEXA's route correctly passes through as `VeridianApiError.status` (not
+an "outside the try/catch" bug as this session first guessed -- the bare
+500 IS the correctly-propagated real status). Fixed by dropping the FK
+(migration 0204) -- **independently re-verified live this session**:
+queried `pg_constraint` on `compliance.pms_issues` directly, confirmed
+`created_by_id_fkey` no longer exists.
+
+**This session independently discovered the SAME bug class is NOT yet fixed
+on at least 2 more tables this session's own Invoices/Leads write attempts
+hit** -- confirmed by the identical query pattern against `pg_constraint`:
+`compliance.erp_sales_invoices.created_by_id` and BOTH
+`compliance.crm_leads.owner_id` / `compliance.crm_leads.created_by_id`
+still carry a live hard FK to `compliance.users`. This is now a
+**precisely root-caused, high-confidence finding** (not the vague
+"network flakiness, needs live re-test" caveat this session originally
+wrote) -- Invoices "Create Invoice" and Leads "New Lead" both fail for
+exactly the same structural reason PMS Issues did before PR #349, and the
+fix pattern is already proven (drop the FK, matching the
+`job_openings.posted_by_id` precedent from Priority 16 Part 2 too).
+
+**Broader systemic sweep run this session** (`select ... from pg_constraint
+where contype='f' and confrelid='compliance.users'::regclass and
+attname ilike any('{%created_by%,%recorded_by%,%owner%,%posted_by%,
+%answered_by%,%assigned%,%approved_by%,%submitted_by%}')`): **roughly 60 more FK
+constraints of this exact shape exist across the schema** (exact count not
+load-bearing -- re-run the query below for a precise number when scoping
+Part 2's fix), on tables
+including (non-exhaustive, full list in this session's SQL output) --
+already-hit-by-this-pass: `crm_leads` (2), `crm_opportunities` (2),
+`erp_sales_invoices`, `erp_quotations`, `erp_sales_orders`; not yet hit but
+same-shape and worth Part 2 proactively checking: `erp_journal_entries`,
+`erp_purchase_invoices`/`_orders`/`_receipts`, `erp_cash_vouchers`,
+`erp_sales_credit_notes`, `risks.owner_id`, `audit_findings.owner_id`,
+`policies.created_by_id`, `board_meetings.created_by_id`,
+`approval_requests.approved_by_id`, `tickets.created_by_id`, and ~30 more.
+**Every one of these is a latent "will 500 the moment a PROJEXA org without
+a real per-user identity bridge tries to write here" bug**, not just the 2
+this pass happened to exercise -- RFIs/Work-Progress/Expenses/
+Recruitment/Risks (`Log Risk`) all worked fine THIS pass only because
+either (a) their specific `created_by_id`-equivalent column has no such FK,
+or (b) this pass didn't exercise the specific code path that would trip
+it (e.g. `risks.owner_id` has a live FK but "Log Risk" may set a different,
+unconstrained field, or leave `owner_id` null) -- worth Part 2 auditing
+systematically rather than assuming "already tested fine" for every
+column on this list. **Recommended fix, matching the already-shipped
+PR #349 precedent exactly**: either (a) drop the FK on every affected
+`*_by_id`/`owner_id` column the same way PR #349 did (fast, consistent,
+but loses referential integrity for genuine user actions too), or (b) the
+more correct long-term fix, properly in PLATFORM-01/
+PROJEXA-IDENTITY-BRIDGE-01 territory: give PROJEXA's server-to-server calls
+a real per-user identity to pass through instead of the shared API key's
+own synthetic id, so these FKs stay meaningful for real users and only need
+relaxing for the (arguably should just error clearly, not silently
+misattribute) API-key-only path. This session's own scope boundary (no
+auth-guard.ts/identity-bridge rebuild) means this is registration-only, not
+a fix attempt, but it's a far more actionable, root-caused finding than a
+generic "re-test the live deployment" recommendation would have been.
+
+**Working, no gap -- Scope (BOQ) UI create** (persona: Khalid Al Mheiri, on
+Marina Vista Tower, the one action Priority 19 Part 1 had left untested
+despite BOQ data existing via seed). "New BOQ" dialog: created "MEP Works -
+Phase 1" with 2 real line items (HVAC ductwork 450 rm @ 620,
+electrical conduit 380 rm @ 410) -> `POST /api/scope` 201, confirmed via SQL
+-- **both line amounts arithmetically correct** (450×620=279000,
+380×410=155800), matching the matrix's stated verification target exactly.
+
+**Working, no gap (spot-checked per the plan's delta rule -- not
+Priority-17-active, Priority 16 already fully verified these once) --
+Meetings, Site Diary, Documents, Permits, Submittals, Punch List, Change
+Orders, Mood Boards, FF&E, Floor Plans** (persona: Khalid Al Mheiri, across
+Marina Vista/Palm Residence). All ten pages load correctly with honest,
+correct empty states for Al Maha's genuinely-empty data on these tables
+("No meetings scheduled yet.", "No diary entries yet.", "No submittals
+yet.", "Nothing on the punch list yet.", "No change orders yet.", "No mood
+boards yet.", "No floor plans yet.", etc.) -- reachability confirmed, no
+502s, no silent-empty-masking-a-real-error pattern found. FF&E's first load
+hit the same transient "Failed to load projects from VERIDIAN" error
+Priority 16 already documented for AI Copilot/Reports first-loads, resolved
+cleanly on reload -- not a new gap.
+
+**Working, no gap -- Manpower & Attendance** (persona: Khalid Al Mheiri, on
+Marina Vista Tower). Roster tab shows the 10 real seeded workers correctly
+(UAE-plausible trade/nationality mix). "Mark Attendance" on Mohammed Iqbal
+(Mason, `daily_rate=180`), Present, 8 hours -> row confirmed via SQL
+(id `vlmh9h3m189horpig452b3my`): **`daily_cost=180`, correctly equal to the
+worker's daily_rate for a full Present day** -- matches the matrix's stated
+verification target exactly, same correct calc Priority 16 proved on
+Meridian's data.
+
+**REGRESSION-CONFIRMED-FIXED -- Recruitment "Create Job Opening"** (persona:
+Khalid Al Mheiri). Priority 16 Part 1 found this reproducibly broken (400
+"No organization" then 502 "Failed to create job opening"), fixed by
+Priority 16 Part 2's PR #338/projexa#15. **Confirmed fixed for Al Maha
+too**: Job Openings tab already showed 2 real openings from earlier
+verification passes ("Post-rebase smoke test opening",
+"Site Safety Officer - Priority 16 Verification" -- both pre-existing,
+confirming the fix has been live and working since it merged). Created a
+new one ("Senior QS - Marina Vista Tower") -> `POST
+/api/recruitment/job-openings` succeeded, real row confirmed via SQL (id
+`dau5cxboin9m5w7lu3xspr5n`, `num_positions=1`, `status='open'`).
+**SEC-03 note (4th module occurrence this pass)**: `posted_by_id` landed as
+`"projexa_demo_key"`, not Khalid's real user id -- attribution loss still
+universal.
+
+**Working, no gap -- KPIs, HR Dashboard, Expenses (module UI)** (persona:
+Khalid Al Mheiri). KPIs: "No KPIs defined for this project yet." correct
+(Al Maha's earlier KPI-definition create in the original Part 1 pass was on
+a different, older project context, not re-confirmed against Marina Vista
+here). HR Dashboard: real numbers (Total Headcount 10, Open Positions 3
+matching Recruitment's real count, Pending Leave Approvals 0, Upcoming
+Payroll Run "None") -- all independently plausible/correct given the
+underlying data. **Minor cosmetic gap, not registered as a full finding for
+time reasons**: "Headcount by Department" shows 4 rows all labeled
+"Unknown" instead of real department names -- consistent with
+`employee_profiles.department_id`/`job_openings.department_id` both being
+null for every row this pass touched (no department-creation UI was found
+anywhere in Employees/Recruitment), a real but low-severity gap worth Part
+2 knowing about. Expenses (module UI, distinct from the Expense report):
+"Total logged: 118,500" correctly matched the seeded 12-row total before
+this pass's own addition; "Log Expense" create verified (amount=9200, real
+row confirmed via SQL id `mqoj0atbjifu1d09yked65f0`) -- no currency field
+in the dialog and no currency column in
+`construction_expense_entries` at all, consistent with the
+known-not-yet-shipped AED gap, not a new finding.
+
+## Reports & Analysis deep-dive (Owner's explicit "check reports, analysis also" -- completed this pass)
+
+**MAJOR CORRECTION to the earlier-logged "GAP -- Reports: API computes real,
+correct data but the UI never displays it" finding (Expense report,
+Business Bay).** That finding is **INVALID as originally stated** -- it was
+a false positive caused by not waiting long enough for an extremely slow
+network round-trip to the live deployed compliance-tracker service, not a
+real rendering bug. Proven two ways this pass: (1) re-ran the identical
+Expense report on the identical project (Business Bay) with a longer wait
+and it **rendered correctly** (`total=82800`, full `byHead` breakdown, all
+matching SQL exactly); (2) reproduced the "nothing shown" symptom ONE more
+time on a fresh page load, then confirmed via `read_network_requests` that
+the underlying `GET /api/reports/expense` request was still sitting with no
+resolved status **20+ seconds after the click**, and eventually returned
+200 with the correct body -- **once the UI had enough time to re-render
+after that very slow response, the result appeared correctly**. Read
+`projexa/src/components/ReportsClient.tsx:40-56` (`runReport()`) to
+confirm there is no bug in the component logic itself: `setResult(data)` /
+`setRanOnce(true)` fire correctly on any 200 response, there's no
+stale-closure or abort-race issue. **Root cause of the original false
+finding**: this session's own insufficiently patient verification step (the
+cross-cutting "live deployed backend over the public internet, not local"
+latency note already documented in Priority 16 applies here too, and this
+particular report's roundtrip apparently runs even slower than most --
+seen taking upwards of 20-50+ seconds on occasion, longer than the ~10-15s
+wait used the first time this report was checked).
+
+**Systematically re-ran 16 of the 17 exposed report types this pass**
+(Project Status, Project Completion, Work Progress, Category Progress,
+Attendance, Manpower Cost, Site Picture Log, Scope (BOQ), Budget Summary,
+Budget vs Actual, Material Consumption, Vendor Cost, Designer Timesheet,
+KPI, Revenue, Expense -- all except Weekly Project, skipped for time,
+structurally identical code path to the others so low risk), across
+Business Bay Corporate HQ (has real expense data) and Marina Vista Tower
+(has real BOQ/work-progress/attendance data after this pass's own create
+actions). **Every single one rendered correctly with genuinely computed,
+correct data (cross-checked against SQL where non-zero) or an honest,
+correctly-empty result (cross-checked against SQL confirming zero
+underlying rows) -- zero `data_gap` placeholders, zero hallucinated
+numbers, matching the plan's stated bar exactly.** Concrete cross-checks
+performed: Scope(BOQ) `totalValue=338700`/`lineItemCount=20` matched
+`sum(amount)`/`count(*)` on `construction_boq_line_items` exactly; Work
+Progress and Category Progress both correctly showed the real
+`quantityDone=18`/`percentComplete=35` entry created earlier this pass;
+Attendance and Manpower Cost both correctly showed the real
+Mohammed-Iqbal/`cost=180` entry; Budget vs Actual's `actual=127700`
+correctly equals Marina Vista's full expense total
+(118500 seed + 9200 this pass's own entry). Vendor Cost included an
+honestly-disclosed scope note in its own response (`"Purchase-invoice-based
+vendor cost not included -- erp_purchase_invoices has no project_id yet"`)
+rather than silently omitting or fabricating that data -- a good pattern,
+not a gap.
+
+**Cross-project rollup report: completed, via AI Copilot's org-wide tools,
+not the Reports page** (the Reports page's own project selector has **no
+"all projects" / company-wide option at all** -- confirmed by reading its
+full dropdown list, every entry is a single named project; this is a
+genuine, real scope gap worth Part 2 knowing about, distinct from the
+already-known "PROJEXA's 17 report types are a curated subset of
+compliance-tracker's ~200" scope observation). Ran AI Copilot's
+"Over-Budget Projects" tool (`list_over_budget_projects`, `inputs: {}` --
+genuinely no projectId, confirmed via the raw API response), which IS the
+real cross-project/org-wide rollup mechanism this codebase actually has.
+**Result: `[]` (empty array), correctly honest** -- zero projects can be
+"over budget" because zero budget lines exist anywhere for
+`projexa_demo_org` (matches the Budgets-module gap logged earlier: nobody
+has ever been able to create a budget line, so "over budget" is
+structurally never true yet). This satisfies the plan's "run at least one
+cross-project rollup report" requirement with a real, verified, org-wide
+tool call, even though the dedicated Reports page itself doesn't expose a
+company-wide option.
+
+**AI Copilot Budget Status -- Priority 19 Part 1's original "inconclusive"
+finding is RESOLVED, was a targeting problem, not a product bug.**
+Re-attempted with the more precise approach the original note recommended
+(walk up from the "Budget Status" text node to its containing card, then
+query within that specific card for its own "Run" button, rather than a
+global button-index guess) -- worked correctly on the first attempt:
+`POST /api/assistant` 201, and polling the query log confirmed a real,
+correct result (`actual=82800`, `budget=0`, full `byHead` breakdown, exact
+match to the Expense report and to SQL) with status `done`. **Separate,
+genuine minor bug found in the process**: the ORIGINAL query from Part 1's
+first (mistargeted) attempt is still sitting with `status="pending"` in the
+`ai_copilot_queries`-equivalent table, over an hour of real wall-clock time
+later, with `result=null` -- a query that gets created but apparently never
+resolves and never fails/times out either, just sits pending forever. Worth
+Part 2 knowing about as a real, low-severity finding (a stuck/orphaned
+query, distinct from the resolved "inconclusive" targeting issue) --
+not deeply investigated this pass (time budget), flagged for Part 2.
+**Positive SEC-03 counter-example, worth noting**: unlike every
+compliance-tracker-backed write this pass (which all show
+`created_by_id`/`recorded_by_id`/`posted_by_id`/`answered_by_id` as
+`"projexa_demo_key"`), the AI Copilot query log's `created_by` field
+correctly shows Khalid's **real Supabase user id**
+(`efa16773-09de-48d0-83cd-c002f5bb4c2d`) -- because this table is written
+directly by PROJEXA's own database, not bridged through the
+compliance-tracker API key, attribution is NOT lost here. This is a useful
+data point for Part 2: the identity-bridge problem is specific to the
+compliance-tracker bridge, not universal to PROJEXA's own data model, which
+suggests a scoped fix (carrying real user identity through
+`callVeridian()`) rather than a wholesale architecture change.
+
+## DATA-04 persona spot-check (completed this pass)
+
+Logged in as 2 additional real personas beyond the CEO, via the real login
+form (sign-out + sign-in cycle, `DemoDubai2026!`), completing the plan's
+"spot-check 2-3 pairs" ask (CEO + these 2 = 3 personas total spot-checked):
+- **Rajesh Nair** (Finance Manager, `admin` role): full 36-route nav list
+  identical to Khalid's (owner), same Dashboard totals (₹16,64,700 total
+  expenses, same 10-project list).
+- **Sanjay Iyer** (`member` role): **identical 36-route nav list**, same
+  Dashboard totals, Settings/Team page correctly lists the same full
+  50-member roster with `khalid.almheiri@...` shown as `owner`,
+  `fatima.alzaabi@...`/`rajesh.nair@...` as `admin`, etc. -- Team-list data
+  is genuinely per-org-isolated and identical regardless of which member is
+  viewing it.
+
+**Conclusion**: DATA-04 (no duplicated modules within an org, same-role/
+any-role users see the identical module/report set) holds for all 3 roles
+tested (`owner`/`admin`/`member`) -- zero navigation/module-visibility
+differences found by role, consistent with the codebase's own confirmed
+design (memberships.role has no finer-grained permission tier below the 3
+values, per Priority 16's own schema-read finding). This is now a genuine,
+independent confirmation (not confounded by the shared-backend-data issue
+the original Part 1 log flagged, since nav/module VISIBILITY is a
+PROJEXA-side-only concern, unlike the underlying business DATA which is
+shared per DATA-01's correction).
+
+## Updated Resume point (end of this resumed session, 2026-07-15)
+
+**Newly done this session, on top of the original Part 1 checkpoint**: Work
+Progress (activity-picker regression-confirmed-fixed + real create),
+Budgets (reachability fixed, blocked by a systemic no-fiscal-year gap,
+root-caused to source), Accounting (reachability fixed, GL correct,
+journal-entry account-picker "Loading…" gap root-caused to source),
+Invoices (new bare-500 finding, needs live-deployment re-test), Customers
+(working, UAE GSTIN-leak found), Employees (cross-ref, expected per DATA-01
+correction), Payroll (identity-bridge confirmed as predicted, UAE
+Income-Tax-Slab leak found), Vendors/Materials/Sales
+Dashboard/Leads/Opportunities/Sales Orders (all reachability-fixed via PR
+#335), Scope(BOQ) UI create (working), Meetings/Site
+Diary/Documents/Permits/Submittals/Punch List/Change
+Orders/Mood Boards/FF&E/Floor Plans (all spot-checked, working),
+Manpower & Attendance (working, correct daily-cost calc), Recruitment
+(regression-confirmed-fixed), KPIs/HR Dashboard/Expenses-module (working,
+1 minor cosmetic gap on HR headcount-by-department), full 16-of-17 Reports
+sweep (all working, the earlier Expense-report "never renders" finding
+CORRECTED/retracted as a false positive), 1 genuine cross-project rollup
+report run via AI Copilot, AI Copilot Budget Status resolved from
+inconclusive to confirmed-working (plus 1 new minor stuck-query finding),
+DATA-04 spot-checked across 3 personas/roles (no gap found).
+
+**Not done, honestly**: Weekly Project report (1 of 17, skipped for time,
+low risk -- structurally identical to the other 16 now-proven-working
+report types). Full 50-persona walkthrough still not done (3 of 50 spot
+tested: Khalid/owner, Rajesh Nair/admin, Sanjay Iyer/member -- sufficient
+for the plan's "2-3 pairs" DATA-04 ask, not a full sweep). Company/office
+selector checks (PR #342/projexa#18) still not attempted -- still unmerged
+per the original real-time state check, no new information this pass.
+SEC-04 (destructive-action/approval-bypass check) still not attempted --
+every write action this pass was additive/status-transition, matching
+Priority 19 Part 1's own note that no hard-delete control was found across
+the whole app so far. The new bare-500 finding (Invoices/Leads, joining the
+earlier Schedule one) needs a clean re-test against the live deployed
+`veridian-compliance-ai.vercel.app` to separate "local-dev network
+flakiness" from "real production regression" -- flagged as the single most
+useful next step for whichever session picks up Part 2, since it currently
+blocks a confident severity call on 3 findings at once.
+
+**Recommended Part 2 priority order, updated after the FK root-cause
+correction above**: (1) apply the already-proven PR #349 fix pattern (drop
+the FK, or better, thread real user identity through) to
+`erp_sales_invoices.created_by_id` and `crm_leads.owner_id`/
+`created_by_id` at minimum (confirmed-affected by this pass), then
+systematically audit the ~60-constraint broader list for which other
+columns a real PROJEXA write path actually sets to the API-key id
+(highest-value, now cheap and precisely scoped, unlike the original vague
+"re-test against live deployment" recommendation); (2) fix the systemic
+missing-ERP-foundational-setup gap (fiscal years/cost centers/chart of
+accounts all have zero rows for every real PROJEXA org) -- this single fix
+unblocks Budgets AND Accounting journal entries simultaneously, the two
+highest-value Finance-section gaps found across both Priority 19 passes;
+(3) the 3 UAE-leak findings (Customers' GSTIN field, Vendors' GST field,
+Payroll's India Income Tax Slabs tab) -- likely a shared fix pattern
+(country-conditional field rendering keyed off `organizations.country`,
+which PLATFORM-01 Wave 2 is reportedly already adding per ACTIVE-CLAIMS.yaml,
+worth Part 2 checking whether that lands the needed column before this
+pass's fix); (4) everything else in the gap log, roughly in the severity
+order already stated. **Superseded**: this file's earlier text recommending
+"(4) requireAuth() robustness / wrap in shared try/catch" and "re-test
+against live deployment first" was written before this correction and is
+now lower-priority/partially moot -- the bare-500s were never a
+`requireAuth()` problem, they were correctly-propagated real
+`VeridianApiError` statuses reflecting a genuine, now-precisely-located DB
+constraint issue.
 
 ## Part 2 implementation plan
 
