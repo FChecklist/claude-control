@@ -443,6 +443,35 @@ PROJEXA-NO-TENANT-ISOLATION-01).
   Confirmed via SQL: zero new rows in `compliance.pms_issues` for either
   attempt.
 
+  **FIXED, see compliance-tracker PR #349.** Neither of the two hypotheses
+  above was the actual cause: `pms-issue-service.ts`/`pms-taxonomy-service.ts`
+  were unchanged since Wave 26/141 (`git log` confirmed, ruling out a
+  Priority 17 regression), and the exception genuinely was inside
+  `callVeridian()`'s try block, not outside it -- a `VeridianApiError` can
+  legitimately carry any upstream status including 500, so "raw 500 not 502"
+  didn't actually imply an uncaught exception in `requireAuth()`/
+  `request.json()`. Real root cause: `compliance.pms_issues.created_by_id`
+  carries a hard `FOREIGN KEY REFERENCES compliance.users(id)`
+  (drizzle/0021, Wave 25), but `src/app/api/v1/projexa/schedule/route.ts`'s
+  `POST` handler legitimately passes the caller's API-key id
+  (`"projexa_demo_key"`) as the actor for every PROJEXA-originated create
+  (PROJEXA-IDENTITY-BRIDGE-01, the org-wide API key bridge has no per-user
+  identity) -- that id is never a row in `compliance.users`, so every such
+  create hit the FK constraint on INSERT, surfaced as the route's own
+  generic-catch 500 "Failed to create task" (byte-for-byte match to what
+  was observed), then faithfully re-thrown by PROJEXA's `callVeridian()`
+  with the real upstream status (500, not a masked 502). Confirmed via
+  Supabase MCP: all 17 pre-existing `pms_issues` rows had `created_by_id`
+  NULL or a real `compliance.users` row -- zero were ever created through
+  the PROJEXA API-key path. Fix: dropped the FK, matching the identical
+  precedent already set for `job_openings.posted_by_id`
+  (drizzle/0202, Priority 16 Part 2) -- verified live by simulating the
+  exact insert `createIssue()` performs with the API-key actor, which
+  succeeded post-fix (then cleaned up, no trace left in demo data). Scoped
+  to `created_by_id` only; `assigned_by_id`/`assignee_id`'s identical
+  latent FK-vs-API-key-actor exposure on the Kanban board's PATCH path is
+  flagged in the PR for a future session, not fixed here.
+
 - **Working, no gap -- RFIs** (persona: Khalid Al Mheiri, on Marina Vista
   Tower). Seeded list renders correctly with real pagination-worthy data (15
   RFIs, correct subject/status/ball-in-court columns, status-appropriate
@@ -526,6 +555,40 @@ PROJEXA-NO-TENANT-ISOLATION-01).
   from their own dedicated PROJEXA modules) -- flagged as a scope
   observation for Part 2 to judge, not asserted as a bug, since a curated
   subset may be the intended design.
+
+  **FIXED (partially -- see below), see projexa PR #21.** Direct, repeated
+  re-testing of this exact repro against current `main` (same project
+  `alm_project_bizbay`, same "Expense" report, local dev server) **could NOT
+  reproduce the described failure**: the report rendered correctly end to
+  end every time, reproducing this finding's own cited figures exactly
+  (`total: 82800`; `byHead` transport 14400/misc 16800/subcontractor
+  15600/equipment 13200/material 10800/labour 12000). `git log` confirms
+  `ReportsClient.tsx`/`ReportOutput.tsx` unchanged since Priority 2
+  (`4b5b6ef`), long predating this finding, and both files' fetch -> state
+  -> render logic is correct as written. Most plausible explanation: a
+  browser-automation click-registration artifact of this session's own
+  tooling against Radix/shadcn-driven elements -- this session's own
+  TOOLING NOTE (above) already documented `computer.left_click` "reliably
+  fail[ing] to register a real click ... against ... submit buttons wrapped
+  in onClick/pointer handlers," which is exactly what "Run Report" is; the
+  fix session independently hit the identical issue on the report-type
+  `Select` (a `left_click` left `aria-expanded="false"`) before switching to
+  a synthetic `pointerdown`/`mousedown`/`pointerup`/`mouseup`/`click`
+  dispatch, which then worked reliably every time. Rather than a fix for an
+  unreproduced defect, PR #21 ships two real, safe hardenings found while
+  investigating: (1) an out-of-order-response guard in `ReportsClient.tsx`
+  (a genuine latent race if the report type is switched and "Run Report"
+  clicked again before the first request resolves -- not the literal
+  symptom reported, but a real bug in the same component); (2)
+  `key={project.id}` on `ReportsClient` in `reports/page.tsx` (without it, a
+  client-side project switch could leak a previous project's stale report
+  state into the new project's view). **Recommendation for a resuming
+  session**: if this reproduces again through a genuinely real, non-
+  automated browser (not `mcp__Claude_Browser__*`/`computer.left_click`),
+  that would be a much stronger signal of an actual defect this fix pass
+  didn't catch, and needs a fresh look with that context -- until then, this
+  is closed as tooling-artifact-most-likely, with two real hardenings
+  shipped as a hedge.
 
 - **INCONCLUSIVE, not logged as a gap -- AI Copilot "Budget Status"**
   (persona: Khalid Al Mheiri, on Business Bay Corporate HQ). Page loads
