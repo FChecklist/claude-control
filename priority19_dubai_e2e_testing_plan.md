@@ -1436,9 +1436,94 @@ constraint issue.
 
 ## Part 2 implementation plan
 
-_Not started -- depends on Part 1's gap log. Per the Owner's explicit
-"make implementation plan, correct it": write the first draft, then
-re-read it against the full gap log a second time before dispatching any
-build sub-agent, and record what changed between draft 1 and the corrected
-version here (not just the final version) so the correction step is
-auditable, not just claimed._
+### Draft 1 (written 2026-07-15, controlling session, after independently
+re-verifying the systemic-FK claim via direct SQL)
+
+Independently confirmed via `pg_constraint` (not trusting the sub-agent's
+"~60" estimate as-is): **51 foreign keys** across **48 tables** in
+`compliance` schema reference `compliance.users(id)` from an actor-shaped
+column (`created_by_id`/`owner_id`/`posted_by_id`/`assigned_by_id`/etc.).
+Only a subset are actually reachable from a PROJEXA write path today --
+this pass and Priority 16 Part 2 combined have confirmed exactly 4:
+`job_openings.posted_by_id` (fixed, PR #202/Priority 16 Part 2),
+`pms_issues.created_by_id` (fixed, PR #349/this Priority), plus 2 newly
+found this pass, NOT yet fixed: `erp_sales_invoices.created_by_id`,
+`crm_leads.owner_id`/`created_by_id`.
+
+**Workstream A -- fix the 2 newly-confirmed columns, audit the rest**:
+(a) apply the identical, already-twice-precedented fix (drop the FK) to
+`erp_sales_invoices.created_by_id` and `crm_leads.owner_id`/
+`created_by_id` -- same migration-comment discipline as PR #349 (cite root
+cause, cite precedent, note why this is scoped narrowly not swept
+broadly). (b) For the remaining ~47 constrained columns: grep every
+`/api/v1/projexa/**` route in compliance-tracker for which service
+functions they call, cross-reference against which of those services set
+an actor column from `ctx.dbUser?.id ?? ctx.apiKey!.id` (the exact pattern
+that causes this bug) -- only DROP the FK for columns with a confirmed live
+PROJEXA call path, do not blanket-sweep unreached columns (matches this
+codebase's own established discipline, see PR #349's migration comment).
+**Considered and rejected for this wave**: a structural fix (insert one
+synthetic `compliance.users` row representing the PROJEXA API-key identity,
+so every existing FK is satisfied at once without 47 more migrations) is
+architecturally more elegant, but carries real unverified risk this
+session can't clear quickly -- unknown whether other code assumes every
+`users` row is a real human (e.g. notification/email fan-out, per-seat
+billing counts, an admin's "Users" list rendering a synthetic row). Flagged
+as a real option for a FUTURE dedicated architecture pass (cross-reference
+PROJEXA-IDENTITY-BRIDGE-01, since a real fix there -- per-user identity
+forwarded from PROJEXA -- would make this whole FK class moot rather than
+requiring either approach) rather than adopted here under time pressure.
+
+**Workstream B -- ERP foundational setup**: every real PROJEXA org has
+ZERO fiscal years/cost centers/chart-of-accounts rows, blocking Budgets
+(no fiscal year to attach a budget to) and Accounting (no COA to post a
+journal entry against) simultaneously -- the single highest-value fix in
+the gap log by modules unblocked. Root-cause first (this session hasn't
+yet): is this a missing auto-provisioning step (should seed a default COA
++ current fiscal year automatically when an org's `erp` branch is
+enabled, mirroring how `provisionOrganisation()` auto-enables branches) or
+a missing self-serve setup UI (an admin should be able to define these,
+and today can't)? Likely needs both: auto-seed sensible defaults so a new
+org isn't blocked day one, AND a real settings UI for an admin to edit
+them (a construction firm's real chart of accounts will differ from a
+generic default eventually).
+
+**Workstream C -- UAE tax-field leak**: 3 confirmed India-specific fields
+rendering unconditionally regardless of org country (Customers' GSTIN
+field, Vendors' GST field, Payroll's "India Income Tax Slabs" tab).
+PLATFORM-01 Wave 2 (merged 2026-07-15, compliance-tracker#347/projexa#20)
+already shipped the exact hook needed: `organizations.country` (nullable,
+default `'IN'`, real column, 18 orgs live-backfilled) and
+`getComplianceEngine(country)` throwing for any non-`'IN'` country rather
+than fabricating tax law. Fix: gate all 3 fields' rendering on
+`organizations.country === 'IN'` (hide, don't error, for non-IN orgs --
+matches the engine registry's own "don't fabricate" principle applied to
+UI instead of computation). Confirm PROJEXA's own API responses expose
+`country` on the organization/company object already (Companies alias from
+Priority 17 Wave 1 is the likely carrier) before wiring the UI condition,
+rather than assuming a new field needs adding.
+
+**Explicitly NOT in this wave** (per this session's own claimed scope
+boundary in ACTIVE-CLAIMS.yaml): PROJEXA-IDENTITY-BRIDGE-01/
+PROJEXA-NO-TENANT-ISOLATION-01 themselves (still PLATFORM-01's), any
+auth-guard.ts/schema.ts auth-shape change, 2D/3D/rendering/BIM/IFC, Weekly
+Project report (low-risk, deferred), full 50-persona walkthrough beyond
+the 3 already spot-checked, company/office selector (still unmerged
+upstream), SEC-04 destructive-action check.
+
+### Correction pass (re-read against the gap log a second time, same
+session, before dispatch)
+
+Re-reading Workstream A against the gap log surfaced one gap in draft 1:
+the draft didn't specify HOW to determine "a confirmed live PROJEXA call
+path" for the audit half of Workstream A, risking a vague dispatch a
+sub-agent could either under- or over-scope. Corrected: the audit method is
+now explicit (grep `/api/v1/projexa/**` routes -> trace to service function
+-> check if that function's insert/update sets the column from
+`ctx.dbUser?.id ?? ctx.apiKey!.id` or equivalent) rather than left as an
+open-ended judgment call, matching Workstream C's already-concrete method.
+Also added to Workstream B: explicitly sequence root-cause-first (this
+session hasn't root-caused it yet, unlike A and C which already have a
+confirmed root cause) so the dispatched agent doesn't guess at a fix before
+confirming which of the two plausible causes (missing auto-seed vs.
+missing setup UI) is real. No other changes between draft 1 and this pass.
