@@ -29,6 +29,22 @@
 #   5. If an entry needs more than one line to explain, that explanation
 #      belongs at the `where` target, not here -- this file stays a fast
 #      index, not a second copy of the detail.
+#
+# GITHUB SYNC (added 2026-07-16): this repo now has a remote --
+# https://github.com/FChecklist/claude-control (private). Local-only git
+# was fine while every session ran on this one Windows machine, but a
+# genuine cloud session (Claude Code Web, or a remote-isolated agent)
+# clones from GitHub and cannot see a file that only exists on this
+# machine's C: drive -- so GitHub is now the real source of truth, this
+# local clone is just one more working copy of it.
+#   - PULL before step 1 (read). `git pull --rebase origin master`.
+#   - PUSH after step 3/4 (write). `git add CONTROLLER.yaml && git commit
+#     -m "..." && git push origin master`. Direct-to-master, no PR --
+#     this file is append-mostly per-entry, so real conflicts are rare;
+#     if one happens, rebase and keep both sessions' entries (same
+#     recovery already proven on ai-os/boss/ACTIVE-CLAIMS.yaml).
+#   - Never rewrite history (`push --force`) on this repo -- other
+#     sessions may be a commit behind and rely on a clean fast-forward.
 # ============================================================================
 
 # ----------------------------------------------------------------------------
