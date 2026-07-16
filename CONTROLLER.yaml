@@ -410,9 +410,9 @@ entries:
   - id: PRIORITY-22
     project: veridian
     type: research
-    status: draft
+    status: in-progress
     summary: "Owner asked to study Soofi Project, Ling-2.6-1T/InclusionAI (AReaL/Ming/LLaDA2.X), iOfficeAI/OfficeCLI, and Claude Code's Prompt Library, then recommend and implement whatever is a genuine fit for VERIDIAN."
-    where: "Recommendation given in-chat this session (no memory file written yet -- pending). Implementation claims, once dispatched, go in ai-os/boss/ACTIVE-CLAIMS.yaml; this entry's own status/where updates as work lands."
+    where: "Workstream 1 (Ling-2.6-1T trial) DONE: compliance-tracker PR #373 (open, not yet merged) + compliance-tracker/ai-os/priority22_ling_trial_findings.md. Real OpenRouter API comparison against deepseek/deepseek-v4-pro (the model actually behind governance_backend_engineer/chief_audit_officer/chief_operating_officer -- corrected from this entry's own tightened_prompt, which misnamed the roles/models, see the memo's section 0). Confirmed Ling-2.6-1T is single-provider (Novita only, vs. deepseek-v4-pro's 16) and, despite being ~5x faster/cheaper, showed real correctness gaps on 2 of 3 test prompts -- recommendation is do-not-adopt; no roster.ts/model-tier-eligibility.ts change made, per this entry's own done-when criteria. Workstreams 2 (OfficeCLI) and 3 (Prompt Library) NOT started -- this entry stays in-progress until those close too."
     last_touched: "2026-07-16"
     raw_instruction: "study these [Soofi Project (GitHub org + Soofi-Pretraining repo + HF org); Ling-2.6-1T (inclusionAI/Ling repo + org + HF model) and also AReaL/Ming/LLaDA2.X] ... along with above also evaluate this https://github.com/iOfficeAI/OfficeCLI and https://code.claude.com/docs/en/prompt-library ... for all above discussions what do you recommend ... ok. implement it as you recommended. Check CONTROLLER.yaml first ... follow its pointers ... before doing any research."
     tightened_prompt: |
