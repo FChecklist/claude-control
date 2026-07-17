@@ -132,3 +132,13 @@ Full rules: /opt/veridian/repos/claude-control/SUPERBOSS_DISPATCH_PROMPT.md
 
 TASK: <task>
 ```
+
+## Sync rule #14 — now automated, not just described
+
+Added 2026-07-18: `sync-controller-back.py` on the server runs every 30 min
+via cron, implementing rule #14 for real. No manual transcription needed
+going forward for routine task completions. See
+`/opt/veridian/README-SERVER.md`'s "Controller sync-back routine" section for
+mechanics. Manual entries (like this file's own SUPERBOSS-PROMPT-01) are
+still appropriate for governance/architecture changes — the automated
+routine only covers individual worker-task terminal states.
