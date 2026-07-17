@@ -605,3 +605,34 @@ entries:
     summary: "Finalized standing dispatch prompt for VERIDIAN-DEV Superboss task dispatch (Claude Desktop = intake/dispatch seat, Claude CLI on server = execution/audit/merge seat, same authority) plus the tiered trust model governing merge autonomy: tier1 (additive/low-risk) merges autonomously after AI review, tier2 (migrations/auth/permission/payment/billing/RLS/.env/heavy-deletion) holds for human sign-off even after AI approval. Supersedes ad-hoc description in HETZNER-01 -- this file is now the authoritative version of the prompt+rules, update it in place rather than restating elsewhere."
     where: "SUPERBOSS_DISPATCH_PROMPT.md (this repo) -- full reusable prompt text + tiered trust rules + mechanics + known gaps. Infra it governs: HETZNER-01 entry above; live task/worker/supervisor state: /opt/veridian/ai-os/CONTROLLER.yaml on the server."
     last_touched: "2026-07-18"
+
+  - id: WORKER-20260717-184415-worker-persistence-test
+    project: veridian
+    type: worker-task
+    status: done
+    summary: Server-worker task 'worker persistence test' on claude-control reached
+      status=completed. Framework validation test reviewed by client; branch deleted
+      (test artifact, not merged), worktree removed.
+    where: /opt/veridian/ai-os/tasks/task-20260717-184415-worker-persistence-test/ on
+      VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-17'
+
+  - id: WORKER-20260717-184945-resume-test
+    project: veridian
+    type: worker-task
+    status: done
+    summary: Server-worker task 'resume test' on claude-control reached status=completed.
+      Resume test passed; reviewed, test artifact, branch deleted, not merged.
+    where: /opt/veridian/ai-os/tasks/task-20260717-184945-resume-test/ on VERIDIAN-DEV
+      server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-17'
+
+  - id: WORKER-20260717-191023-superboss-e2e-test
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''superboss e2e test'' on claude-control reached status=completed.
+      tier1, Superboss-approved, merged autonomously: https://github.com/FChecklist/claude-control/pull/3'
+    where: '/opt/veridian/ai-os/tasks/task-20260717-191023-superboss-e2e-test/ on VERIDIAN-DEV
+      server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/3'
+    last_touched: '2026-07-17'
