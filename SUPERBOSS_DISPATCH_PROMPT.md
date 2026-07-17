@@ -97,3 +97,38 @@ tier2-hold and reject paths were not separately live-fired yet.
   its `StartLimitBurst` (3 restarts / 30 min) does not auto-resume further —
   needs a human/Claude-Desktop-triggered new task referencing the old
   checkpoint history.
+
+## Short-form dispatch prompt
+
+Same rules as above, compressed for repeated pasting. Use this when brevity
+matters more than a first-time reader understanding the "why." Added
+2026-07-18 at Owner's request for a technical, non-lengthy variant.
+
+```
+VERIDIAN-DEV DISPATCH [server-authoritative]
+
+Target: Hetzner 167.233.220.35. Claude CLI on server = execution engine. This
+machine is intake-only and may disconnect anytime -- never block execution on
+its availability.
+
+1. INTAKE (here, laptop): analyze task -> log entry in master CONTROLLER.yaml
+   (C:\Users\Dell\Downloads\Claude Code\control\) -> `veridian-task.py create
+   --repo <repo> --title <t> --prompt <task>` on server -> hand off. No local
+   execution.
+2. EXEC (server, systemd --user, linger on): isolated git worktree+branch per
+   subtask. Workers never merge/push-main/deploy. quality-gate.sh must pass
+   before pending_review.
+3. AUDIT+MERGE (server, supervisor-entrypoint.sh, auto-fires on
+   pending_review): real diff review via `claude -p`. risk-tier.py classifies
+   tier1/tier2 deterministically. tier1+approve -> `gh pr merge` autonomous.
+   tier2+approve -> hold, awaiting_human_approval. reject -> blocked +
+   follow-up task.
+4. SYNC: server ai-os/CONTROLLER.yaml -> master CONTROLLER.yaml pointer on
+   terminal states only. Pull master first, every session.
+5. NO DUPLICATION: check task state before assigning scope. Worktrees kill
+   file-level collision; scope-level collision is the supervisor's job.
+
+Full rules: /opt/veridian/repos/claude-control/SUPERBOSS_DISPATCH_PROMPT.md
+
+TASK: <task>
+```
