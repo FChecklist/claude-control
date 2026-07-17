@@ -45,6 +45,24 @@
 #     recovery already proven on ai-os/boss/ACTIVE-CLAIMS.yaml).
 #   - Never rewrite history (`push --force`) on this repo -- other
 #     sessions may be a commit behind and rely on a clean fast-forward.
+#
+# CONTINUITY ACROSS A DEAD/UNRESPONSIVE LOCAL MACHINE (added 2026-07-17,
+# Owner directive: dispatched work "shouldn't stop" even if this Windows
+# machine goes unresponsive): genuinely remote-isolated agents (Agent tool
+# `isolation: "remote"`) run on cloud infra independent of this machine's
+# uptime -- but that guarantee is only real if their progress is actually
+# pushed to GitHub, not held only in the agent's own sandbox. Every
+# dispatch prompt must tell the agent to commit/push incrementally and
+# open a real PR as soon as a coherent chunk of work exists (a WIP PR
+# clearly labeled as such is fine), never hold everything uncommitted
+# until a final report. At the START of every session/turn in this
+# workspace -- not just after a literal crash -- check for a backlog
+# before starting new work: `gh pr list --repo <owner>/<repo> --state
+# open` across the tracked repos, and re-read each project's own
+# claims-registry `active:` section for claims with no matching PR yet.
+# Audit and merge whatever landed while this session/machine was away
+# before starting anything new. Full reasoning: memory file
+# feedback_standing_operating_prompt.md, point 5.
 # ============================================================================
 
 # ----------------------------------------------------------------------------
@@ -528,3 +546,6 @@ entries:
     raw_instruction: "complete all these phases, as per the implementation plan to fill gaps you identified in PROJEXA. Fill all the gaps 100%. Dont fake... Dont wait for my instructions. You take the call... Dont wait for my approval, you can do the approval yourself, if still my approval is needed and I am not able to give the approval, move to the next task."
     last_touched: "2026-07-17"
     dispatch: "solo (investigation phases 0/1/2) + up to 3 parallel remote agents (phase 3 remediation, per Owner's standing 3-agent cap)"
+    phase0_2026_07_17: "DONE -- compliance-tracker#397 merged. ai-os/system-tree/20-projexa.yaml corrected (old wrong claims struck through and kept visible, not deleted)."
+    phase1_2026_07_17: "DONE -- projexa#31 merged. Real Lint/TypeCheck/Build GitHub Actions workflow added (no Unit Tests job -- projexa genuinely has zero test files, not fabricated). Independently re-verified via the Actions REST API (not just trusting the dispatched agent) that the actual PR-triggered run (29558256853) shows all 3 jobs completed/success. Branch protection cannot be set via API (confirmed 403, free-tier private repo) -- enforcement is this session's own discipline (wait for green before merge), disclosed honestly in the PR, not claimed as automated."
+    phase2_correction_2026_07_17: "Original plan said 'this session personally drives a live real-user browser test' -- CORRECTED before executing: the safety rules this session operates under prohibit creating accounts or entering passwords to authenticate, with no carve-out for testing the Owner's own product, even under the Owner's standing authorization for this task. The 2026-07-12/13 test in PROJEXA_GAP_ANALYSIS.md did exactly that (real signup + an auth-bypass SQL update flagged by its own harness's security classifier) -- not repeated here. Phase 2 re-scoped to a code-level audit (read every untested page + its API routes + cross-reference the real VERIDIAN backend handler, not just route existence) of the 19 genuinely untested pages, dispatched as 2 parallel remote read-only investigation agents (customers/sales/procurement cluster; HR/finance/platform cluster) -- Owner told explicitly this is a lower bar than live-clicking, not silently presented as equivalent."
