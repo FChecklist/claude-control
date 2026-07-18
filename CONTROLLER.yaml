@@ -2982,3 +2982,13 @@ entries:
     where: "FChecklist/compliance-tracker PRs #412-433; rescue worker tasks at /opt/veridian/ai-os/tasks/task-20260718-1806*-rescue-pr--*/ on VERIDIAN-DEV; also fixed a real production bug found live-testing PROJEXA (fix/shadcn-semantic-token-brand-colors, merged) -- shadcn's bare --primary/--ring/--sidebar-primary semantic vars still hardcoded old orange #E6510C, never re-pointed by the original veridian-ui-kit adoption pass, which is why a real demo login still showed old UI."
     dispatch: "solo (Super Boss) intake + server-worker execution (Claude Code CLI only, CLAUDE_CODE_OAUTH_TOKEN, per Owner directive) for the mechanical rescue work; Super Boss personally audits/merges tier1, holds tier2 for Owner sign-off."
     last_touched: "2026-07-18"
+
+  - id: WORKER-20260718-180651-rescue-pr--431
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Rescue PR #431'' on compliance-tracker reached status=completed.
+      worker finished, no changes to commit'
+    where: /opt/veridian/ai-os/tasks/task-20260718-180651-rescue-pr--431/ on VERIDIAN-DEV
+      server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
