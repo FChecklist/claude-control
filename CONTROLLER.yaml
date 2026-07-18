@@ -1083,3 +1083,200 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260718-072006-api-governance--rate-limiting--versionin/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-073003-api-governance--rate-limiting--versionin
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''API Governance (Rate Limiting, Versioning, Webhooks):
+      Rate Limiting & Key Scopin'' on compliance-tracker reached status=failed. worker
+      exited with code 1; systemd will retry from this checkpoint up to the configured
+      burst limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-073003-api-governance--rate-limiting--versionin/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-073004-api-governance--rate-limiting--versionin
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''API Governance (Rate Limiting, Versioning, Webhooks):
+      Webhook Reliability & Secu'' on compliance-tracker reached status=failed. worker
+      exited with code 1; systemd will retry from this checkpoint up to the configured
+      burst limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-073004-api-governance--rate-limiting--versionin/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-073006-accessibility--wcag-compliance---accessi
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''Accessibility (WCAG Compliance): Accessibility Testing''
+      on compliance-tracker reached status=failed. worker exited with code 1; systemd
+      will retry from this checkpoint up to the configured burst limit before giving
+      up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-073006-accessibility--wcag-compliance---accessi/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-074002-accessibility--wcag-compliance---assisti
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''Accessibility (WCAG Compliance): Assistive Technology
+      Support'' on compliance-tracker reached status=failed. worker exited with code
+      1; systemd will retry from this checkpoint up to the configured burst limit before
+      giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-074002-accessibility--wcag-compliance---assisti/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-074004-accessibility--wcag-compliance---navigat
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''Accessibility (WCAG Compliance): Navigation & Input
+      Accessibility'' on compliance-tracker reached status=failed. worker exited with
+      code 1; systemd will retry from this checkpoint up to the configured burst limit
+      before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-074004-accessibility--wcag-compliance---navigat/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-074005-accessibility--wcag-compliance---visual
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''Accessibility (WCAG Compliance): Visual Accessibility''
+      on compliance-tracker reached status=failed. worker exited with code 1; systemd
+      will retry from this checkpoint up to the configured burst limit before giving
+      up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-074005-accessibility--wcag-compliance---visual/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-075002-architecture---design--engineering-princ
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''Architecture & Design: Engineering Principles'' on
+      compliance-tracker reached status=failed. worker exited with code 1; systemd will
+      retry from this checkpoint up to the configured burst limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-075002-architecture---design--engineering-princ/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-075004-architecture---design--reusability-acros
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''Architecture & Design: Reusability Across Scope''
+      on compliance-tracker reached status=failed. worker exited with code 1; systemd
+      will retry from this checkpoint up to the configured burst limit before giving
+      up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-075004-architecture---design--reusability-acros/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-075006-audit---governance--complete-audit-stamp
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''Audit & Governance: Complete Audit Stamp'' on compliance-tracker
+      reached status=failed. worker exited with code 1; systemd will retry from this
+      checkpoint up to the configured burst limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-075006-audit---governance--complete-audit-stamp/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-080002-audit---governance--conversation-audit-l
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''Audit & Governance: Conversation Audit Logging''
+      on compliance-tracker reached status=failed. worker exited with code 1; systemd
+      will retry from this checkpoint up to the configured burst limit before giving
+      up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-080002-audit---governance--conversation-audit-l/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-080004-business-rules-engine--rule-governance
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''Business Rules Engine: Rule Governance & Quality''
+      on compliance-tracker reached status=failed. worker exited with code 1; systemd
+      will retry from this checkpoint up to the configured burst limit before giving
+      up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-080004-business-rules-engine--rule-governance/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-080006-business-rules-engine--rule-lifecycle-ma
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''Business Rules Engine: Rule Lifecycle Management''
+      on compliance-tracker reached status=failed. worker exited with code 1; systemd
+      will retry from this checkpoint up to the configured burst limit before giving
+      up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-080006-business-rules-engine--rule-lifecycle-ma/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-081003-crm---sales-modules--accounts---contacts
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''CRM & Sales Modules: Accounts & Contacts'' on compliance-tracker
+      reached status=failed. worker exited with code 1; systemd will retry from this
+      checkpoint up to the configured burst limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-081003-crm---sales-modules--accounts---contacts/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-081005-crm---sales-modules--leads
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''CRM & Sales Modules: Leads'' on compliance-tracker
+      reached status=failed. worker exited with code 1; systemd will retry from this
+      checkpoint up to the configured burst limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-081005-crm---sales-modules--leads/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-081006-crm---sales-modules--opportunities
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''CRM & Sales Modules: Opportunities'' on compliance-tracker
+      reached status=failed. worker exited with code 1; systemd will retry from this
+      checkpoint up to the configured burst limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-081006-crm---sales-modules--opportunities/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-082002-crm---sales-modules--sales-dashboard
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''CRM & Sales Modules: Sales Dashboard'' on compliance-tracker
+      reached status=failed. worker exited with code 1; systemd will retry from this
+      checkpoint up to the configured burst limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-082002-crm---sales-modules--sales-dashboard/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-082004-crm---sales-modules--sales-pipeline
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''CRM & Sales Modules: Sales Pipeline'' on compliance-tracker
+      reached status=failed. worker exited with code 1; systemd will retry from this
+      checkpoint up to the configured burst limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-082004-crm---sales-modules--sales-pipeline/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
