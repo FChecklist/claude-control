@@ -1942,3 +1942,12 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260718-125007-retry-1--ai-model-lifecycle---benchmark/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-18'
+
+  - id: CIFLAKE-01
+    project: veridian
+    type: bugfix
+    status: in-progress
+    summary: "Found while auditing AIROUTER-01's PR #433: compliance-tracker's required 'Unit Tests' CI check was failing on main itself (not caused by any PR), blocking every open PR. Root cause: tenant-isolation.test.ts's mock.module() calls replaced 5 ERP service modules with tiny object-literal stubs that dropped other real exports (createJournalEntry among them); bun's mock.restore() doesn't undo mock.module(), so the stale stub leaked into erp-fixed-assets-service.test.ts when file execution order (Linux CI only, not reproducible on Windows) put them in the wrong sequence."
+    where: "compliance-tracker PR #434 (https://github.com/FChecklist/compliance-tracker/pull/434), branch fix/tenant-isolation-mock-module-leak. Fix: every mock.module() call now spreads real exports before overriding; afterEach explicitly restores all 8 mocked modules to their real captured implementations. Could not reproduce locally (Windows) even forcing the suspected file order -- CI is the real validation."
+    last_touched: "2026-07-18"
+    dispatch: "solo (Super Boss, direct fix) -- flagged via spawn_task (task_0bd44564) during AIROUTER-01's PR review, then Owner asked for it to be fixed directly."
