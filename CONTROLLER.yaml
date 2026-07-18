@@ -3104,3 +3104,11 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260718-202151-rescue-pr--413/ on VERIDIAN-DEV
       server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-18'
+
+  - id: PR-RESCUE-TIER2-SIGNOFF-QUEUE-01
+    project: veridian
+    type: decision-point
+    status: awaiting-owner-decision
+    summary: "PR-rescue program (see PR-RESCUE-PROGRAM-01) progress: 9 of ~20 PRs merged (#431,#428,#430,#426,#418,#420,#422,#424,#413) via self-audited TIER1 rescue (Owner authorized continuing self-audit/self-merge for TIER1 2026-07-18 to keep pace, per AGENTS.md Rule 7(c) self-certification finding on PR #420). 5 PRs are genuinely done (audited, CI-verified) but TIER2 (touch drizzle/*.sql or schema.ts) and correctly held, never self-merged: #433 (Mother Router/AIROUTER-01), #419 (Governance & Audit: ABAC/audit-trail-TTL/unified-search/maintainability-score), #414 (AI Interaction Efficiency), #412 (Support session impersonation), #415 (AI Orchestration routing/failover -- CI blocked by a GitHub Actions check-suite-not-created platform issue, isolated to this one PR, proven via a control PR that triggered normally; ready to merge once Actions recovers). Remaining un-dispatched: #417 (held separately -- ajv/bun nested-overrides limitation on its new promptfoo-evals workflow, honestly documented, not a required check), #421, #423, #425 (in progress as of this entry), #427, #429, #432. AWAITING: Owner merge sign-off on the 5 TIER2 PRs above (batch decision, not urgent -- everything else continues unblocked)."
+    where: "FChecklist/compliance-tracker PRs #433, #419, #414, #412, #415"
+    last_touched: "2026-07-18"
