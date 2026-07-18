@@ -3178,3 +3178,14 @@ entries:
     summary: "Update: Owner approved and Super Boss merged the second TIER2 batch (#425, #423, #421) 2026-07-18. 17 of 20 PRs now merged (85%). One more TIER2 PR surfaced while finishing the queue: #432 (Checks & Balances: Risk, Fraud & Anomaly Detection, drizzle/0240_risk_anomaly_detection.sql after collision fix from 0236). Fully rebased, migration-collision-free, tsc-clean, CI-green (audit-check + all required checks pass, only non-required rate-limited Vercel fails). Held, not self-merged. AWAITING: Owner sign-off for #432. Remaining: #429, #427 still running as rescue-worker tasks; #417 still separately deprioritized (ajv/bun nested-overrides, honestly documented, non-required check)."
     where: "FChecklist/compliance-tracker PR #432"
     last_touched: "2026-07-18"
+
+  - id: WORKER-20260718-230822-rescue-pr--432
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Rescue PR #432'' on compliance-tracker reached status=blocked.
+      quality gates still failing after 3 auto-fix attempts; branch worker/task-20260718-230822-rescue-pr--432
+      pushed with failing state for human review, see quality-gate-*.json'
+    where: /opt/veridian/ai-os/tasks/task-20260718-230822-rescue-pr--432/ on VERIDIAN-DEV
+      server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
