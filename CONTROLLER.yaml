@@ -1497,3 +1497,111 @@ entries:
     raw_instruction: "Project - AI Routers in server for immediate switching based on ai models availability and instructions. this is important. we already have a multi layer, orchestra setup. For FChecklist / Veridian AI OS , need to have ai model agnostic setup through multiple ai routers set up in the server. Objective to change the ai model on the fly. [full 4-router / 4-layer architecture table and hierarchy verbatim in the memory file above -- not restated here per this file's own 'fast index, not a second copy' rule] ... dont duplicate, keep it simple make notes in controller.yaml"
     tightened_prompt: "NOT YET TIGHTENED -- this is an intake-only entry (status: idea), Owner explicitly asked for notes in CONTROLLER.yaml, not a build. Real gap once scoped: no single addressable model/provider registry exists today with hot-reload config, A/B testing, feature flags, or emergency rollback as first-class ops -- app-side (orchestra-model-resolver.ts) and server-side (GLM-5.2 proxy) routing are two separate mechanisms today, not unified under one Mother Router. Sales & Marketing Router is genuinely new -- no dedicated routing tier exists for that domain today (only individual roster.ts roles). Needs Owner scoping decision before dispatch: build a real unifying Mother Router service, or formalize the existing two mechanisms as 'the Mother Router' via documentation + a thin shared config layer (much less work, same practical outcome for 90% of the stated design principles)."
     dispatch: "not yet decided -- awaiting Owner scoping call, see tightened_prompt"
+
+  - id: WORKER-20260718-110002-retry-2--ai-cost-governance---finops--c
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 2] AI Cost Governance & FinOps: Cost Monitoring
+      & Forecasting'' on compliance-tracker reached status=failed. worker exited with
+      code 1; systemd will retry from this checkpoint up to the configured burst limit
+      before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-110002-retry-2--ai-cost-governance---finops--c/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-110004-retry-2--ai-cost-governance---finops--c
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 2] AI Cost Governance & FinOps: Cost Visibility
+      & Attribution'' on compliance-tracker reached status=failed. worker exited with
+      code 1; systemd will retry from this checkpoint up to the configured burst limit
+      before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-110004-retry-2--ai-cost-governance---finops--c/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-110006-retry-2--ai-documentation--ai-readable
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 2] AI Documentation: AI-Readable Technical
+      Documentation'' on compliance-tracker reached status=failed. worker exited with
+      code 1; systemd will retry from this checkpoint up to the configured burst limit
+      before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-110006-retry-2--ai-documentation--ai-readable/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-111003-retry-0--ai-documentation--documentatio
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 0] AI Documentation: Documentation Lifecycle''
+      on compliance-tracker reached status=failed. worker exited with code 1; systemd
+      will retry from this checkpoint up to the configured burst limit before giving
+      up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-111003-retry-0--ai-documentation--documentatio/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-111005-retry-0--ai-engineering-quality--ai-mod
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 0] AI Engineering Quality: AI-Modification
+      Readiness'' on compliance-tracker reached status=failed. worker exited with code
+      1; systemd will retry from this checkpoint up to the configured burst limit before
+      giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-111005-retry-0--ai-engineering-quality--ai-mod/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-111007-retry-0--ai-engineering-quality--code-s
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 0] AI Engineering Quality: Code Structure
+      & Modularity'' on compliance-tracker reached status=failed. worker exited with
+      code 1; systemd will retry from this checkpoint up to the configured burst limit
+      before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-111007-retry-0--ai-engineering-quality--code-s/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-112002-retry-1--ai-documentation--documentatio
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 1] AI Documentation: Documentation Lifecycle''
+      on compliance-tracker reached status=failed. worker exited with code 1; systemd
+      will retry from this checkpoint up to the configured burst limit before giving
+      up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-112002-retry-1--ai-documentation--documentatio/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-112004-retry-1--ai-engineering-quality--ai-mod
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 1] AI Engineering Quality: AI-Modification
+      Readiness'' on compliance-tracker reached status=failed. worker exited with code
+      1; systemd will retry from this checkpoint up to the configured burst limit before
+      giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-112004-retry-1--ai-engineering-quality--ai-mod/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-112006-retry-1--ai-engineering-quality--code-s
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 1] AI Engineering Quality: Code Structure
+      & Modularity'' on compliance-tracker reached status=failed. worker exited with
+      code 1; systemd will retry from this checkpoint up to the configured burst limit
+      before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-112006-retry-1--ai-engineering-quality--code-s/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
