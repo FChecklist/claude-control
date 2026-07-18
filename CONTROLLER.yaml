@@ -3023,3 +3023,34 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260718-182019-rescue-pr--426/ on VERIDIAN-DEV
       server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-185244-rescue-pr--420
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Rescue PR #420'' on compliance-tracker reached status=blocked.
+      Superboss rejected: https://github.com/FChecklist/compliance-tracker/pull/445
+      — see review.json for issues'
+    where: '/opt/veridian/ai-os/tasks/task-20260718-185244-rescue-pr--420/ on VERIDIAN-DEV
+      server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/445'
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-185246-rescue-pr--418
+    project: veridian
+    type: worker-task
+    status: in-progress
+    summary: 'Server-worker task ''Rescue PR #418'' on compliance-tracker reached status=awaiting_human_approval.
+      tier2, Superboss-approved, held for human merge: https://github.com/FChecklist/compliance-tracker/pull/444'
+    where: '/opt/veridian/ai-os/tasks/task-20260718-185246-rescue-pr--418/ on VERIDIAN-DEV
+      server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/444'
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-185248-rescue-pr--417
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Rescue PR #417'' on compliance-tracker reached status=completed.
+      worker finished, no changes to commit'
+    where: /opt/veridian/ai-os/tasks/task-20260718-185248-rescue-pr--417/ on VERIDIAN-DEV
+      server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
