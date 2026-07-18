@@ -98,35 +98,70 @@ tier2-hold and reject paths were not separately live-fired yet.
   needs a human/Claude-Desktop-triggered new task referencing the old
   checkpoint history.
 
-## Short-form dispatch prompt
+## Short-form dispatch prompt (v2)
 
-Same rules as above, compressed for repeated pasting. Use this when brevity
-matters more than a first-time reader understanding the "why." Added
-2026-07-18 at Owner's request for a technical, non-lengthy variant.
+Same rules as the full version above, compressed for repeated pasting. Use
+this when brevity matters more than a first-time reader understanding the
+"why." v1 added 2026-07-18 at Owner's request for a technical, non-lengthy
+variant; **v2 same day** folds in real lessons from that day's actual
+operation: the API-billing-vs-plan-token distinction (Owner corrected a real
+misunderstanding — see the memory file
+`feedback_veridian_superboss_dispatch_prompt.md` for the full exchange), the
+corrected execution-model framing (parallel worker sessions, not "one
+session displayed here"), the `CONTROLLER.yaml`/`task.yaml` concurrent-write
+corruption bug found and fixed (file locking added, safe for concurrent
+workers now), the `mandatory-audit-check.yml`-style strict field-validation
+gotcha (concise+specific fields only, "n/a" gets rejected), and the
+duplicate/stub-work lesson from the Track1b branches that turned out to be
+claim-only with zero real code.
 
 ```
-VERIDIAN-DEV DISPATCH [server-authoritative]
+VERIDIAN-DEV DISPATCH [server-authoritative, plan-billed]
 
-Target: Hetzner 167.233.220.35. Claude CLI on server = execution engine. This
-machine is intake-only and may disconnect anytime -- never block execution on
-its availability.
+Target: Hetzner 167.233.220.35. Claude CLI on server = execution engine,
+authenticated via CLAUDE_CODE_OAUTH_TOKEN (Claude subscription plan) in
+/opt/veridian/shared/.env -- NEVER the Anthropic API key (disabled on
+purpose, cost-sensitive project, do not re-enable without fresh
+confirmation). This machine is intake-only and may disconnect anytime --
+never block execution on its availability. Not "one session displayed
+here" -- multiple independent worker sessions run on the server in
+parallel; this chat just dispatches and reads results.
 
 1. INTAKE (here, laptop): analyze task -> log entry in master CONTROLLER.yaml
-   (C:\Users\Dell\Downloads\Claude Code\control\) -> `veridian-task.py create
-   --repo <repo> --title <t> --prompt <task>` on server -> hand off. No local
-   execution.
-2. EXEC (server, systemd --user, linger on): isolated git worktree+branch per
-   subtask. Workers never merge/push-main/deploy. quality-gate.sh must pass
-   before pending_review.
+   (C:\Users\Dell\Downloads\Claude Code\control\) -> check for existing
+   open PRs/branches on the same scope first (gh pr list, git
+   for-each-ref) to avoid re-dispatching duplicate or already-attempted
+   work -> `veridian-task.py create --repo <repo> --title <t> --prompt
+   <task>` on server -> hand off. No local execution.
+
+2. EXEC (server, systemd --user, linger on, file-locked task/controller
+   state -- safe for concurrent workers): isolated git worktree+branch per
+   subtask. Workers never merge/push-main/deploy. quality-gate.sh must
+   pass before pending_review. Capacity: 2-3 concurrent workers verified
+   safe on this server's real headroom; check `free -h`/`uptime` before
+   going higher.
+
 3. AUDIT+MERGE (server, supervisor-entrypoint.sh, auto-fires on
-   pending_review): real diff review via `claude -p`. risk-tier.py classifies
-   tier1/tier2 deterministically. tier1+approve -> `gh pr merge` autonomous.
-   tier2+approve -> hold, awaiting_human_approval. reject -> blocked +
-   follow-up task.
+   pending_review): real diff review via `claude -p`. risk-tier.py
+   classifies tier1/tier2 deterministically. tier1+approve -> `gh pr merge`
+   autonomous. tier2+approve -> hold, awaiting_human_approval (human
+   sign-off happens here, in this chat, on reconnect). reject -> blocked +
+   follow-up task. If this repo requires a structured "AUDIT:" comment
+   (mandatory-audit-check.yml-style), keep every field concise and
+   specific -- no "n/a", no long sentences in Severity Classified -- or
+   the check itself will reject the comment. Workflow files only
+   re-trigger on push, not new comments -- an empty commit is needed
+   after posting a corrected audit comment.
+
 4. SYNC: server ai-os/CONTROLLER.yaml -> master CONTROLLER.yaml pointer on
-   terminal states only. Pull master first, every session.
-5. NO DUPLICATION: check task state before assigning scope. Worktrees kill
-   file-level collision; scope-level collision is the supervisor's job.
+   terminal states only (automated via sync-controller-back.py, 30-min
+   cron). Pull master first, every session.
+
+5. NO DUPLICATION: before trusting any "claim" or in-progress marker as
+   done, verify real code exists (diff/file changes), not just a
+   claim-registration commit. Check task state before assigning scope.
+   Worktrees kill file-level collision; scope-level collision is the
+   supervisor's job.
 
 Full rules: /opt/veridian/repos/claude-control/SUPERBOSS_DISPATCH_PROMPT.md
 
