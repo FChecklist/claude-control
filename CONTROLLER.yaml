@@ -2067,3 +2067,218 @@ entries:
     where: "Credentials + full mechanics: memory/projexa_customer_demo_accounts_2026-07-18.md (deliberately NOT restated here -- this is a git-tracked repo, credentials stay local-only per this session's established secrets-hygiene practice). Owner account provisioned via the real live signup/login flow (browser), verified via DB query that organizations+memberships+veridian_credentials all exist for real. The 2 member accounts provisioned via direct auth.users/auth.identities inserts (Supabase's own documented seed-user SQL pattern) + a manual memberships row, since no app-level invite path exists -- profiles auto-created via the existing on_auth_user_created trigger. All 3 logins verified working (owner via real UI flow reaching a live dashboard; the 2 members via a direct Supabase Auth API password-grant check, 200 + real access_token for both)."
     last_touched: "2026-07-18"
     dispatch: "solo (Super Boss, direct execution) -- Owner gave exact emails/org name/passwords, executed directly against the live projexa Supabase project (evpckeuxgvahguwsaeul) via Supabase MCP + live browser."
+
+  - id: WORKER-20260718-133002-retry-2--ai-platform--ai-platform---gen
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 2] AI Platform: AI Platform - General'' on
+      compliance-tracker reached status=failed. worker exited with code 1; systemd will
+      retry from this checkpoint up to the configured burst limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-133002-retry-2--ai-platform--ai-platform---gen/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-133004-retry-2--api-governance--rate-limiting
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 2] API Governance (Rate Limiting, Versioning,
+      Webhooks): API Developer Ex'' on compliance-tracker reached status=failed. worker
+      exited with code 1; systemd will retry from this checkpoint up to the configured
+      burst limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-133004-retry-2--api-governance--rate-limiting/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-133006-retry-2--api-governance--rate-limiting
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 2] API Governance (Rate Limiting, Versioning,
+      Webhooks): Rate Limiting & '' on compliance-tracker reached status=failed. worker
+      exited with code 1; systemd will retry from this checkpoint up to the configured
+      burst limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-133006-retry-2--api-governance--rate-limiting/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-134002-retry-0--api-governance--rate-limiting
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 0] API Governance (Rate Limiting, Versioning,
+      Webhooks): Webhook Reliabil'' on compliance-tracker reached status=failed. worker
+      exited with code 1; systemd will retry from this checkpoint up to the configured
+      burst limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-134002-retry-0--api-governance--rate-limiting/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-134004-retry-0--accessibility--wcag-compliance
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 0] Accessibility (WCAG Compliance): Accessibility
+      Testing'' on compliance-tracker reached status=failed. worker exited with code
+      1; systemd will retry from this checkpoint up to the configured burst limit before
+      giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-134004-retry-0--accessibility--wcag-compliance/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-134006-retry-0--accessibility--wcag-compliance
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 0] Accessibility (WCAG Compliance): Assistive
+      Technology Support'' on compliance-tracker reached status=failed. worker exited
+      with code 1; systemd will retry from this checkpoint up to the configured burst
+      limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-134006-retry-0--accessibility--wcag-compliance/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-135002-retry-1--api-governance--rate-limiting
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 1] API Governance (Rate Limiting, Versioning,
+      Webhooks): Webhook Reliabil'' on compliance-tracker reached status=failed. worker
+      exited with code 1; systemd will retry from this checkpoint up to the configured
+      burst limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-135002-retry-1--api-governance--rate-limiting/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-135004-retry-1--accessibility--wcag-compliance
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 1] Accessibility (WCAG Compliance): Accessibility
+      Testing'' on compliance-tracker reached status=failed. worker exited with code
+      1; systemd will retry from this checkpoint up to the configured burst limit before
+      giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-135004-retry-1--accessibility--wcag-compliance/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-135006-retry-1--accessibility--wcag-compliance
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 1] Accessibility (WCAG Compliance): Assistive
+      Technology Support'' on compliance-tracker reached status=failed. worker exited
+      with code 1; systemd will retry from this checkpoint up to the configured burst
+      limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-135006-retry-1--accessibility--wcag-compliance/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-140002-retry-2--api-governance--rate-limiting
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 2] API Governance (Rate Limiting, Versioning,
+      Webhooks): Webhook Reliabil'' on compliance-tracker reached status=failed. worker
+      exited with code 1; systemd will retry from this checkpoint up to the configured
+      burst limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-140002-retry-2--api-governance--rate-limiting/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-140004-retry-2--accessibility--wcag-compliance
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 2] Accessibility (WCAG Compliance): Accessibility
+      Testing'' on compliance-tracker reached status=failed. worker exited with code
+      1; systemd will retry from this checkpoint up to the configured burst limit before
+      giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-140004-retry-2--accessibility--wcag-compliance/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-140006-retry-2--accessibility--wcag-compliance
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 2] Accessibility (WCAG Compliance): Assistive
+      Technology Support'' on compliance-tracker reached status=failed. worker exited
+      with code 1; systemd will retry from this checkpoint up to the configured burst
+      limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-140006-retry-2--accessibility--wcag-compliance/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-141002-retry-0--accessibility--wcag-compliance
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 0] Accessibility (WCAG Compliance): Navigation
+      & Input Accessibility'' on compliance-tracker reached status=failed. worker exited
+      with code 1; systemd will retry from this checkpoint up to the configured burst
+      limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-141002-retry-0--accessibility--wcag-compliance/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-141004-retry-0--accessibility--wcag-compliance
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 0] Accessibility (WCAG Compliance): Visual
+      Accessibility'' on compliance-tracker reached status=failed. worker exited with
+      code 1; systemd will retry from this checkpoint up to the configured burst limit
+      before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-141004-retry-0--accessibility--wcag-compliance/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-141006-retry-0--architecture---design--enginee
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 0] Architecture & Design: Engineering Principles''
+      on compliance-tracker reached status=failed. worker exited with code 1; systemd
+      will retry from this checkpoint up to the configured burst limit before giving
+      up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-141006-retry-0--architecture---design--enginee/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-142002-retry-1--accessibility--wcag-compliance
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 1] Accessibility (WCAG Compliance): Navigation
+      & Input Accessibility'' on compliance-tracker reached status=failed. worker exited
+      with code 1; systemd will retry from this checkpoint up to the configured burst
+      limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-142002-retry-1--accessibility--wcag-compliance/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-142004-retry-1--accessibility--wcag-compliance
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 1] Accessibility (WCAG Compliance): Visual
+      Accessibility'' on compliance-tracker reached status=failed. worker exited with
+      code 1; systemd will retry from this checkpoint up to the configured burst limit
+      before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-142004-retry-1--accessibility--wcag-compliance/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-142006-retry-1--architecture---design--enginee
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 1] Architecture & Design: Engineering Principles''
+      on compliance-tracker reached status=failed. worker exited with code 1; systemd
+      will retry from this checkpoint up to the configured burst limit before giving
+      up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-142006-retry-1--architecture---design--enginee/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
