@@ -1338,3 +1338,35 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260718-084006-checks---balances--audit-trail---immutab/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-084003-calculation-engine--calculation-governan
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Calculation Engine: Calculation Governance'' on compliance-tracker
+      reached status=completed. worker finished, no changes to commit'
+    where: /opt/veridian/ai-os/tasks/task-20260718-084003-calculation-engine--calculation-governan/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-085003-checks---balances--business-rule---calcu
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Checks & Balances: Business Rule & Calculation Verification''
+      on compliance-tracker reached status=completed. worker finished, no changes to
+      commit'
+    where: /opt/veridian/ai-os/tasks/task-20260718-085003-checks---balances--business-rule---calcu/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-090002-checks---balances--duplicate---data-qual
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Checks & Balances: Duplicate & Data Quality Detection''
+      on compliance-tracker reached status=completed. worker finished, no changes to
+      commit'
+    where: /opt/veridian/ai-os/tasks/task-20260718-090002-checks---balances--duplicate---data-qual/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
