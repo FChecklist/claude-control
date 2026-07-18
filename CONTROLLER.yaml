@@ -761,3 +761,11 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260718-051002-ai-architecture--domain-accuracy---quali/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-18'
+
+  - id: PR406-ONE-TIME-OVERRIDE-2026-07-18
+    project: veridian
+    type: exception
+    status: done
+    summary: "One-time manual override to merge PR #406 (wave4-erp-rbac-batch2), Owner-approved explicitly in chat 2026-07-18 -- not a standing policy change. Root problem: bun test's Unit Tests check is genuinely flaky in CI (mock.module() cross-file isolation issue, previously diagnosed -- see compliance_tracker_dependency_cleanup / prior session notes; a real fix via --isolate broke 145 unrelated tests and was reverted). #406's actual code was independently verified locally: tsc --noEmit clean, full suite 1410/0 fail. Before overriding: retried CI 3 separate times (original run, branch-updated via gh api update-branch, then an empty-commit re-trigger) -- Unit Tests failed all 3 times, every OTHER required check (Lint, Type Check, Build, audit-check, Guardrail Presence Check, Asset Registry Coverage Check) passed cleanly each time, confirming this is isolated to the one known-flaky check, not a real regression. Execution: branch protection's enforce_admins=true blocks even --admin merges when a required check is failing (confirmed empirically, same finding as earlier session), so gh pr merge --admin alone does not work here -- instead temporarily PATCHed required_status_checks to drop 'Unit Tests' from the contexts list (kept strict=true and all other 6 required contexts), merged PR #406 (commit ffaadc37, squash-free merge commit on main), then immediately PATCHed required_status_checks back to the original 7-context list including Unit Tests. Verified restoration via a follow-up GET -- contexts list and strict:true both confirmed back to original state before moving on."
+    where: "compliance-tracker branch protection API (repos/FChecklist/compliance-tracker/branches/main/protection/required_status_checks). Merged PR: https://github.com/FChecklist/compliance-tracker/pull/406"
+    last_touched: "2026-07-18"
