@@ -3132,3 +3132,33 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260718-205406-rescue-pr--412/ on VERIDIAN-DEV
       server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-212530-rescue-pr--425
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Rescue PR #425'' on compliance-tracker reached status=completed.
+      worker finished, no changes to commit'
+    where: /opt/veridian/ai-os/tasks/task-20260718-212530-rescue-pr--425/ on VERIDIAN-DEV
+      server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-212532-rescue-pr--423
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Rescue PR #423'' on compliance-tracker reached status=completed.
+      worker finished, no changes to commit'
+    where: /opt/veridian/ai-os/tasks/task-20260718-212532-rescue-pr--423/ on VERIDIAN-DEV
+      server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-212534-rescue-pr--421
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Rescue PR #421'' on compliance-tracker reached status=completed.
+      worker finished, no changes to commit'
+    where: /opt/veridian/ai-os/tasks/task-20260718-212534-rescue-pr--421/ on VERIDIAN-DEV
+      server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
