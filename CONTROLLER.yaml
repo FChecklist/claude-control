@@ -873,3 +873,109 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260718-061005-ai-cost-governance---finops--cost-contro/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-061002-ai-architecture--software-first-ai-secon
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''AI Architecture: Software-First AI-Second Philosophy''
+      on compliance-tracker reached status=blocked. supervisor failed to produce a review
+      verdict — see supervisor.log'
+    where: /opt/veridian/ai-os/tasks/task-20260718-061002-ai-architecture--software-first-ai-secon/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-062002-ai-cost-governance---finops--cost-monito
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''AI Cost Governance & FinOps: Cost Monitoring & Forecasting''
+      on compliance-tracker reached status=failed. worker exited with code 1; systemd
+      will retry from this checkpoint up to the configured burst limit before giving
+      up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-062002-ai-cost-governance---finops--cost-monito/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-062003-ai-cost-governance---finops--cost-visibi
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''AI Cost Governance & FinOps: Cost Visibility & Attribution''
+      on compliance-tracker reached status=failed. worker exited with code 1; systemd
+      will retry from this checkpoint up to the configured burst limit before giving
+      up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-062003-ai-cost-governance---finops--cost-visibi/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-064002-ai-documentation--ai-readable-technical
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''AI Documentation: AI-Readable Technical Documentation''
+      on compliance-tracker reached status=failed. worker exited with code 1; systemd
+      will retry from this checkpoint up to the configured burst limit before giving
+      up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-064002-ai-documentation--ai-readable-technical/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-064004-ai-documentation--documentation-lifecycl
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''AI Documentation: Documentation Lifecycle'' on compliance-tracker
+      reached status=failed. worker exited with code 1; systemd will retry from this
+      checkpoint up to the configured burst limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-064004-ai-documentation--documentation-lifecycl/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-064006-ai-engineering-quality--ai-modification
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''AI Engineering Quality: AI-Modification Readiness''
+      on compliance-tracker reached status=failed. worker exited with code 1; systemd
+      will retry from this checkpoint up to the configured burst limit before giving
+      up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-064006-ai-engineering-quality--ai-modification/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-065002-ai-engineering-quality--code-structure
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''AI Engineering Quality: Code Structure & Modularity''
+      on compliance-tracker reached status=failed. worker exited with code 1; systemd
+      will retry from this checkpoint up to the configured burst limit before giving
+      up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-065002-ai-engineering-quality--code-structure/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-065003-ai-engineering-quality--error-handling
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''AI Engineering Quality: Error Handling & Logging''
+      on compliance-tracker reached status=failed. worker exited with code 1; systemd
+      will retry from this checkpoint up to the configured burst limit before giving
+      up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-065003-ai-engineering-quality--error-handling/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-065005-ai-engineering-quality--logic-separation
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''AI Engineering Quality: Logic Separation & Determinism''
+      on compliance-tracker reached status=failed. worker exited with code 1; systemd
+      will retry from this checkpoint up to the configured burst limit before giving
+      up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-065005-ai-engineering-quality--logic-separation/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
