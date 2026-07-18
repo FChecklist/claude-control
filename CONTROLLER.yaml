@@ -703,3 +703,11 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260718-045005-ai-architecture--ai-capability-registry/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-18'
+
+  - id: COST-ESTIMATE-50USER-01
+    project: veridian
+    type: analysis
+    status: in-progress
+    summary: "Owner ask: cost guesstimate (infra + AI) for VERIDIAN AI OS (incl. PROJEXA + compliance-tracker, same codebase) at 5 orgs x 10 users = 50 users, all modules. Not a code-fix -- doesn't fit the gap-queue's PR/merge pipeline (no application code change, just an analysis deliverable), so dispatched as its own one-off worker task rather than added to REVIEW-FRAMEWORK-GAPS-QUEUE-01's queue. Runs alongside the gap-queue workers, sharing the same 3-worker concurrency cap (the queue dispatcher throttles itself automatically when total running workers >= cap, verified this self-corrects rather than needing a manual capacity bump)."
+    where: "Server task task-20260718-050114-cost-estimate--5-orgs-x-10-users--all-mo. Deliverable: docs/analysis/cost-estimate-5org-50user.md in compliance-tracker once merged (tier1 expected -- docs-only)."
+    last_touched: "2026-07-18"
