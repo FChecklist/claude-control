@@ -1370,3 +1370,47 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260718-090002-checks---balances--duplicate---data-qual/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-091002-checks---balances--exception-handling
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Checks & Balances: Exception Handling & Recovery''
+      on compliance-tracker reached status=completed. worker finished, no changes to
+      commit'
+    where: /opt/veridian/ai-os/tasks/task-20260718-091002-checks---balances--exception-handling/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-091004-checks---balances--risk--fraud---anomaly
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Checks & Balances: Risk, Fraud & Anomaly Detection''
+      on compliance-tracker reached status=completed. worker finished, no changes to
+      commit'
+    where: /opt/veridian/ai-os/tasks/task-20260718-091004-checks---balances--risk--fraud---anomaly/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-092002-checks---balances--separation-of-duties
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Checks & Balances: Separation of Duties & Approval
+      Controls'' on compliance-tracker reached status=completed. worker finished, no
+      changes to commit'
+    where: /opt/veridian/ai-os/tasks/task-20260718-092002-checks---balances--separation-of-duties/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-094002-retry-0--ai-architecture--software-firs
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''[retry 0] AI Architecture: Software-First AI-Second
+      Philosophy'' on compliance-tracker reached status=completed. worker finished,
+      no changes to commit'
+    where: /opt/veridian/ai-os/tasks/task-20260718-094002-retry-0--ai-architecture--software-firs/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
