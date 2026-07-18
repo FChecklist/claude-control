@@ -2058,3 +2058,12 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260718-132007-retry-1--api-governance--rate-limiting/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-18'
+
+  - id: PROJEXA-DEMO-01
+    project: projexa
+    type: task
+    status: done
+    summary: "Owner directive 2026-07-18: create 3 real login accounts on live projexa-ai.com for a customer to evaluate PROJEXA themselves -- 1 org owner (democeo@projexa-ai.com) + 2 members, all under one 'Demo Organization'. Real gap found: PROJEXA has no self-serve team-invite flow at all (org-members API is GET-only) -- every signup unconditionally creates a brand-new org, so there was no existing way to add 2 more users to the SAME org through the app's UI."
+    where: "Credentials + full mechanics: memory/projexa_customer_demo_accounts_2026-07-18.md (deliberately NOT restated here -- this is a git-tracked repo, credentials stay local-only per this session's established secrets-hygiene practice). Owner account provisioned via the real live signup/login flow (browser), verified via DB query that organizations+memberships+veridian_credentials all exist for real. The 2 member accounts provisioned via direct auth.users/auth.identities inserts (Supabase's own documented seed-user SQL pattern) + a manual memberships row, since no app-level invite path exists -- profiles auto-created via the existing on_auth_user_created trigger. All 3 logins verified working (owner via real UI flow reaching a live dashboard; the 2 members via a direct Supabase Auth API password-grant check, 200 + real access_token for both)."
+    last_touched: "2026-07-18"
+    dispatch: "solo (Super Boss, direct execution) -- Owner gave exact emails/org name/passwords, executed directly against the live projexa Supabase project (evpckeuxgvahguwsaeul) via Supabase MCP + live browser."
