@@ -979,3 +979,107 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260718-065005-ai-engineering-quality--logic-separation/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-070002-ai-engineering-quality--overall-code-qua
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''AI Engineering Quality: Overall Code Quality'' on
+      compliance-tracker reached status=failed. worker exited with code 1; systemd will
+      retry from this checkpoint up to the configured burst limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-070002-ai-engineering-quality--overall-code-qua/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-070004-ai-engineering-quality--technical-debt
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''AI Engineering Quality: Technical Debt & Complexity''
+      on compliance-tracker reached status=failed. worker exited with code 1; systemd
+      will retry from this checkpoint up to the configured burst limit before giving
+      up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-070004-ai-engineering-quality--technical-debt/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-070005-ai-maintainability--ai-safe-change-capab
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''AI Maintainability: AI Safe-Change Capability'' on
+      compliance-tracker reached status=failed. worker exited with code 1; systemd will
+      retry from this checkpoint up to the configured burst limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-070005-ai-maintainability--ai-safe-change-capab/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-071002-ai-maintainability--change-risk-manageme
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''AI Maintainability: Change Risk Management'' on compliance-tracker
+      reached status=failed. worker exited with code 1; systemd will retry from this
+      checkpoint up to the configured burst limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-071002-ai-maintainability--change-risk-manageme/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-071004-ai-model-lifecycle---benchmarking--depre
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''AI Model Lifecycle & Benchmarking: Deprecation &
+      Rollback'' on compliance-tracker reached status=failed. worker exited with code
+      1; systemd will retry from this checkpoint up to the configured burst limit before
+      giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-071004-ai-model-lifecycle---benchmarking--depre/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-071005-ai-model-lifecycle---benchmarking--evalu
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''AI Model Lifecycle & Benchmarking: Evaluation & Promotion
+      Process'' on compliance-tracker reached status=failed. worker exited with code
+      1; systemd will retry from this checkpoint up to the configured burst limit before
+      giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-071005-ai-model-lifecycle---benchmarking--evalu/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-072002-ai-model-lifecycle---benchmarking--ongoi
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''AI Model Lifecycle & Benchmarking: Ongoing Quality
+      Monitoring'' on compliance-tracker reached status=failed. worker exited with code
+      1; systemd will retry from this checkpoint up to the configured burst limit before
+      giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-072002-ai-model-lifecycle---benchmarking--ongoi/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-072004-ai-platform--ai-platform---general
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''AI Platform: AI Platform - General'' on compliance-tracker
+      reached status=failed. worker exited with code 1; systemd will retry from this
+      checkpoint up to the configured burst limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-072004-ai-platform--ai-platform---general/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-072006-api-governance--rate-limiting--versionin
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''API Governance (Rate Limiting, Versioning, Webhooks):
+      API Developer Experience'' on compliance-tracker reached status=failed. worker
+      exited with code 1; systemd will retry from this checkpoint up to the configured
+      burst limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-072006-api-governance--rate-limiting--versionin/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
