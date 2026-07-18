@@ -1414,3 +1414,75 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260718-094002-retry-0--ai-architecture--software-firs/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-095002-retry-0--ai-cost-governance---finops--c
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 0] AI Cost Governance & FinOps: Cost Monitoring
+      & Forecasting'' on compliance-tracker reached status=failed. worker exited with
+      code 1; systemd will retry from this checkpoint up to the configured burst limit
+      before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-095002-retry-0--ai-cost-governance---finops--c/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-100002-retry-0--ai-cost-governance---finops--c
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 0] AI Cost Governance & FinOps: Cost Visibility
+      & Attribution'' on compliance-tracker reached status=failed. worker exited with
+      code 1; systemd will retry from this checkpoint up to the configured burst limit
+      before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-100002-retry-0--ai-cost-governance---finops--c/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-101002-retry-0--ai-documentation--ai-readable
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 0] AI Documentation: AI-Readable Technical
+      Documentation'' on compliance-tracker reached status=failed. worker exited with
+      code 1; systemd will retry from this checkpoint up to the configured burst limit
+      before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-101002-retry-0--ai-documentation--ai-readable/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-105002-retry-1--ai-cost-governance---finops--c
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 1] AI Cost Governance & FinOps: Cost Monitoring
+      & Forecasting'' on compliance-tracker reached status=failed. worker exited with
+      code 1; systemd will retry from this checkpoint up to the configured burst limit
+      before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-105002-retry-1--ai-cost-governance---finops--c/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-105004-retry-1--ai-cost-governance---finops--c
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 1] AI Cost Governance & FinOps: Cost Visibility
+      & Attribution'' on compliance-tracker reached status=failed. worker exited with
+      code 1; systemd will retry from this checkpoint up to the configured burst limit
+      before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-105004-retry-1--ai-cost-governance---finops--c/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-105006-retry-1--ai-documentation--ai-readable
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 1] AI Documentation: AI-Readable Technical
+      Documentation'' on compliance-tracker reached status=failed. worker exited with
+      code 1; systemd will retry from this checkpoint up to the configured burst limit
+      before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-105006-retry-1--ai-documentation--ai-readable/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
