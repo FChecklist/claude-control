@@ -719,3 +719,45 @@ entries:
     summary: "Two infra bugs found + fixed while operating the gap-queue dispatcher, neither needed Owner input: (1) systemctl --user commands (invoked by queue-dispatcher.py -> veridian-task.py create) failed under cron with 'Failed to connect to bus: No medium found' -- cron doesn't inherit the XDG_RUNTIME_DIR/dbus session an interactive SSH login gets via pam_systemd. Fixed at the crontab level (covers every cron job, not just one script): added XDG_RUNTIME_DIR=/run/user/1000 as a crontab environment line (works because loginctl enable-linger rajat keeps that runtime dir alive persistently). Verified via a simulated minimal cron environment before trusting it, then confirmed a real subsequent cron tick dispatched cleanly. Cleaned up 3 orphaned worktrees/branches/task-dirs from the failed attempts (confirmed none had been pushed before deleting). (2) PROGRESS.md is committed to main by each merged task, so a fresh worktree for a NEW task inherited the PREVIOUS task's 'complete' content until the new worker overwrote it -- caused a false 'already complete' checkpoint report, and could have fed a resumed worker the wrong task's status if killed before its first real write. Fixed in veridian-task.py's cmd_create: overwrite PROGRESS.md with a fresh task-scoped stub immediately after worktree creation. Confirmed the actual claude -p processes for affected tasks were running the correct prompts regardless (checked via ps -ef) -- no work was actually misdirected, only the status reporting was wrong."
     where: "/opt/veridian/scripts/queue-dispatcher.py, veridian-task.py (cmd_create), crontab -l on VERIDIAN-DEV server."
     last_touched: "2026-07-18"
+
+  - id: WORKER-20260718-045007-ai-architecture--ai-interaction-efficien
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''AI Architecture: AI Interaction Efficiency'' on compliance-tracker
+      reached status=completed. worker finished, no changes to commit'
+    where: /opt/veridian/ai-os/tasks/task-20260718-045007-ai-architecture--ai-interaction-efficien/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-045009-ai-architecture--ai-orchestration--routi
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''AI Architecture: AI Orchestration, Routing & Failover''
+      on compliance-tracker reached status=completed. worker finished, no changes to
+      commit'
+    where: /opt/veridian/ai-os/tasks/task-20260718-045009-ai-architecture--ai-orchestration--routi/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-050114-cost-estimate--5-orgs-x-10-users--all-mo
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Cost estimate: 5 orgs x 10 users, all modules'' on
+      compliance-tracker reached status=completed. tier1, Superboss-approved, merged
+      autonomously: https://github.com/FChecklist/compliance-tracker/pull/416'
+    where: '/opt/veridian/ai-os/tasks/task-20260718-050114-cost-estimate--5-orgs-x-10-users--all-mo/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/416'
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-051002-ai-architecture--domain-accuracy---quali
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''AI Architecture: Domain Accuracy & Quality'' on compliance-tracker
+      reached status=completed. worker finished, no changes to commit'
+    where: /opt/veridian/ai-os/tasks/task-20260718-051002-ai-architecture--domain-accuracy---quali/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
