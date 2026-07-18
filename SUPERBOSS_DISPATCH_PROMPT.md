@@ -308,3 +308,30 @@ going forward for routine task completions. See
 mechanics. Manual entries (like this file's own SUPERBOSS-PROMPT-01) are
 still appropriate for governance/architecture changes — the automated
 routine only covers individual worker-task terminal states.
+
+## CRITICAL FIX 2026-07-18 — execution backend was broken (OpenRouter 402), now fixed
+
+Every server worker task dispatched today was silently routed through
+`ANTHROPIC_BASE_URL=http://127.0.0.1:8787` (veridian-glm-proxy.service,
+translating Anthropic-shaped calls to OpenRouter/GLM-5.2), NOT through
+`CLAUDE_CODE_OAUTH_TOKEN` (the real Claude subscription plan) as this
+document's own header always specified. That OpenRouter account ran out of
+credits — every single worker task this session failed with a 402 error
+(`result.json`: "This request requires more credits"), which is the real
+root cause behind the large run of WORKER-\* `status: failed` entries synced
+into CONTROLLER.yaml and the ~20 stuck-CI PRs (#412-433) on compliance-tracker.
+
+**Fixed 2026-07-18**: commented out `ANTHROPIC_BASE_URL`/`ANTHROPIC_AUTH_TOKEN`/
+`ANTHROPIC_MODEL` in `/opt/veridian/shared/.env` (backup:
+`.env.backup-2026-07-18-glm-proxy-disable`), stopped+disabled
+`veridian-glm-proxy.service`. `claude` CLI now falls through to
+`CLAUDE_CODE_OAUTH_TOKEN` directly — verified live (a test call billed
+against `claude-sonnet-5`, zero OpenRouter involvement, zero 402).
+
+**Standing rule going forward**: do not re-enable `ANTHROPIC_BASE_URL`/the
+GLM proxy without a fresh Owner confirmation. Claude Code CLI via the
+subscription plan is the sole execution engine for every worker/supervisor/
+superboss role on this server — no other AI model, per Owner directive
+2026-07-18. If a future session finds `ANTHROPIC_BASE_URL` set again in
+`/opt/veridian/shared/.env`, that is a regression of this exact fix, not an
+intentional config — investigate before trusting it.
