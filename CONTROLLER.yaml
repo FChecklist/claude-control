@@ -677,3 +677,11 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260717-194836-deterministic-decision-impact-analysis/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-17'
+
+  - id: HETZNER-02
+    project: veridian
+    type: infrastructure
+    status: done
+    summary: "Switched VERIDIAN-DEV server's AI worker authentication from a raw Anthropic Console API key (pay-per-token billing) to a Claude subscription-plan-based long-lived OAuth token (Owner directive 2026-07-18: 'stop using anthropic api, thats instruction, its costly for current project'). Root cause of the earlier credit-exhaustion incident: the server's Claude Code CLI was never actually connected to the Owner's Claude plan -- it was authenticated via a raw API key found in an earlier credential dump, which is a materially different billing path than a subscription. Corrected: disabled the old key in-place (renamed, not deleted, in /opt/veridian/shared/.env) so Claude Code CLI falls back to no env-var auth; Owner ran `claude setup-token` interactively on the server themselves (OAuth login to their claude.ai account, one-time, cannot be done on Owner's behalf), producing a 1-year long-lived token; stored as CLAUDE_CODE_OAUTH_TOKEN in the same shared .env (picked up automatically by both worker and supervisor systemd units via their existing EnvironmentFile=). Verified working with a real headless claude -p call before relying on it. Resumed the 3 tasks that had failed on the old key (reset-failed + restart -- they do not auto-resume past their StartLimitBurst on their own, by design)."
+    where: "/opt/veridian/shared/.env (CLAUDE_CODE_OAUTH_TOKEN, ANTHROPIC_API_KEY_DISABLED_PER_OWNER_2026-07-18) on VERIDIAN-DEV server. Open honest question not yet resolved: whether a Claude subscription plan is intended to cover multiple concurrent unattended background workers (vs. one human driving the CLI interactively) -- flagged to Owner, not blocking, but not independently verified against Anthropic's terms either."
+    last_touched: "2026-07-18"
