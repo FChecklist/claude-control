@@ -3054,3 +3054,33 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260718-185248-rescue-pr--417/ on VERIDIAN-DEV
       server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-195944-rescue-pr--424
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Rescue PR #424'' on compliance-tracker reached status=completed.
+      worker finished, no changes to commit'
+    where: /opt/veridian/ai-os/tasks/task-20260718-195944-rescue-pr--424/ on VERIDIAN-DEV
+      server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-195946-rescue-pr--422
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Rescue PR #422'' on compliance-tracker reached status=completed.
+      worker finished, no changes to commit'
+    where: /opt/veridian/ai-os/tasks/task-20260718-195946-rescue-pr--422/ on VERIDIAN-DEV
+      server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-195948-rescue-pr--419
+    project: veridian
+    type: worker-task
+    status: in-progress
+    summary: 'Server-worker task ''Rescue PR #419'' on compliance-tracker reached status=awaiting_human_approval.
+      tier2, Superboss-approved, held for human merge: '
+    where: /opt/veridian/ai-os/tasks/task-20260718-195948-rescue-pr--419/ on VERIDIAN-DEV
+      server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
