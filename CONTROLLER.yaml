@@ -3084,3 +3084,23 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260718-195948-rescue-pr--419/ on VERIDIAN-DEV
       server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-202149-rescue-pr--414
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Rescue PR #414'' on compliance-tracker reached status=completed.
+      worker finished, no changes to commit'
+    where: /opt/veridian/ai-os/tasks/task-20260718-202149-rescue-pr--414/ on VERIDIAN-DEV
+      server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-202151-rescue-pr--413
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Rescue PR #413'' on compliance-tracker reached status=completed.
+      worker finished, no changes to commit'
+    where: /opt/veridian/ai-os/tasks/task-20260718-202151-rescue-pr--413/ on VERIDIAN-DEV
+      server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
