@@ -1952,3 +1952,109 @@ entries:
     last_touched: "2026-07-18"
     dispatch: "solo (Super Boss, direct fix) -- flagged via spawn_task (task_0bd44564) during AIROUTER-01's PR review, Owner then pasted the task content back asking for it to be fixed directly."
     audit: "pass -- structured AUDIT: PASS posted on PR #434 (tier1, test-file-only) and #435 (tier1, docs-only); both self-merged by Super Boss after CI fully green, per this repo's own tiered trust model."
+
+  - id: WORKER-20260718-130002-retry-2--ai-model-lifecycle---benchmark
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 2] AI Model Lifecycle & Benchmarking: Deprecation
+      & Rollback'' on compliance-tracker reached status=failed. worker exited with code
+      1; systemd will retry from this checkpoint up to the configured burst limit before
+      giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-130002-retry-2--ai-model-lifecycle---benchmark/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-130005-retry-2--ai-model-lifecycle---benchmark
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 2] AI Model Lifecycle & Benchmarking: Evaluation
+      & Promotion Process'' on compliance-tracker reached status=failed. worker exited
+      with code 1; systemd will retry from this checkpoint up to the configured burst
+      limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-130005-retry-2--ai-model-lifecycle---benchmark/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-130006-retry-2--ai-model-lifecycle---benchmark
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 2] AI Model Lifecycle & Benchmarking: Ongoing
+      Quality Monitoring'' on compliance-tracker reached status=failed. worker exited
+      with code 1; systemd will retry from this checkpoint up to the configured burst
+      limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-130006-retry-2--ai-model-lifecycle---benchmark/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-131002-retry-0--ai-platform--ai-platform---gen
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 0] AI Platform: AI Platform - General'' on
+      compliance-tracker reached status=failed. worker exited with code 1; systemd will
+      retry from this checkpoint up to the configured burst limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-131002-retry-0--ai-platform--ai-platform---gen/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-131005-retry-0--api-governance--rate-limiting
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 0] API Governance (Rate Limiting, Versioning,
+      Webhooks): API Developer Ex'' on compliance-tracker reached status=failed. worker
+      exited with code 1; systemd will retry from this checkpoint up to the configured
+      burst limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-131005-retry-0--api-governance--rate-limiting/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-131006-retry-0--api-governance--rate-limiting
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 0] API Governance (Rate Limiting, Versioning,
+      Webhooks): Rate Limiting & '' on compliance-tracker reached status=failed. worker
+      exited with code 1; systemd will retry from this checkpoint up to the configured
+      burst limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-131006-retry-0--api-governance--rate-limiting/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-132003-retry-1--ai-platform--ai-platform---gen
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 1] AI Platform: AI Platform - General'' on
+      compliance-tracker reached status=failed. worker exited with code 1; systemd will
+      retry from this checkpoint up to the configured burst limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-132003-retry-1--ai-platform--ai-platform---gen/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-132005-retry-1--api-governance--rate-limiting
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 1] API Governance (Rate Limiting, Versioning,
+      Webhooks): API Developer Ex'' on compliance-tracker reached status=failed. worker
+      exited with code 1; systemd will retry from this checkpoint up to the configured
+      burst limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-132005-retry-1--api-governance--rate-limiting/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-132007-retry-1--api-governance--rate-limiting
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 1] API Governance (Rate Limiting, Versioning,
+      Webhooks): Rate Limiting & '' on compliance-tracker reached status=failed. worker
+      exited with code 1; systemd will retry from this checkpoint up to the configured
+      burst limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-132007-retry-1--api-governance--rate-limiting/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
