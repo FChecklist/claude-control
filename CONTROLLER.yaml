@@ -2992,3 +2992,34 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260718-180651-rescue-pr--431/ on VERIDIAN-DEV
       server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-180652-rescue-pr--430
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Rescue PR #430'' on compliance-tracker reached status=completed.
+      worker finished, no changes to commit'
+    where: /opt/veridian/ai-os/tasks/task-20260718-180652-rescue-pr--430/ on VERIDIAN-DEV
+      server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-180654-rescue-pr--428
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Rescue PR #428'' on compliance-tracker reached status=completed.
+      worker finished, no changes to commit'
+    where: /opt/veridian/ai-os/tasks/task-20260718-180654-rescue-pr--428/ on VERIDIAN-DEV
+      server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-182019-rescue-pr--426
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Rescue PR #426'' on compliance-tracker reached status=blocked.
+      quality gates still failing after 3 auto-fix attempts; branch worker/task-20260718-182019-rescue-pr--426
+      pushed with failing state for human review, see quality-gate-*.json'
+    where: /opt/veridian/ai-os/tasks/task-20260718-182019-rescue-pr--426/ on VERIDIAN-DEV
+      server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
