@@ -1724,3 +1724,111 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260718-115006-retry-1--ai-engineering-quality--overal/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-120002-retry-2--ai-engineering-quality--error
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 2] AI Engineering Quality: Error Handling
+      & Logging'' on compliance-tracker reached status=failed. worker exited with code
+      1; systemd will retry from this checkpoint up to the configured burst limit before
+      giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-120002-retry-2--ai-engineering-quality--error/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-120004-retry-2--ai-engineering-quality--logic
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 2] AI Engineering Quality: Logic Separation
+      & Determinism'' on compliance-tracker reached status=failed. worker exited with
+      code 1; systemd will retry from this checkpoint up to the configured burst limit
+      before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-120004-retry-2--ai-engineering-quality--logic/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-120006-retry-2--ai-engineering-quality--overal
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 2] AI Engineering Quality: Overall Code Quality''
+      on compliance-tracker reached status=failed. worker exited with code 1; systemd
+      will retry from this checkpoint up to the configured burst limit before giving
+      up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-120006-retry-2--ai-engineering-quality--overal/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-121002-retry-0--ai-engineering-quality--techni
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 0] AI Engineering Quality: Technical Debt
+      & Complexity'' on compliance-tracker reached status=failed. worker exited with
+      code 1; systemd will retry from this checkpoint up to the configured burst limit
+      before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-121002-retry-0--ai-engineering-quality--techni/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-121004-retry-0--ai-maintainability--ai-safe-ch
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 0] AI Maintainability: AI Safe-Change Capability''
+      on compliance-tracker reached status=failed. worker exited with code 1; systemd
+      will retry from this checkpoint up to the configured burst limit before giving
+      up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-121004-retry-0--ai-maintainability--ai-safe-ch/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-121006-retry-0--ai-maintainability--change-ris
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 0] AI Maintainability: Change Risk Management''
+      on compliance-tracker reached status=failed. worker exited with code 1; systemd
+      will retry from this checkpoint up to the configured burst limit before giving
+      up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-121006-retry-0--ai-maintainability--change-ris/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-122002-retry-1--ai-engineering-quality--techni
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 1] AI Engineering Quality: Technical Debt
+      & Complexity'' on compliance-tracker reached status=failed. worker exited with
+      code 1; systemd will retry from this checkpoint up to the configured burst limit
+      before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-122002-retry-1--ai-engineering-quality--techni/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-122004-retry-1--ai-maintainability--ai-safe-ch
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 1] AI Maintainability: AI Safe-Change Capability''
+      on compliance-tracker reached status=failed. worker exited with code 1; systemd
+      will retry from this checkpoint up to the configured burst limit before giving
+      up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-122004-retry-1--ai-maintainability--ai-safe-ch/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-122006-retry-1--ai-maintainability--change-ris
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 1] AI Maintainability: Change Risk Management''
+      on compliance-tracker reached status=failed. worker exited with code 1; systemd
+      will retry from this checkpoint up to the configured burst limit before giving
+      up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-122006-retry-1--ai-maintainability--change-ris/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
