@@ -745,12 +745,51 @@ entries:
     project: veridian
     type: worker-task
     status: done
-    summary: 'Server-worker task ''Cost estimate: 5 orgs x 10 users, all modules'' on
-      compliance-tracker reached status=completed. tier1, Superboss-approved, merged
-      autonomously: https://github.com/FChecklist/compliance-tracker/pull/416'
+    summary: >-
+      CORRECTED 2026-07-18: this entry's earlier "merged autonomously" note was written the
+      moment the worker finished and was FALSE at the time -- supervisor-entrypoint.sh's tier1
+      path called `gh pr merge` without ever posting the required structured AUDIT: comment
+      first (see HETZNER-03-INFRA-FIXES-2 below), so the real merge attempt silently failed
+      while the script still recorded "completed...merged". PR #416 sat OPEN, blocked on
+      audit-check, until caught by manual verification and fixed same day. Now genuinely
+      MERGED (2026-07-18T06:02:26Z), via a manual one-time Unit-Tests-check override
+      (Owner-approved in chat, same class of exception as PR406-ONE-TIME-OVERRIDE-2026-07-18)
+      after audit-check was satisfied for real. Report: docs/analysis/cost-estimate-5org-50user.md.
+      Headline figure: ~$2.50-$4.00/user/month combined infra+AI (central estimate
+      ~$2.54/user/month = ~$127/month total for 50 users), infra is ~97-99% of that (Vercel
+      Pro ~$40-60/mo + Supabase Pro w/ Medium compute ~$75-125/mo), AI inference is a few
+      dollars/month total even under a heavier premium-model-mix scenario -- corrected Groq
+      floor-tier pricing (repo's own MODEL_PRICING constant was understated ~3.3-4x vs real
+      current Groq pricing) was the single most consequential finding in the report itself.
     where: '/opt/veridian/ai-os/tasks/task-20260718-050114-cost-estimate--5-orgs-x-10-users--all-mo/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/416'
     last_touched: '2026-07-18'
+
+  - id: HETZNER-03-INFRA-FIXES-2
+    project: veridian
+    type: infra-fix
+    status: done
+    summary: >-
+      Real bug found while verifying PR #416's "merged" claim (don't trust, verify --
+      see [[feedback_no_assumptions_full_file_reads]] pattern): supervisor-entrypoint.sh's
+      tier1+approve path called `gh pr merge` directly, with no structured AUDIT: PR comment
+      ever posted first, and no check on the merge command's own exit code before writing
+      "completed...merged autonomously" to the task checkpoint. Since mandatory-audit-check.yml
+      requires that structured comment as a required status check, EVERY tier1 auto-merge
+      attempt on compliance-tracker was silently failing at the merge step while being
+      unconditionally reported as successful -- confirmed via git history that only 2 tasks
+      ever reached this code path (an earlier claude-control-repo e2e test, unaffected since
+      that repo has no audit-check gate; and PR #416, confirmed broken). The 3 other
+      "completed" gap-queue tasks that day used a separate, legitimate "worker found no
+      changes needed, no PR opened" path and were not affected. Fixed in
+      supervisor-entrypoint.sh: post a real structured AUDIT: PASS/FAIL comment (all 8
+      required fields, built from the actual review.json verdict/summary/issues) before
+      attempting any tier1 merge, poll briefly for CI to clear BLOCKED/BEHIND before merging,
+      and only checkpoint "completed" if the merge command itself actually succeeds --
+      otherwise checkpoint "blocked" with an explicit "NOT actually merged" note so this
+      class of false-positive can never silently recur.
+    where: "/opt/veridian/scripts/supervisor-entrypoint.sh on VERIDIAN-DEV server."
+    last_touched: "2026-07-18"
 
   - id: WORKER-20260718-051002-ai-architecture--domain-accuracy---quali
     project: veridian
