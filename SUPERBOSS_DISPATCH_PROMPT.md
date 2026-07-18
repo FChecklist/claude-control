@@ -86,17 +86,148 @@ tier2-hold and reject paths were not separately live-fired yet.
 
 ## Known gaps (do not claim these are solved)
 
-- No task queue/scheduler daemon — tasks are created one at a time via the
-  CLI, by a human or by Claude Desktop following this prompt.
-- Model Router is deferred to a Claude-Code-CLI-via-proxy approach (route to
-  other models through an OpenRouter-style proxy, keep Claude Code as the one
-  agent harness) — not yet built. True multi-harness independence was
-  explicitly not chosen.
 - No per-worker resource limits (CPU/memory caps, concurrent-worker caps).
 - Failed tasks resume from checkpoint on restart, but a task that exhausts
   its `StartLimitBurst` (3 restarts / 30 min) does not auto-resume further —
   needs a human/Claude-Desktop-triggered new task referencing the old
   checkpoint history.
+- The GLM-5.2-via-proxy execution engine (see below) is validated on 3
+  synthetic capability tests (text reply, tool-use file read, tool-use file
+  edit) plus a small number of real gap-queue tasks — not yet proven at full
+  sustained multi-week load. Watch its early real-task outcomes for quality
+  drift versus the previous Claude-Code-native baseline; this is a genuinely
+  new execution substrate, not a like-for-like swap that can be assumed safe
+  by default.
+- The Master + 5 Supervisor role/file-ownership layer (below) is a policy
+  and reporting overlay on the existing tier1/tier2 supervisor-entrypoint.sh
+  pipeline, not a separate second execution engine. `module-queue-dispatcher.py`
+  and the per-module `ai-os/queues/*.yaml` files from the initial pilot
+  (`master-decompose.py`) exist but are NOT the primary path for the 1713-item
+  gap-queue backlog — that stays on `queue-dispatcher.py`/`gap_queue.yaml`,
+  now labeled by module for reporting. Do not fork the same backlog across
+  both mechanisms; that would double-dispatch the same findings.
+
+## Execution engine: GLM-5.2 via local Anthropic-protocol proxy (2026-07-18)
+
+Owner directive 2026-07-18: Claude subscription usage limits were observed
+actively blocking real work (38 of 296 gap-queue groups failed with
+`"You've hit your session limit"` mid-session — confirmed via task result.json,
+not assumed). Full swap: **Claude Code CLI is still the execution harness**
+(same tool-use loop — file edit, bash, git — same worktree/quality-gate/PR
+flow) but now runs against **GLM-5.2 via OpenRouter** instead of Anthropic's
+own models, through a small local translation proxy since OpenRouter speaks
+the OpenAI chat-completions protocol, not Anthropic's Messages protocol
+(confirmed by direct testing — pointing `ANTHROPIC_BASE_URL` straight at
+OpenRouter 404s).
+
+- Proxy: `/opt/veridian/scripts/anthropic_openrouter_proxy.py`, stdlib-only
+  Python (no third-party deps — deliberate, since this sits in the path of
+  every code change the framework writes), running as systemd user service
+  `veridian-glm-proxy.service` on `127.0.0.1:8787`, `Restart=on-failure`.
+- Config: `ANTHROPIC_BASE_URL=http://127.0.0.1:8787`,
+  `ANTHROPIC_AUTH_TOKEN=dummy-proxy-token` (placeholder — the proxy itself
+  holds and uses the real `OPENROUTER_API_KEY`), `ANTHROPIC_MODEL=z-ai/glm-5.2`,
+  all in `/opt/veridian/shared/.env`, auto-loaded by every worker and
+  supervisor systemd unit via their existing `EnvironmentFile=`.
+- **Live-verified before trusting it**, not just deployed: (1) plain text
+  reply — correct. (2) tool-use file read — correct content reported,
+  `num_turns:2` confirming a real tool_use/tool_result round trip. (3) tool-use
+  file **edit** — read the actual file after the run, confirmed the exact
+  intended line changed and nothing else did, `num_turns:3`. All three via
+  real `claude -p ... --dangerously-skip-permissions` calls against the
+  running proxy.
+- Cost note: Claude Code's own displayed `total_cost_usd` in these tests is
+  calibrated for Anthropic models and is **not** the real bill for a
+  non-Anthropic model routed through this proxy — treat it as noise, not a
+  budget signal, until real OpenRouter billing is checked directly.
+- `ANTHROPIC_API_KEY_DISABLED_PER_OWNER_2026-07-18` stays disabled — this
+  change does not reintroduce Anthropic-API metered billing, it replaces it
+  with OpenRouter/GLM-5.2 metered billing, which the Owner explicitly chose
+  in place of the Claude subscription's usage ceiling.
+
+## Role structure: Superboss (Master) + 5 module Supervisors (2026-07-18)
+
+Owner directive: standardize every agent on one flow, with GLM-5.2 as the
+model for all of it (Master, Supervisors, workers). This is layered onto the
+**existing, already-working** tier1/tier2 pipeline above, not a replacement:
+
+- **Superboss = Master.** Same seat as described at the top of this file
+  (server-side Claude CLI, now GLM-5.2-backed). Owns architecture-level
+  judgment: which gap-queue group goes to which Supervisor, tier1/tier2
+  classification via `risk-tier.py`, final review, merge authority.
+- **5 Supervisors, by module, mapped from each gap-queue item's category:**
+  - **Frontend** — UI/components/pages/forms (`src/app/**/page.tsx`,
+    `src/components/**`).
+  - **Backend** — APIs/services/business logic (`src/app/api/**`,
+    `src/lib/**-service.ts`, orchestration).
+  - **Database** — schema/SQL/migrations (`src/lib/db/schema.ts`,
+    `drizzle/**`).
+  - **QA/Testing** — tests, security, performance, docs (`*.test.ts`,
+    `docs/**`, CI test config).
+  - **DevOps/Integration** — CI/CD, deployment, monitoring
+    (`.github/workflows/**` — **but see the hard rule below**).
+  - A gap-queue item spanning multiple modules is fine to close as one PR
+    (current `queue-dispatcher.py` behavior) — the module label is for
+    routing/reporting clarity, not a hard split requirement on every finding.
+- **Standard task shape** (apply to new task prompts going forward — not a
+  retrofit of already-dispatched tasks): TASK ID, MODULE, OBJECTIVE, FILES
+  ALLOWED, FILES FORBIDDEN, DEPENDENCIES, INPUT, OUTPUT, STEPS, CONSTRAINTS,
+  VALIDATION, DONE CRITERIA. `queue-dispatcher.py`'s `build_prompt()` already
+  carries most of this (objective, findings, constraints); it doesn't yet
+  emit explicit FILES ALLOWED/FORBIDDEN per item — a real gap if file-ownership
+  enforcement is wanted at the per-task level rather than only at PR-review
+  time.
+- **Hard rule: never modify `.github/workflows/**` directly in a worker
+  task.** Confirmed real failure: the GitHub token lacks the `workflow`
+  OAuth scope, so any push touching a workflow file is rejected by GitHub
+  itself (`refusing to allow an OAuth App to create or update workflow ...
+  without workflow scope`) — real work gets done, then silently lost at the
+  push step. If a finding's only real fix requires a workflow-file change,
+  the worker should implement everything else and flag the workflow-file
+  part in PROGRESS.md as needing manual application (by the Owner or a
+  future PAT-scope change) rather than attempting and losing the push.
+
+## GitHub / Vercel / Supabase — how Superboss implements and audits
+
+- **GitHub**: every subtask ships as its own worktree branch + real PR (`gh
+  pr create`), regardless of tier — this is the audit trail. tier1+approve
+  merges via `gh pr merge --merge --delete-branch`; tier2 or reject holds
+  the PR open with a structured `AUDIT:` comment (8 required fields per
+  `mandatory-audit-check.yml` — concise, specific values only, no "n/a").
+  Workflow-file changes are out of scope per the hard rule above.
+- **Vercel**: no new action needed — the repo's existing GitHub integration
+  auto-deploys a preview on every PR and promotes on merge to main. Superboss
+  doesn't need to touch Vercel directly; it should note in its review if a
+  change plausibly affects build/deploy (new env var needed, new route,
+  etc.) so that's visible before merge, not after a broken deploy.
+- **Supabase**: schema changes go through this repo's existing Drizzle
+  migration convention (`drizzle/*.sql` + `schema.ts`, additive migrations
+  only, checked for numbering collisions before adding) — tier2 by
+  definition (matches the `migrations?/|schema\.(sql|prisma)|\*\.sql` path
+  pattern), always held for human sign-off, never auto-merged.
+
+## Retry policy for stuck gap-queue items (2026-07-18)
+
+`queue-dispatcher.py` now auto-retries `needs_retry` items (up to
+`MAX_RETRIES = 3`) instead of leaving them permanently stuck — this closed a
+real gap found live: 38 of 296 groups were stuck in `needs_retry` with no
+path back to dispatch, because the dispatcher only ever pulled from
+`status == "queued"`. After `MAX_RETRIES` failed attempts, an item moves to
+`stuck_needs_human` (surfaced by `gap-status.py`) instead of retrying
+forever. Also fixed: `worker-entrypoint.sh`'s first `claude -p` call used to
+**overwrite** `worker.log`/`result.json` on every restart (`>` instead of
+`>>`), destroying the evidence needed to diagnose why a task failed — now
+appends, so a task's full retry history survives for real debugging.
+
+## Reporting (reaffirm explicitly — do not assume this carries over)
+
+Per Owner's standing instruction: **do not narrate progress.** Report only
+`X of Y groups completed (Z%)` from `gap-status.py`, plus any item that
+genuinely needs the Owner's own decision (a `stuck_needs_human` item, a
+tier2 hold, a scope ambiguity). This applies to the GLM-5.2-backed Superboss
+exactly as it applied to the Claude-native one — state it plainly to any
+fresh Superboss/Supervisor session reading this file, since a different
+underlying model has no memory of this having been said before.
 
 ## Short-form dispatch prompt (v2)
 
