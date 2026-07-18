@@ -2509,3 +2509,107 @@ entries:
     raw_instruction: "make sure that the colour, fonts, navigation, in VERIDIAN AI OS, PROJEXA and all the products and services is exactly same as [veridian-scope-selector-in-home.html] ... make this a universal ui / ux. Make a module where its kept and from where complete FChecklist / Veridian ai os / PROJEXA / products / projects / modules / functions can take it. exactly this"
     dispatch: "solo (Super Boss, direct execution, plan-mode-confirmed) -- 2 explicit decisions confirmed with Owner before building: (1) new repo + git-dependency distribution over private-npm-registry or full monorepo restructuring, (2) VERIDIAN itself adopts the shared module too, not just PROJEXA. A 3rd decision (make the new repo public, given bun's private-repo git-dependency limitation) confirmed mid-build."
     audit: "pass -- structured AUDIT: PASS posted on compliance-tracker PR #436 (tier1, self-merged after CI green). projexa PR #38 left for Owner's own review/merge -- that repo has no CI or branch protection to gate an autonomous merge against, unlike compliance-tracker's tiered trust model."
+
+  - id: WORKER-20260718-153002-retry-2--business-rules-engine--rule-go
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 2] Business Rules Engine: Rule Governance
+      & Quality'' on compliance-tracker reached status=failed. worker exited with code
+      1; systemd will retry from this checkpoint up to the configured burst limit before
+      giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-153002-retry-2--business-rules-engine--rule-go/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-153005-retry-2--business-rules-engine--rule-li
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 2] Business Rules Engine: Rule Lifecycle Management''
+      on compliance-tracker reached status=failed. worker exited with code 1; systemd
+      will retry from this checkpoint up to the configured burst limit before giving
+      up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-153005-retry-2--business-rules-engine--rule-li/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-153007-retry-2--crm---sales-modules--accounts
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 2] CRM & Sales Modules: Accounts & Contacts''
+      on compliance-tracker reached status=failed. worker exited with code 1; systemd
+      will retry from this checkpoint up to the configured burst limit before giving
+      up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-153007-retry-2--crm---sales-modules--accounts/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-154002-retry-0--crm---sales-modules--leads
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 0] CRM & Sales Modules: Leads'' on compliance-tracker
+      reached status=failed. worker exited with code 1; systemd will retry from this
+      checkpoint up to the configured burst limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-154002-retry-0--crm---sales-modules--leads/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-154005-retry-0--crm---sales-modules--opportuni
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 0] CRM & Sales Modules: Opportunities'' on
+      compliance-tracker reached status=failed. worker exited with code 1; systemd will
+      retry from this checkpoint up to the configured burst limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-154005-retry-0--crm---sales-modules--opportuni/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-154007-retry-0--crm---sales-modules--sales-das
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 0] CRM & Sales Modules: Sales Dashboard''
+      on compliance-tracker reached status=failed. worker exited with code 1; systemd
+      will retry from this checkpoint up to the configured burst limit before giving
+      up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-154007-retry-0--crm---sales-modules--sales-das/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-155002-retry-1--crm---sales-modules--leads
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 1] CRM & Sales Modules: Leads'' on compliance-tracker
+      reached status=failed. worker exited with code 1; systemd will retry from this
+      checkpoint up to the configured burst limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-155002-retry-1--crm---sales-modules--leads/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-155004-retry-1--crm---sales-modules--opportuni
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 1] CRM & Sales Modules: Opportunities'' on
+      compliance-tracker reached status=failed. worker exited with code 1; systemd will
+      retry from this checkpoint up to the configured burst limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-155004-retry-1--crm---sales-modules--opportuni/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-155006-retry-1--crm---sales-modules--sales-das
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 1] CRM & Sales Modules: Sales Dashboard''
+      on compliance-tracker reached status=failed. worker exited with code 1; systemd
+      will retry from this checkpoint up to the configured burst limit before giving
+      up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-155006-retry-1--crm---sales-modules--sales-das/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
