@@ -1280,3 +1280,61 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260718-082004-crm---sales-modules--sales-pipeline/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-083002-crm---sales-modules--veri-reward--gamifi
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''CRM & Sales Modules: VERI Reward (Gamification &
+      Referral)'' on compliance-tracker reached status=failed. worker exited with code
+      1; systemd will retry from this checkpoint up to the configured burst limit before
+      giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-083002-crm---sales-modules--veri-reward--gamifi/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-083004-cache---synchronization--cache-integrity
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''Cache & Synchronization: Cache Integrity & Security''
+      on compliance-tracker reached status=failed. worker exited with code 1; systemd
+      will retry from this checkpoint up to the configured burst limit before giving
+      up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-083004-cache---synchronization--cache-integrity/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-083006-cache---synchronization--cache-utilizati
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''Cache & Synchronization: Cache Utilization & Prediction''
+      on compliance-tracker reached status=failed. worker exited with code 1; systemd
+      will retry from this checkpoint up to the configured burst limit before giving
+      up'
+    where: /opt/veridian/ai-os/tasks/task-20260718-083006-cache---synchronization--cache-utilizati/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-084004-calculation-engine--formula-library---cu
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Calculation Engine: Formula Library & Customization''
+      on compliance-tracker reached status=completed. worker finished, no changes to
+      commit'
+    where: /opt/veridian/ai-os/tasks/task-20260718-084004-calculation-engine--formula-library---cu/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-084006-checks---balances--audit-trail---immutab
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Checks & Balances: Audit Trail & Immutable Logging''
+      on compliance-tracker reached status=completed. worker finished, no changes to
+      commit'
+    where: /opt/veridian/ai-os/tasks/task-20260718-084006-checks---balances--audit-trail---immutab/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-18'
