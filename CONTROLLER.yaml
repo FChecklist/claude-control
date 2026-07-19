@@ -3464,3 +3464,11 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260719-061256-projexa-e2e-phase-1--architecture-discov/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-19'
+
+  - id: PROJEXA-E2E-PHASE1-COMPLETE-PHASE2-STARTED
+    project: projexa
+    type: gap-closure-program
+    status: in-progress
+    summary: "Phase 1 (architecture discovery + seed data) fully closed, PR #45 merged: real cross-system bridge documented with file:line citations (PROJEXA org -> veridian_credentials -> vk_ API key -> compliance-tracker org); 39/40 modules confirmed REAL-BACKING (settings is legitimately PROJEXA-native, not a gap); 1,007 rows seeded live in compliance-tracker for a new clean org 'Meridian Construction Group (E2E Test Org)' (id 4ecc472f-4152-4310-ae8d-cf8b7c52ab6d) -- 4 projects, 32 RFIs, 24 submittals, 40 punch-list items, and full procurement/sales/HR/payroll data. The one gap Phase 1's worker honestly couldn't close (no Supabase MCP/service-role access in its environment) -- the 11 real PROJEXA login accounts -- was completed directly via Supabase MCP in this session: created via direct auth.users/auth.identities inserts (hit and fixed a real GoTrue quirk: several auth.users text columns need empty-string not NULL, or GoTrue's own login query 500s with 'Database error querying schema'), verified working via a real Supabase Auth API call returning a valid JWT for 2 spot-checked accounts (CEO arjun.mehta@... and a member account). All 11: firstname.lastname@meridian-construction.e2e-test.projexa-ai.com, password MeridianE2E2026! for all. Phase 2 (writing + running real Playwright E2E tests across all 39 real-backed modules, plus real natural-language chat-command testing against the Copilot's actual 7-tool dispatch surface) dispatched as 3 parallel batches (Batch A: execution/field, Batch B: resources/design, Batch C: finance/sales/HR + chat commands), all running now."
+    where: "FChecklist/projexa PR #45 (merged); Supabase project evpckeuxgvahguwsaeul (11 accounts created live); 3 Phase 2 batch tasks running"
+    last_touched: "2026-07-19"
