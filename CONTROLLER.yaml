@@ -3264,3 +3264,11 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260719-004413-gap-closure--res-02-phase1/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-19'
+
+  - id: GAP-CLOSURE-BATCH-01-COMPLETE
+    project: veridian
+    type: gap-closure-program
+    status: done
+    summary: "First constitution gap-closure batch CLOSED 2026-07-19: #460 (UMR-03 instruction_execution_cache), #459 (DMP-04 full Dynamic Chain bundle proposals), #461 (RES-02 Phase 1, 5 more Tier-1 monitor events wired) all merged. A real code conflict in src/lib/services/fde-service.ts between #459 and the already-merged #460 (both touched the same import block and the same post-proposal code path) was resolved by combining both features (kept both new imports, kept both the Dynamic-Chain-bundle proposal AND the execution-path cache write, in sequence) -- verified findPriorExecutionPath() call site survived the merge intact via grep, not just import. All 3 PRs independently chose migration 0242 against the same main tip; resolved sequentially (0242 kept for #460, #459 renumbered to 0243, #461 renumbered to 0244) as each merged."
+    where: "FChecklist/compliance-tracker PRs #460, #459, #461 (all merged)"
+    last_touched: "2026-07-19"
