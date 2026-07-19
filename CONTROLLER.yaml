@@ -3526,3 +3526,25 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260719-070240-projexa-e2e-phase-2-batch-b--resources-d/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-19'
+
+  - id: WORKER-20260719-122711-airouter-01-phase-2--software-team-l0-l5
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''AIROUTER-01 Phase 2: Software Team L0-L5 + Instruction
+      Contract + Routing Matrix'' on compliance-tracker reached status=completed. worker
+      finished, no changes to commit'
+    where: /opt/veridian/ai-os/tasks/task-20260719-122711-airouter-01-phase-2--software-team-l0-l5/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-19'
+
+  - id: WORKER-20260719-132247-cost-incident-rca--api-called--11000-tim
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Cost Incident RCA: API called ~11000 times - root
+      cause + prevention'' on compliance-tracker reached status=completed. worker finished,
+      no changes to commit'
+    where: /opt/veridian/ai-os/tasks/task-20260719-132247-cost-incident-rca--api-called--11000-tim/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-19'
