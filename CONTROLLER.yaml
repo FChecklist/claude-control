@@ -3454,3 +3454,13 @@ entries:
     summary: "Both FChecklist/compliance-tracker's 'E2E Tests' CI job is currently broken for every PR (confirmed via direct reproduction on plain main, not just PR #417): bunx fetches playwright@latest (currently 1.61.1) fresh per-run with no version pin, and this version's config-loader can't resolve playwright.config.ts's self-referencing `import { defineConfig } from "playwright/test"` because the project has never had playwright as a real local devDependency (always relied on bunx's temp-fetched copy). Not a required merge-blocking check, so not currently blocking anything, but a real, confirmed, repo-wide regression as of ~2026-07-19T06:00 UTC. Real fix: add playwright as a genuine devDependency (so config self-reference resolves against the project's own node_modules) or pin bunx to a known-working playwright version in the CI workflow."
     where: "FChecklist/compliance-tracker .github/workflows/ci.yml E2E Tests job"
     last_touched: "2026-07-19"
+
+  - id: WORKER-20260719-061256-projexa-e2e-phase-1--architecture-discov
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''PROJEXA E2E Phase 1: architecture discovery + seed
+      data'' on projexa reached status=completed. worker finished, no changes to commit'
+    where: /opt/veridian/ai-os/tasks/task-20260719-061256-projexa-e2e-phase-1--architecture-discov/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-19'
