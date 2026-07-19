@@ -3417,3 +3417,24 @@ entries:
     summary: "Owner directive 2026-07-19 ('end to end testing of PROJEXA, all modules, zero gaps, no assumption; then gap doc + implement 100%; you dont need my approval'). Verified real module count first (no assumptions): 40 distinct top-level modules confirmed via file tree, not the stated 37. 5-phase program: Phase 1 (architecture discovery + realistic seed data for a new clean test org, 1 CEO + 10 employees) dispatched and running. Phase 2 (E2E test writing/execution across all 40 real modules), Phase 3 (chat/composer command testing against the real capability tree), Phase 4 (gap document), Phase 5 (100% fix implementation) not yet started, sequenced after Phase 1's report lands. Real architectural finding surfaced during Phase 1 dispatch prep: PROJEXA is genuinely cross-system -- its own Supabase project (evpckeuxgvahguwsaeul) holds only auth/org-membership tables, while real construction business data (projects/RFIs/submittals/etc.) lives in compliance-tracker's own database under a product-branch org; democeo@projexa-ai.com is NOT a compliance.users row, confirming PROJEXA's own Supabase Auth + a credential-bridge mechanism handles the cross-system link -- Phase 1's own task is to fully document this with file:line citations rather than trust this summary. Owner authorized proceeding through tier2 sign-offs without separate check-ins for this specific program ('you dont need my approval'); still applying own engineering judgment (CI green, audit posted, no destructive/payment/credential actions) before any merge."
     where: "FChecklist/projexa (Phase 1 task running); also in flight in parallel: PR 417 ajv/promptfoo real fix, and a real search+notifications feature build for PROJEXA -- both separately tracked, see prior CONTROLLER.yaml entries"
     last_touched: "2026-07-19"
+
+  - id: WORKER-20260719-052950-real-fix--pr-417-ajv-promptfoo-dependenc
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Real fix: PR 417 ajv/promptfoo dependency conflict''
+      on compliance-tracker reached status=completed. worker finished, no changes to
+      commit'
+    where: /opt/veridian/ai-os/tasks/task-20260719-052950-real-fix--pr-417-ajv-promptfoo-dependenc/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-19'
+
+  - id: WORKER-20260719-060409-projexa--build-real-search---notificatio
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''PROJEXA: build real search + notifications'' on projexa
+      reached status=completed. worker finished, no changes to commit'
+    where: /opt/veridian/ai-os/tasks/task-20260719-060409-projexa--build-real-search---notificatio/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-19'
