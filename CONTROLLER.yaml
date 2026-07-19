@@ -3340,3 +3340,26 @@ entries:
     summary: "Separately found: compliance.agent_review_records has Row Level Security DISABLED -- fully exposed to anon/authenticated. Not touched, not auto-fixed (same standing policy as above). Remediation SQL given to Owner: ALTER TABLE compliance.agent_review_records ENABLE ROW LEVEL SECURITY; -- needs accompanying policies added before enabling, or it will block all access."
     where: "Supabase project pcrjmlpuqsbocqfwoxod (verdian-ai), schema compliance"
     last_touched: "2026-07-19"
+
+  - id: WORKER-20260719-025216-migrate-compliance-tracker-to-consume-ve
+    project: veridian
+    type: worker-task
+    status: done
+    summary: Server-worker task 'Migrate compliance-tracker to consume veridian-ui-kit'
+      on compliance-tracker reached status=completed. worker finished, no changes to
+      commit
+    where: /opt/veridian/ai-os/tasks/task-20260719-025216-migrate-compliance-tracker-to-consume-ve/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-19'
+
+  - id: WORKER-20260719-031532-schema-ts--reflect-live-platform-schema
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''schema.ts: reflect live platform-schema table moves''
+      on compliance-tracker reached status=blocked. tier1, Superboss-approved, but the
+      merge itself FAILED (see supervisor.log) — needs manual attention, NOT actually
+      merged: https://github.com/FChecklist/compliance-tracker/pull/472'
+    where: '/opt/veridian/ai-os/tasks/task-20260719-031532-schema-ts--reflect-live-platform-schema/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/472'
+    last_touched: '2026-07-19'
