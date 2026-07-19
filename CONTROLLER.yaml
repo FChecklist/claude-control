@@ -1487,6 +1487,15 @@ entries:
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-18'
 
+  - id: COST-INCIDENT-11K-CALLS-RCA
+    project: veridian
+    type: incident-investigation
+    status: in-progress
+    summary: "Owner reported an earlier session had 'an api called 11000 times' and asked for root-cause analysis + prevention. Direct DB check found no table showing anywhere near 11,000 rows (orchestra_executions=2548 all-time, ai_routing_audit_log=0, token_usage_ledger=0 -- the last one because AI_TEAM_LOG_SECRET was never added to Vercel production per the 2026-07-08 token-ledger build, so writes have been failing silently since day one, a real visibility gap regardless of root cause). Dispatched as server-side worker task-20260719-132247-cost-incident-rca--api-called--11000-tim (running in parallel with AIROUTER-01 Phase 2, separate worktree, no file-scope collision) to investigate GitHub Actions run history, OpenRouter/Groq usage APIs, and VERIDIAN-DEV's own systemd/cron history against known prior incidents (the 2026-07-08 $12.34/$10 OpenRouter overspend, the 2026-07-18 ANTHROPIC_API_KEY credit exhaustion, the 2026-07-18 systemctl-from-cron bug that caused repeated failed dispatch retries) for a real match, and to implement genuine prevention (call-count circuit breaker, retry-storm guard, and/or fixing the AI_TEAM_LOG_SECRET gap) rather than guessing. Instructed to say plainly if no exact match to '11000' is found rather than forcing a fit."
+    where: "Server: /opt/veridian/ai-os/tasks/task-20260719-132247-cost-incident-rca--api-called--11000-tim/. Full tightened prompt was scp'd to the server, not committed to a repo (ephemeral dispatch input, same pattern as AIROUTER-01 Phase 2)."
+    last_touched: "2026-07-19"
+    dispatch: "Real server-side worker, CLAUDE_CODE_OAUTH_TOKEN only. Confirmed actively running via systemctl."
+
   - id: AIROUTER-01
     project: veridian
     type: architecture-spec
