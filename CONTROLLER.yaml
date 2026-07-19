@@ -3272,3 +3272,47 @@ entries:
     summary: "First constitution gap-closure batch CLOSED 2026-07-19: #460 (UMR-03 instruction_execution_cache), #459 (DMP-04 full Dynamic Chain bundle proposals), #461 (RES-02 Phase 1, 5 more Tier-1 monitor events wired) all merged. A real code conflict in src/lib/services/fde-service.ts between #459 and the already-merged #460 (both touched the same import block and the same post-proposal code path) was resolved by combining both features (kept both new imports, kept both the Dynamic-Chain-bundle proposal AND the execution-path cache write, in sequence) -- verified findPriorExecutionPath() call site survived the merge intact via grep, not just import. All 3 PRs independently chose migration 0242 against the same main tip; resolved sequentially (0242 kept for #460, #459 renumbered to 0243, #461 renumbered to 0244) as each merged."
     where: "FChecklist/compliance-tracker PRs #460, #459, #461 (all merged)"
     last_touched: "2026-07-19"
+
+  - id: WORKER-20260719-021225-gap-closure--dmp-06
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Gap closure: DMP-06'' on compliance-tracker reached
+      status=blocked. Superboss rejected: https://github.com/FChecklist/compliance-tracker/pull/466
+      — see review.json for issues'
+    where: '/opt/veridian/ai-os/tasks/task-20260719-021225-gap-closure--dmp-06/ on VERIDIAN-DEV
+      server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/466'
+    last_touched: '2026-07-19'
+
+  - id: WORKER-20260719-021227-gap-closure--gp-20-loop-prevention
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Gap closure: GP-20-loop-prevention'' on compliance-tracker
+      reached status=blocked. tier1, Superboss-approved, but the merge itself FAILED
+      (see supervisor.log) — needs manual attention, NOT actually merged: '
+    where: /opt/veridian/ai-os/tasks/task-20260719-021227-gap-closure--gp-20-loop-prevention/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-19'
+
+  - id: WORKER-20260719-021229-gap-closure--gp-08-09-hallucination-conf
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Gap closure: GP-08-09-hallucination-confidence''
+      on compliance-tracker reached status=completed. worker finished, no changes to
+      commit'
+    where: /opt/veridian/ai-os/tasks/task-20260719-021229-gap-closure--gp-08-09-hallucination-conf/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-19'
+
+  - id: WORKER-20260719-024156-veridian-ui-kit--extract-shared-appheade
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''veridian-ui-kit: extract shared AppHeader'' on veridian-ui-kit
+      reached status=blocked. Superboss rejected: https://github.com/FChecklist/veridian-ui-kit/pull/2
+      — see review.json for issues'
+    where: '/opt/veridian/ai-os/tasks/task-20260719-024156-veridian-ui-kit--extract-shared-appheade/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/veridian-ui-kit/pull/2'
+    last_touched: '2026-07-19'
