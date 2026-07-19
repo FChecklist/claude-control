@@ -3482,3 +3482,15 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260719-070238-projexa-e2e-phase-2-batch-a--execution-f/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-19'
+
+  - id: WORKER-20260719-070242-projexa-e2e-phase-2-batch-c--finance-sal
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''PROJEXA E2E Phase 2 Batch C: finance+sales+HR+chat
+      commands'' on projexa reached status=blocked. tier1, Superboss-approved, but the
+      merge itself FAILED (see supervisor.log) — needs manual attention, NOT actually
+      merged: https://github.com/FChecklist/projexa/pull/47'
+    where: '/opt/veridian/ai-os/tasks/task-20260719-070242-projexa-e2e-phase-2-batch-c--finance-sal/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/projexa/pull/47'
+    last_touched: '2026-07-19'
