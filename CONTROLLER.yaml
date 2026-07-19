@@ -3189,3 +3189,24 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260718-230822-rescue-pr--432/ on VERIDIAN-DEV
       server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-18'
+
+  - id: WORKER-20260718-230824-rescue-pr--429
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Rescue PR #429'' on compliance-tracker reached status=blocked.
+      tier1, Superboss-approved, but the merge itself FAILED (see supervisor.log) —
+      needs manual attention, NOT actually merged: https://github.com/FChecklist/compliance-tracker/pull/457'
+    where: '/opt/veridian/ai-os/tasks/task-20260718-230824-rescue-pr--429/ on VERIDIAN-DEV
+      server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/457'
+    last_touched: '2026-07-19'
+
+  - id: WORKER-20260718-230826-rescue-pr--427
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Rescue PR #427'' on compliance-tracker reached status=completed.
+      worker finished, no changes to commit'
+    where: /opt/veridian/ai-os/tasks/task-20260718-230826-rescue-pr--427/ on VERIDIAN-DEV
+      server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-19'
