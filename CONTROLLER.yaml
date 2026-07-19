@@ -3398,3 +3398,14 @@ entries:
     summary: "Owner directive 2026-07-19 ('close all gaps 100%, zero gaps, no regression, no assumption') -- systematic closure of every open item from the prior session segment: (1) RLS-disabled findings on platform.ai_model_registry/ai_routing_policies/ai_routing_audit_log AND compliance.agent_review_records -- both closed live via Supabase MCP with real deny-public/service-role-bypass policies, verified no regression (the app's real write path uses the postgres-owner db client which bypasses RLS as owner regardless). (2) AI Router model-agnostic gaps -- PR #475 merged + migrations applied live: roster-overrides.ts's isKnownModel() and orchestra-model-resolver.ts's 4 named failover-chain slots (platform_default/cerebras_failover/platform_fallback/escalated_default) are now registry-backed (platform.ai_model_registry's new role column) with safe fallback-to-hardcoded-literal on lookup failure; openai/gpt-oss-20b registered (Owner-confirmed real model, real Groq pricing verified live); customer_success added as a 4th AiRouterScope. model-tier-eligibility.ts's judgment/integrative trust allowlists deliberately left hardcoded (AGENTS.md Rule 9 safety guardrail, not a gap). (3) 4-domain x L0-L5 AI Orchestra Hierarchy documentation (PR #476, merged) -- formalizes the Owner's spec, synced into CONSTITUTION.yaml (new domain_hierarchy_ref cross-reference, clarifying it's a complementary axis to the existing model-trust ai_orchestra_tiers section) and OS.yaml (brain_pointer entry). (4) PR #417's ajv/promptfoo dependency conflict -- root cause fully diagnosed via real npm registry checks (promptfoo genuinely requires ajv@8, conflicting with eslints ajv@6; root package.json's explicit ajv pin is the likely actual blocker, not bun's overrides limitation per se) -- a real fix (remove the root pin and let nested resolution work naturally, or isolate promptfoo into its own install if that fails) is dispatched and running, not yet landed."
     where: "FChecklist/compliance-tracker PRs #475, #476 (merged); Supabase project pcrjmlpuqsbocqfwoxod (RLS fixes + registry migrations applied live); PR #417 fix still in progress"
     last_touched: "2026-07-19"
+
+  - id: WORKER-20260719-050016-ai-router--registry-backed-model-resolut
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''AI Router: registry-backed model resolution + customer_success
+      scope'' on compliance-tracker reached status=completed. worker finished, no changes
+      to commit'
+    where: /opt/veridian/ai-os/tasks/task-20260719-050016-ai-router--registry-backed-model-resolut/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-19'
