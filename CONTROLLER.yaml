@@ -3363,3 +3363,14 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260719-031532-schema-ts--reflect-live-platform-schema/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/472'
     last_touched: '2026-07-19'
+
+  - id: WORKER-20260719-034948-migrate-projexa-to-consume-veridian-ui-k
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Migrate PROJEXA to consume veridian-ui-kit'' on projexa
+      reached status=blocked. Superboss rejected: https://github.com/FChecklist/projexa/pull/43
+      — see review.json for issues'
+    where: '/opt/veridian/ai-os/tasks/task-20260719-034948-migrate-projexa-to-consume-veridian-ui-k/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/projexa/pull/43'
+    last_touched: '2026-07-19'
