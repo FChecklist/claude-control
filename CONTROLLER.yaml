@@ -3603,3 +3603,14 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260719-143503-superboss--evaluate-all-pending-work---b/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-19'
+
+  - id: WORKER-20260719-171130-reevaluate-2045-row-veridian-framework-r
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Reevaluate 2045-row VERIDIAN Framework Review + build
+      gap-closure plan (Owner-delegated decision authority)'' on compliance-tracker
+      reached status=blocked. Superboss rejected:  — see review.json for issues'
+    where: /opt/veridian/ai-os/tasks/task-20260719-171130-reevaluate-2045-row-veridian-framework-r/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-19'
