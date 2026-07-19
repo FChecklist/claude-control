@@ -3561,3 +3561,14 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260719-132247-cost-incident-rca--api-called--11000-tim/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-19'
+
+  - id: WORKER-20260719-140432-smoke-test--verify-glm-5-2-proxy-routing
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''SMOKE TEST: verify GLM-5.2 proxy routing end-to-end''
+      on compliance-tracker reached status=blocked. Superboss rejected: https://github.com/FChecklist/compliance-tracker/pull/484
+      — see review.json for issues'
+    where: '/opt/veridian/ai-os/tasks/task-20260719-140432-smoke-test--verify-glm-5-2-proxy-routing/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/484'
+    last_touched: '2026-07-19'
