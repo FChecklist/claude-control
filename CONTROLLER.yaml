@@ -3210,3 +3210,11 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260718-230826-rescue-pr--427/ on VERIDIAN-DEV
       server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-19'
+
+  - id: PR-RESCUE-PROGRAM-01-STATUS
+    project: veridian
+    type: decision-point
+    status: awaiting-owner-decision
+    summary: "PR-rescue program (see PR-RESCUE-PROGRAM-01/TIER2-SIGNOFF-QUEUE-01/02/03): 19 of 20 original PRs now merged (95%) after Owner-approved TIER2 batches (#412,#414,#419,#433,#415-via-#454,#425,#423,#421,#432 all merged 2026-07-18) plus TIER1 self-merges (#431,#428,#430,#426,#418,#420,#422,#424,#413,#429). One PR remains: #458 (Calculation Engine / Calculation Governance, rescued from the now-closed #427 via the same fresh-branch CI-trigger workaround proven on #415/#454) -- fully rebased, migration-collision-free (0225->0236->0241 after 2 renumbering rounds as main advanced), tsc-clean, CI-green (audit-check + all required checks pass). TIER2 (touches drizzle/0241_calculation_engine_governance.sql + schema.ts), held, not self-merged. AWAITING: Owner sign-off for #458 -- the last PR in this rescue program. #417 remains separately deprioritized (ajv/bun nested-overrides limitation on its promptfoo-evals workflow, honestly documented, non-required check, not part of the original 20-count). A recurring GitHub Actions reliability issue was discovered and documented 3 times this session (PRs stuck in mergeStateStatus=DIRTY get zero new check-suites on any push, even after empty-commit retriggers and close/reopen -- fixed each time by opening a fresh branch+PR once MERGEABLE) -- worth flagging to GitHub support if it recurs on future work."
+    where: "FChecklist/compliance-tracker PR #458 (final pending item)"
+    last_touched: "2026-07-18"
