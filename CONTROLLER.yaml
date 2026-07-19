@@ -3234,3 +3234,33 @@ entries:
     summary: "First constitution gap-closure batch (see PR-RESCUE-PROGRAM-01-COMPLETE for what preceded this) dispatched and completed 2026-07-18/19: 3 real, honestly-tagged CONSTITUTION.yaml gaps closed. #460 (UMR-03: new instruction_execution_cache table + findPriorExecutionPath() wired into the chat/DMP dispatch entry point, reusing the existing embeddings.ts pgvector pattern rather than reinventing it -- was POLICY_ONLY, now has a real mechanism). #459 (DMP-04 enhancement: FDE 'my option is not available' submissions now draft a full Dynamic Chain bundle -- module/rules/permissions/workflow/KPIs -- instead of just one workerAgents row; still gated by the existing human/CI review flow, AUTH-02/HAB-01 NOT weakened). #461 (RES-02/GAP-NARROW-MONITOR-ESCALATION Phase 1: wired 5 more Tier-1 monitor event types beyond the original APPROVAL_GRANTED/REJECTED pair, following the existing pattern exactly, no new architecture). All 3 are TIER2 (touch drizzle/*.sql and/or schema.ts) and CI-green (audit-check + all required checks pass). All 3 independently chose migration number 0242 against the same main tip -- will need sequential renumbering at merge time (same mechanical fix applied repeatedly during the PR-rescue program), not a content problem. AWAITING: Owner sign-off to merge #460, #459, #461."
     where: "FChecklist/compliance-tracker PRs #460, #459, #461"
     last_touched: "2026-07-19"
+
+  - id: WORKER-20260719-004409-gap-closure--umr-03
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Gap closure: UMR-03'' on compliance-tracker reached
+      status=completed. worker finished, no changes to commit'
+    where: /opt/veridian/ai-os/tasks/task-20260719-004409-gap-closure--umr-03/ on VERIDIAN-DEV
+      server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-19'
+
+  - id: WORKER-20260719-004411-gap-closure--dmp-04-enhancement
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Gap closure: DMP-04-enhancement'' on compliance-tracker
+      reached status=completed. worker finished, no changes to commit'
+    where: /opt/veridian/ai-os/tasks/task-20260719-004411-gap-closure--dmp-04-enhancement/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-19'
+
+  - id: WORKER-20260719-004413-gap-closure--res-02-phase1
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Gap closure: RES-02-Phase1'' on compliance-tracker
+      reached status=completed. worker finished, no changes to commit'
+    where: /opt/veridian/ai-os/tasks/task-20260719-004413-gap-closure--res-02-phase1/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-19'
