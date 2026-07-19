@@ -3438,3 +3438,19 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260719-060409-projexa--build-real-search---notificatio/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-19'
+
+  - id: ZERO-GAPS-CLOSURE-COMPLETE-2026-07-19
+    project: veridian
+    type: gap-closure-program
+    status: done
+    summary: "PR-417 merged: root cause was actually a THIRD conflict beyond ajv (js-yaml, root-pinned to 4.2.0 for a real @mdxeditor/editor CVE fix, vs promptfoo's bundled v5-only API usage) -- fixed by isolating promptfoo into its own CI job (npm install -g, isolated from the app's bun/node_modules tree) rather than forcing any root dependency change. Verified live on the server: ajv/promptfoo conflict genuinely resolved (eval ran real tests before hitting an unrelated 15-min timeout). Separately discovered and confirmed (reproduced on both PR-417's branch AND plain main): E2E Tests job is currently broken repo-wide due to bunx fetching a new playwright@latest (1.61.1) that breaks self-referencing 'playwright/test' config imports for any project without playwright as a real local devDependency -- NOT a regression from PR #417 (proven via direct reproduction on unmodified main), non-required check, but a real new finding for a follow-up fix (pin playwright version or add it as a real project dependency). PROJEXA search+notifications (PR #44) merged: search proxies PROJEXA's real live VERIDIAN data (RFIs/submittals/punch-list/change-orders via veridian-client.ts) + local todos/projects; 3 real notification triggers wired (RFI created, submittal status changed, punch-list item created); migration applied live via Supabase MCP (project evpckeuxgvahguwsaeul) since the worker had no DB access. Additional RLS gap found+closed on PROJEXA's own Supabase project: public.contact_requests (marketing lead-capture) was fully exposed for read/write, not just insert -- fixed with an insert-only anon policy + service_role bypass. All 4 original 'close all gaps 100%' items now genuinely closed: 2x RLS fixes, AI Router registry-backed fix, 4-table documentation, PR-417 dependency fix -- all merged/applied and verified live."
+    where: "FChecklist/compliance-tracker PR #417 (merged); FChecklist/projexa PR #44 (merged); Supabase projects pcrjmlpuqsbocqfwoxod + evpckeuxgvahguwsaeul (migrations + RLS fixes applied live)"
+    last_touched: "2026-07-19"
+
+  - id: FINDING-PLAYWRIGHT-E2E-BROKEN-REPO-WIDE
+    project: veridian
+    type: bug-finding
+    status: open
+    summary: "Both FChecklist/compliance-tracker's 'E2E Tests' CI job is currently broken for every PR (confirmed via direct reproduction on plain main, not just PR #417): bunx fetches playwright@latest (currently 1.61.1) fresh per-run with no version pin, and this version's config-loader can't resolve playwright.config.ts's self-referencing `import { defineConfig } from "playwright/test"` because the project has never had playwright as a real local devDependency (always relied on bunx's temp-fetched copy). Not a required merge-blocking check, so not currently blocking anything, but a real, confirmed, repo-wide regression as of ~2026-07-19T06:00 UTC. Real fix: add playwright as a genuine devDependency (so config self-reference resolves against the project's own node_modules) or pin bunx to a known-working playwright version in the CI workflow."
+    where: "FChecklist/compliance-tracker .github/workflows/ci.yml E2E Tests job"
+    last_touched: "2026-07-19"
