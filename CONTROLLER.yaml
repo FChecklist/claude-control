@@ -3374,3 +3374,19 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260719-034948-migrate-projexa-to-consume-veridian-ui-k/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/projexa/pull/43'
     last_touched: '2026-07-19'
+
+  - id: UI-KIT-MIGRATION-COMPLETE-2026-07-19
+    project: veridian
+    type: gap-closure-program
+    status: done
+    summary: "UI/UX shared-component migration CLOSED, both products verified live: compliance-tracker (PR #471, merged) swapped its real AppShell/AppSidebar/AppTopbar/VeriChatPanel for veridian-ui-kit's actual AppShellFrame/AppSidebar/AppHeader/PanelShell components (gated behind existing veriChatV2Enabled flag, one disclosed minor regression: right-panel width no longer persists across hard reload). PROJEXA (PR #42 + follow-up #43, both merged) did the same unconditionally, closing the originally-reported UI parity gap: AppHeader now has a real user-menu (Supabase Auth) and real panel-toggle; search/notifications honestly omitted (grepped first -- neither exists anywhere in PROJEXA, not faked); PR #43 added a PageHeading component across 34+ pages replacing the old per-page sticky AppTopbar title (disclosed gap from PR #42). Live-verified via browser: PROJEXA's /schedule route correctly shows the real shared right panel (Overview/Queries/Chats/To Do tabs), header shows real org/user data. veridian-ui-kit itself gained a previously-missing AppHeader component (PR #1, v0.2.0) as part of this work."
+    where: "FChecklist/veridian-ui-kit (v0.2.2), FChecklist/compliance-tracker PR #471, FChecklist/projexa PR #42+#43 -- all merged"
+    last_touched: "2026-07-19"
+
+  - id: AI-ROUTER-MODEL-AGNOSTIC-EVAL-2026-07-19
+    project: veridian
+    type: decision-point
+    status: in-progress
+    summary: "Owner asked to evaluate whether the AI Router is genuinely model-agnostic (swappable on the fly, no hardcoding) and pasted a detailed 4-domain x 6-level (L0-L5) operational hierarchy spec (Software Development / End User Work Management / Sales & Marketing / Customer Success) to formalize as documentation. Evaluation found: role-level model assignment IS genuinely live-swappable (ai_team_role_overrides + roster-overrides.ts's resolveEffectiveModel()); model-tier-eligibility.ts's judgment/integrative allowlists are DELIBERATELY hardcoded as a safety guardrail (AGENTS.md Rule 9) and should stay that way. Two real gaps found and a fix dispatched (task-20260719-050016, in progress): roster-overrides.ts's isKnownModel() only accepts models already in roster.ts's static array (should read platform.ai_model_registry instead); orchestra-model-resolver.ts hardcodes PLATFORM_DEFAULT_MODEL/FALLBACK/CEREBRAS/ESCALATED model constants (should be registry-backed with safe fallback). Also adding: gpt-oss-20b as a new registered model (Owner-confirmed real, not currently in codebase), and a 4th ai_router_scope value customer_success (mirroring the sales_marketing pattern). Documentation formalization of the 4-table hierarchy is the NEXT step, not yet dispatched."
+    where: "FChecklist/compliance-tracker (pending PR from task-20260719-050016)"
+    last_touched: "2026-07-19"
