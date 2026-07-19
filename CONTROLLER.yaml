@@ -3494,3 +3494,14 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260719-070242-projexa-e2e-phase-2-batch-c--finance-sal/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/projexa/pull/47'
     last_touched: '2026-07-19'
+
+  - id: WORKER-20260719-070240-projexa-e2e-phase-2-batch-b--resources-d
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''PROJEXA E2E Phase 2 Batch B: resources+design modules''
+      on projexa reached status=failed. worker exited with code 1; systemd will retry
+      from this checkpoint up to the configured burst limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260719-070240-projexa-e2e-phase-2-batch-b--resources-d/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-19'
