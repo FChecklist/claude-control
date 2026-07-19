@@ -3316,3 +3316,27 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260719-024156-veridian-ui-kit--extract-shared-appheade/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/veridian-ui-kit/pull/2'
     last_touched: '2026-07-19'
+
+  - id: DB-CATCHUP-AND-PLATFORM-SCHEMA-01
+    project: veridian
+    type: infra-fix
+    status: done
+    summary: "CRITICAL FINDING + FIX (2026-07-19): discovered none of 2026-07-18's PR-rescue/gap-closure work had reached the live Supabase database (verdian-ai project) -- last applied migration was 2026-07-17. Applied all 22 pending migrations (0224-0244) live via the Supabase MCP, verified all 12 new tables present and functional, zero new security issues. Owner directive follow-up: Supabase free tier caps at 2 databases (confirmed: only FChecklist/projexa + FChecklist/verdian-ai exist) -- created a new `platform` Postgres schema WITHIN compliance-tracker's existing database (drizzle/0245, PR #468 merged) for the UI-kit/capability-registry/AI-router supporting tables (dynamic_chains, worker_agents+5 satellites, module_registry+3 satellites, instruction_execution_cache, fde_requests, automation_rules+runs, ai_model_registry/ai_routing_policies/ai_routing_audit_log/ai_team_role_overrides, capability_improvement_proposals, task_capabilities -- 22 tables + 3 enum types total), designed so a future split into its own physical database is a clean schema-level export rather than untangling a monolith. Deliberately excluded platform_assets/platform_applications (compliance.auto_register_asset() hardcodes writes to compliance.platform_assets -- verified via pg_get_functiondef before moving anything). Honest limitation flagged to Owner: Postgres FKs cannot cross databases, so full physical independence later still requires replacing those FK constraints with app-level checks. schema.ts code-update task dispatched separately (task-20260719-031532) to make Drizzle definitions match the live move."
+    where: "Supabase project pcrjmlpuqsbocqfwoxod (verdian-ai); FChecklist/compliance-tracker PR #468 (migration file, merged) + a pending schema.ts PR"
+    last_touched: "2026-07-19"
+
+  - id: SECURITY-FLAG-RLS-DISABLED-3-TABLES
+    project: veridian
+    type: security-finding
+    status: awaiting-owner-decision
+    summary: "Found while listing the new platform schema's tables together: platform.ai_model_registry, platform.ai_routing_policies, platform.ai_routing_audit_log have Row Level Security DISABLED -- fully exposed to anon/authenticated Supabase client roles. Pre-existing gap from their original creation migration (0231, AIROUTER-01/Mother Router), not introduced by the schema move. No customer PII in these tables (platform config: model pricing, routing rules, routing audit trail) but they are admin-only platform config that should not be publicly readable. NOT auto-fixed per standing Supabase-advisor policy (enabling RLS without policies blocks all access). Remediation SQL prepared and given to Owner, awaiting explicit go-ahead: ALTER TABLE ... ENABLE ROW LEVEL SECURITY on all 3, plus a service-role-bypass-only policy on each (matching platform.ai_team_role_overrides own correct pattern from the same PR)."
+    where: "Supabase project pcrjmlpuqsbocqfwoxod (verdian-ai), schema platform"
+    last_touched: "2026-07-19"
+
+  - id: SECURITY-FLAG-RLS-DISABLED-AGENT-REVIEW-RECORDS
+    project: veridian
+    type: security-finding
+    status: awaiting-owner-decision
+    summary: "Separately found: compliance.agent_review_records has Row Level Security DISABLED -- fully exposed to anon/authenticated. Not touched, not auto-fixed (same standing policy as above). Remediation SQL given to Owner: ALTER TABLE compliance.agent_review_records ENABLE ROW LEVEL SECURITY; -- needs accompanying policies added before enabling, or it will block all access."
+    where: "Supabase project pcrjmlpuqsbocqfwoxod (verdian-ai), schema compliance"
+    last_touched: "2026-07-19"
