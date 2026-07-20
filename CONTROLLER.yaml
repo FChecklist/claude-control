@@ -3624,3 +3624,25 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260719-171130-reevaluate-2045-row-veridian-framework-r/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-19'
+
+  - id: WORKER-20260720-022703-superboss-v2-plan--unified-bottom-nav-st
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''SUPERBOSS_V2_PLAN: Unified bottom-nav strip'' on
+      compliance-tracker reached status=completed. worker finished, no changes to commit'
+    where: /opt/veridian/ai-os/tasks/task-20260720-022703-superboss-v2-plan--unified-bottom-nav-st/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-022708-superboss-v2-plan--shared-cross-repo-pro
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''SUPERBOSS_V2_PLAN: Shared cross-repo prompt-pattern
+      module'' on compliance-tracker reached status=failed. worker exited with code
+      1; systemd will retry from this checkpoint up to the configured burst limit before
+      giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260720-022708-superboss-v2-plan--shared-cross-repo-pro/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
