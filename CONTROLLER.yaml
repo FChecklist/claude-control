@@ -3646,3 +3646,36 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260720-022708-superboss-v2-plan--shared-cross-repo-pro/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-022706-superboss-v2-plan--verify-and-close-fixe
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''SUPERBOSS_V2_PLAN: Verify-and-close Fixed Assets
+      + Change Orders (already shippe'' on compliance-tracker reached status=completed.
+      worker finished, no changes to commit'
+    where: /opt/veridian/ai-os/tasks/task-20260720-022706-superboss-v2-plan--verify-and-close-fixe/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-025001-superboss-v2-plan--decisions-of-record
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''SUPERBOSS_V2_PLAN: Decisions-of-record (docs-only
+      close for the hold/document ro'' on compliance-tracker reached status=blocked.
+      tier1, Superboss-approved, but the merge itself FAILED (see supervisor.log) —
+      needs manual attention, NOT actually merged: https://github.com/FChecklist/compliance-tracker/pull/494'
+    where: '/opt/veridian/ai-os/tasks/task-20260720-025001-superboss-v2-plan--decisions-of-record/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/494'
+    last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-031725-indyanet-infisuite-in--3-account-reverse
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''indyanet.infisuite.in: 3-account reverse-engineering''
+      on infisuite-reverse-engineering reached status=blocked. periodic checkpoint'
+    where: /opt/veridian/ai-os/tasks/task-20260720-031725-indyanet-infisuite-in--3-account-reverse/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
