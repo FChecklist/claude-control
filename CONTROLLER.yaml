@@ -3724,3 +3724,108 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260720-035002-superboss-v2-plan--surface-loop-derived/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-022710-superboss-v2-plan--byob-bring-your-own-a
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''SUPERBOSS_V2_PLAN: BYOB bring-your-own-AI-model''
+      on compliance-tracker reached status=failed. worker exited with code 1; systemd
+      will retry from this checkpoint up to the configured burst limit before giving
+      up'
+    where: /opt/veridian/ai-os/tasks/task-20260720-022710-superboss-v2-plan--byob-bring-your-own-a/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-031002-superboss-v2-plan--persistent-vercel-sta
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''SUPERBOSS_V2_PLAN: Persistent Vercel staging env
+      + per-env var scoping'' on compliance-tracker reached status=failed. worker exited
+      with code 1; systemd will retry from this checkpoint up to the configured burst
+      limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260720-031002-superboss-v2-plan--persistent-vercel-sta/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-034002-superboss-v2-plan--mobile-field-ux-cross
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''SUPERBOSS_V2_PLAN: Mobile field UX cross-reference
+      to projexa'' on compliance-tracker reached status=completed. worker finished,
+      no changes to commit'
+    where: /opt/veridian/ai-os/tasks/task-20260720-034002-superboss-v2-plan--mobile-field-ux-cross/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-035005-superboss-v2-plan--sentry-dsn-startup-ch
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''SUPERBOSS_V2_PLAN: Sentry DSN startup check'' on
+      compliance-tracker reached status=completed. worker finished, no changes to commit'
+    where: /opt/veridian/ai-os/tasks/task-20260720-035005-superboss-v2-plan--sentry-dsn-startup-ch/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-044002-superboss-v2-plan--delegation-expiry-enf
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''SUPERBOSS_V2_PLAN: Delegation expiry enforcement
+      audit + test'' on compliance-tracker reached status=failed. worker exited with
+      code 1; systemd will retry from this checkpoint up to the configured burst limit
+      before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260720-044002-superboss-v2-plan--delegation-expiry-enf/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-045002-retry-1--superboss-v2-plan--delegation
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 1] SUPERBOSS_V2_PLAN: Delegation expiry enforcement
+      audit + test'' on compliance-tracker reached status=failed. worker exited with
+      code 1; systemd will retry from this checkpoint up to the configured burst limit
+      before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260720-045002-retry-1--superboss-v2-plan--delegation/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-045004-superboss-v2-plan--serverless-resource-l
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''SUPERBOSS_V2_PLAN: Serverless resource-limit tradeoff
+      doc + heavy-workload audit'' on compliance-tracker reached status=failed. worker
+      exited with code 1; systemd will retry from this checkpoint up to the configured
+      burst limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260720-045004-superboss-v2-plan--serverless-resource-l/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-045007-superboss-v2-plan--chat-context---termin
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''SUPERBOSS_V2_PLAN: Chat context + terminology + mode-pill
+      analytics'' on compliance-tracker reached status=failed. worker exited with code
+      1; systemd will retry from this checkpoint up to the configured burst limit before
+      giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260720-045007-superboss-v2-plan--chat-context---termin/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-045009-superboss-v2-plan--preview-deployment-sp
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''SUPERBOSS_V2_PLAN: Preview deployment spot-check''
+      on compliance-tracker reached status=failed. worker exited with code 1; systemd
+      will retry from this checkpoint up to the configured burst limit before giving
+      up'
+    where: /opt/veridian/ai-os/tasks/task-20260720-045009-superboss-v2-plan--preview-deployment-sp/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
