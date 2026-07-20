@@ -3712,3 +3712,15 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260720-031729-odoo-full-erp-reverse-engineering/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-035002-superboss-v2-plan--surface-loop-derived
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''SUPERBOSS_V2_PLAN: Surface loop-derived insights
+      conversationally'' on compliance-tracker reached status=failed. worker exited
+      with code 1; systemd will retry from this checkpoint up to the configured burst
+      limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260720-035002-superboss-v2-plan--surface-loop-derived/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
