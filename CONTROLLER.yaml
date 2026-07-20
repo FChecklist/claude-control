@@ -4201,3 +4201,67 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260720-055011-superboss-v2-plan--crm-contacts-list-rou/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-060002-retry-2--superboss-v2-plan--e-invoicing
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 2] SUPERBOSS_V2_PLAN: E-invoicing per-line
+      GstRt fix + IRP format scaffol'' on compliance-tracker reached status=failed.
+      worker exited with code 1; failure signature recorded for circuit breaker; pushed
+      whatever progress existed; systemd will retry up to the burst limit'
+    where: /opt/veridian/ai-os/tasks/task-20260720-060002-retry-2--superboss-v2-plan--e-invoicing/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-060006-superboss-v2-plan--continue-the-autonomo
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''SUPERBOSS_V2_PLAN: Continue the autonomous gap_queue
+      (system-driven, NOT a manua'' on compliance-tracker reached status=failed. worker
+      exited with code 1; failure signature recorded for circuit breaker; pushed whatever
+      progress existed; systemd will retry up to the burst limit'
+    where: /opt/veridian/ai-os/tasks/task-20260720-060006-superboss-v2-plan--continue-the-autonomo/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-060747-billstack-bharatnet-reverse-engineering
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: Server-worker task 'Billstack bharatnet reverse-engineering' on infisuite-reverse-engineering
+      reached status=failed. periodic checkpoint
+    where: /opt/veridian/ai-os/tasks/task-20260720-060747-billstack-bharatnet-reverse-engineering/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-060749-cityline-crm-billstack-reverse-engineeri
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: Server-worker task 'Cityline CRM+Billstack reverse-engineering' on infisuite-reverse-engineering
+      reached status=failed. periodic checkpoint
+    where: /opt/veridian/ai-os/tasks/task-20260720-060749-cityline-crm-billstack-reverse-engineeri/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-060750-cityline-contracts-reverse-engineering
+    project: veridian
+    type: worker-task
+    status: done
+    summary: Server-worker task 'Cityline Contracts reverse-engineering' on infisuite-reverse-engineering
+      reached status=completed. worker finished, no changes to commit
+    where: /opt/veridian/ai-os/tasks/task-20260720-060750-cityline-contracts-reverse-engineering/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-060752-cityline-ticketing-6-role-reverse-engine
+    project: veridian
+    type: worker-task
+    status: done
+    summary: Server-worker task 'Cityline Ticketing 6-role reverse-engineering' on infisuite-reverse-engineering
+      reached status=completed. worker finished, no changes to commit
+    where: /opt/veridian/ai-os/tasks/task-20260720-060752-cityline-ticketing-6-role-reverse-engine/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
