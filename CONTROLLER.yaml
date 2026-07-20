@@ -1487,6 +1487,15 @@ entries:
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-18'
 
+  - id: RCA-OVERNIGHT-DISPATCH-FAILURE-01
+    project: veridian
+    type: incident-investigation
+    status: done
+    summary: "At the 0800 IST 2026-07-20 status check, found the overnight gap-closure mission's execution phase never ran: PR #487 (the reevaluation + 25-task plan) merged at 17:33:50 UTC 07-19, then ZERO worker tasks dispatched for ~8.7 hours (completed=52/failed=164 completely static from 21:15 UTC onward). ROOT CAUSE: the active-dispatch mechanism was a Claude Desktop LOCAL scheduled task (veridian-glm-superboss-supervision), which only fires while that app is open on the Owner's laptop -- confirmed via list_scheduled_tasks showing exactly 1 lastRunAt in ~9 hours with nextRunAt skipping forward rather than backfilling missed windows. This was a disclosed risk at design time but its severity was underestimated (treated as 'some audits get skipped', not 'the entire unattended-execution mechanism never fires'). CONTRIBUTING FACTOR: queue-dispatcher.py -- a real, already-built, cron-driven, laptop-independent, concurrency-capped dispatcher exactly suited to this job -- was sitting disabled in crontab (#DISABLED-2026-07-18) the whole time; it was not checked/re-enabled before building a new Claude-Desktop-based mechanism instead."
+    where: "ai-os/RCA_OVERNIGHT_DISPATCH_FAILURE_2026-07-20.md, compliance-tracker PR #488 (tier1, docs-only). PREVENTION IMPLEMENTED, not just recommended: (1) queue-dispatcher.py re-enabled in crontab (*/10 * * * *, fully server-side, survives the laptop being closed indefinitely); (2) CONCURRENCY_CAP raised 3->5 (~80% of this 8-core box's capacity per Owner directive); (3) build_prompt() extended to accept a pre-written full_prompt field so properly-scoped plan tasks dispatch with their real spec, not forced through the generic CSV-finding format; (4) ai-os/gap_queue.yaml populated from the 25-task v2 plan (24 queued, 1 excluded as pure-projexa since this dispatcher instance is compliance-tracker-only -- a disclosed limitation, not silently mis-dispatched). LIVE-VERIFIED, not just deployed: manual test run dispatched exactly 5 real tasks and hit the concurrency cap correctly on first invocation, confirmed via systemctl showing 5 active workers. The Claude Desktop scheduled task (veridian-glm-superboss-supervision) reverted to audit-only role -- it no longer owns whether agents run, only whether they're running correctly."
+    last_touched: "2026-07-20"
+    dispatch: "RCA + fix built directly by Super Boss (this session) via SSH -- ops/tooling work, same class as every other server-script fix today. Not dispatched to a GLM-5.2 worker (this is meta-analysis of the supervising session's own mechanism choice, plus a small, well-understood script patch)."
+
   - id: SUPERBOSS-2045-GAP-CLOSURE-MISSION-01 # supersedes SUPERBOSS-24HOUR-AUDIT-RUN-01's window/role, same scheduled task repurposed
     project: veridian
     type: mission
