@@ -3679,3 +3679,36 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260720-031725-indyanet-infisuite-in--3-account-reverse/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-022700-superboss-v2-plan--finish-the-uae-countr
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''SUPERBOSS_V2_PLAN: Finish the UAE country pack (Multi-Country
+      pluggability proof'' on compliance-tracker reached status=failed. worker exited
+      with code 1; systemd will retry from this checkpoint up to the configured burst
+      limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260720-022700-superboss-v2-plan--finish-the-uae-countr/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-030153-crm-bharatnet-pilot--full-reverse-engine
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''CRM bharatnet pilot: full reverse-engineering'' on
+      infisuite-reverse-engineering reached status=completed. worker finished, no changes
+      to commit'
+    where: /opt/veridian/ai-os/tasks/task-20260720-030153-crm-bharatnet-pilot--full-reverse-engine/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-031729-odoo-full-erp-reverse-engineering
+    project: veridian
+    type: worker-task
+    status: done
+    summary: Server-worker task 'Odoo full ERP reverse-engineering' on odoo-reverse-engineering
+      reached status=completed. worker finished, no changes to commit
+    where: /opt/veridian/ai-os/tasks/task-20260720-031729-odoo-full-erp-reverse-engineering/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
