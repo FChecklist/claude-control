@@ -4009,3 +4009,195 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260720-052011-superboss-v2-plan--prompt---cache-real-p/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-053002-retry-2--superboss-v2-plan--crm-perform
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 2] SUPERBOSS_V2_PLAN: CRM performance-under-load
+      indexes + load-test harn'' on compliance-tracker reached status=failed. worker
+      exited with code 1; systemd will retry from this checkpoint up to the configured
+      burst limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260720-053002-retry-2--superboss-v2-plan--crm-perform/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-053004-retry-1--superboss-v2-plan--hr-performa
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 1] SUPERBOSS_V2_PLAN: HR performance/error-handling
+      + payroll rate audit'' on compliance-tracker reached status=failed. worker exited
+      with code 1; systemd will retry from this checkpoint up to the configured burst
+      limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260720-053004-retry-1--superboss-v2-plan--hr-performa/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-053007-retry-1--superboss-v2-plan--multi-offic
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 1] SUPERBOSS_V2_PLAN: Multi-office selector
+      correctness audit'' on compliance-tracker reached status=failed. worker exited
+      with code 1; systemd will retry from this checkpoint up to the configured burst
+      limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260720-053007-retry-1--superboss-v2-plan--multi-offic/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-053009-retry-1--superboss-v2-plan--prompt---ca
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 1] SUPERBOSS_V2_PLAN: Prompt & Cache real
+      production metrics'' on compliance-tracker reached status=failed. worker exited
+      with code 1; systemd will retry from this checkpoint up to the configured burst
+      limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260720-053009-retry-1--superboss-v2-plan--prompt---ca/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-053011-superboss-v2-plan--search-performance-ex
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''SUPERBOSS_V2_PLAN: Search performance EXPLAIN ANALYZE
+      + GIN index'' on compliance-tracker reached status=failed. worker exited with
+      code 1; systemd will retry from this checkpoint up to the configured burst limit
+      before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260720-053011-superboss-v2-plan--search-performance-ex/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-054001-retry-2--superboss-v2-plan--hr-performa
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 2] SUPERBOSS_V2_PLAN: HR performance/error-handling
+      + payroll rate audit'' on compliance-tracker reached status=failed. worker exited
+      with code 1; systemd will retry from this checkpoint up to the configured burst
+      limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260720-054001-retry-2--superboss-v2-plan--hr-performa/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-054004-retry-2--superboss-v2-plan--multi-offic
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 2] SUPERBOSS_V2_PLAN: Multi-office selector
+      correctness audit'' on compliance-tracker reached status=failed. worker exited
+      with code 1; systemd will retry from this checkpoint up to the configured burst
+      limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260720-054004-retry-2--superboss-v2-plan--multi-offic/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-054006-retry-2--superboss-v2-plan--prompt---ca
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 2] SUPERBOSS_V2_PLAN: Prompt & Cache real
+      production metrics'' on compliance-tracker reached status=failed. worker exited
+      with code 1; systemd will retry from this checkpoint up to the configured burst
+      limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260720-054006-retry-2--superboss-v2-plan--prompt---ca/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-054009-retry-1--superboss-v2-plan--search-perf
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 1] SUPERBOSS_V2_PLAN: Search performance EXPLAIN
+      ANALYZE + GIN index'' on compliance-tracker reached status=failed. worker exited
+      with code 1; systemd will retry from this checkpoint up to the configured burst
+      limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260720-054009-retry-1--superboss-v2-plan--search-perf/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-054011-superboss-v2-plan--e-invoicing-per-line
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''SUPERBOSS_V2_PLAN: E-invoicing per-line GstRt fix
+      + IRP format scaffolding'' on compliance-tracker reached status=failed. worker
+      exited with code 1; systemd will retry from this checkpoint up to the configured
+      burst limit before giving up'
+    where: /opt/veridian/ai-os/tasks/task-20260720-054011-superboss-v2-plan--e-invoicing-per-line/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-054314-canary-zero-waste-pipeline-test
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: Server-worker task 'CANARY zero-waste-pipeline test' on compliance-tracker
+      reached status=failed. worker exited with code 1; failure signature recorded for
+      circuit breaker; pushed whatever progress existed; systemd will retry up to the
+      burst limit
+    where: /opt/veridian/ai-os/tasks/task-20260720-054314-canary-zero-waste-pipeline-test/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-055002-retry-2--superboss-v2-plan--search-perf
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 2] SUPERBOSS_V2_PLAN: Search performance EXPLAIN
+      ANALYZE + GIN index'' on compliance-tracker reached status=failed. worker exited
+      with code 1; failure signature recorded for circuit breaker; pushed whatever progress
+      existed; systemd will retry up to the burst limit'
+    where: /opt/veridian/ai-os/tasks/task-20260720-055002-retry-2--superboss-v2-plan--search-perf/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-055004-retry-1--superboss-v2-plan--e-invoicing
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''[retry 1] SUPERBOSS_V2_PLAN: E-invoicing per-line
+      GstRt fix + IRP format scaffol'' on compliance-tracker reached status=failed.
+      worker exited with code 1; failure signature recorded for circuit breaker; pushed
+      whatever progress existed; systemd will retry up to the burst limit'
+    where: /opt/veridian/ai-os/tasks/task-20260720-055004-retry-1--superboss-v2-plan--e-invoicing/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-055007-superboss-v2-plan--executive-reporting-d
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''SUPERBOSS_V2_PLAN: Executive reporting drill-down
+      + cadence scheduled job'' on compliance-tracker reached status=failed. worker
+      exited with code 1; failure signature recorded for circuit breaker; pushed whatever
+      progress existed; systemd will retry up to the burst limit'
+    where: /opt/veridian/ai-os/tasks/task-20260720-055007-superboss-v2-plan--executive-reporting-d/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-055009-superboss-v2-plan--remove-anthropic-api
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''SUPERBOSS_V2_PLAN: Remove ANTHROPIC_API_KEY dead
+      code path'' on compliance-tracker reached status=failed. worker exited with code
+      1; failure signature recorded for circuit breaker; pushed whatever progress existed;
+      systemd will retry up to the burst limit'
+    where: /opt/veridian/ai-os/tasks/task-20260720-055009-superboss-v2-plan--remove-anthropic-api/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
+
+  - id: WORKER-20260720-055011-superboss-v2-plan--crm-contacts-list-rou
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''SUPERBOSS_V2_PLAN: CRM Contacts list route + page
+      (the one genuinely-missing Wav'' on compliance-tracker reached status=failed.
+      worker exited with code 1; failure signature recorded for circuit breaker; pushed
+      whatever progress existed; systemd will retry up to the burst limit'
+    where: /opt/veridian/ai-os/tasks/task-20260720-055011-superboss-v2-plan--crm-contacts-list-rou/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-20'
