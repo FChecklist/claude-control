@@ -4277,3 +4277,27 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260721-044724-wave-1--crm-schema---service-gaps--lost/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-21'
+
+  - id: WORKER-20260721-050239-wave-1-v2--crm-schema---service-gaps--lo
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Wave 1 v2: CRM schema + service gaps (lost reason,
+      activities, campaigns, CRUD audit)'' on compliance-tracker reached status=blocked.
+      PRE-FLIGHT HARD STOP (credit_accountant_rejected): existing software/mechanism
+      already covers this (system_index match) -- use it instead of spending AI credits'
+    where: /opt/veridian/ai-os/tasks/task-20260721-050239-wave-1-v2--crm-schema---service-gaps--lo/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-21'
+
+  - id: WORKER-20260721-051357-wave-1-v3--crm-schema---service-gaps--lo
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Wave 1 v3: CRM schema + service gaps (lost reason,
+      activities, campaigns, CRUD audit)'' on compliance-tracker reached status=blocked.
+      PRE-FLIGHT HARD STOP (credit_accountant_rejected): accountant call failed, failing
+      closed: claude -p reported is_error: '
+    where: /opt/veridian/ai-os/tasks/task-20260721-051357-wave-1-v3--crm-schema---service-gaps--lo/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-21'
