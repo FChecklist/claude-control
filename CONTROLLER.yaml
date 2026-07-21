@@ -4265,3 +4265,15 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260720-060752-cityline-ticketing-6-role-reverse-engine/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-20'
+
+  - id: WORKER-20260721-044724-wave-1--crm-schema---service-gaps--lost
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Wave 1: CRM schema + service gaps (lost reason, activities,
+      campaigns, CRUD audit)'' on compliance-tracker reached status=blocked. PRE-FLIGHT
+      HARD STOP (credit_accountant_rejected): existing software/mechanism already covers
+      this (system_index match) -- use it instead of spending AI credits'
+    where: /opt/veridian/ai-os/tasks/task-20260721-044724-wave-1--crm-schema---service-gaps--lost/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-21'
