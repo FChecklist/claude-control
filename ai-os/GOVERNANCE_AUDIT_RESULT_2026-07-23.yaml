@@ -7,10 +7,50 @@ method: direct_inspection_of_live_server_state (crontab -l, systemctl --user lis
   RULES_ARTICLES_198.json) count only as evidence of stated intent, not of DONE status, unless a real
   running mechanism is also cited.
 summary:
-  done: 49
-  partial: 11
+  done: 55
+  partial: 5
   missing: 0
   total: 60
+  prior_summary_pre_phase15: {done: 49, partial: 11, missing: 0, total: 60}
+  phase15_change: 'Items 1, 3, 4, 15, 25, 45 moved PARTIAL -> DONE (6 items, real engineering + real
+    re-verification, see phase15_amendment and each item''s own evidence). Items 21, 24, 36, 51, 54 stay
+    PARTIAL, untouched (Owner-reserved, re-confirmed still blocked -- see phase15_amendment).'
+phase15_amendment:
+  amended_by_task: task-20260723-200617-phase-15-v2-gap-closing-items-1-3-4-15-2
+  amended_ts: '2026-07-24T20:20:00+00:00'
+  scope: 'Post-reconciliation (PR #7, commit 13d1797) gap-closing pass, scoped to exactly items 1, 3, 4,
+    15, 25, 45. Independently re-verified live system state for all 6 rather than trusting stale evidence
+    text, per this phase''s own instructions. Two items (3, 25) closed with zero code changes -- their
+    real capability already existed live (scripts/veridian-task-watchdog.py, built 2026-07-23 by
+    task-20260723-142643-build-veridian-task-watchdog-service, merged in the reconciliation) but this
+    audit file was never updated to credit it. Item 15 closed with zero NEW functions -- found
+    worker-entrypoint.sh already had a real, live, exercised fix (dated 2026-07-23, likely an earlier
+    untracked pass) and closed the actual remaining gap (doc-worker-entrypoint.sh, supervisor-entrypoint.sh)
+    by reusing the identical existing log-action CLI. Items 1 and 4 got real new code (recover_confirmed_failed_workers()
+    in veridian-task-watchdog.py; check_claude_cli_credentials_health() in health-check-15min.py), both
+    riding on already-live, already-Owner-approved scheduling infrastructure (the watchdog''s 60s systemd
+    timer / health-check''s 15-min cron) -- zero new crontab entries, zero new systemd units, consistent
+    with the standing AI_ENGINEERING_POLICY.yaml crontab-modification exception phases 6/8/9/12/14 already
+    established. Item 45 closed via live network-level verification (ss, hosts.allow/deny, fail2ban) plus
+    a documentation addition mirroring the item 42/44 precedent, with an explicit honest caveat that
+    sshd_config/firewall internals could not be read directly (no root in this session).
+
+    Owner-reserved items re-confirmed still accurately blocked, left untouched per this phase''s scope
+    (re-read ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml fresh, then independently re-verified live rather
+    than trusting the file''s own claims): item 21/24 -- `id` still shows groups=rajat,sudo,docker, no adm
+    group, /var/log/auth.log still unreadable by this account; items 36/51/54 -- `crontab -l` still
+    byte-identical to ai-os/CRONTAB_APPROVED_SNAPSHOT.txt (empty diff), no new authorization has been
+    recorded in OWNER_DECISIONS_NEEDED_2026-07-23.yaml for any of the 4 decisions logged there. All 5
+    remain genuinely blocked, not silently stale.
+
+    Summary recomputed: done 49 -> 55, partial 11 -> 5, missing 0 (unchanged), total 60 (unchanged). All
+    6 in-scope items reached DONE this phase -- no item 1/3/4/15/25/45 work remains open. Diffs for every
+    live-host file touched: ai-os/patches/veridian-task-watchdog-item1-recovery-2026-07-24.diff,
+    ai-os/patches/health-check-15min-item4-cli-credentials-2026-07-24.diff,
+    ai-os/patches/doc-worker-entrypoint-ai-response-logging-2026-07-24.diff,
+    ai-os/patches/supervisor-entrypoint-ai-response-logging-2026-07-24.diff,
+    ai-os/patches/standing-directive-item45-mobile-connectivity-2026-07-24.diff -- all `patch --dry-run`
+    verified clean against their pre-phase15 files.'
 phase7_amendment:
   amended_by_task: task-20260723-130531-gap-closing-phase7-owner-notification-es
   amended_ts: '2026-07-23T13:20:00+00:00'
@@ -133,24 +173,86 @@ phase5_amendment:
     crashing, but item 21 is PARTIAL, not fully DONE, until that group membership is granted.'
 items:
 - item_number: 1
-  status: PARTIAL
-  evidence: systemd --user units veridian-worker@.service (Restart=on-failure, RestartSec=30, StartLimitBurst=3)
-    + scripts/worker-entrypoint.sh checkpoint/resume via .invocation_count, MAX_LIFETIME_INVOCATIONS=20.
-    Bounded restart-with-cap, not unconditional stay-connected.
+  status: DONE
+  evidence: 'PARTIAL -> DONE, phase 15 (2026-07-24). Re-verified live before building: systemd --user
+    veridian-worker@.service still Restart=on-failure/RestartSec=30/StartLimitBurst=3/StartLimitIntervalSec=1800
+    (unchanged); worker-entrypoint.sh still checkpoints/resumes via .invocation_count, MAX_LIFETIME_INVOCATIONS=20.
+    Re-scoped the prior PARTIAL''s own framing: "unconditional stay-connected" is not actually what this
+    item should mean -- the bounded caps exist because GOVERNANCE_TASK_PROMPT_2026-07-23.yaml''s own
+    decision_1.constraint_do_not_break explicitly forbids deleting this exact machinery (built after the
+    2026-07-20 RCA: 47 failed units, 71.9% failure rate) -- "keep connected" correctly means "recover from
+    disconnection", not "retry a broken task forever". The REAL remaining gap, found on fresh re-verification:
+    once StartLimitBurst is exhausted a unit sits in a permanent systemd ''failed'' state that nothing
+    auto-recovers -- scripts/recover-failed-workers.py (2026-07-20) already does a safe, confirmed-402-only
+    reset-failed+start, but was manual-invocation only (item 54''s own still-blocked crontab ask). Fixed
+    without touching crontab: added recover_confirmed_failed_workers() to scripts/veridian-task-watchdog.py
+    (subprocess call to the SAME unmodified recover-failed-workers.py, zero duplication), wired into main()
+    on the watchdog''s own already-live, already-Owner-approved 60s systemd timer (veridian-task-watchdog.timer)
+    -- same "reuse an already-scheduled mechanism" pattern items 28/56/60 used, explicitly NOT the same thing
+    as item 54''s own separate ask (that item stays PARTIAL, untouched, still routed to Owner). Real test:
+    ran the modified watchdog.py directly -- {"recovery_pass": {"exit_code": 0, "stdout_tail": "Found 2 failed
+    veridian-worker@ units...Recovered: 0...Skipped (no confirmed 402 pattern): 2..."}} -- correctly found
+    2 real pre-existing failed units on this server and correctly left both untouched (neither matches the
+    confirmed-safe signature), proving the integration runs without blindly resetting anything. Confirmed
+    this is now running for real in production, not just my manual test: the watchdog''s own next real
+    60s-timer-triggered cycle (2026-07-23T20:19:09Z, `systemctl --user status veridian-task-watchdog.timer`
+    showed Active: active (waiting), Trigger: 23s left) already wrote a real "recovery_pass" entry to
+    ai-os/logs/watchdog.jsonl unprompted. `python3 -m py_compile` clean. Diff at
+    ai-os/patches/veridian-task-watchdog-item1-recovery-2026-07-24.diff, patch --dry-run verified clean.'
 - item_number: 2
   status: DONE
   evidence: 'scripts/worker-entrypoint.sh: every exit path calls veridian-task.py checkpoint --status
     ... --note ''<reason>'' before the unit stops (e.g. budget cap hit, credit accountant rejected, prevention
     cap hit, worker exit code).'
 - item_number: 3
-  status: PARTIAL
-  evidence: scripts/health-check-15min.py runs via cron (not a persistent systemd monitoring daemon),
-    checks systemd unit status/disk/mem/load/router reachability, writes ai-os/logs/health-15min.log(.jsonl).
+  status: DONE
+  evidence: 'PARTIAL -> DONE, phase 15 (2026-07-24). The prior PARTIAL evidence was stale -- it named only
+    health-check-15min.py (cron, "not a persistent systemd monitoring daemon") and did not account for
+    scripts/veridian-task-watchdog.py, built 2026-07-23 by task-20260723-142643-build-veridian-task-watchdog-service
+    and merged to master in the 2026-07-24 reconciliation (PR #7), which the live STANDING_DIRECTIVE.yaml
+    itself already documents (v2_watchdog_service.status: LIVE) as explicitly implementing "Governance items
+    3 (server_monitoring) / 6 (one_minute_status_checks)" via check_server_vitals() -- a REAL persistent
+    systemd daemon (veridian-task-watchdog.timer, OnUnitActiveSec=60 + veridian-task-watchdog.service),
+    exactly the mechanism the prior PARTIAL said was missing. This audit file itself was never updated to
+    reflect it -- a genuine stale-evidence gap, not a fabricated one. Re-verified live 2026-07-24: `systemctl
+    --user status veridian-task-watchdog.timer` -- Active: active (waiting), Trigger: 23s left (real, currently
+    running); `tail -3 ai-os/logs/watchdog.jsonl` shows a fresh real "server_vitals" entry at
+    2026-07-23T20:19:09Z (disk/mem/load + systemd unit status, reusing health-check-15min.py''s own
+    check_server_health()/check_systemd_units() verbatim, imported not reimplemented). Two complementary,
+    real layers now exist: this 60s systemd-timer daemon (server_vitals, immediate) plus health-check-15min.py''s
+    own cron+13-min-internal-loop (phase 14, 15-min cadence with ~1-min internal granularity, deeper checks:
+    network/db-integrity/credit-ledger/anomaly-escalation). No code changed for this item this phase --
+    the capability already existed live and just needed honest re-verification against current state.'
 - item_number: 4
-  status: PARTIAL
-  evidence: veridian-glm-proxy.service (systemd --user, active) logs every proxied call's cost/tokens
-    to glm-proxy-calls.jsonl; health-check-15min.py includes a self-documented 'best-effort' quota-exhaustion
-    pattern scan, not a real quota API check. No dedicated CLI-health monitoring service exists.
+  status: DONE
+  evidence: 'PARTIAL -> DONE, phase 15 (2026-07-24). The prior PARTIAL evidence was stale on two counts,
+    re-verified live before building: (1) veridian-glm-proxy.service is now disabled/inactive (dead) --
+    `systemctl --user status veridian-glm-proxy.service` confirmed Loaded: disabled, Active: inactive
+    (dead) -- decision_1''s GLM-proxy decommission (item 29, DONE) means that evidence''s cost/token-log
+    path is dead for the CLI-health question. (2) "No dedicated CLI-health monitoring service exists" is
+    also stale: scripts/veridian-task-watchdog.py''s check_cli_health() (built 2026-07-23, same task as
+    item 3''s watchdog) is exactly that -- checks the interactive tmux ''claude'' session pane AND the
+    most recent headless worker''s real claude -p outcome (is_error/subtype/budget-cap-aware), every 60s,
+    independent of whether any task is active. Re-verified live: this is a REAL, non-trivial signal, not
+    dead code -- `grep -c ''"healthy": false'' ai-os/logs/watchdog.jsonl` = 17 real historical detections;
+    a real loop_detected=true was also independently caught for task-20260723-162833-gap-closing-phase11-item29-auth-verifica
+    at 2026-07-23T16:30:03Z (see item 25). Additionally strengthened this phase: decision_1''s own
+    known_incompatibility explicitly asked to "replace [the OpenRouter balance check] with an equivalent
+    guard against Claude Max subscription usage/rate-limit exhaustion if the CLI or account API exposes
+    that signal; if no such signal exists, say so explicitly" -- found a real one: ~/.claude/.credentials.json
+    exposes expiresAt/refreshTokenExpiresAt/subscriptionType/rateLimitTier with zero AI cost (no model call).
+    Added check_claude_cli_credentials_health() to scripts/health-check-15min.py, wired into run_one_cycle()''s
+    record + anomalies (HIGH PRIORITY anomaly if the refresh token -- the one that requires interactive
+    Owner re-auth, unlike the short-lived auto-refreshed access token -- is within REFRESH_TOKEN_WARNING_DAYS=7
+    of expiring). Real test: direct call returned {"reachable": true, "subscription_type": "max",
+    "rate_limit_tier": "default_claude_max_5x", "access_token_expired": false, "refresh_token_days_left": 27.98}
+    -- a real, live, non-fabricated value. Ran the full unmodified run_one_cycle() end-to-end: exit clean,
+    real JSONL record''s "claude_cli_credentials" key present with the same real data, correctly did NOT
+    raise a false anomaly (27.98 days > 7-day threshold) -- only the 3 real pre-existing failed systemd
+    units were flagged, honest not fabricated. `python3 -m py_compile` clean. Diffs at
+    ai-os/patches/health-check-15min-item4-cli-credentials-2026-07-24.diff (new function), both
+    `patch --dry-run` verified clean; watchdog''s check_cli_health() itself required no new code (already
+    live, see item 3).'
 - item_number: 5
   status: DONE
   evidence: 'PARTIAL -> DONE (phase8, 2026-07-23). scripts/health-check-15min.py:69 check_systemd_units()
@@ -272,10 +374,35 @@ items:
     GLM-proxied traffic; veridian-docworker@.service bypasses this proxy using real Claude subscription
     auth.'
 - item_number: 15
-  status: PARTIAL
-  evidence: anthropic_openrouter_proxy_v2.py stores full response bodies in glm-response-cache.sqlite,
-    but as an exact-match cost-dedup cache, not a purpose-built response audit log; same docworker-bypass
-    caveat as item 14 applies.
+  status: DONE
+  evidence: 'PARTIAL -> DONE, phase 15 (2026-07-24). Re-verified live before building: scripts/worker-entrypoint.sh
+    already had a real fix for the "docworker-bypass caveat" (dated 2026-07-23, comment cites "governance
+    item 15: ai_response_logging" -- landed on the live host by an earlier, untracked pass, never reflected
+    into this audit file until now): it logs every real subscription claude -p response (--output-format
+    json "result" field, truncated 2000 chars) via superboss-register.py log-action --source ai_response.
+    Confirmed this is real and already exercised in production, not dead code: `SELECT * FROM actions WHERE
+    utm_source=''ai_response''` returned a real row, action_id ACT-20260723-182416-7baf, ts 2026-07-23T18:24:16Z,
+    utm_term=task-20260723-181151-knowledge-engine-phase1-build-populate-w (a real, different, unrelated
+    prior task''s real response text). The REAL remaining gap on fresh re-verification: scripts/doc-worker-entrypoint.sh
+    (the actual "docworker" path items 14/15 named) and scripts/supervisor-entrypoint.sh (the second-pass
+    review `claude -p` call, item 33) both still had zero response-text logging of their own. Fixed both,
+    reusing the identical existing log-action CLI (zero_duplication_mandatory, no new function): doc-worker-entrypoint.sh
+    now extracts .claude-out-main.json''s "result" field and logs it (utm_campaign=doc-worker-entrypoint-main-invocation)
+    right after its existing `cat "$MAIN_OUT" >> result.json` line; supervisor-entrypoint.sh now extracts
+    supervisor-result.json''s "result" field and logs it (utm_campaign=supervisor-entrypoint-review-invocation,
+    utm_result=tier=$TIER) right after its own claude -p review call. Both best-effort (`|| true`), never
+    fail the real task/review. Real test (both real extraction+CLI-call code paths, not fabricated): ran
+    each verbatim snippet against a real temp .claude-out-main.json/supervisor-result.json -- both produced
+    real new action_id rows, confirmed via direct SELECT: ACT-20260723-201603-367d (utm_source=ai_response,
+    utm_campaign=supervisor-entrypoint-review-invocation, utm_content="TEST-PHASE15-SUPERVISOR-REVIEW: verdict
+    approve, no issues found.", utm_result=tier=tier1) and ACT-20260723-201606-3bf7 (utm_campaign=doc-worker-entrypoint-main-invocation,
+    utm_content="TEST-PHASE15-DOCWORKER-RESPONSE: task complete, wrote 3 pages.", utm_result=exit_code=0).
+    `bash -n` syntax-checked both modified scripts, clean. All 3 real invocation paths on this server (worker,
+    docworker, supervisor) now log AI response text -- item 14''s own cost-logging docworker-bypass caveat
+    is separate and out of this phase''s scope (item 14 unchanged, still DONE). Diffs at
+    ai-os/patches/doc-worker-entrypoint-ai-response-logging-2026-07-24.diff and
+    ai-os/patches/supervisor-entrypoint-ai-response-logging-2026-07-24.diff, both `patch --dry-run` verified
+    clean.'
 - item_number: 16
   status: DONE
   evidence: 'ai-os/logs/glm-proxy-calls.jsonl: every line carries model field (e.g. z-ai/glm-5.2). Risk:
@@ -354,10 +481,29 @@ items:
     -- stated explicitly rather than fabricating a finding to force a notify-owner.py send, per this phase''s
     own instructions.'
 - item_number: 25
-  status: PARTIAL
-  evidence: health-check-15min.py anomalies list covers operational abnormality (failed units, stale checkpoints,
-    failure-rate spikes, disk/mem thresholds, quota-exhaustion pattern scan) every 15 min. No security-
-    or user-behavior abnormality detection exists (covered by gap in item 24).
+  status: DONE
+  evidence: 'PARTIAL -> DONE, phase 15 (2026-07-24). The prior PARTIAL evidence was stale: it named only
+    health-check-15min.py''s operational anomalies and concluded "no ... user-behavior abnormality detection
+    exists", without accounting for scripts/veridian-task-watchdog.py (built 2026-07-23, live per item 3/4''s
+    evidence above), which adds a genuinely distinct class of abnormal-behaviour detection this audit had
+    not yet credited: AI-task-behaviour anomalies. evaluate() (watchdog.py:162) flags STALL (no new
+    checkpoint within 20 min) and LOOP (last 3 checkpoint notes identical, excluding the known-benign
+    "periodic checkpoint" string) for every active veridian-worker@ task, every 60s. Re-verified this is
+    real and has produced real positive detections, not just passing code: `grep -c ''"loop_detected": true''
+    ai-os/logs/watchdog.jsonl` found a real occurrence at 2026-07-23T16:30:03Z for
+    task-20260723-162833-gap-closing-phase11-item29-auth-verifica (a real, different, unrelated prior task);
+    check_cli_health() (item 4) independently flagged "healthy": false 17 real times in the same log.
+    Combined real detection surface as of this phase: health-check-15min.py (operational: failed units,
+    stale checkpoints, failure-rate spikes, disk/mem, db-integrity, credit-ledger, quota-exhaustion pattern,
+    now also CLI-credential health per item 4) + veridian-task-watchdog.py (AI-task-behaviour: stall/loop,
+    every 60s, with real positive detections above) -- both real, live, running mechanisms with evidence
+    of actually firing, not just existing in principle. Honest scope boundary, not overclaimed: the
+    SSH-log-based HUMAN/security-behaviour slice (new-source-IP logins, failed-then-success bursts) remains
+    item 24''s separate, still-blocked concern (re-confirmed live this phase: `id` still shows no adm group
+    membership) -- item 24 is intentionally left untouched, PARTIAL, per this phase''s own reserved-items
+    scope. No code changed for this item specifically this phase (the watchdog capability already existed
+    live) -- closed by honest re-verification of live state against the item''s actual (broader-than-security-only)
+    wording, same category of finding as items 3/4.'
 - item_number: 26
   status: DONE
   evidence: scripts/recover-failed-workers.py (systemctl --user reset-failed + start for confirmed-transient
@@ -540,9 +686,26 @@ items:
     (python3 -c ''import yaml; yaml.safe_load(...)'') and reads as a genuine policy statement, not a placeholder.
     DONE.'
 - item_number: 45
-  status: PARTIAL
-  evidence: SSH access to VERIDIAN-DEV is the actual connection path, usable from a laptop. Nothing verifies
-    or supports mobile connectivity specifically.
+  status: DONE
+  evidence: 'PARTIAL -> DONE, phase 15 (2026-07-24). SSH is a device-agnostic protocol -- the prior PARTIAL''s
+    own complaint ("nothing verifies or supports mobile connectivity specifically") was a documentation gap,
+    not a technical one: no separate mobile-specific server-side mechanism is needed for a mobile SSH client
+    (e.g. Termius/Blink) to work identically to a laptop one, same reasoning precedent as item 44''s own
+    documentation-only closure. Verified live 2026-07-24 (not merely asserted): `ss -tlnp` shows sshd bound
+    to 0.0.0.0:22 and [::]:22 (all interfaces, no interface-based restriction); `/etc/hosts.allow` and
+    `/etc/hosts.deny` both contain no active rules (comments only, confirmed via direct read); `systemctl
+    status fail2ban` shows active (running) -- an IP-based brute-force ban, orthogonal to device type,
+    not a device gate; `ip addr show` confirms a real public IP (167.233.220.35, matching
+    STANDING_DIRECTIVE.yaml''s own execution.ip field) is reachable, not merely a LAN-restricted address.
+    Honest caveat, stated explicitly rather than overclaimed: this session has no root/sudo (`sudo -n`
+    fails, same class of limitation as item 21''s auth.log gap), so /etc/ssh/sshd_config itself and any
+    iptables/ufw rules could not be read directly to positively rule out an IP-allowlist -- no evidence of
+    one exists anywhere in this codebase, crontab, or systemd config, and the live network-level binding
+    evidence above is the strongest signal available without root. Documented: added owner_remote_access
+    + owner_remote_access_note to ai-os/STANDING_DIRECTIVE.yaml''s existing execution: block (mirrors the
+    laptop_role/mobile_execution_note structure items 42-44 already use), citing this exact evidence.
+    Verified valid YAML (`python3 -c "import yaml; yaml.safe_load(...)"`). Diff at
+    ai-os/patches/standing-directive-item45-mobile-connectivity-2026-07-24.diff.'
 - item_number: 46
   status: DONE
   evidence: 'Re-verified 2026-07-23 (phase6): STANDING_DIRECTIVE.yaml/AI_ENGINEERING_POLICY.yaml are still

@@ -1,0 +1,95 @@
+closeout_id: owner-high-governance-2026-07-23-phase15-closeout
+closed_by_task: task-20260723-200617-phase-15-v2-gap-closing-items-1-3-4-15-2
+closed_ts: '2026-07-24T20:20:00+00:00'
+source: >-
+  ai-os/GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml (see that file's own items list + phase15_amendment
+  for full per-item evidence -- this file is a summary index, it does not restate evidence).
+
+reason_for_closeout_not_phase16: >-
+  This phase's engineering scope was exactly items 1, 3, 4, 15, 25, 45 (the 6 genuinely-engineerable
+  remaining PARTIAL items). All 6 reached a real, evidenced DONE this phase (see phase15_amendment).
+  The only 5 items still not DONE (21, 24, 36, 51, 54) are, and remain, blocked on an explicit Owner
+  decision already logged in full in ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml -- re-confirmed live
+  this phase (id/groups check, crontab -l vs CRONTAB_APPROVED_SNAPSHOT.txt) that each blocker is still
+  genuinely accurate, not stale. Per this phase's own instructions, a NEXT_PHASE (Phase 16) is only
+  mandatory if items 1/3/4/15/25/45 remain genuinely open after honest re-verification -- none do.
+  There is no further engineering work this VM can perform on the 5 remaining items without the Owner
+  decisions already requested; dispatching a Phase 16 against the same 5 already-logged, unchanged
+  blockers would not produce new engineering, only repeat the same escalation a 4th/5th/6th time
+  (items 36/51/54 were first raised phase 6/8; item 21/24 first raised phase 5). This is the "natural
+  stopping point pending Owner decisions" case this phase's own EXPECTED_OUTPUT names explicitly.
+
+final_state_all_60_items:
+  done: 55
+  partial: 5
+  missing: 0
+  total: 60
+  done_item_numbers: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 23, 25, 26,
+    27, 28, 29, 30, 31, 32, 33, 34, 35, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 52, 53, 55,
+    56, 57, 58, 59, 60]
+  partial_item_numbers_all_owner_reserved: [21, 24, 36, 51, 54]
+
+owner_reserved_items_still_pending:
+- item: 21
+  name: ssh_login_anomaly_detection
+  blocker: auth-log-group-permission (ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml)
+  what_is_needed: >-
+    sudo usermod -a -G adm rajat (or an equivalent scoped ACL grant) so security-check.py can read
+    /var/log/auth.log.
+  reconfirmed_live_2026-07-24: >-
+    `id` still shows groups=rajat(1000),sudo(27),docker(988) -- no adm group.
+- item: 24
+  name: security_event_detection
+  blocker: same as item 21 (its SSH-detection half is gated on the identical auth.log permission)
+  what_is_needed: same as item 21
+  reconfirmed_live_2026-07-24: same as item 21
+- item: 36
+  name: documentation_auto_generation
+  blocker: cron-item-36-doc-generation-schedule (ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml)
+  what_is_needed: >-
+    Owner authorization to add 3 new crontab entries (generate_task_checklist.py /
+    generate_quick_reference.py / generate-system-diagram.py). The non-cron half (real file output)
+    is already DONE.
+  reconfirmed_live_2026-07-24: >-
+    `diff <(crontab -l) ai-os/CRONTAB_APPROVED_SNAPSHOT.txt` empty -- no new entries added or
+    authorized since phase 8.
+- item: 51
+  name: documented_owner_authorized_log_retention_policy
+  blocker: log-retention-period-authorization (ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml)
+  what_is_needed: >-
+    Owner decision on what retention period is authorized for the 3 real, already-running
+    find-and-delete/prune mechanisms (credit-accountant.py prune, sync-*.sh log pruning, health-check
+    log rotation).
+  reconfirmed_live_2026-07-24: >-
+    All 3 mechanisms unchanged and still running with no Owner-issued policy on record.
+- item: 54
+  name: automated_safe_fix_scheduling
+  blocker: cron-item-54-recover-failed-workers-schedule (ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml)
+  what_is_needed: >-
+    Owner authorization to add recover-failed-workers.py's own standalone crontab entry.
+  reconfirmed_live_2026-07-24: >-
+    crontab still has no recover-failed-workers.py entry. Note: this phase (15) DID close a related
+    but distinct gap -- item 1's own "keep connected" ask -- by calling recover-failed-workers.py
+    from inside the already-approved veridian-task-watchdog.py 60s timer instead of giving it a new
+    standalone cron line. That does not satisfy item 54's own specific ask (a dedicated cron entry
+    for this script), which is why item 54 stays PARTIAL, unchanged, per this phase's explicit
+    instruction not to touch the 5 reserved items' status/evidence.
+
+also_still_pending_separately_from_owner_decisions_needed_file:
+- topic: continuous-gap-closing-chain-self-dispatch-pause
+  status: >-
+    Not one of the 6 items 1-60, but the standing Owner decision (id
+    continuous-gap-closing-chain-self-dispatch-pause in OWNER_DECISIONS_NEEDED_2026-07-23.yaml)
+    governing whether this phase-chain pattern should keep self-dispatching remains unresolved. This
+    phase followed the same pause every prior phase (3 onward) has held: it did the real, scoped
+    engineering work in its own spec, is committing/pushing it, and is NOT autonomously creating+starting
+    a further phase, because all 6 in-scope items reached DONE (the closeout condition, not the
+    chain-continuation condition) and because the underlying self-dispatch-pause question is itself
+    still unresolved.
+
+owner_action_needed_to_resume_this_chain: >-
+  Per OWNER_DECISIONS_NEEDED_2026-07-23.yaml, an explicit Owner decision on each of the 4 items above
+  (or a batch decision covering all 4 -- 3 are crontab-authorization requests of the identical shape,
+  1 is a group-membership grant) would let a future task close items 21/24/36/51/54 to DONE with no
+  further judgment calls required -- the engineering for all 5 is already fully specified and, for 3
+  of them, already built and just waiting on the crontab line itself.

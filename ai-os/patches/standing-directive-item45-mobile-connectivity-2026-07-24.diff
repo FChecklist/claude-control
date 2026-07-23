@@ -1,0 +1,21 @@
+--- a/ai-os/STANDING_DIRECTIVE.yaml
++++ b/ai-os/STANDING_DIRECTIVE.yaml
+@@ -19,6 +19,18 @@
+   mobile_execution_note: 'Mobile devices (phone/tablet) are thin-client access only, same prohibition as RULE-067 (RULES_ARTICLES_198.json) already states for local
+     machines: no development, execution, or AI processing shall occur on a mobile device, unless explicitly authorized. A mobile device may be used only to view or
+     trigger work that still runs on VERIDIAN-DEV via SSH -- never as the machine doing the work.'
++  owner_remote_access: laptop_or_mobile_thin_client_via_ssh
++  owner_remote_access_note: 'Governance item 45 (allow_owner_connect_from_laptop_or_mobile). SSH (port 22) is a
++    device-agnostic protocol -- the same auth/session mechanism this directive''s own laptop_role: ssh_client_only
++    (below, line ~371) already documents applies identically to a mobile SSH client (e.g. Termius/Blink), no
++    separate mobile-specific server-side mechanism exists or is needed. Re-verified live 2026-07-23 (phase 15):
++    `ss -tlnp` shows sshd bound to 0.0.0.0:22 and [::]:22 (all interfaces, not restricted to a specific source);
++    /etc/hosts.allow and /etc/hosts.deny both contain no active rules (comments only); fail2ban.service is active
++    (running) -- an IP-based brute-force ban, orthogonal to device type, not a device-type gate. Honest caveat:
++    this session has no root/sudo (same limitation as item 21''s auth.log gap), so /etc/ssh/sshd_config itself and
++    any iptables/ufw rules could not be read directly to positively rule out an IP-allowlist; no evidence of one
++    exists anywhere in this codebase or in crontab/systemd config, and the live network-level binding evidence
++    above is the strongest signal available without root.'
+ guardrails:
+   mandatory:
+   - ai-os/RULES_ARTICLES_198.json
