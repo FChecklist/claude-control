@@ -4337,3 +4337,16 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260723-045924-governance-build-owner-notifications-202/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-23'
+
+  - id: WORKER-20260723-052857-execution-rules-phase0-analysis-and-buil
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''execution-rules-phase0-analysis-and-build-2026-07-23''
+      on claude-control reached status=failed. PRE-FLIGHT REJECTED (tight_task_schema_violation,
+      transient): Scope contains vague, unresolved language ("etc."). Please replace
+      "etc." with the actual decision -- stating exactly what should happen helps avoid
+      leaving it for the model to guess. -- no model call made, no cost incurred'
+    where: /opt/veridian/ai-os/tasks/task-20260723-052857-execution-rules-phase0-analysis-and-buil/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-23'
