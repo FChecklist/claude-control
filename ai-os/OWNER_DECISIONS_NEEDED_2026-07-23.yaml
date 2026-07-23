@@ -95,3 +95,51 @@ decisions:
     The task spec that raised this item was explicit: 'do not build, this is an Owner policy
     call.'"
   status: awaiting_owner_decision
+
+- id: cron-item-36-doc-generation-schedule
+  raised_by_task: task-20260723-132537-gap-closing-phase8-coverage-notification
+  raised_ts: '2026-07-23T13:50:00+00:00'
+  title: "Add a crontab entry so generate_task_checklist.py / generate_quick_reference.py /
+    generate-system-diagram.py run automatically (governance item 36, documentation_auto_generation)"
+  what: "This phase built the non-cron half of item 36: generate_task_checklist.py and
+    generate_quick_reference.py now also write their generated output to real files under
+    ai-os/generated/ (in addition to their existing stdout print), and generate-system-diagram.py
+    was re-verified to already write a real file (ai-os/SYSTEM_DIAGRAM.md) -- so all 3 scripts now
+    produce real, persisted, auto-generated output when run. What remains is making them run
+    automatically instead of requiring a human/AI to remember to invoke them, e.g. a new crontab
+    entry such as '0 */6 * * * /opt/veridian/scripts/run-logged.sh \"generate-task-checklist\"
+    /usr/bin/python3 /opt/veridian/scripts/generate_task_checklist.py
+    /opt/veridian/ai-os/MASTER_INDEX.yaml >> /opt/veridian/ai-os/logs/generate-task-checklist-cron.log
+    2>&1' (mirroring the existing system-sync.py 6-hourly cadence), plus similar entries for the
+    other 2 scripts."
+  needed_action: "An Owner decision to authorize (or decline) adding these 3 new crontab entries.
+    If authorized, a future task adds them exactly as above (or with the Owner's preferred
+    schedule) and confirms via `crontab -l`."
+  why_not_done_automatically: "AI_ENGINEERING_POLICY.yaml automation_scope_boundary.standing_exceptions.
+    genuinely_irreversible_actions explicitly lists crontab modifications as a standing exception
+    requiring Owner confirmation before execution, 'never silently automated through, regardless of
+    any other directive's 100% automation framing' -- re-read live before this phase started and
+    confirmed still current policy."
+  status: awaiting_owner_decision
+
+- id: cron-item-54-recover-failed-workers-schedule
+  raised_by_task: task-20260723-132537-gap-closing-phase8-coverage-notification
+  raised_ts: '2026-07-23T13:50:00+00:00'
+  title: "Add a crontab entry for scripts/recover-failed-workers.py (governance item 54,
+    automated_safe_fix_scheduling)"
+  what: "Re-verified scripts/recover-failed-workers.py's safety gate is still real and unchanged:
+    is_402_balance_failure() only allows reset-failed+start for a failed veridian-worker@ unit whose
+    own task result.json contains the literal '\"api_error_status\":402' signature; every other
+    failed unit is left untouched and printed for manual review. A real manual invocation today
+    (`python3 recover-failed-workers.py`, no flags) exited 0 with 0 failed units found (clean state).
+    The script itself is safe and working; it is just not in crontab -- still manually-invoked only.
+    Proposed entry: '*/30 * * * * /opt/veridian/scripts/run-logged.sh \"recover-failed-workers\"
+    /usr/bin/python3 /opt/veridian/scripts/recover-failed-workers.py >>
+    /opt/veridian/ai-os/logs/recover-failed-workers-cron.log 2>&1' (mirrors the existing
+    run-logged.sh wrapper convention every other cron entry uses)."
+  needed_action: "An Owner decision to authorize (or decline) adding this crontab entry. If
+    authorized, a future task adds it exactly as above and confirms via `crontab -l`."
+  why_not_done_automatically: "Same standing exception as cron-item-36-doc-generation-schedule
+    above: AI_ENGINEERING_POLICY.yaml requires Owner confirmation before any crontab modification,
+    regardless of how safe the underlying script's own logic is."
+  status: awaiting_owner_decision

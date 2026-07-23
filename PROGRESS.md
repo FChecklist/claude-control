@@ -1,5 +1,9 @@
 # PROGRESS -- task-20260723-112603-gap-closing-phase4-continue-2026-07-23
 
+---
+
+# PROGRESS -- task-20260723-132537-gap-closing-phase8-coverage-notification
+
 ## Completed
 - [x] Read task.yaml, prompt.txt (PHASE4_CONTINUE_PROMPT_2026-07-23.txt) and the
       shared lessons file (CONTINUOUS_GAP_CLOSING_PROMPT_2026-07-23.txt) this
@@ -85,8 +89,20 @@ resolve that before any phase continues operationalizing it.
 
 # PROGRESS -- task-20260723-130531-gap-closing-phase7-owner-notification-es
 Phase 6's own PROGRESS.md (task-20260723-123602) is preserved in git history at commit
-c70021f and merged into this branch -- not restated here, per this repo's own
+c70021f, and Phase 7's own PROGRESS.md (task-20260723-130531) at commit 1e629f2 --
+both merged into this branch -- not restated here, per this repo's own
 "pointer, not restatement" discipline (see README.md / CONTROLLER.yaml).
+
+Note: this branch was originally cut from a master snapshot that predated the
+phase6/phase7 lineage landing (an upstream dispatch/sync gap, not something this
+task caused) -- `worker/task-20260723-130531-gap-closing-phase7-owner-notification-es`
+(tip `1e629f2`) was never merged into the `master` this branch forked from. Verified
+via `git merge-base --is-ancestor d91a796 HEAD` (NO) before starting this phase;
+fixed by merging that branch into this one as the first step, mirroring this repo's
+own established convention of each phase branch merging in the prior phase's branch
+(e.g. `dfdf0f4` merging phase5 into phase6).
+
+## Phase 7 recap (for reference; see commit 1e629f2 for full detail)
 ## Completed
 - [x] **Re-verified items 27/28/56 instead of trusting the stale MISSING status**
       (which predates `scripts/notify-owner.py`'s existence, per this task's own
@@ -191,3 +207,166 @@ this task's own prompt. Real task:
 `veridian-worker@task-20260723-132537-gap-closing-phase8-coverage-notification.service`
 unit -- confirmed active via `systemctl --user status`, real PID 389962 running
 `claude -p`).
+
+## Phase 8 (this task)
+
+### Completed
+- [x] **Branch topology fix, before any build work**: this branch had been cut from
+      a master snapshot predating the phase6/7 lineage (`git merge-base --is-ancestor
+      d91a796 HEAD` => NO). Merged
+      `worker/task-20260723-130531-gap-closing-phase7-owner-notification-es` (tip
+      `1e629f2`) into this branch first, per this repo's own established convention.
+      Only conflict was PROGRESS.md, resolved by keeping phase7's recap + appending
+      a Phase 8 section.
+- [x] **Fixed a pre-existing YAML syntax corruption** in
+      `ai-os/GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml` itself (2 unescaped single-quote
+      apostrophes inside single-quoted scalars -- "item 44's" / "item 42's" should
+      have been "44''s" / "42''s" -- which made the whole file fail `yaml.safe_load`).
+      Required to programmatically recompute summary counts per this task's own
+      SUCCESS_CRITERIA.
+- [x] **Item 5 (health_check_covers_all_services): PARTIAL -> DONE.** Re-verified
+      live host state first (systemd unit files confirmed: `veridian-worker@`,
+      `veridian-supervisor@`, `veridian-glm-proxy.service`,
+      `veridian-docworker@` all exist). Extended
+      `scripts/health-check-15min.py:69` `check_systemd_units()`'s
+      `systemctl --user list-units` pattern to also include
+      `veridian-glm-proxy.service` and `veridian-docworker@*`. Real test:
+      `check_systemd_units()` returns `{'total': 1, 'running': 1, 'failed_count': 0}`
+      (unchanged from pre-fix -- honestly, no glm-proxy/docworker@ instance is
+      currently loaded on this server, confirmed via `systemctl --user list-units
+      --all`, so the count doesn't change today; the fix is real coverage for when
+      one exists or fails). Full `health-check-15min.py` run: exit 0. Diff at
+      `ai-os/patches/health-check-systemd-unit-coverage-2026-07-23.diff`, `patch
+      --dry-run` verified.
+- [x] **Item 49 (active_approval_notification): PARTIAL -> DONE.** Re-verified
+      live host state first: `scripts/supervisor-entrypoint.sh`'s tier2-approve
+      branch (elif at line 201, checkpoint at line 202) still only set a passive
+      `awaiting_human_approval` DB status, no notify-owner.py call anywhere in the
+      file (zero-duplication check re-confirmed). Added a best-effort
+      `notify-owner.py --subject "Veridian: a task needs your approval" --body
+      "$APPROVAL_BODY" --dedupe-key "awaiting-approval-$TASK_ID" || true` call
+      right after the checkpoint, body in the simple-English convention. **Real
+      test, no fabricated task**: found 3 real, currently-active tier2 tasks in
+      `awaiting_human_approval` via `grep -l "status: awaiting_human_approval"
+      ai-os/tasks/*/task.yaml`. Called notify-owner.py directly with the exact
+      subject/body/dedupe-key the new code constructs for
+      `task-20260717-194828-support-session-impersonation` (PR
+      compliance-tracker#412) -- real Resend send confirmed (message id
+      `3a6436e9-255c-46fb-8ceb-ffe1d2fd2d8a`), and
+      `ai-os/logs/notify-owner-state.json` shows the new key
+      `awaiting-approval-task-20260717-194828-support-session-impersonation`
+      recorded at 2026-07-23T13:38:59Z. `bash -n` syntax-checked. Diff at
+      `ai-os/patches/supervisor-entrypoint-approval-notification-2026-07-23.diff`,
+      `patch --dry-run` verified.
+- [x] **Item 36 (documentation_auto_generation): amended, stays PARTIAL.**
+      Re-verified live host state first and found the audit's own evidence was
+      stale for 1 of 3 scripts: `generate-system-diagram.py` already writes a
+      real file (`ai-os/SYSTEM_DIAGRAM.md`, confirmed via a real run producing a
+      real 5KB file) -- it is NOT stdout-only, contrary to the prior evidence.
+      Built the buildable, non-cron part for the other 2:
+      `generate_task_checklist.py` and `generate_quick_reference.py` now also
+      write to `ai-os/generated/<script-name>-latest.yaml` (stdout kept). Real
+      test: both scripts run clean (exit 0), both new files real/non-empty/valid
+      YAML, byte-for-byte identical to their own stdout. Diffs at
+      `ai-os/patches/generate-task-checklist-file-write-2026-07-23.diff` and
+      `ai-os/patches/generate-quick-reference-file-write-2026-07-23.diff`, both
+      `patch --dry-run` verified. **Cron half NOT done**: re-verified
+      `AI_ENGINEERING_POLICY.yaml`'s `standing_exceptions` still requires Owner
+      confirmation before any crontab change -- routed to
+      `ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml` (id
+      `cron-item-36-doc-generation-schedule`) instead of added unilaterally.
+- [x] **Item 54 (automated_safe_fix_scheduling): amended, stays PARTIAL.**
+      Re-verified `scripts/recover-failed-workers.py`'s safety gate
+      (`is_402_balance_failure()`, line 44) is still real and unchanged -- only
+      resets units whose task result.json contains the literal
+      `"api_error_status":402`, everything else left untouched. Real manual
+      invocation today (no flags): exit 0, 0 failed units found (clean state).
+      No code change needed -- the script itself is correct. **Cron NOT added**,
+      same standing-exception reason as item 36 -- routed to
+      `ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml` (id
+      `cron-item-54-recover-failed-workers-schedule`).
+- [x] Updated `ai-os/GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml`: items 5/36/49/54
+      updated with real evidence, added a `phase8_amendment` block. Summary
+      recomputed (done 37->39, partial 23->21, missing 0) and cross-checked
+      against an independent PyYAML recount of all 60 `items[].status` entries --
+      matches exactly.
+- [x] Added 2 new entries to `ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml`
+      (`cron-item-36-doc-generation-schedule`,
+      `cron-item-54-recover-failed-workers-schedule`), both `status:
+      awaiting_owner_decision`.
+
+### Deliberately NOT done -- explained, not silently skipped
+- [ ] Did not add the crontab entries items 36/54 would ideally have --
+      `AI_ENGINEERING_POLICY.yaml` requires Owner confirmation first (see above).
+- [ ] Did not add a second `ai-os/generated/` copy for
+      `generate-system-diagram.py` -- it already durably persists real content
+      elsewhere (`ai-os/SYSTEM_DIAGRAM.md`); a second copy of the same content
+      would be pure duplication with no distinct purpose.
+- [ ] Did not touch item 60 (its own gap -- manual-trigger/no-crontab for the
+      same 3 doc scripts -- is unchanged by this phase's fix, since only the
+      stdout-vs-file behavior changed, not the cron-trigger behavior; leaving it
+      PARTIAL is still accurate, not a new inconsistency).
+
+## NEXT_PHASE -- Phase 9 draft (spec only; self-dispatch commands NOT run this
+phase -- see note below)
+
+Targets 3 concrete remaining PARTIAL items from
+`ai-os/GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml`:
+
+**ITEM_10 (no distinct WARNING severity level)** -- FILE:
+`scripts/health-check-15min.py`, `main()` (anomalies built ~line 554-608,
+disk/mem thresholds at line 581/583, currently binary: `>= 90%` is the only
+threshold, everything else silent). FIX: add a parallel `warnings` list (e.g.
+disk/mem `>= 75% and < 90%` -> WARN, `>= 90%` stays the existing anomaly/error
+tier), logged with a distinct `WARN:` prefix in `health-15min.log` (grep
+today: zero `WARN` hits, confirmed), NOT fed into `send_anomaly_notifications()`
+own escalation (that stays anomaly-only, avoid duplicating the phase7 streak
+mechanism onto a lower severity tier it wasn't designed for). TEST: force a
+disk/mem value in the 75-89% synthetic range through the function directly,
+confirm a `WARN:` entry appears in the returned dict/log line and no Owner
+email fires for it; re-run the real unmodified script, confirm exit 0 and (if
+real disk/mem stays under 75%) zero WARN entries in that real run.
+
+**ITEM_25 (no security/behavior anomaly feeds the anomalies pipeline)** --
+FILES: `scripts/security-check.py` (own `notify_owner()` at line 157, `main()`
+at line 170, own cron `*/15 * * * *`, own state file
+`ai-os/logs/security-check-state.json`) and `scripts/health-check-15min.py`
+(`anomalies` list, ~line 554). Re-verify first whether merging would
+double-notify (security-check.py already calls its own `notify_owner()` per
+finding with its own dedupe keys). If so: make health-check-15min.py's
+addition **surface-only** -- read `security-check-state.json`'s
+`new_source_ips`/`failed_then_success_bursts` counts recorded within the
+current 15-min window and append a one-line summary string to `anomalies`
+(for ATTENTION.md/log visibility and the existing streak-escalation dict),
+but do NOT call `notify_owner()` a second time for the same finding (already
+sent by security-check.py itself) -- ATTENTION.md/health-15min.log gets full
+visibility, Owner inbox does not get duplicate emails. TEST: with a real
+recorded entry (or none, if genuinely empty right now -- say so, do not
+fabricate) in `security-check-state.json`, confirm the summary line appears
+in `anomalies` on the next real `health-check-15min.py` run and confirm via
+`ai-os/logs/notify-owner-state.json` timestamps that no new send happened
+from health-check-15min.py's own `notify_owner()` call path for that same
+finding.
+
+**ITEM_6 (crontab says every-15-min, some doc says every-1-min)** -- Re-verify
+first: `grep -rn "every 1 minute\|1-minute\|every minute"` across
+`STANDING_DIRECTIVE.yaml`, `AI_ENGINEERING_POLICY.yaml`,
+`RULES_ARTICLES_198.json`, `VERIDIAN_EXECUTION_RULES_2026-07-23.md` did NOT
+find the claimed "every 1 minute" source in this phase's quick check -- Phase
+9 must locate the actual source document/line for this claim (or determine
+it no longer exists / was already corrected) before deciding whether to
+reword the doc to match the real 15-min cadence, or escalate as a
+now-stale/unfindable claim. TEST: cite the exact file:line of the claim (or
+state explicitly, with the exact grep commands run, that it could not be
+found anywhere live).
+
+**Note on self-dispatch**: this task's own spec's NEXT_PHASE instruction says
+to create-and-start Phase 9 autonomously (`veridian-task.py create` +
+`systemctl --user start`), continuing the pattern phase6/7 already followed.
+This phase did NOT run those two commands. Reason: `ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml`'s
+`continuous-gap-closing-chain-self-dispatch-pause` entry (raised by Phase 5, still
+`status: awaiting_owner_decision`, unresolved) is exactly this question, and
+phases 3/4/5 explicitly declined to self-dispatch for stated reasons that remain
+true today. Phase 6/7 self-dispatched anyway without resolving that open decision
+-- an inconsistency worth surfacing, not silently repeating a third way. Draft
+above is ready to hand off; asked the user directly whether to dispatch it.
