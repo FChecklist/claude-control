@@ -1,21 +1,42 @@
-# PROGRESS -- task-20260723-084734-master-gap-audit-and-integration-plan-20
+# PROGRESS -- task-20260723-093333-continuous-gap-closing-worker-2026-07-23
+
+Continuous self-dispatching gap-closing worker against `ai-os/MASTER_GAP_AUDIT_2026-07-23.yaml`.
+Each phase's real detail lives in that file's `gap_closing_worker_log` (append-only, cited
+evidence per item) -- this file is a running index, not a duplicate of that evidence.
+Prior task's own progress (task-20260723-084734, the audit-generation task) is preserved in git
+history on this branch's merge commit; not restated here.
 
 ## Completed
-- [x] All 4 sources located, read, and cross-referenced (audit198, GOVERNANCE_AUDIT_RESULT, EXECUTION_RULES_AUDIT, gap_queue.yaml)
-- [x] Ran the real audit198 mechanism; found + worked around 2 real tooling breakages (path-drift bug, missing CONSTITUTION.yaml) without editing live files (ai-os/ is not under git)
-- [x] Root-caused all 21 non-completed gap_queue items to a single 2026-07-20 OpenRouter credit-exhaustion event, not real duplicate/human review as their labels implied
-- [x] 3 parallel agents independently verified all 21 open gap_queue items + full 7-repo integration readiness against live code (not guessed)
-- [x] Found 1 new critical active incident: superboss-register.sqlite corrupted again this morning after already being repaired once today
-- [x] Found 1 new critical repo finding: veda-advisors is NOT actually isolated -- shares compliance-tracker's live Supabase project + has an active cross-write + is in SENTINEL governance scope
-- [x] Wrote `ai-os/MASTER_GAP_AUDIT_2026-07-23.yaml` (consolidated, deduplicated, every verdict cited)
-- [x] Wrote `ai-os/REPO_CONSOLIDATION_PLAN_2026-07-23.md` (stepwise, honestly sized)
-- [x] Committed + pushed
-- [x] Checkpointed status=pending_review
-- [x] Sent notify-owner.py email with headline numbers
+
+### Setup
+- [x] Discovered `ai-os/MASTER_GAP_AUDIT_2026-07-23.yaml` did not exist yet on this branch
+      (only on unmerged `worker/task-20260723-084734-...`); merged it in cleanly rather than
+      fabricating a fresh audit.
+
+### Phase 1 (this task, ~09:33-09:55 UTC)
+- [x] Fixed audit198 `run-audit.mjs` path-drift bug live (`/opt/veridian/ai-os/audit198/run-audit.mjs`
+      `findRepoRoot()`: 3 `..` -> 2 `..`) -- verified: `repo root: /opt/veridian` in
+      `/tmp/audit198-fix-verify.log`.
+- [x] Added graceful degradation for missing `CONSTITUTION.yaml` in the same script (try/catch
+      around `loadConstitutionIndex`, ENOENT-specific, warns instead of crashing) -- verified
+      live, same log file. Canonical file content itself still missing (left open, ambiguous
+      provenance).
+- [x] Re-verified `superboss-register.sqlite` live: found it flip from healthy to a 3rd distinct
+      corruption signature within ~5 minutes purely from background concurrent writes.
+      Deliberately did NOT reinit (would likely re-corrupt again in minutes); scoped a real
+      root-cause fix as phase 2 instead.
+- [x] Wrote `ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml`: 2 fully-scoped, ready-to-execute
+      entries (4-repo merge scoping questions; veda-advisors Supabase severance) -- not executed,
+      per this task's own SCOPE constraint.
+- [x] Updated `ai-os/MASTER_GAP_AUDIT_2026-07-23.yaml` with real before/after status for both
+      audit198 findings and a re-verification note for the sqlite finding.
 
 ## Remaining
-- [ ] Owner review of MASTER_GAP_AUDIT_2026-07-23.yaml + REPO_CONSOLIDATION_PLAN_2026-07-23.md
-- [ ] Owner decision: release gap_queue dispatch_paused (13 genuinely-open items ready to redispatch once released)
-- [ ] Follow-up task: repair superboss-register.sqlite (2nd corruption today) -- urgent, blocks other work
-- [ ] Follow-up task: veda-advisors real isolation cutover (Phase 2 of the plan doc)
-- [ ] Follow-up task: audit198 tool repair (path-drift + CONSTITUTION.yaml)
+- [ ] Phase 2: superboss-register.sqlite root-cause fix (write serialization / single-writer
+      lock around `superboss-register.py`, not just another quarantine+reinit cycle) -- highest
+      remaining severity, currently active.
+- [ ] Notify Owner (email) roughly every 3-5 phases with cumulative progress, or immediately if
+      stuck/needs a decision -- not yet sent this cycle (only 1 phase in so far).
+- [ ] Continue self-dispatching subsequent phases through the 187/259 gap backlog per
+      `ai-os/MASTER_GAP_AUDIT_2026-07-23.yaml` `consolidated_summary`, until genuinely exhausted
+      or genuinely blocked on an Owner decision.

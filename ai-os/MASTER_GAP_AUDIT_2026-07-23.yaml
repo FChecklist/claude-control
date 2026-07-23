@@ -48,15 +48,19 @@ source_1_rules_articles_198:
         assumes. Running it plain resolves REPO_ROOT to /opt instead of /opt/veridian and it
         cannot find ai-os/RULES_ARTICLES_198.json at all."
       severity: medium
-      status: WORKED_AROUND_NOT_FIXED
-      evidence: "Reproduced live: `cd /opt/veridian/ai-os/audit198 && node run-audit.mjs` ->
-        ENOENT on /opt/ai-os/RULES_ARTICLES_198.json. The script has a supported
-        AUDIT198_REPO_ROOT env override (not used by default); setting it to /opt/veridian lets
-        the script proceed. The live script file itself was NOT edited (ai-os/ is not under git
-        at all on this server -- confirmed `git status` in /opt/veridian/ai-os returns 'not a
-        git repository' -- so there is no way to commit a real fix to it from this task's repo;
-        recommend the Owner have a future task fix the comment/path logic directly on the live
-        file, or move the env var into a wrapper cron entry)."
+      status: FIXED
+      fixed_by_task: task-20260723-093333-continuous-gap-closing-worker-2026-07-23 (phase 1)
+      evidence: "Edited the live file directly (ai-os/ is not under git on this server, confirmed
+        again this phase -- same finding as before, only a direct live edit is possible):
+        /opt/veridian/ai-os/audit198/run-audit.mjs findRepoRoot() changed from
+        `path.resolve(__dirname, '..', '..', '..')` to `path.resolve(__dirname, '..', '..')`,
+        comment corrected to 'ai-os/audit198/ -> repo root is 2 levels up'. Verified live:
+        `node run-audit.mjs --limit=3` (no AUDIT198_REPO_ROOT override set) now logs
+        `[audit198] repo root: /opt/veridian` (previously would have resolved to /opt) and
+        proceeds to load RULES_ARTICLES_198.json successfully (198 items, 99 rules + 99
+        articles, taxonomy coverage confirmed across 33 categories) -- full log at
+        /tmp/audit198-fix-verify.log on the live host. AUDIT198_REPO_ROOT env override left
+        intact as a supported escape hatch."
     - finding: "ai-os/CONSTITUTION.yaml, the script's own required cross-reference input
         (referenced in RULES_ARTICLES_198.json's own meta.relationship_to_CONSTITUTION_yaml
         field as 'ai-os/CONSTITUTION.yaml, 819 lines'), no longer exists at the canonical live
@@ -66,15 +70,21 @@ source_1_rules_articles_198:
         itself likely a task-workspace artifact, not necessarily identical to whatever the
         canonical file last was)."
       severity: high
-      status: CONFIRMED_GAP_NOT_FIXED
-      evidence: "Reproduced live: loadConstitutionIndex() throws ENOENT on
-        /opt/veridian/ai-os/CONSTITUTION.yaml. The script has NO fallback/try-catch for this --
-        it hard-crashes, meaning the audit188 tool is currently NON-FUNCTIONAL out of the box on
-        this server, contradicting the 'software does complete audit' claim until this file is
-        restored or the script is patched to degrade gracefully. This task ran a re-audit against
-        a SCRATCH COPY only (/tmp/audit198-run, not committed anywhere, not the live
-        ai-os/audit198/ files) with a local try/catch added just to get real fresh per-item grep
-        evidence without CONSTITUTION-boost inheritance -- see fresh_rerun_status below."
+      status: PARTIALLY_FIXED_GRACEFUL_DEGRADATION_ONLY
+      fixed_by_task: task-20260723-093333-continuous-gap-closing-worker-2026-07-23 (phase 1)
+      evidence: "The missing-file CRASH is fixed: main() in run-audit.mjs now wraps
+        loadConstitutionIndex(REPO_ROOT) in try/catch, catches ENOENT specifically (rethrows any
+        other error), logs a clear WARNING, and continues with an empty constitution index
+        (count: 0, missing: true) instead of hard-crashing. Verified live: same
+        /tmp/audit198-fix-verify.log run shows
+        '[audit198] WARNING: ai-os/CONSTITUTION.yaml not found at /opt/veridian -- continuing
+        WITHOUT constitution cross-reference...' followed by the script proceeding into
+        per-item evidence gathering (previously it would have thrown and exited before this
+        point). The UNDERLYING gap -- the canonical CONSTITUTION.yaml file itself is still
+        missing, so verdicts lose the constitution-inherited-status boost -- is NOT fixed;
+        restoring it needs a content-provenance decision (which stale copy, if any, is
+        trustworthy) that this phase judged too ambiguous for a mechanical fix and left open
+        rather than guessing at governance-relevant content."
   fresh_rerun_status: "A fresh run (via the scratch-copy workaround) was started this task and was
     still executing at the time this document was finalized -- run-audit.mjs greps the full
     /opt/veridian tree (excluding node_modules/.next per its own --exclude-dir flags) once per
@@ -158,6 +168,29 @@ source_3_execution_rules_audit:
         detection) should be dispatched before any further task that depends on
         check-duplicate/system_index/execution_log runs, since those are all currently degraded
         for the second time today."
+      reverified_2026-07-23T09:44Z_by_task-20260723-093333_phase_1: "Re-ran PRAGMA
+        integrity_check live (python3 sqlite3 stdlib, no write attempted) at 3 points ~5 min
+        apart: 09:39:xx -> ('ok',) with plausible non-empty row counts (instructions=235,
+        work_items=12, actions=162, execution_log=2, file_inventory=2422,
+        directive_compliance_runs=160, task_audits=3) -- briefly healthy, most likely from an
+        external/cron-driven repair this task did NOT perform (no matching process found in ps,
+        no matching entry in ATTENTION.md or veridian-self-check-cron.log explaining it; file
+        mtime 09:38:40 predates this check). Then at 09:43:59Z and again at 09:44:xx (two
+        independent checks, ~30s apart, same result both times, ruling out a one-off transient
+        WAL-checkpoint artifact): integrity_check FAILED AGAIN with a THIRD distinct signature
+        this single day ('Freelist: size is 2 but should be 3' -- distinct from both the
+        btreeInitPage/page-11 signature and the page-368/363/123 2nd-reference signature
+        recorded earlier), and actions row count had incremented 162->163 between the healthy
+        and broken checks, confirming a live concurrent writer caused the re-corruption within
+        this task's own observation window, not a stale/cached read. CONCLUSION: status stands
+        as ACTIVE_UNRESOLVED, now with a 3rd distinct corruption signature and direct evidence
+        the DB flips ok->corrupt within single-digit minutes purely from background write
+        activity -- this task judged a rushed reinit right now to be a false fix (it would very
+        likely re-corrupt again within minutes given the demonstrated write pressure) and
+        deliberately deferred a real root-cause fix (write serialization / single-writer lock
+        around superboss-register.py, not just another quarantine+reinit cycle) to a dedicated
+        next phase rather than bundling a high-risk, likely-incomplete fix into this phase's
+        small/low-risk batch."
   verdict_for_master_gap_list: "42 part-entries stand at 2 DONE / 35 PARTIAL / 5 MISSING as
     audited; ADD one new critical, active, unresolved finding (sqlite corruption recurrence) not
     captured in that count."
@@ -258,6 +291,44 @@ consolidated_summary:
     wants the more conservative (larger) number. Either way, the honest scale is: hundreds of
     open items, not tens -- do not let this number be read as small."
   new_findings_not_in_any_prior_source:
-    - "audit198 tool itself has 2 real breakages (path-drift bug, missing CONSTITUTION.yaml) -- see source_1"
-    - "superboss-register.sqlite has corrupted AGAIN today, after already being repaired once today -- ACTIVE, UNRESOLVED as of this document's writing -- see source_3"
+    - "audit198 tool itself has 2 real breakages (path-drift bug, missing CONSTITUTION.yaml) -- see source_1 (path-drift FIXED, CONSTITUTION.yaml gracefully-degraded but content still missing, as of phase 1 below)"
+    - "superboss-register.sqlite has corrupted AGAIN today, after already being repaired once today -- ACTIVE, UNRESOLVED as of this document's writing -- see source_3 (re-confirmed still active with a 3rd distinct signature as of phase 1 below)"
     - "gap_queue.yaml's own status labels are unreliable (retry-count artifacts, not real investigation) -- see source_4 root_cause_finding"
+
+# =========================================================================
+# CONTINUOUS GAP-CLOSING WORKER LOG (task-20260723-093333 and self-dispatched successors)
+# Append one entry per phase. Never edit a prior phase's entry after the fact --
+# corrections go in a new phase's entry that references the old one.
+# =========================================================================
+gap_closing_worker_log:
+  - phase: 1
+    task_id: task-20260723-093333-continuous-gap-closing-worker-2026-07-23
+    started_2026-07-23T09:33Z_completed_approx: "2026-07-23T09:55Z"
+    pre_phase_step: "Discovered this document did not exist yet in this task's own branch (only
+      on unmerged branch worker/task-20260723-084734-master-gap-audit-and-integration-plan-20,
+      2 commits ahead of master, not yet auto-synced). Merged that branch into this one
+      (git merge, clean, no conflicts -- own placeholder PROGRESS.md moved aside first) to
+      obtain the real starting document rather than fabricating one."
+    batch_picked: "Small, well-defined, low-risk tooling-reliability fixes (audit198 script) +
+      mandatory re-verification of source_3's flagged active incident before touching anything
+      else, per this task's own SCOPE step 2."
+    items_closed:
+      - "source_1 path-drift bug: FIXED (see source_1.new_findings_this_task_re_running_it[0])"
+      - "source_1 CONSTITUTION.yaml hard-crash: PARTIALLY_FIXED, graceful degradation only, real
+        content restoration deliberately left open pending provenance judgment (see
+        source_1.new_findings_this_task_re_running_it[1])"
+    items_reverified_not_closed:
+      - "source_3 superboss-register.sqlite corruption: re-confirmed ACTIVE_UNRESOLVED with new
+        live evidence (3rd distinct corruption signature, ok->corrupt within single-digit
+        minutes from background writes) -- see source_3.new_finding_this_task_degrading_existing_partials_further[0].reverified_2026-07-23T09:44Z_by_task-20260723-093333_phase_1.
+        Deliberately NOT reinit'd this phase: a rushed fix would likely re-corrupt within
+        minutes given demonstrated concurrent-write pressure; a real root-cause fix (write
+        serialization) is scoped as phase 2 instead."
+    owner_decisions_written: "Created ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml with 2 fully
+      scoped entries (4-repo merge scoping questions; veda-advisors Supabase severance) per this
+      task's SCOPE -- neither executed, both parked for Owner sign-off as required."
+    commit_evidence: "See git log on this branch for the commit(s) accompanying this phase --
+      commit message references 'phase 1' explicitly."
+    self_dispatch_decision: "Continuing to phase 2: superboss-register.sqlite root-cause fix
+      (write serialization), since it is now the single highest-severity active-and-unresolved
+      item and blocks trustworthy future work on check-duplicate/system_index/execution_log."
