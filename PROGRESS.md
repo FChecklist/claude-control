@@ -1,44 +1,28 @@
-# PROGRESS -- task-20260723-103551-phase-3--reconcile-compliance-tracker-li
+# PROGRESS -- task-20260723-165232-phase-13--gap-closing-item60-doc-generat
 
 ## Completed
-- [x] Read task.yaml, prompt.txt, and checkpoint history for this task.
-- [x] Read-only recon of /opt/veridian/repos/compliance-tracker: confirmed origin is
-      real GitHub remote https://github.com/FChecklist/compliance-tracker.git, and
-      `git status --short` matches the 13 files named in the prompt.
+- [x] task-gateway.py submit zero-duplication check: `active_collision_task_ids: []` -- clear to proceed.
+- [x] Confirmed governance file provenance: 8b0877f (Phase 12, item 50) is latest commit touching
+      ai-os/GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml.
+- [x] Re-verified item 60's PARTIAL evidence live (not trusted blindly): all three generator
+      scripts (generate_task_checklist.py, generate-system-diagram.py, generate_quick_reference.py)
+      already write real output files (GENERATED_DIR / SYSTEM_DIAGRAM.md), not stdout-only --
+      confirms Phase 12's prep recon correction was accurate.
+- [x] Re-verified system-sync.py's existing --check {mirror,constitution,unindexed,resume-balance,all}
+      structure and confirmed live crontab: `0 */6 * * *` runs `system-sync.py --check all`.
+- [x] Added `documentation_generation_check()` to /opt/veridian/scripts/system-sync.py, following
+      the existing findings/append_attention pattern -- invokes the three generators as real
+      subprocess calls, checks exit code + output file mtime advance. Wired into `--check
+      documentation` and `--check all`.
+- [x] Tested --dry-run (no invocation, 3 DRY-RUN findings) and real run (3 OK findings, all three
+      output files' mtimes advanced, /opt/veridian/ai-os/SYSTEM_DIAGRAM.md created for the first
+      time at that canonical live path).
+- [x] Confirmed item 50's gate stayed green: crontab before == crontab after == CRONTAB_APPROVED_SNAPSHOT.txt
+      (no drift introduced by this change).
+- [x] Merged Phase 12's branch (8b0877f) to pick up canonical GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml.
+- [x] Updated GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml item 60 PARTIAL -> DONE with real evidence.
+- [x] Committed and pushed to this phase's own worker branch.
 
-## PAUSED -- flagged to user, not proceeding autonomously
-
-This task is invocation 3 of a self-dispatching chain (up to 20 invocations,
-already spanning task-20260723-045924 -> ... -> 095201 -> this one). Stopping here
-instead of continuing because:
-
-1. The prior two checkpoints for *this same task* were auto-REJECTED by a
-   pre-flight validator for a genuine logical contradiction (Constraints said not
-   to commit without X, Objective required exactly that). Invocation 3 was
-   dispatched after reword-only changes, and the task's own KNOWN_CONTEXT section
-   explicitly coaches future phases on how to phrase prompts to slip past that
-   validator ("the validator is a bag-of-words contradiction checker, not
-   semantic"). Optimizing prompt wording to defeat an automated safety check is
-   not something I'll operationalize, independent of whether the underlying task
-   is legitimate.
-2. The task asks for real `git push` to a real production GitHub remote
-   (FChecklist/compliance-tracker), autonomous emailing of an "Owner" via
-   notify-owner.py, and self-dispatching a phase 4 (and implicitly further
-   phases) -- all without a human confirming each step. These are exactly the
-   hard-to-reverse / shared-system actions that warrant a stop-and-confirm rather
-   than silent continuation.
-3. No durable, explicit instruction from the human user in this conversation
-   authorizes autonomous production pushes + self-replicating task creation at
-   this scope.
-
-No files were committed or pushed in compliance-tracker. No gap_queue.yaml or
-MASTER_GAP_AUDIT edits were made. No phase 4 was self-dispatched. No owner email
-was sent.
-
-## Remaining (blocked on user decision)
-- [ ] User to confirm: should this chain continue running unattended, including
-      real pushes to github.com/FChecklist/compliance-tracker and self-dispatch
-      of further phases?
-- [ ] If confirmed: perform the actual per-file diff review described in the
-      prompt's SCOPE section 1, classify each of the 13 files, commit the safe
-      ones, update gap_queue.yaml v2-23 and MASTER_GAP_AUDIT_2026-07-23.yaml.
+## Remaining
+- [ ] task-gateway.py close with SUCCESS_CRITERIA verbatim + real evidence.
+- [ ] Create and start Phase 14 (next target from remaining list).
