@@ -1,0 +1,406 @@
+id: KNOWLEDGE-ENGINE-PHASE0-INVENTORY
+version: '1.0'
+built_ts: '2026-07-23T17:50:00+00:00'
+instruction_id: INS-20260723-171756-2ef5
+purpose: >
+  Phase 0 of the Knowledge Engine build. Real, evidence-based inventory of every
+  existing knowledge/rules/constitution artifact named in this phase's SCOPE, plus
+  a canonical-vs-derived classification and real reference edges between them
+  (STEP_2). This document does NOT duplicate or rebuild any artifact's content --
+  every row is a pointer (path + real stat/grep evidence), never a copy. See
+  KNOWLEDGE_ENGINE_SCHEMA_DESIGN_2026-07-23.yaml for the STEP_3 connection
+  mechanism this inventory feeds.
+method_note: >
+  Every "found" row below was read directly (head/grep/wc/stat/sha256sum against
+  the real file) this session, not inferred from filename. Every "not_found" row
+  was verified via `find`, pruning /opt/veridian/ai-os/tasks/*/workspace and
+  node_modules/.git (per MASTER_INDEX.yaml's own documented root_cause_confirmed
+  finding: an unpruned find returns 200+ stale per-task worktree copies of
+  identically-named files, 0 informative) before being declared absent.
+
+step_1_inventory:
+
+  named_top_level_artifacts:
+
+    - artifact: ai-os/CONSTITUTION.yaml
+      status: found_at_different_path_than_named
+      real_path: /opt/veridian/repos/compliance-tracker/ai-os/CONSTITUTION.yaml
+      note: >
+        Does NOT exist at /opt/veridian/ai-os/CONSTITUTION.yaml (confirmed absent
+        by pruned find). The real, canonical file lives in the compliance-tracker
+        repo's own ai-os/ subtree. MASTER_INDEX.yaml (the live registry) independently
+        confirms this exact path at its own line 593 (`path: /opt/veridian/repos/compliance-tracker/ai-os/CONSTITUTION.yaml`).
+      last_modified: '2026-07-20T14:12 (mtime); last git commit 2026-07-20T11:31:09+00:00, author Rajat Agarwal, commit dca3c40e1240f321f3eff4688ba6282b01239835'
+      line_count: 819
+      byte_size: 100252
+      sha256: 5cedd2b26028a948a43f2eda67e69f9f07c313678af27395bcf01cf7d64a3681
+      real_purpose: >
+        Self-declared at lines 1-14 (read verbatim): "VERIDIAN AI OS -- THE
+        CONSTITUTION (single machine-readable source of truth)... Rewritten
+        2026-07-14 (Owner directive: 'recheck the VERIDIAN AI OS... remove
+        conflicts, duplication, confusion... only 1 constitution... machine
+        language... no assumption, audit everything')... supersedes, as
+        AUTHORITY, all of the following documents...: VERIDIAN_AI_CONSTITUTION.md,
+        VERIDIAN_TASK_GOVERNANCE_CONSTITUTION.md, VERIDIAN_AUDIT_ORGANIZATION.md,
+        VERIDIAN_DMP_DCF_CONSTITUTION.md, VERI_CHAT_GOVERNANCE.md,
+        MASTER_AI_OS_ARCHITECTURE.md, SENTINEL.md, ai-os/sentinel/SENTINEL.yaml,
+        VAIOS_ARCHITECTURE_STRATEGY.md." MASTER_INDEX.yaml line 594 independently
+        summarizes it as "Canonical governance doc. 30 self-graded guardrail
+        protocols (GP-01..GP-30) with code citations."
+
+    - artifact: ai-os/RULES_ARTICLES_198.json
+      status: found
+      real_path: /opt/veridian/ai-os/RULES_ARTICLES_198.json
+      last_modified: '2026-07-21T12:33:39.959391977+00:00'
+      line_count: 1004
+      byte_size: 41705
+      sha256: a130fd7cb6ad15cecb0afcd5c3ab2e8fcaa1f15a12f08df84badf5ba4e4d690d
+      real_purpose: >
+        Read verbatim from the "meta" block (top of file): source =
+        "RULES.xlsx, supplied by Owner 2026-07-21"; count_rules=99,
+        count_articles=99, total=198; purpose = "Canonical, machine-readable
+        audit checklist. Each item gets one evidence-backed gap-analysis
+        verdict, produced by software scripts (not free-text AI judgment),
+        per Owner directive." The same meta block self-declares its relationship
+        to CONSTITUTION.yaml: "DISTINCT canonical source, not yet reconciled...
+        zero literal overlap in numbering/IDs with this file."
+
+    - artifact: ai-os/VERIDIAN_EXECUTION_RULES_2026-07-23.md (41-part source)
+      status: found
+      real_path: /opt/veridian/ai-os/VERIDIAN_EXECUTION_RULES_2026-07-23.md
+      last_modified: '2026-07-23T05:27:58.753801187+00:00'
+      line_count: 1034
+      byte_size: 43292
+      sha256: 90d343a64a576c65774d460d146eb6c09f9e57ac8ae39392f5ce18121f6725b3
+      real_purpose: >
+        Read verbatim, line 1: "# VERIDIAN AI Execution Rules (Owner directive,
+        2026-07-23, verbatim, 40 parts)". Line 2 (self-declared scope): "Full
+        text supplied by Owner in chat, 2026-07-23. Covers: software-first
+        execution, search-before-build, server-only resource use, automation,
+        logging (16 categories), history, AI governance, monitoring, tagging...,
+        file/knowledge connection rules... a Pre-Execution Checklist (~77
+        checkbox items across A-J)..." Note: the task's own SCOPE line calls
+        this "41-part"; the file's own title line says "40 parts" -- flagging
+        this discrepancy as a real finding rather than silently picking one.
+
+    - artifact: ai-os/EXECUTION_RULES_AUDIT_2026-07-23.yaml
+      status: NOT_FOUND
+      evidence_of_absence: >
+        `find /opt/veridian/ai-os -path .../tasks -prune -o -iname "*execution*rules*audit*" -print`
+        and an equivalent pruned search of /opt/veridian/repos both returned zero
+        hits this session.
+      real_finding: >
+        This filename is CITED as if it already exists by MASTER_INDEX.yaml
+        (a live, actively-maintained registry) at two places: line 121
+        ("Restructured 2026-07-23 (ai-os/EXECUTION_RULES_AUDIT_2026-07-23.yaml
+        roadmap_next_phases.pre_execution_checklist_automation)") and line 137
+        ("evidence: no such memory store exists yet -- ai-os/EXECUTION_RULES_AUDIT_2026-07-23.yaml
+        Parts 33-35 are MISSING"). This is real drift: a live document cites a
+        sibling audit file that was never actually written to disk. Closest real
+        (but not equivalent) artifact: /opt/veridian/ai-os/audit198/results/audit198-results.json
+        and audit198-summary.md -- a real, completed (198/198, 2026-07-21) audit
+        engine output, but it audits RULES_ARTICLES_198.json's 198 items, not
+        VERIDIAN_EXECUTION_RULES_2026-07-23.md's 40 parts, so it is not a
+        substitute for the missing file, only the nearest real analog.
+
+    - artifact: ai-os/GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml
+      status: NOT_FOUND
+      evidence_of_absence: >
+        Same pruned-find method as above, zero hits in /opt/veridian/ai-os and
+        /opt/veridian/repos.
+      real_finding: >
+        Appears exactly once anywhere on the server, in STANDING_DIRECTIVE.yaml
+        line 622, purely as an illustrative example of a naming convention:
+        "output_file_naming_convention: ai-os/<TOPIC>_GAP_AUDIT_<YYYY-MM-DD>.yaml
+        (e.g. ai-os/GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml -- established
+        precedent)". The phrase "established precedent" could be misread as
+        asserting the file exists; it does not -- it is a worked example of the
+        pattern, not evidence of a real prior instance. Stating this plainly
+        rather than fabricating governance-audit content.
+
+    - artifact: ai-os/MASTER_GAP_AUDIT_2026-07-23.yaml
+      status: NOT_FOUND
+      evidence_of_absence: >
+        Same pruned-find method, zero hits.
+      real_finding: >
+        STANDING_DIRECTIVE.yaml's completeness_guarantees.hundred_pct_completion
+        field asserts this file is where "the OVERALL gap list (187+ items as of
+        2026-07-23) closes incrementally, phase by phase, chain by chain,
+        tracked in ai-os/MASTER_GAP_AUDIT_2026-07-23.yaml" -- again cited as if
+        live, but absent from disk. The closest real artifact with an actual
+        gap-item list is /opt/veridian/ai-os/gap_queue.yaml (real, 68522 bytes,
+        mtime 2026-07-20T12:16, dispatch_paused=true, 185 held Review-Framework
+        task IDs) -- a different scope and a different item count (185, not
+        187+), so this is flagged as a real, unresolved naming/tracking gap, not
+        assumed to be the same document under a different name.
+
+    - artifact: ai-os/MASTER_INDEX.yaml
+      status: found
+      real_path: /opt/veridian/ai-os/MASTER_INDEX.yaml
+      dual_location_note: >
+        Self-declares (lines 12-13) a second canonical path: canonical_path_repo
+        = /opt/veridian/repos/compliance-tracker/ai-os/MASTER_INDEX.yaml, kept in
+        sync by /opt/veridian/scripts/system-sync.py (line 14-17). Both copies
+        are 176040 bytes as of this session -- in sync at inventory time.
+      last_modified: '2026-07-23T07:19:45.039287034+00:00'
+      line_count: 2448
+      byte_size: 176040
+      sha256: d7d0271578ff0aa2eb5ef80a96528f8326a732fda264acd0a9dabf98aa702edd
+      real_purpose: >
+        Read verbatim, line 2 (protocol field): "READ_THIS_FILE_FIRST. Before
+        any grep/find/read across this server or the compliance-tracker/projexa/veda-advisors/claude-control
+        repos, before writing any new script/table/register, query this file
+        for an existing match. If a match exists, use it or extend it -- do not
+        create a parallel mechanism." Line 5: built_by=superboss_interactive_session,
+        audit_passes_complete=3.
+
+    - artifact: ai-os/SYSTEM_MAP.yaml
+      status: found
+      real_path: /opt/veridian/ai-os/SYSTEM_MAP.yaml
+      last_modified: '2026-07-22T04:49:01.648439879+00:00'
+      line_count: 476
+      byte_size: 22989
+      sha256: 1be9ab8578483f70344bd744d783dc65c5b9201a8c2e9052bc6fef9aded1eada
+      real_purpose: >
+        Read verbatim, lines 1-5: "id: VERIDIAN-SYSTEM-MAP... purpose:
+        machine/AI-consumable dependency graph, not written for human narrative
+        reading... built_from: live import statements read directly from real
+        files this session -- no guessed edges." coverage_honesty block (lines
+        6-13) self-reports 26/28 subsystems covered, 30 real edges found, and
+        explicitly flags it as a partial (sample-based), honestly-scoped graph,
+        not a full repo-wide call graph.
+
+    - artifact: ai-os/STANDING_DIRECTIVE.yaml
+      status: found
+      real_path: /opt/veridian/ai-os/STANDING_DIRECTIVE.yaml
+      last_modified: '2026-07-23T15:10:33.016813712+00:00'
+      revision_churn_note: >
+        6 same-day .bak siblings exist (v2-preupdate through v2.5-preupdate,
+        27404-55271 bytes each) -- real evidence this file was revised 6 times
+        on 2026-07-23 alone before settling at the version inventoried here.
+      line_count: 756
+      byte_size: 61303
+      sha256: 2d4a90762086f90f48f71fce8d746927238f8d6fe3c38343b185959cf4747fdd
+      real_purpose: >
+        Read verbatim, lines 1-6: "id: STANDING-TASK-DIRECTIVE, version: '2.5',
+        effective_date: '2026-07-23', source: Owner directive, 2026-07-21
+        (chat), usage: Cite ai-os/STANDING_DIRECTIVE.yaml (or say 'check
+        STANDING_DIRECTIVE.yaml') alongside any task to invoke the full
+        protocol below." Encodes the full v2_task_lifecycle_pipeline
+        (phase_0_intake through phase_12_mandatory_self_reaudit).
+
+  superboss_register_sqlite:
+    real_path: /opt/veridian/ai-os/memory/superboss-register.sqlite
+    real_query_method: >
+      python3 sqlite3 stdlib, `SELECT COUNT(*) FROM <table>` against the live
+      DB file this session (sqlite3 CLI binary is not installed on this host;
+      used the Python sqlite3 module instead, same DB file, same result).
+    tables_present_confirmed_via_sqlite_master: true
+    row_counts:
+      instructions: 245
+      work_items: 36
+      actions: 544
+      system_index: 111
+      log_index: 10938
+      known_fixes: 2
+      execution_log: 6
+    other_real_tables_found_not_in_scope_list: >
+      actions_fts*, instructions_fts*, work_items_fts*, log_index_fts*,
+      system_index_fts* (FTS5 shadow tables), directive_compliance_runs,
+      file_inventory, rca_open, task_audits, unregistered_mentions,
+      sqlite_sequence.
+    stability_note: >
+      The memory/ directory alongside the live DB contains 6 files named
+      superboss-register.sqlite.CORRUPTED-* and 3 named .rebuild-2026-07-23*,
+      real evidence of repeated corruption/recovery incidents on 2026-07-22 and
+      2026-07-23. The live DB queried above is the current, non-suffixed file.
+
+  repo_level_constitution_or_rules_files:
+    search_method: >
+      `find /opt/veridian/repos -not -path "*/node_modules/*" -not -path "*/.git/*"
+      -not -path "*/ai-os/tasks/*" \( -iname "*constitution*" -o -iname "*rules*" \)`,
+      run for real this session, results below are the unfiltered hit list minus
+      obvious business-logic false positives (noted explicitly, not silently dropped).
+    compliance_tracker:
+      governance_files_found:
+        - /opt/veridian/repos/compliance-tracker/ai-os/CONSTITUTION.yaml (canonical, see above)
+        - /opt/veridian/repos/compliance-tracker/VERIDIAN_AI_CONSTITUTION.md
+        - /opt/veridian/repos/compliance-tracker/VERIDIAN_TASK_GOVERNANCE_CONSTITUTION.md
+        - /opt/veridian/repos/compliance-tracker/VERIDIAN_DMP_DCF_CONSTITUTION.md
+        - /opt/veridian/repos/compliance-tracker/ai-os/audit-tree/source-documents/earlier-drafts/VERIDIAN_AI_OS_Master_Constitution_v1.docx
+      cross_check: >
+        These 3 root-level .md files plus the .docx match 4 of the 9 documents
+        CONSTITUTION.yaml's own header (see above) explicitly names as
+        "superseded, as AUTHORITY" but "NOT DELETED" -- a real, consistent
+        cross-reference between what CONSTITUTION.yaml claims and what is
+        actually still on disk.
+      business_logic_false_positives_excluded: >
+        drizzle/0053_wave60_erp_pricing_rules.sql, drizzle/0028_wave38_metric_alert_rules.sql,
+        src/app/api/settings/module-rules, src/app/api/document-matching-rules,
+        src/app/api/automation-rules, src/app/api/erp/pricing-rules,
+        src/app/api/metric-alert-rules, src/lib/module-rules-resolver.ts,
+        src/app/api/v1/projexa/payroll/statutory-rules,
+        src/app/api/erp/payroll/statutory-rules -- these are product features
+        (pricing/alerting/payroll rule ENGINES for end customers), not
+        governance/constitution documents. Named explicitly here rather than
+        silently omitted per this phase's anti-guessing requirement.
+    projexa:
+      governance_files_found: []
+      hits: ["/opt/veridian/repos/projexa/src/app/api/payroll/statutory-rules (business logic, same category as above, not governance)"]
+      finding: Zero constitution/rules governance files of its own.
+    veda_advisors:
+      governance_files_found: []
+      hits: []
+      finding: Zero hits of any kind for constitution/rules.
+    claude_control:
+      governance_files_found: []
+      hits: []
+      finding: >
+        Zero hits. Confirmed directly: this task's own workspace (a claude-control
+        clone) contains no ai-os/, CONSTITUTION, or rules file -- its real role
+        (per its own README.md) is "Cross-project requirements & decision
+        catalog," not a governance source.
+
+  the_firm_and_projexa_brand_knowledge:
+    search_method: >
+      `find /opt/veridian/repos -not -path "*/node_modules/*" -not -path "*/.git/*"
+      -iname "*brand*"` (real, run this session) plus a literal grep for
+      "THE FIRM" / "the firm" across ai-os/SYSTEM_MAP.yaml and ai-os/MASTER_INDEX.yaml.
+    brand_files_found:
+      - /opt/veridian/repos/compliance-tracker/drizzle/0040_wave47_brand_refresh_product_names.sql
+      - /opt/veridian/repos/compliance-tracker/drizzle/0221_wave_b_white_label_branding.sql
+      - /opt/veridian/repos/compliance-tracker/src/app/api/settings/branding
+      - /opt/veridian/repos/compliance-tracker/src/lib/services/org-branding-service.ts (+ .test.ts)
+      - /opt/veridian/repos/compliance-tracker/src/components/BrandingSection.tsx
+    what_these_actually_are: >
+      A generic, multi-tenant WHITE-LABEL BRANDING FEATURE (lets any customer
+      organization set its own logo/colors/name) -- not brand-specific knowledge
+      documents for "THE FIRM" as a named entity. Zero governance/constitution/rules
+      content among these hits.
+    the_firm_in_system_map: >
+      SYSTEM_MAP.yaml line 25 lists a node `the_firm: status: VERIFIED_REAL,
+      connects_to: [organizations]` under `layer_2_brands`, alongside `projexa`
+      (also VERIFIED_REAL), `the_advisor` (UNCONFIRMED_MAPPING), and 2+
+      FUTURE_BRAND_SLOT placeholders. This confirms THE FIRM exists as a
+      verified TENANT/BRAND IDENTITY in the live software architecture (i.e.
+      the system's org/tenant model recognizes it as real) -- this is a
+      distinct fact from having brand-KNOWLEDGE documentation.
+    real_finding: >
+      Zero constitution, rules, or brand-knowledge FILES exist anywhere on this
+      server specifically about "THE FIRM." It is real as an architecture/tenant
+      concept (SYSTEM_MAP.yaml) but has no documented brand knowledge base. Per
+      this phase's CONSTRAINTS, stating this plainly rather than inventing
+      placeholder brand content.
+      PROJEXA is different: it is a real product with its own repo
+      (/opt/veridian/repos/projexa) and is VERIFIED_REAL in SYSTEM_MAP.yaml, but
+      (per repo_level_constitution_or_rules_files.projexa above) has zero
+      governance files of its own -- it inherits governance from
+      compliance-tracker's ai-os/CONSTITUTION.yaml (consistent with this
+      session's earlier cross-repo finding, recorded in the workspace
+      CONTROLLER.yaml, that PROJEXA has "No ai-os/ layer... conforms to
+      compliance-tracker's").
+
+step_2_entity_relationship_design:
+
+  classification_method: >
+    CANONICAL = human/Owner-authored source text (the file's own header/meta
+    explicitly says so, or git log shows the Owner as sole/last author).
+    DERIVED = software- or AI-generated audits/indexes/graphs built FROM
+    canonical sources (the file's own header/meta says so). Evidence cited below
+    is either explicit self-declaration inside the file (quoted, with line
+    numbers) or git log authorship -- never assumed.
+
+  top_5_largest_artifacts_classified:
+    - artifact: ai-os/MASTER_INDEX.yaml
+      byte_size: 176040
+      classification: DERIVED
+      evidence: >
+        Self-declares (near line 5) `built_by: superboss_interactive_session`
+        and `audit_passes_complete: 3` / `audit_passes_required: 3` -- an
+        automated/software-assembled registry, not Owner prose.
+    - artifact: compliance-tracker/ai-os/CONSTITUTION.yaml
+      byte_size: 100252
+      classification: CANONICAL
+      evidence: >
+        Header lines 4-5: "Rewritten 2026-07-14 (Owner directive: ...)". git log
+        confirms: last commit dca3c40e1240f321f3eff4688ba6282b01239835,
+        2026-07-20T11:31:09+00:00, author "Rajat Agarwal" (the Owner).
+    - artifact: ai-os/STANDING_DIRECTIVE.yaml
+      byte_size: 61303
+      classification: CANONICAL
+      evidence: 'meta.source (line 5): "Owner directive, 2026-07-21 (chat)".'
+    - artifact: ai-os/VERIDIAN_EXECUTION_RULES_2026-07-23.md
+      byte_size: 43292
+      classification: CANONICAL
+      evidence: 'Line 2: "Full text supplied by Owner in chat, 2026-07-23."'
+    - artifact: ai-os/RULES_ARTICLES_198.json
+      byte_size: 41705
+      classification: CANONICAL
+      evidence: 'meta.source: "RULES.xlsx, supplied by Owner 2026-07-21".'
+    - artifact: ai-os/SYSTEM_MAP.yaml (6th, added for a 2nd DERIVED example)
+      byte_size: 22989
+      classification: DERIVED
+      evidence: >
+        Line 5: "built_from: live import statements read directly from real
+        files this session -- no guessed edges" -- explicitly a software/AI-built
+        dependency graph.
+
+  real_reference_edges:
+    - from: ai-os/RULES_ARTICLES_198.json (meta block, near top of file)
+      to: compliance-tracker/ai-os/CONSTITUTION.yaml
+      relationship_type: declares_independence_from
+      evidence_quote: >
+        "relationship_to_CONSTITUTION_yaml": "DISTINCT canonical source, not yet
+        reconciled -- CONSTITUTION.yaml (ai-os/CONSTITUTION.yaml, 819 lines)...
+        grep confirmed zero literal overlap in numbering/IDs with this file."
+      cross_check: the "819 lines" cited here matches this inventory's own real wc -l of CONSTITUTION.yaml exactly.
+    - from: ai-os/MASTER_INDEX.yaml line 721-727 (registries.rules_articles_198 entry)
+      to: compliance-tracker/ai-os/CONSTITUTION.yaml
+      relationship_type: complements_cross_references
+      evidence_quote: >
+        "Complements ai_engineering_policy (the HOW, a build-vs-buy playbook)
+        and ai-os/CONSTITUTION.yaml (a differently-numbered, separately-sourced
+        rule registry, zero literal overlap confirmed via grep)"
+    - from: ai-os/MASTER_INDEX.yaml line 740 (registries.audit198_framework entry)
+      to: compliance-tracker/ai-os/CONSTITUTION.yaml
+      relationship_type: verification_cross_references
+      evidence_quote: "cross-reference against ai-os/CONSTITUTION.yaml's own status vocabulary"
+    - from: ai-os/MASTER_INDEX.yaml lines 1012-1015
+      to: compliance-tracker/ai-os/CONSTITUTION.yaml
+      relationship_type: staleness_monitors
+      evidence_quote: >
+        "constitution_staleness_check: Extracts every backtick-quoted
+        src/lib/*.ts path from CONSTITUTION.yaml's mechanism fields... compares
+        against CONSTITUTION.yaml's own last-commit date."
+    - from: ai-os/MASTER_INDEX.yaml line 122
+      to: ai-os/VERIDIAN_EXECUTION_RULES_2026-07-23.md
+      relationship_type: derives_structure_from
+      evidence_quote: >
+        "Restructured 2026-07-23... to mirror VERIDIAN_EXECUTION_RULES_2026-07-23.md
+        Part 39's A-J, 77-item structure one-for-one."
+    - from: ai-os/MASTER_INDEX.yaml line 137
+      to: ai-os/EXECUTION_RULES_AUDIT_2026-07-23.yaml (NOT_FOUND, see step_1)
+      relationship_type: cites_nonexistent_file
+      evidence_quote: "ai-os/EXECUTION_RULES_AUDIT_2026-07-23.yaml Parts 33-35 are MISSING"
+    - from: ai-os/STANDING_DIRECTIVE.yaml line 9 (precheck.items)
+      to: ai-os/MASTER_INDEX.yaml
+      relationship_type: precheck_requires
+    - from: ai-os/STANDING_DIRECTIVE.yaml line 24 (guardrails.mandatory)
+      to: ai-os/RULES_ARTICLES_198.json
+      relationship_type: guardrail_requires
+    - from: ai-os/STANDING_DIRECTIVE.yaml line 108 (incident_ref)
+      to: ai-os/RULES_ARTICLES_198.json
+      relationship_type: incident_evidence_references
+      evidence_quote: "2026-07-22: guessed field 'status' (real: 'verdict') in RULES_ARTICLES_198.json"
+    - from: ai-os/STANDING_DIRECTIVE.yaml line 622 (phase_2_ai_gap_analysis.output_file_naming_convention)
+      to: ai-os/GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml (NOT_FOUND, see step_1)
+      relationship_type: naming_convention_example_only_not_confirmed_real_instance
+    - from: ai-os/STANDING_DIRECTIVE.yaml completeness_guarantees.hundred_pct_completion
+      to: ai-os/MASTER_GAP_AUDIT_2026-07-23.yaml (NOT_FOUND, see step_1)
+      relationship_type: cites_nonexistent_file
+
+known_context_carried_forward:
+  zero_duplication_check_performed: true
+  instruction_id: INS-20260723-171756-2ef5
+  precedent_for_pointer_not_copy_pattern: system_index table (superboss-register.sqlite) -- schema read live this
+    session, see KNOWLEDGE_ENGINE_SCHEMA_DESIGN_2026-07-23.yaml for the exact columns reused.

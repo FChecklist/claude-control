@@ -1,0 +1,161 @@
+id: KNOWLEDGE-ENGINE-PHASE0-SCHEMA-DESIGN
+version: '1.0'
+built_ts: '2026-07-23T17:50:00+00:00'
+instruction_id: INS-20260723-171756-2ef5
+status: DESIGN_ONLY_NOT_YET_BUILT
+purpose: >
+  STEP_3 of Phase 0. Proposes the exact table structure for a `knowledge_engine`
+  layer inside the existing superboss-register.sqlite (real path:
+  /opt/veridian/ai-os/memory/superboss-register.sqlite), so a future query can
+  answer "what does the system know, and where does the real content live"
+  without copying any artifact's content. This document is a proposal only --
+  no CREATE TABLE has been executed against the live DB by this phase, per the
+  task's own CONSTRAINTS (build is Phase 1, after this design is reviewed).
+
+precedent_this_extends:
+  table: system_index
+  real_schema_read_live_this_session: |
+    CREATE TABLE system_index (
+        index_id TEXT PRIMARY KEY,
+        ts TEXT NOT NULL,
+        path TEXT NOT NULL,
+        category TEXT NOT NULL,
+        layer TEXT NOT NULL,
+        status TEXT NOT NULL,
+        purpose TEXT NOT NULL,
+        utm_term TEXT,
+        calls TEXT,
+        called_by TEXT,
+        verified_ts TEXT,
+        tags TEXT,
+        metadata_json TEXT NOT NULL DEFAULT '{}'
+    )
+  why_this_matters: >
+    system_index already proves the "path + metadata, not a content copy"
+    pattern works in this exact database (111 real rows as of this session, see
+    KNOWLEDGE_ENGINE_INVENTORY_2026-07-23.yaml). knowledge_engine reuses its
+    naming/typing conventions (TEXT PRIMARY KEY id with a readable prefix, ISO8601
+    ts columns, metadata_json TEXT DEFAULT '{}' as the escape hatch for anything
+    not worth a first-class column) rather than inventing a parallel style,
+    per this phase's KNOWN_CONTEXT instruction and per MASTER_INDEX.yaml's own
+    protocol ("if a match exists, use it or extend it -- do not create a
+    parallel mechanism").
+  what_it_does_not_reuse: >
+    system_index is a general "what software/scripts exist" registry (its rows
+    in this session are shell scripts, entrypoints, etc. -- see the 3 example
+    rows read live in Phase 0). knowledge_engine is narrower and adds fields
+    system_index has no equivalent for: artifact_type (canonical|derived) and
+    entity_relationships (structured edges to OTHER knowledge artifacts) --
+    system_index's `calls`/`called_by` columns are for code call-graphs, not
+    document-to-document governance relationships, so they are not reused
+    directly for that purpose.
+
+proposed_table:
+  name: knowledge_engine
+  create_statement: |
+    CREATE TABLE knowledge_engine (
+        artifact_id TEXT PRIMARY KEY,       -- e.g. KE-20260723-<hex>, same generation
+                                             -- convention as system_index.index_id (IDX-...)
+        ts TEXT NOT NULL,                   -- row-created timestamp, ISO8601 UTC
+        artifact_path TEXT NOT NULL,        -- REAL filesystem path (e.g.
+                                             -- /opt/veridian/repos/compliance-tracker/ai-os/CONSTITUTION.yaml).
+                                             -- Absolute, not repo-relative, because Phase 0 found
+                                             -- artifacts whose real path does NOT match their
+                                             -- commonly-cited short name (CONSTITUTION.yaml being
+                                             -- the clearest case) -- ambiguity here is exactly what
+                                             -- caused the MASTER_INDEX.yaml root_cause_confirmed
+                                             -- incident (200+ unpruned find hits).
+        content_hash TEXT NOT NULL,         -- sha256 of artifact_path's content AT verified_ts.
+                                             -- This is the pointer's integrity check, not a copy:
+                                             -- proves what was verified without storing the bytes.
+        artifact_type TEXT NOT NULL CHECK(artifact_type IN ('canonical','derived')),
+        secondary_path TEXT,                -- nullable. Populated only for artifacts with a real
+                                             -- dual-location precedent, e.g. MASTER_INDEX.yaml's own
+                                             -- self-declared canonical_path_live vs canonical_path_repo
+                                             -- (see KNOWLEDGE_ENGINE_INVENTORY_2026-07-23.yaml). NULL
+                                             -- for every single-location artifact.
+        exists_on_disk INTEGER NOT NULL DEFAULT 1,  -- 0 for a row that documents a REFERENCED-BUT-MISSING
+                                             -- artifact (Phase 0 found 3: EXECUTION_RULES_AUDIT_2026-07-23.yaml,
+                                             -- GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml,
+                                             -- MASTER_GAP_AUDIT_2026-07-23.yaml). Keeping these as real
+                                             -- 0-rows, not omitting them, is how the drift stays visible
+                                             -- to a future query instead of silently disappearing.
+        purpose TEXT NOT NULL,              -- one line, sourced from the artifact's own self-declared
+                                             -- header/meta (never guessed from filename) -- same rule
+                                             -- Phase 0's inventory followed by hand.
+        tags TEXT,                          -- comma-separated, same convention as system_index.tags
+                                             -- (which stores a JSON-list-as-string, e.g. '["module:dispatch"]') --
+                                             -- knowledge_engine mirrors that exact stringified-list style
+                                             -- for consistency with existing query code.
+        entity_relationships TEXT NOT NULL DEFAULT '[]',  -- JSON list. Each element:
+                                             -- {"related_artifact_id": "<knowledge_engine.artifact_id
+                                             -- of the OTHER row, or null if that artifact has no row yet>",
+                                             -- "related_artifact_path": "<real path, always populated,
+                                             -- so the edge is human-verifiable even before the other
+                                             -- row exists>", "relationship_type": "<free text, e.g.
+                                             -- declares_independence_from | complements_cross_references |
+                                             -- verification_cross_references | staleness_monitors |
+                                             -- derives_structure_from | cites_nonexistent_file |
+                                             -- precheck_requires | guardrail_requires>",
+                                             -- "evidence": "<file:line or exact quote, never a guess --
+                                             -- same evidentiary bar as this phase's own step_2>"}
+        last_verified_ts TEXT NOT NULL,     -- ISO8601 UTC of the last time content_hash was actually
+                                             -- recomputed and compared against a live read of
+                                             -- artifact_path (not just when the row was inserted).
+        verification_status TEXT NOT NULL DEFAULT 'UNVERIFIED'
+            CHECK(verification_status IN ('VERIFIED_MATCH','HASH_DRIFTED','PATH_MISSING','UNVERIFIED')),
+                                             -- HASH_DRIFTED = artifact_path exists but its live hash no
+                                             -- longer matches content_hash (the artifact changed since
+                                             -- last_verified_ts -- expected for a living document like
+                                             -- STANDING_DIRECTIVE.yaml, which had 6 same-day revisions
+                                             -- this session, and just means "re-verify," not an error).
+                                             -- PATH_MISSING = exists_on_disk was 1 but a re-check found
+                                             -- the file gone.
+        metadata_json TEXT NOT NULL DEFAULT '{}'  -- escape hatch, same role as system_index.metadata_json
+    )
+  indexes:
+    - 'CREATE INDEX idx_knowledge_engine_type ON knowledge_engine(artifact_type)'
+    - 'CREATE INDEX idx_knowledge_engine_path ON knowledge_engine(artifact_path)'
+    - 'CREATE VIRTUAL TABLE knowledge_engine_fts USING fts5(purpose, tags, entity_relationships, content=knowledge_engine, content_rowid=rowid)'
+      # mirrors the *_fts5 shadow-table pattern already used by system_index/instructions/work_items/actions/log_index
+      # in this exact DB (confirmed live: system_index_fts, instructions_fts, etc. all present) -- same
+      # "extend the existing pattern" rule applies to indexing, not just the base table shape.
+
+  not_a_copy_guarantee: >
+    No column stores artifact content. `content_hash` lets a query detect drift
+    (verification_status) without ever holding the bytes. Reading the real
+    knowledge still means opening artifact_path -- this table only tells you
+    WHICH path, WHETHER it still matches what was last verified, and HOW it
+    relates to every other artifact. This mirrors system_index's existing
+    contract exactly (path + metadata; the 3 real rows read live this session
+    all point at scripts, none embed script source).
+
+  seed_rows_planned_for_phase_1_not_created_by_phase_0:
+    count: 9
+    source: every artifact classified in step_1/step_2 of KNOWLEDGE_ENGINE_INVENTORY_2026-07-23.yaml
+      -- 6 exists_on_disk=1 rows (CONSTITUTION.yaml, RULES_ARTICLES_198.json,
+      VERIDIAN_EXECUTION_RULES_2026-07-23.md, MASTER_INDEX.yaml, SYSTEM_MAP.yaml,
+      STANDING_DIRECTIVE.yaml) + 3 exists_on_disk=0 rows (EXECUTION_RULES_AUDIT_2026-07-23.yaml,
+      GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml, MASTER_GAP_AUDIT_2026-07-23.yaml),
+      each with entity_relationships populated from step_2's real_reference_edges list.
+    explicitly_not_done_this_phase: >
+      No INSERT has been run. This phase produces the design and the exact
+      future seed source, not the live rows -- CREATE TABLE + the 9 INSERTs are
+      Phase 1 work per this phase's own CONSTRAINTS.
+
+query_surface_proposed_for_phase_1:
+  mechanism: >
+    A `search` subcommand (or new `knowledge` subcommand) added to
+    /opt/veridian/scripts/task-gateway.py, following the exact wrapper pattern
+    its other subcommands already use (delegates to a SELECT against
+    knowledge_engine, does not reimplement lookup logic inline) -- consistent
+    with this phase's own EXPECTED_OUTPUT.NEXT_PHASE instruction.
+  example_queries:
+    - 'SELECT artifact_path, purpose FROM knowledge_engine WHERE artifact_type = ''canonical'''
+    - 'SELECT artifact_path FROM knowledge_engine WHERE exists_on_disk = 0'  # surfaces exactly the 3 drift cases Phase 0 found
+    - 'SELECT * FROM knowledge_engine_fts WHERE knowledge_engine_fts MATCH ''execution rules'''
+
+phase_1_dependency_note: >
+  Per this phase's own EXPECTED_OUTPUT.NEXT_PHASE instruction, Phase 1's task
+  prompt must cite KNOWLEDGE_ENGINE_INVENTORY_2026-07-23.yaml and this file by
+  real path, not restate their content from scratch.

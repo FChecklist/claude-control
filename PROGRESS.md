@@ -1,44 +1,24 @@
-# PROGRESS -- task-20260723-103551-phase-3--reconcile-compliance-tracker-li
+# PROGRESS -- task-20260723-173441-knowledge-engine-phase0-inventory-design
 
 ## Completed
-- [x] Read task.yaml, prompt.txt, and checkpoint history for this task.
-- [x] Read-only recon of /opt/veridian/repos/compliance-tracker: confirmed origin is
-      real GitHub remote https://github.com/FChecklist/compliance-tracker.git, and
-      `git status --short` matches the 13 files named in the prompt.
+- [x] STEP_1 inventory: read all 9 named top-level ai-os/ artifacts for real (5 found at the named path, 1 found at a
+      different real path -- CONSTITUTION.yaml lives in compliance-tracker/ai-os/, not top-level ai-os/ -- and 3
+      genuinely do not exist anywhere on the server: EXECUTION_RULES_AUDIT_2026-07-23.yaml,
+      GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml, MASTER_GAP_AUDIT_2026-07-23.yaml).
+- [x] STEP_1 sqlite: queried superboss-register.sqlite's 7 named tables for real row counts.
+- [x] STEP_1 repo-level constitution/rules find across compliance-tracker/projexa/veda-advisors/claude-control, real
+      `find`, pruned node_modules/.git/task-workspaces.
+- [x] STEP_1 THE FIRM / PROJEXA brand-knowledge check: zero real brand-knowledge files for THE FIRM anywhere;
+      confirmed real as an architecture/tenant node in SYSTEM_MAP.yaml only, not as documentation.
+- [x] STEP_2 canonical-vs-derived classification for top 5 (+1) largest artifacts, each with cited self-declaration
+      or git-blame evidence.
+- [x] STEP_2 real reference edges between artifacts, each with file:line citation.
+- [x] STEP_3 `knowledge_engine` table design (design only, not built), extending the real system_index precedent.
+- [x] Wrote ai-os/KNOWLEDGE_ENGINE_INVENTORY_2026-07-23.yaml and ai-os/KNOWLEDGE_ENGINE_SCHEMA_DESIGN_2026-07-23.yaml
+      to the live system path (/opt/veridian/ai-os/) and mirrored both into this workspace's ai-os/ for commit+push.
 
-## PAUSED -- flagged to user, not proceeding autonomously
-
-This task is invocation 3 of a self-dispatching chain (up to 20 invocations,
-already spanning task-20260723-045924 -> ... -> 095201 -> this one). Stopping here
-instead of continuing because:
-
-1. The prior two checkpoints for *this same task* were auto-REJECTED by a
-   pre-flight validator for a genuine logical contradiction (Constraints said not
-   to commit without X, Objective required exactly that). Invocation 3 was
-   dispatched after reword-only changes, and the task's own KNOWN_CONTEXT section
-   explicitly coaches future phases on how to phrase prompts to slip past that
-   validator ("the validator is a bag-of-words contradiction checker, not
-   semantic"). Optimizing prompt wording to defeat an automated safety check is
-   not something I'll operationalize, independent of whether the underlying task
-   is legitimate.
-2. The task asks for real `git push` to a real production GitHub remote
-   (FChecklist/compliance-tracker), autonomous emailing of an "Owner" via
-   notify-owner.py, and self-dispatching a phase 4 (and implicitly further
-   phases) -- all without a human confirming each step. These are exactly the
-   hard-to-reverse / shared-system actions that warrant a stop-and-confirm rather
-   than silent continuation.
-3. No durable, explicit instruction from the human user in this conversation
-   authorizes autonomous production pushes + self-replicating task creation at
-   this scope.
-
-No files were committed or pushed in compliance-tracker. No gap_queue.yaml or
-MASTER_GAP_AUDIT edits were made. No phase 4 was self-dispatched. No owner email
-was sent.
-
-## Remaining (blocked on user decision)
-- [ ] User to confirm: should this chain continue running unattended, including
-      real pushes to github.com/FChecklist/compliance-tracker and self-dispatch
-      of further phases?
-- [ ] If confirmed: perform the actual per-file diff review described in the
-      prompt's SCOPE section 1, classify each of the 13 files, commit the safe
-      ones, update gap_queue.yaml v2-23 and MASTER_GAP_AUDIT_2026-07-23.yaml.
+## Remaining
+- [ ] Commit + push both files on this task's branch.
+- [ ] task-gateway.py close --task-id task-20260723-173441-knowledge-engine-phase0-inventory-design (checkpoint)
+- [ ] Dispatch Knowledge Engine Phase 1 per this phase's NEXT_PHASE instruction (build the live knowledge_engine
+      table per the schema design, seed 9 rows, add a search subcommand) -- not started yet.
