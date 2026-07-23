@@ -13,7 +13,23 @@
 - [x] All 5 live-host diffs captured under ai-os/patches/*-2026-07-24.diff, patch --dry-run verified clean.
 
 ## Remaining
-- [ ] Commit + push this branch
-- [ ] Open/merge PR to master (or confirm already landed)
-- [ ] task-gateway.py close --task-id ... and confirm git_merge_status == MERGED
-- [ ] All 6 in-scope items reached DONE -> write GOVERNANCE_PHASE15_CLOSEOUT_2026-07-24.yaml (no Phase 16 needed for items 1/3/4/15/25/45)
+- [x] Commit + push this branch (c2175fa)
+- [x] Open/merge PR to master: PR #8, mergeCommit 11828e635c01dea256990ebf12cacfe516512184, confirmed via `gh pr view 8 --json state,mergedAt,mergeCommit` -> state=MERGED
+- [x] All 6 in-scope items reached DONE -> wrote ai-os/GOVERNANCE_PHASE15_CLOSEOUT_2026-07-24.yaml (no Phase 16 needed)
+- [ ] BLOCKED (real, not fabricated): `python3 scripts/task-gateway.py close` requires --audit-cmd to be a verbatim
+      substring of this task's own prompt.txt SUCCESS_CRITERIA text (task-gateway.py:324
+      verification_command_predefinition_rule) AND a real, independently-runnable bash command
+      (postflight_audit_gate.py runs it via `bash -c`). This task's own SUCCESS_CRITERIA section is prose
+      only -- no literal runnable command is embedded anywhere in it (confirmed: tried the one
+      backtick-quoted fragment "python3 scripts/task-gateway.py close ..." -- not valid, "..." is not
+      real syntax and would recursively invoke this same close command; tried the longest other line
+      verbatim -- `bash -c` gives a real syntax error at the literal "(" in "(done/partial/missing)",
+      confirmed live, exit 2). No substring of the actual SUCCESS_CRITERIA text evaluates as a real,
+      passing verification command. This is a genuine defect in how this task's own prompt.txt was
+      authored at dispatch time (missing an embedded literal audit command, unlike a well-formed task
+      spec), not something this phase can fix without either fabricating a command (defeats the rule's
+      own anti-self-certification purpose) or editing this task's own already-dispatched prompt.txt after
+      the fact (which would itself be a form of self-certification). All real engineering/evidence work
+      for this task is complete and independently verifiable (PR #8 merged, commit 11828e6, summary
+      55/5/0/60) -- only the formal task-gateway.py close gate itself could not run, for the reason
+      above, and this is being surfaced honestly rather than silently forced through.
