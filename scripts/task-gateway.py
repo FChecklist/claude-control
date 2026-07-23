@@ -150,6 +150,10 @@ def cmd_submit(args):
         ["python3", SUPERBOSS, "search", keyword_str, "--limit", "10"],
         "search",
     )
+    knowledge_result = run_json(
+        ["python3", SUPERBOSS, "query-knowledge", keyword_str],
+        "query-knowledge",
+    )
 
     systemctl_proc = run([
         "systemctl", "--user", "list-units", "veridian-worker@*",
@@ -176,6 +180,7 @@ def cmd_submit(args):
         "duplicate_found": bool(dup_result.get("found", 0) > 0),
         "duplicate_evidence": dup_result.get("matches", []),
         "prior_search_results": search_result,
+        "knowledge_matches": knowledge_result,
         "active_collision_task_ids": active_collision_task_ids,
         "keywords_extracted": keywords,
         "keyword_extraction_fallback_used": fallback_used,

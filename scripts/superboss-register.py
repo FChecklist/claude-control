@@ -301,6 +301,42 @@ def init_db():
         last_applied TEXT,
         success_count INTEGER NOT NULL DEFAULT 0
     );
+
+    -- 7th tree (2026-07-23, Knowledge Engine Phase 1, task-20260723-181151).
+    -- Builds the real table proposed in
+    -- ai-os/KNOWLEDGE_ENGINE_SCHEMA_DESIGN_2026-07-23.yaml's proposed_table
+    -- (verbatim create_statement -- Phase 0 already reviewed this design,
+    -- this phase builds it, does not redesign it), extending system_index's
+    -- own proven "path + metadata, not a content copy" contract. One row per
+    -- real knowledge/rules/constitution artifact found in
+    -- ai-os/KNOWLEDGE_ENGINE_INVENTORY_2026-07-23.yaml -- artifact_path +
+    -- content_hash let a query detect drift without ever storing the bytes.
+    CREATE TABLE IF NOT EXISTS knowledge_engine (
+        artifact_id TEXT PRIMARY KEY,
+        ts TEXT NOT NULL,
+        artifact_path TEXT NOT NULL,
+        content_hash TEXT NOT NULL,
+        artifact_type TEXT NOT NULL CHECK(artifact_type IN ('canonical','derived')),
+        secondary_path TEXT,
+        exists_on_disk INTEGER NOT NULL DEFAULT 1,
+        purpose TEXT NOT NULL,
+        tags TEXT,
+        entity_relationships TEXT NOT NULL DEFAULT '[]',
+        last_verified_ts TEXT NOT NULL,
+        verification_status TEXT NOT NULL DEFAULT 'UNVERIFIED'
+            CHECK(verification_status IN ('VERIFIED_MATCH','HASH_DRIFTED','PATH_MISSING','UNVERIFIED')),
+        metadata_json TEXT NOT NULL DEFAULT '{}'
+    );
+    CREATE VIRTUAL TABLE IF NOT EXISTS knowledge_engine_fts USING fts5(
+        purpose, tags, entity_relationships,
+        content='knowledge_engine', content_rowid='rowid'
+    );
+    CREATE TRIGGER IF NOT EXISTS knowledge_engine_ai AFTER INSERT ON knowledge_engine BEGIN
+        INSERT INTO knowledge_engine_fts(rowid, purpose, tags, entity_relationships)
+        VALUES (new.rowid, new.purpose, new.tags, new.entity_relationships);
+    END;
+    CREATE INDEX IF NOT EXISTS idx_knowledge_engine_type ON knowledge_engine(artifact_type);
+    CREATE INDEX IF NOT EXISTS idx_knowledge_engine_path ON knowledge_engine(artifact_path);
     """)
     conn.commit()
     _migrate_schema(conn)
@@ -698,6 +734,125 @@ def log_fix(args):
     print(json.dumps({"signature": args.signature, "fix_action": args.fix_action, "success_count": new_count}))
 
 
+def _ensure_knowledge_engine_table(conn):
+    """Standalone idempotent create, same defensiveness convention as
+    _ensure_execution_log_table/_ensure_known_fixes_table -- works even if
+    init_db() was never run against this DB."""
+    conn.execute("""CREATE TABLE IF NOT EXISTS knowledge_engine (
+        artifact_id TEXT PRIMARY KEY,
+        ts TEXT NOT NULL,
+        artifact_path TEXT NOT NULL,
+        content_hash TEXT NOT NULL,
+        artifact_type TEXT NOT NULL CHECK(artifact_type IN ('canonical','derived')),
+        secondary_path TEXT,
+        exists_on_disk INTEGER NOT NULL DEFAULT 1,
+        purpose TEXT NOT NULL,
+        tags TEXT,
+        entity_relationships TEXT NOT NULL DEFAULT '[]',
+        last_verified_ts TEXT NOT NULL,
+        verification_status TEXT NOT NULL DEFAULT 'UNVERIFIED'
+            CHECK(verification_status IN ('VERIFIED_MATCH','HASH_DRIFTED','PATH_MISSING','UNVERIFIED')),
+        metadata_json TEXT NOT NULL DEFAULT '{}'
+    )""")
+    conn.execute("""CREATE VIRTUAL TABLE IF NOT EXISTS knowledge_engine_fts USING fts5(
+        purpose, tags, entity_relationships,
+        content='knowledge_engine', content_rowid='rowid'
+    )""")
+    conn.execute("""CREATE TRIGGER IF NOT EXISTS knowledge_engine_ai AFTER INSERT ON knowledge_engine BEGIN
+        INSERT INTO knowledge_engine_fts(rowid, purpose, tags, entity_relationships)
+        VALUES (new.rowid, new.purpose, new.tags, new.entity_relationships);
+    END""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_knowledge_engine_type ON knowledge_engine(artifact_type)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_knowledge_engine_path ON knowledge_engine(artifact_path)")
+    conn.commit()
+
+
+def register_knowledge(args):
+    """Add one knowledge_engine pointer row. Real content_hash + exists_on_disk
+    are computed from a live read of --path (never guessed) -- a missing file
+    is recorded as a real exists_on_disk=0 / verification_status=PATH_MISSING
+    row (per KNOWLEDGE_ENGINE_SCHEMA_DESIGN_2026-07-23.yaml's drift-visibility
+    requirement), not silently rejected. --relationships is a JSON list of
+    {"path": ..., "relationship_type": ..., "evidence": <optional>} objects;
+    each is resolved against already-registered rows so related_artifact_id
+    is populated whenever the target artifact already has a row (falls back
+    to null, never fabricated, if it doesn't yet)."""
+    init_db_silent()
+    conn = _connect()
+    _ensure_knowledge_engine_table(conn)
+
+    aid = _new_id("KE")
+    now = _now_iso()
+    exists = os.path.isfile(args.path)
+    if exists:
+        with open(args.path, "rb") as f:
+            content_hash = hashlib.sha256(f.read()).hexdigest()
+        verification_status = "VERIFIED_MATCH"
+    else:
+        # No bytes to hash for a referenced-but-missing artifact -- sha256 of
+        # the empty string is a documented sentinel, paired with
+        # verification_status=PATH_MISSING so this is never confused with a
+        # real verified empty file.
+        content_hash = hashlib.sha256(b"").hexdigest()
+        verification_status = "PATH_MISSING"
+
+    tags_list = [t.strip() for t in args.tags.split(",") if t.strip()] if args.tags else []
+
+    relationships_in = json.loads(args.relationships) if args.relationships else []
+    entity_relationships = []
+    for rel in relationships_in:
+        related_path = rel["path"]
+        related_row = conn.execute(
+            "SELECT artifact_id FROM knowledge_engine WHERE artifact_path = ? ORDER BY ts DESC LIMIT 1",
+            (related_path,),
+        ).fetchone()
+        entity_relationships.append({
+            "related_artifact_id": related_row["artifact_id"] if related_row else None,
+            "related_artifact_path": related_path,
+            "relationship_type": rel["relationship_type"],
+            "evidence": rel.get("evidence"),
+        })
+
+    conn.execute(
+        "INSERT INTO knowledge_engine (artifact_id, ts, artifact_path, content_hash, artifact_type, "
+        "secondary_path, exists_on_disk, purpose, tags, entity_relationships, last_verified_ts, "
+        "verification_status, metadata_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        (aid, now, args.path, content_hash, args.artifact_type, args.secondary_path,
+         1 if exists else 0, args.purpose, json.dumps(tags_list), json.dumps(entity_relationships),
+         now, verification_status, json.dumps(json.loads(args.metadata) if args.metadata else {})),
+    )
+    conn.commit()
+    conn.close()
+    print(json.dumps({
+        "artifact_id": aid, "artifact_path": args.path, "artifact_type": args.artifact_type,
+        "exists_on_disk": exists, "verification_status": verification_status,
+        "entity_relationships": entity_relationships,
+    }, indent=2, default=str))
+
+
+def query_knowledge(args):
+    """FTS5 search over knowledge_engine (purpose/tags/entity_relationships),
+    same MATCH-via-_fts_query + rowid-join pattern as search()'s other trees.
+    --tag filters to rows whose tags list contains that exact tag, same
+    Python-side membership check search() already uses for system_index.tags
+    (JSON1 not confirmed present on this host)."""
+    init_db_silent()
+    conn = _connect()
+    _ensure_knowledge_engine_table(conn)
+    q = _fts_query(args.query)
+    try:
+        rows = conn.execute(
+            "SELECT t.* FROM knowledge_engine_fts f JOIN knowledge_engine t ON t.rowid = f.rowid "
+            "WHERE knowledge_engine_fts MATCH ? ORDER BY rank",
+            (q,),
+        ).fetchall()
+        result = [dict(r) for r in rows]
+    except sqlite3.OperationalError as e:
+        result = []
+    if getattr(args, "tag", None):
+        result = [r for r in result if args.tag in json.loads(r["tags"] or "[]")]
+    conn.close()
+    print(json.dumps({"found": len(result), "matches": result}, indent=2, default=str))
 def init_db_silent():
     if not os.path.exists(DB_PATH):
         conn = _connect()
@@ -796,6 +951,20 @@ if __name__ == "__main__":
     p_fix.add_argument("--fix-action", dest="fix_action", required=True,
                         help="name of a known, whitelisted recovery action (see veridian-task-watchdog.py's FIX_ACTIONS registry)")
 
+    p_regk = sub.add_parser("register-knowledge")
+    p_regk.add_argument("--path", required=True, help="real, absolute artifact_path -- exists_on_disk is detected live, not asserted")
+    p_regk.add_argument("--artifact-type", dest="artifact_type", required=True, choices=["canonical", "derived"])
+    p_regk.add_argument("--purpose", required=True, help="one line, sourced from the artifact's own self-declared header/meta, never guessed from filename")
+    p_regk.add_argument("--tags", default="", help="comma-separated list, stored as a JSON-encoded list (same convention as index-add)")
+    p_regk.add_argument("--relationships", default="[]",
+                        help='JSON list of {"path": "<real path>", "relationship_type": "<free text>", "evidence": "<optional file:line/quote>"}')
+    p_regk.add_argument("--secondary-path", dest="secondary_path", default=None,
+                         help="nullable -- only for artifacts with a real dual-location precedent (e.g. MASTER_INDEX.yaml)")
+    p_regk.add_argument("--metadata", default="")
+
+    p_queryk = sub.add_parser("query-knowledge")
+    p_queryk.add_argument("query")
+    p_queryk.add_argument("--tag", default=None, help="filter results to rows whose tags list contains this exact tag")
     args = p.parse_args()
     if args.cmd == "init":
         with _write_lock():
@@ -829,3 +998,8 @@ if __name__ == "__main__":
     elif args.cmd == "log-fix":
         with _write_lock():
             log_fix(args)
+    elif args.cmd == "register-knowledge":
+        with _write_lock():
+            register_knowledge(args)
+    elif args.cmd == "query-knowledge":
+        query_knowledge(args)

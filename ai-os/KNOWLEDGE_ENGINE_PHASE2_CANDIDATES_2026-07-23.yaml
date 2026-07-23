@@ -1,0 +1,93 @@
+id: KNOWLEDGE-ENGINE-PHASE2-CANDIDATES
+version: '1.0'
+built_ts: '2026-07-23T18:30:00+00:00'
+instruction_id: task-20260723-181151-knowledge-engine-phase1-build-populate-w
+purpose: >
+  Phase 1 built and populated the real knowledge_engine table (see
+  ai-os/STANDING_DIRECTIVE.yaml's v2_knowledge_engine key for the live status
+  and real test evidence). Per this phase's own NEXT_PHASE instruction, this
+  is a standalone infrastructure build -- it does not self-dispatch further
+  Knowledge Engine phases. This file lists real remaining work for
+  Owner-directed dispatch only.
+
+candidates:
+  - id: auto_update_on_task_completion
+    problem: >
+      knowledge_engine rows are currently only written by an explicit
+      register-knowledge CLI call (this phase ran it 9 times, by hand, for
+      Phase 0's inventory). Nothing yet re-verifies content_hash/
+      last_verified_ts/verification_status automatically when a governed
+      artifact (e.g. STANDING_DIRECTIVE.yaml, which had 6 same-day revisions
+      before this phase and a 7th during it) actually changes -- so
+      verification_status can silently go stale (should flip to
+      HASH_DRIFTED but won't, since nothing re-checks it).
+    proposed_shape: >
+      Wire a re-verify call into task-gateway.py's close subcommand (or a
+      new dedicated cron, following the same run-logged.sh + crontab pattern
+      already used for veridian_self_check.py/file_inventory.py) that
+      recomputes content_hash for every knowledge_engine row whose
+      artifact_path was touched by the just-closed task, and flips
+      verification_status to HASH_DRIFTED or VERIFIED_MATCH accordingly.
+    priority: medium
+    real_blocker_if_any: none -- this is additive, does not block current LIVE status.
+
+  - id: projexa_the_firm_brand_knowledge
+    problem: >
+      Phase 0's inventory (ai-os/KNOWLEDGE_ENGINE_INVENTORY_2026-07-23.yaml,
+      the_firm_and_projexa_brand_knowledge section) found zero
+      constitution/rules/brand-knowledge FILES for "THE FIRM" anywhere on the
+      server -- it exists only as a verified tenant/brand identity in
+      SYSTEM_MAP.yaml's layer_2_brands, with no documented knowledge base.
+      PROJEXA has a real repo but zero governance files of its own; it
+      inherits compliance-tracker's ai-os/CONSTITUTION.yaml.
+    proposed_shape: >
+      Once real brand-knowledge documents exist for THE FIRM (or PROJEXA
+      gets its own governance layer distinct from compliance-tracker's),
+      register them into knowledge_engine with entity_relationships back to
+      compliance-tracker/ai-os/CONSTITUTION.yaml (the artifact they'd
+      supplement or override).
+    priority: low
+    real_blocker_if_any: >
+      No source documents exist yet to register -- this is blocked on the
+      Owner supplying or authoring real brand-knowledge content, not on any
+      Knowledge Engine mechanism gap.
+
+  - id: fill_the_3_real_drift_gaps
+    problem: >
+      3 of the 9 seeded rows are real, currently-missing artifacts that live
+      documents cite as if they exist: ai-os/EXECUTION_RULES_AUDIT_2026-07-23.yaml,
+      ai-os/GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml,
+      ai-os/MASTER_GAP_AUDIT_2026-07-23.yaml (all exists_on_disk=0,
+      verification_status=PATH_MISSING in the live table right now --
+      confirmed via `SELECT artifact_path FROM knowledge_engine WHERE
+      exists_on_disk = 0`).
+    proposed_shape: >
+      Either write the real files (closing the drift MASTER_INDEX.yaml and
+      STANDING_DIRECTIVE.yaml already cite) or correct the citing documents
+      to stop referencing paths that were never created. This is an Owner
+      judgment call (which of the two is correct), not a mechanical fix.
+    priority: medium
+    real_blocker_if_any: >
+      Requires an Owner decision on whether these 3 files should actually be
+      authored, or whether the citing text in MASTER_INDEX.yaml/
+      STANDING_DIRECTIVE.yaml is itself the thing to fix.
+
+  - id: fts5_relevance_tuning
+    problem: >
+      knowledge_engine_fts currently indexes purpose/tags/entity_relationships
+      only (per the schema design's own verbatim create_statement) --
+      artifact_path itself is not FTS-indexed, so a query for a bare
+      filename (e.g. "CONSTITUTION.yaml") that isn't also mentioned inside
+      purpose/tags/entity_relationships text will miss real matches.
+    proposed_shape: >
+      Confirmed real gap, not yet fixed: `query-knowledge "CONSTITUTION.yaml"`
+      returns 2 real rows (RULES_ARTICLES_198.json, MASTER_INDEX.yaml -- both
+      because their own entity_relationships evidence text happens to mention
+      "CONSTITUTION.yaml"), but does NOT return CONSTITUTION.yaml's own row,
+      since neither its purpose nor tags literally contain the filename
+      string. A future phase could add a path-substring fallback search (same
+      pattern check-duplicate already uses for system_index) alongside the
+      FTS5 MATCH, so a query for an artifact's own filename reliably
+      surfaces its own row too.
+    priority: medium
+    real_blocker_if_any: none -- purely additive, does not require a schema change.
