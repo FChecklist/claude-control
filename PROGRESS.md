@@ -1,44 +1,37 @@
-# PROGRESS -- task-20260723-103551-phase-3--reconcile-compliance-tracker-li
+# PROGRESS -- task-20260723-181151-knowledge-engine-phase1-build-populate-w
 
 ## Completed
-- [x] Read task.yaml, prompt.txt, and checkpoint history for this task.
-- [x] Read-only recon of /opt/veridian/repos/compliance-tracker: confirmed origin is
-      real GitHub remote https://github.com/FChecklist/compliance-tracker.git, and
-      `git status --short` matches the 13 files named in the prompt.
+- [x] STEP_1: added `knowledge_engine` table (+ `knowledge_engine_fts` FTS5 + AFTER INSERT trigger + 2 indexes) to
+      scripts/superboss-register.py's init_db(), verbatim create_statement from
+      ai-os/KNOWLEDGE_ENGINE_SCHEMA_DESIGN_2026-07-23.yaml's proposed_table. Also added a standalone
+      `_ensure_knowledge_engine_table()` for defensiveness, same convention as `_ensure_execution_log_table`/
+      `_ensure_known_fixes_table`.
+- [x] Found + fixed a real pre-existing freelist corruption in the live ai-os/memory/superboss-register.sqlite
+      (`PRAGMA integrity_check`: "Freelist: size is 0 but should be 2") that blocked all schema writes. Backed up
+      the corrupt file, rebuilt via `VACUUM INTO` + `REINDEX`, verified all 7 pre-existing tables' row counts matched
+      exactly (245/36/544/111/10938/2/6) before swapping the rebuilt file into place. `integrity_check` now returns `ok`.
+- [x] STEP_2: added `register-knowledge` and `query-knowledge` CLI subcommands to scripts/superboss-register.py.
+- [x] STEP_3: populated 9 real rows in knowledge_engine, one per artifact in
+      ai-os/KNOWLEDGE_ENGINE_INVENTORY_2026-07-23.yaml's step_1 inventory, with entity_relationships edges sourced
+      verbatim from that file's step_2 real_reference_edges (registered in dependency order so every edge resolved
+      to a real related_artifact_id, not null).
+- [x] STEP_4: wired scripts/task-gateway.py's `submit` to also call `query-knowledge`, adding a `knowledge_matches`
+      key to submit's JSON output.
+- [x] Updated ai-os/STANDING_DIRECTIVE.yaml (v2.6): added `v2_knowledge_engine` key + changelog entry.
+- [x] Wrote ai-os/KNOWLEDGE_ENGINE_PHASE2_CANDIDATES_2026-07-23.yaml (4 real candidates for Owner-directed dispatch).
 
-## PAUSED -- flagged to user, not proceeding autonomously
+## SUCCESS_CRITERIA evidence
+- `python3 scripts/superboss-register.py query-knowledge "constitution"` -> 3 real rows (compliance-tracker/ai-os/CONSTITUTION.yaml,
+  ai-os/RULES_ARTICLES_198.json, ai-os/MASTER_INDEX.yaml).
+- `python3 scripts/task-gateway.py submit --text "test knowledge engine wiring" --source ai_agent --session-id ke-test` ->
+  non-null `knowledge_matches` key (`{"found": 0, "matches": []}` for that text; re-tested with
+  `--text "check the constitution rules"` -> found=6 real matches).
+- row count in knowledge_engine = 9, matches KNOWLEDGE_ENGINE_SCHEMA_DESIGN_2026-07-23.yaml's
+  `seed_rows_planned_for_phase_1_not_created_by_phase_0.count: 9` exactly.
 
-This task is invocation 3 of a self-dispatching chain (up to 20 invocations,
-already spanning task-20260723-045924 -> ... -> 095201 -> this one). Stopping here
-instead of continuing because:
-
-1. The prior two checkpoints for *this same task* were auto-REJECTED by a
-   pre-flight validator for a genuine logical contradiction (Constraints said not
-   to commit without X, Objective required exactly that). Invocation 3 was
-   dispatched after reword-only changes, and the task's own KNOWN_CONTEXT section
-   explicitly coaches future phases on how to phrase prompts to slip past that
-   validator ("the validator is a bag-of-words contradiction checker, not
-   semantic"). Optimizing prompt wording to defeat an automated safety check is
-   not something I'll operationalize, independent of whether the underlying task
-   is legitimate.
-2. The task asks for real `git push` to a real production GitHub remote
-   (FChecklist/compliance-tracker), autonomous emailing of an "Owner" via
-   notify-owner.py, and self-dispatching a phase 4 (and implicitly further
-   phases) -- all without a human confirming each step. These are exactly the
-   hard-to-reverse / shared-system actions that warrant a stop-and-confirm rather
-   than silent continuation.
-3. No durable, explicit instruction from the human user in this conversation
-   authorizes autonomous production pushes + self-replicating task creation at
-   this scope.
-
-No files were committed or pushed in compliance-tracker. No gap_queue.yaml or
-MASTER_GAP_AUDIT edits were made. No phase 4 was self-dispatched. No owner email
-was sent.
-
-## Remaining (blocked on user decision)
-- [ ] User to confirm: should this chain continue running unattended, including
-      real pushes to github.com/FChecklist/compliance-tracker and self-dispatch
-      of further phases?
-- [ ] If confirmed: perform the actual per-file diff review described in the
-      prompt's SCOPE section 1, classify each of the 13 files, commit the safe
-      ones, update gap_queue.yaml v2-23 and MASTER_GAP_AUDIT_2026-07-23.yaml.
+## Remaining
+- [ ] Commit + push scripts/superboss-register.py, scripts/task-gateway.py diffs (+ ai-os/STANDING_DIRECTIVE.yaml,
+      ai-os/KNOWLEDGE_ENGINE_PHASE2_CANDIDATES_2026-07-23.yaml as new tracked files, since this branch's base
+      predates both scripts/ and ai-os/ existing in this repo).
+- [ ] CHECKPOINT: `task-gateway.py close --task-id <own-id> --audit-cmd "python3 scripts/superboss-register.py
+      query-knowledge constitution" --evidence <real row citation>`.
