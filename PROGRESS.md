@@ -116,7 +116,30 @@
       `scripts/*.py` or `ai-os/` on this host (single dev VM, not DNS-authoritative) -- explicitly
       out-of-scope-by-non-applicability, not fabricated. Scope stayed crontab-only per spec.
 
+- [x] Committed (8b0877f) + pushed to this phase's own worker branch.
+- [x] `task-gateway.py close --audit-cmd "<SUCCESS_CRITERIA line, verbatim>"` -- real result:
+      `{"audit_verdict": "DONE", "checkpoint_status": "completed", "audit_id": "AUD-20260723-164850-03f11b",
+      "work_item_id": "WRK-20260723-164851-75d1"}`.
+- [x] Surveyed remaining target list [1,3,4,6,15,25,36,45,60] (36/51/54 excluded per known Owner-block;
+      21/24 excluded per known Owner-block) for Phase 13 via `git log --all --oneline --
+      '*GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml'` (confirmed 8b0877f still latest) plus a live read of
+      item titles from `ai-os/GOVERNANCE_TASK_PROMPT_2026-07-23.yaml` and each item's current evidence.
+      Picked item 60 (automatic doc generation): confirmed generate_task_checklist.py,
+      generate-system-diagram.py, generate_quick_reference.py all already write real output files
+      (not stdout-only as the stale PARTIAL evidence claimed) but nothing calls them periodically --
+      closable by adding a check function inside system-sync.py (already runs on a real existing
+      6-hourly cron entry) with zero new/changed crontab line, so it never triggers item 50's own
+      new gate.
+- [x] Drafted Phase 13's prompt.txt; first validation attempt against `tight_task_validation
+      .validate_tight_task()` failed (`valid: False`, flagged a Constraints/Objective "contradiction"
+      -- a bag-of-words false positive from restating "do not touch crontab" with overlapping words
+      in multiple sections, not a real contradiction). Fixed by stating the crontab-boundary rule
+      ONCE in CONSTRAINTS and referring to it elsewhere instead of restating it -- re-validated,
+      `{'valid': True}`.
+- [x] Created AND started Phase 13 (task-20260723-165232-phase-13--gap-closing-item60-doc-generat):
+      `systemctl --user status` confirms real `claude -p ... --effort high
+      --dangerously-skip-permissions --max-budget-usd 10` process active and running (PID 952031).
+
 ## Remaining
-- [ ] Commit + push to this phase's own worker branch.
-- [ ] `task-gateway.py close` with the verbatim SUCCESS_CRITERIA command.
-- [ ] Create AND start Phase 13 with a fresh, re-verified target.
+- Nothing further for this task -- Phase 13 is live and will continue the chain (its own NEXT_PHASE
+  points to Phase 14).
