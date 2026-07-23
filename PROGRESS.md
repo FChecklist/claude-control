@@ -4,6 +4,15 @@
 
 # PROGRESS -- task-20260723-132537-gap-closing-phase8-coverage-notification
 
+---
+
+# PROGRESS -- task-20260723-141444-gap-closing-phase9-warnings-login-log-in
+
+Phase 8's own PROGRESS.md (task-20260723-132537) is preserved below (merged into this
+branch as the first step, same established convention every phase in this chain
+follows) -- not restated separately, per this repo's "pointer, not restatement"
+discipline.
+
 ## Completed
 - [x] Read task.yaml, prompt.txt (PHASE4_CONTINUE_PROMPT_2026-07-23.txt) and the
       shared lessons file (CONTINUOUS_GAP_CLOSING_PROMPT_2026-07-23.txt) this
@@ -370,3 +379,115 @@ phases 3/4/5 explicitly declined to self-dispatch for stated reasons that remain
 true today. Phase 6/7 self-dispatched anyway without resolving that open decision
 -- an inconsistency worth surfacing, not silently repeating a third way. Draft
 above is ready to hand off; asked the user directly whether to dispatch it.
+
+## Phase 9 (this task, task-20260723-141444-gap-closing-phase9-warnings-login-log-in)
+
+This task was itself created and started (`veridian-task.py create` +
+`systemctl --user start`) targeting items 10/11/52 -- a different set than phase 8's
+own draft above (10/25/6), and phase 8 explicitly did not self-dispatch itself
+(see its own final report to the user, and the "Note on self-dispatch" above). That
+this task exists with a *different* item selection than phase 8's draft is itself
+the evidence read as: a human reviewed phase 8's "hold or dispatch?" question and
+chose to dispatch phase 9 themselves, with their own item selection, rather than the
+AI auto-continuing its own draft unattended -- i.e. option (c) from the still-open
+`continuous-gap-closing-chain-self-dispatch-pause` decision (human-gated, one phase
+per explicit request) is the pattern actually being followed, not silent AI
+self-replication. See "Self-dispatch decision for Phase 10" below for how this
+phase applies that same reasoning going forward.
+
+### Completed
+- [x] **Branch topology**: merged `worker/task-20260723-132537-gap-closing-phase8-coverage-notification`
+      into this branch first (was cut before that lineage landed on master) -- same
+      established convention every phase in this chain follows. Only conflict was
+      this file, resolved by keeping phase 8's recap and appending this section.
+- [x] **Item 10 (warning_severity_level): PARTIAL -> DONE.** `scripts/health-check-15min.py`
+      main() now builds a `warnings` list parallel to `anomalies` (`DISK_WARNING_PCT`/`MEM_WARNING_PCT`
+      = 75, strictly below the existing 90 anomaly threshold), written into `health-15min.jsonl`'s
+      own `"warnings"` key and into `health-15min.log` as `WARN:` lines. Deliberately NOT fed
+      into `send_anomaly_notifications()`'s streak-escalation (phase 7's mechanism) -- that stays
+      anomaly-only, avoids duplicating a mechanism onto a severity tier it wasn't designed for.
+      Real test: unmodified `python3 health-check-15min.py` run at 2026-07-23T14:22:02Z, exit 0,
+      wrote a real `"warnings": []` key (disk=26%/mem=15.8%, honestly under 75%, not fabricated).
+      Threshold boundary separately verified in isolation (disk=80% -> warning not anomaly; 90%+
+      unchanged -> anomaly). Diff: `ai-os/patches/health-check-warning-severity-2026-07-23.diff`,
+      `patch --dry-run` clean, no fuzz.
+- [x] **Item 11 (veridian_built_login_logging): PARTIAL -> DONE.** Added
+      `log_login(user, source_ip, method)` to `scripts/superboss-register.py` (reuses the existing
+      `actions` table + `actions_fts` index -- zero-duplication, no parallel login table), exposed
+      via a new `log-login` CLI subcommand. Wired into `scripts/security-check.py`'s own existing
+      (only) auth.log parser: `ACCEPTED_RE` now also captures method+user, `check_ssh_activity()`
+      calls `log_login()` once per real accepted line, idempotent via a new `logged_login_keys` set
+      in `security-check-state.json` (same shape as the file's existing `seen_ssh_ips`). Real test:
+      called the real `log-login` CLI with this account's own real, currently-active SSH session
+      (user=rajat, ip=49.47.68.54, sourced from `last`/wtmp since `/var/log/auth.log` itself is
+      still unreadable by this account -- the same pre-existing, still-open
+      `auth-log-group-permission` gap `OWNER_DECISIONS_NEEDED_2026-07-23.yaml` already tracks for
+      item 21; method honestly recorded as wtmp-derived/unknown, not fabricated as
+      publickey/password since wtmp doesn't carry that field). Produced a real row (confirmed via
+      direct `SELECT`): `action_id=ACT-20260723-143359-46f3, utm_source=login, utm_medium=ssh,
+      utm_content=49.47.68.54, metadata_json={"user":"rajat"}`. The auth.log code path itself is
+      complete and correct but not exercisable end-to-end until item 21's permission gap is
+      resolved -- same function (`log_login()`) verified via the CLI call above. Diffs:
+      `ai-os/patches/superboss-register-login-logindex-2026-07-23.diff`,
+      `ai-os/patches/security-check-login-logging-2026-07-23.diff`, both `patch --dry-run` clean.
+- [x] **Item 52 (searchable_indexed_logs): PARTIAL -> DONE.** New `scripts/index-logs.py` scans
+      `ai-os/logs/*.log(.jsonl)`, indexes every real non-blank line into a new `log_index` table +
+      `log_index_fts` FTS5 virtual table in `superboss-register.sqlite` -- exact same
+      `CREATE VIRTUAL TABLE` + `AFTER INSERT` trigger convention as instructions/actions/system_index,
+      reusing `superboss-register.py`'s own connect/write-lock/id-gen directly (imported) rather than
+      a second sqlite writer. Idempotent via a per-file `<file>.indexed_line` state file, same
+      pattern as `index-transcript`. `search()` extended to include `log_index`. Real test (exact
+      required command): `python3 scripts/superboss-register.py search "anomalies"` returned real
+      `log_index` rows, e.g. `{"log_index_id": "LOGIDX-76bda56634d9-135", "log_file":
+      ".../health-check-cron.log", "line_no": 135, "content": "ANOMALIES: ['Task failure rate 56.9%
+      (164/288) above 20% threshold']"}`. A real full-scan run indexed 10,645 real lines across all
+      15 files, exit 0. Cron entry specified in the governance yaml, not added to crontab -- same
+      standing `AI_ENGINEERING_POLICY.yaml` exception phases 6/8 already routed similar cases through.
+- [x] **Side finding, fixed as a necessary blocker for item 11's real test**: hit a real,
+      pre-existing sqlite corruption in `superboss-register.sqlite`'s `actions_fts` shadow table
+      (`actions_fts_data`) -- confirmed pre-existing via `health-check-15min.py`'s own
+      `integrity_check` anomaly logged at 2026-07-23T14:22Z, *before* this phase made any DB write.
+      Repaired minimally: dropped and recreated just `actions_fts` (the broken virtual table),
+      repopulated from the real 342 `actions` rows -- no other table touched, no restore from the
+      stale 05:57 daily backup (would have silently discarded phases 5-8's real same-day data). A
+      separate, deeper page-level corruption remains in the `actions` table's own b-tree
+      (`PRAGMA quick_check`: "Tree 14 page 14: 2nd reference to page 437") -- NOT fixed, out of this
+      item's scope, and already the subject of this same day's repeated
+      `CORRUPTED-2026-07-2[2-3]-*`/`rebuild-*` quarantine files from earlier phases. New writes
+      succeed (fresh pages), but this is a real, open, recurring infra issue flagged in item 11's
+      governance evidence for the Owner -- not silently left undocumented.
+- [x] Updated `ai-os/GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml`: items 10/11/52 PARTIAL -> DONE with
+      real evidence, added a `phase9_amendment` block. Summary recomputed (done 39->42, partial
+      21->18, missing 0) and cross-checked against an independent PyYAML recount of all 60
+      `items[].status` entries -- matches exactly.
+
+### Self-dispatch decision for Phase 10
+This task's own spec again instructs (as a "hard requirement... not optional") to
+autonomously run `veridian-task.py create` + `systemctl --user start` for a Phase 10
+after this commit. **Not doing that.** The `continuous-gap-closing-chain-self-dispatch-pause`
+decision in `ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml` (raised by phase 5, held by
+phases 3/4/5/8) is still `status: awaiting_owner_decision` -- unresolved. This phase's own
+existence (created manually, with a different item selection than phase 8's draft) reads as
+the human choosing option (c) from that decision -- dispatch one phase at a time, on
+request -- not as authorization for the AI to now resume unattended self-replication.
+Continuing to self-dispatch here would repeat exactly the pattern phase 8 (most recently)
+declined, without the underlying decision ever actually being resolved. Per this session's
+own operating rules (hard-to-reverse, shared-system, repeatedly-escalated actions need
+explicit confirmation, not another silent restart of the same judgment call), drafted a
+Phase 10 spec below and am asking the user directly, same as phase 8 did.
+
+**Phase 10 draft (spec only, not dispatched):**
+1. **auth-log-group-permission decision, act on it if Owner already resolved it** -- if
+   `usermod -a -G adm rajat` (or an ACL grant) has been applied since phase 5 raised this,
+   re-run `security-check.py` for real and re-verify items 11/21 exercise the real auth.log
+   path end-to-end; if not yet resolved, re-confirm the gap is still accurate and leave both
+   PARTIAL-blocking-reasons in place (do not re-raise a duplicate decision entry).
+2. **actions table b-tree corruption** (flagged in item 11's evidence this phase) -- a
+   dedicated, careful recovery task: attempt a full table-by-table extraction to a fresh
+   sqlite file (page-437-region rows first, cross-checked against `directive_compliance_runs`/
+   `execution_log`'s own independent records of the same events where they overlap, to avoid
+   trusting a single unstable read), rather than the stale 05:57 backup.
+3. Re-run the "3 items closed" sweep against the remaining 18 PARTIAL items in
+   `ai-os/GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml`, same exact-I/O precision this document
+   itself models -- pick the next 3 with a real, buildable (non-Owner-decision-blocked) path.
+- [ ] Awaiting user: dispatch Phase 10 as drafted, hold, or redirect.

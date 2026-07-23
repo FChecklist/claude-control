@@ -35,8 +35,9 @@ NOTIFY_SCRIPT = "/opt/veridian/scripts/notify-owner.py"
 WINDOW_MINUTES = 20  # 15-min cron cadence + grace, same reasoning as health-check's STALE_THRESHOLD_MIN
 BURST_THRESHOLD = 3  # >=3 failed attempts immediately before a success, same IP
 
-ACCEPTED_RE = re.compile(r"Accepted \S+ for (?:invalid user )?\S+ from ([0-9a-fA-F:.]+)")
+ACCEPTED_RE = re.compile(r"Accepted (\S+) for (?:invalid user )?(\S+) from ([0-9a-fA-F:.]+)")
 FAILED_RE = re.compile(r"Failed password for (?:invalid user )?\S+ from ([0-9a-fA-F:.]+)")
+SUPERBOSS_REGISTER = "/opt/veridian/scripts/superboss-register.py"
 TS_RE = re.compile(r"^(\w{3}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2})")
 
 
@@ -88,13 +89,30 @@ def parse_auth_log_events(now):
         if "Accepted" in line:
             am = ACCEPTED_RE.search(line)
             if am:
-                events.append((dt, am.group(1), "accepted"))
+                method, user, ip = am.group(1), am.group(2), am.group(3)
+                events.append((dt, ip, "accepted", method, user))
         elif "Failed password" in line:
             fm = FAILED_RE.search(line)
             if fm:
-                events.append((dt, fm.group(1), "failed"))
+                events.append((dt, fm.group(1), "failed", None, None))
     events.sort(key=lambda e: e[0])
     return events, None
+
+
+def log_login(user, ip, method):
+    """Best-effort, fail-open -- same contract as notify_owner() below.
+    Governance item 11 (veridian_built_login_logging): logs a real successful
+    SSH login into superboss-register.py's own actions table via its
+    log-login CLI (reuses that script's tested DB/locking code, no second
+    sqlite writer here)."""
+    try:
+        import subprocess
+        subprocess.run(
+            [sys.executable, SUPERBOSS_REGISTER, "log-login", "--user", user, "--source-ip", ip, "--method", method],
+            capture_output=True, text=True, timeout=20,
+        )
+    except Exception:
+        pass
 
 
 def check_ssh_activity(state, now):
@@ -102,18 +120,28 @@ def check_ssh_activity(state, now):
     errors = [error] if error else []
     window_start = now - timedelta(minutes=WINDOW_MINUTES)
     seen_ips = set(state.get("seen_ssh_ips", []))
+    logged_logins = set(state.get("logged_login_keys", []))
 
     new_source_ips = []
     bursts = []
     failed_streak = {}
     all_accepted_ips = set()
 
-    for dt, ip, kind in events:
+    for dt, ip, kind, method, user in events:
         if kind == "failed":
             failed_streak[ip] = failed_streak.get(ip, 0) + 1
             continue
         all_accepted_ips.add(ip)
         prior_failed = failed_streak.get(ip, 0)
+        # governance item 11: log every real successful login line this same
+        # parser finds, exactly once per line (dt+ip+user+method is unique
+        # per real auth.log line) -- not windowed like new_source_ips/bursts
+        # below, since a login that happened outside the last WINDOW_MINUTES
+        # is still a real login worth recording, just not worth re-alerting on.
+        login_key = f"{dt.isoformat()}|{ip}|{user}|{method}"
+        if login_key not in logged_logins:
+            log_login(user, ip, method)
+            logged_logins.add(login_key)
         if dt >= window_start:
             if ip not in seen_ips and ip not in new_source_ips:
                 new_source_ips.append(ip)
@@ -122,6 +150,7 @@ def check_ssh_activity(state, now):
         failed_streak[ip] = 0
 
     state["seen_ssh_ips"] = sorted(seen_ips | all_accepted_ips)
+    state["logged_login_keys"] = sorted(logged_logins)
     return new_source_ips, bursts, errors
 
 
