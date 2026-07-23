@@ -4547,3 +4547,37 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260723-164109-gap-closing-phase12-item50-crontab-enfor/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-23'
+
+  - id: WORKER-20260723-165232-phase-13--gap-closing-item60-doc-generat
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Phase 13: gap-closing item60-doc-generation-auto-wiring''
+      on claude-control reached status=completed. worker finished, no changes to commit'
+    where: /opt/veridian/ai-os/tasks/task-20260723-165232-phase-13--gap-closing-item60-doc-generat/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-23'
+
+  - id: WORKER-20260723-165714-gap-closing-phase13-server-cli-monitorin
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: Server-worker task 'gap-closing-phase13-server-cli-monitoring' on claude-control
+      reached status=failed. worker exited with code 1; failure signature recorded for
+      circuit breaker; pushed whatever progress existed; systemd will retry up to the
+      burst limit
+    where: /opt/veridian/ai-os/tasks/task-20260723-165714-gap-closing-phase13-server-cli-monitorin/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-23'
+
+  - id: WORKER-20260723-170222-phase-14-gap-closing-item6-health-check
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: Server-worker task 'phase-14 gap-closing item6 health-check 1min cadence'
+      on claude-control reached status=failed. worker exited with code 1; failure signature
+      recorded for circuit breaker; pushed whatever progress existed; systemd will retry
+      up to the burst limit
+    where: /opt/veridian/ai-os/tasks/task-20260723-170222-phase-14-gap-closing-item6-health-check/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-23'
