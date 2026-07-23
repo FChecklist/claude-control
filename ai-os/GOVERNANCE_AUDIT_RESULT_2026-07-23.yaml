@@ -7,8 +7,8 @@ method: direct_inspection_of_live_server_state (crontab -l, systemctl --user lis
   RULES_ARTICLES_198.json) count only as evidence of stated intent, not of DONE status, unless a real
   running mechanism is also cited.
 summary:
-  done: 47
-  partial: 13
+  done: 48
+  partial: 12
   missing: 0
   total: 60
 phase7_amendment:
@@ -719,12 +719,28 @@ items:
     -- only ANTHROPIC_BASE_URL/ANTHROPIC_API_KEY env vars differ. Live proof the primary model can be
     swapped without changing the system.
 - item_number: 60
-  status: PARTIAL
-  evidence: RULES_ARTICLES_198.json mandates complete documentation; ai-os/MASTER_INDEX.yaml registry
-    is real (86 entries as of 2026-07-22). But generate_quick_reference.py, generate-system-diagram.py,
-    generate_task_checklist.py are manual-trigger only (print to stdout for hand-paste) and are not in
-    crontab -- documentation requires a human/AI to remember to run and splice these in, not an automatic
-    process.
+  status: DONE
+  evidence: |-
+    RESOLVED 2026-07-23 (phase13). Prior PARTIAL evidence was stale on re-check: all three generators
+    (generate_task_checklist.py, generate-system-diagram.py, generate_quick_reference.py) already wrote
+    real output files, not stdout-only-for-hand-paste as previously claimed (confirmed live via
+    `grep -n "def main|argparse|open(.*['"]w"` on all three -- each has a genuine open(..., "w") write).
+    The real remaining gap was that nothing invoked them periodically. Closed by adding
+    documentation_generation_check() to /opt/veridian/scripts/system-sync.py (which already runs via the
+    live crontab line `0 */6 * * * ... system-sync.py --check all`, re-confirmed live, matching phase12's
+    finding) -- invokes all three generators as real subprocess calls, verifies exit code 0 and that each
+    output file's mtime actually advanced, reports via the file's existing findings/append_attention
+    convention, and is individually skippable via the new --check documentation choice. No crontab line
+    was added or changed (stayed inside code changes to an already-scheduled script, per this phase's
+    CONSTRAINTS boundary tied to item 50's new gate) -- confirmed `diff <(crontab -l)
+    ai-os/CRONTAB_APPROVED_SNAPSHOT.txt` empty both before and after this change. Real test run:
+    `--dry-run --check documentation` produced 3 DRY-RUN findings with 0 invocations; a real (non-dry-run)
+    run produced "[documentation_generation_check] 3 finding(s), 3 generator(s) ran successfully" with
+    "OK: <name> regenerated <output_file>" for all three, and each output file's mtime measurably advanced
+    (e.g. generate_task_checklist-latest.yaml: 1784814365 -> 1784825816); SYSTEM_DIAGRAM.md did not
+    previously exist at its canonical live path (/opt/veridian/ai-os/SYSTEM_DIAGRAM.md) and was created by
+    this run. `python3 -m py_compile system-sync.py` clean; `--check all` still runs cleanly end to end
+    alongside the other three checks.
 unresolved_items_not_safely_automatable_this_increment:
 - items:
   - 27
