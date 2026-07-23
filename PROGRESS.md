@@ -19,9 +19,12 @@
 - [x] Deduplicated linked GitHub repos across all posts -> 77 distinct repo URLs (list at /tmp/all_repos.txt), none overlap with the 3 repos from direct input URLs (markitdown, OfficeCLI, anthropics/skills) -> 80 distinct repos total
 - [x] Split the 77 into 6 batches (/tmp/repobatch_00..05), dispatched 6 parallel background Agents to fetch each repo's README and produce a one-sentence README-sourced description (and flag any repo that 404s / doesn't exist rather than guessing)
 
+## Completed (final)
+- [x] Collected README-description results from all 6 repo-batch agents (77/77 processed; 2 flagged as nonexistent: stan-smith/FossFLOW and md-Ateek-dev/Gate_Pass_Backend, both 404 -- correctly NOT invented, NOT indexed)
+- [x] Built final markdown table -> ai-os/X_POST_AI_ANALYSIS_2026-07-23.md, all 79 input URLs covered (78 accessible=true, 1 accessible=false [x.com/i/trending URL]), 80 distinct repos found (78 real + 2 nonexistent noted but excluded from indexing)
+- [x] Ran scripts/superboss-register.py index-add for all 78 real distinct repos (script's built-in flock-based _write_lock serializes against the gap-closing chain automatically -- no errors, no lock contention observed in the run)
+- [x] Verified via `search --tag source:x-analysis-2026-07-23` that entries landed correctly in system_index
+
 ## Remaining
-- [ ] Collect README-description results from the 6 repo-batch agents
-- [ ] Build final markdown table -> ai-os/X_POST_AI_ANALYSIS_2026-07-23.md (columns: post_url | accessible | linked_github_repo | what_it_does), covering all 79 input URLs
-- [ ] Run scripts/superboss-register.py index-add for each distinct repo (use /opt/veridian/scripts/superboss-register.py; retry on db lock/busy)
 - [ ] Commit + push the markdown file
 - [ ] Checkpoint status=pending_review with real counts note
