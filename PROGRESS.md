@@ -17,9 +17,11 @@
 - [x] Real repair performed on the live db, single sequential operation: quarantined corrupted file as `superboss-register.sqlite.CORRUPTED-2026-07-23-1000-freelist-mismatch`, ran `superboss-register.py init` (fixed code), recovered ALL 449 rows (235 instructions + 13 work_items + 169 actions + 32 system_index + 2 execution_log) from the quarantined file (data was still fully readable despite the freelist corruption) with zero data loss -- row counts and FTS parity verified to match exactly.
 - [x] Post-repair smoke test via the real CLI: `search`, `log-action`, `check-duplicate` all work; `integrity_check` = ok.
 
+- [x] Observed real post-fix recurrence-free evidence: `ai-os/logs/health-check-cron.log` shows 2 consecutive clean 15-min cron cycles after the fix+repair (10:15:02Z anomalies=0, 10:30:01Z anomalies=0) -- every prior same-day repair attempt (07:30, ~08:30, ~09:18/09:23) had already re-corrupted by its very next cycle, so 2 clean cycles in a row is real, novel evidence, not just a reinit claim. Independently re-ran `PRAGMA integrity_check` directly against the live db at 10:31Z: `('ok',)`. Documented caveat: ~30min/2 cycles is still a short window.
+- [x] Updated `ai-os/MASTER_GAP_AUDIT_2026-07-23.yaml`: source_3 finding status `FIXED_PENDING_OBSERVATION` -> `FIXED_OBSERVED_STABLE` with a new `observed_2026-07-23T10:31Z_by_task-20260723-095201_phase_2` evidence block, `verdict_for_master_gap_list` updated, and `consolidated_summary.new_findings_not_in_any_prior_source` sqlite bullet updated to match. Did NOT append a new `gap_closing_worker_log` phase-2 entry yet -- doing that next along with commit+push+checkpoint+self-dispatch.
+
 ## Remaining
-- [ ] Observe across the next 15-min health-check cron cycle (next fires ~10:15 UTC) for real recurrence-free evidence, per task success criteria.
-- [ ] Update `ai-os/MASTER_GAP_AUDIT_2026-07-23.yaml` source_3 finding with real before/after + append gap_closing_worker_log phase 2 entry.
+- [ ] Append `gap_closing_worker_log` phase 2 entry (own commit hash cited retroactively is not possible pre-commit, so entry will point to "this branch's phase 2 commit(s)" the way phase 1's entry did, then commit).
 - [ ] Commit + push.
-- [ ] Checkpoint status=pending_review with evidence-cited note.
-- [ ] Self-dispatch phase 3 continuing through remaining ai-os/MASTER_GAP_AUDIT_2026-07-23.yaml consolidated_summary items.
+- [ ] Checkpoint status=pending_review with evidence-cited note via `veridian-task.py checkpoint`.
+- [ ] Self-dispatch phase 3 via `veridian-task.py create` (title/repo=claude-control/prompt following the strict prompt.txt label-format + validator-avoidance rules from this task's own KNOWN_CONTEXT), continuing through `ai-os/MASTER_GAP_AUDIT_2026-07-23.yaml`'s consolidated_summary remaining ~185 open items in the same small-batch style.

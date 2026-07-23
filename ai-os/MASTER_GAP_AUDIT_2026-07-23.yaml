@@ -162,8 +162,8 @@ source_3_execution_rules_audit:
         it materially undercuts today's earlier 'fully repaired, zero data loss' framing: that
         was true of the 07:30 fix and is no longer true right now."
       severity: critical
-      status: FIXED_PENDING_OBSERVATION  # updated 2026-07-23T10:01Z by phase 2, see
-        # fixed_2026-07-23T10:01Z_by_task-20260723-095201_phase_2 below for evidence
+      status: FIXED_OBSERVED_STABLE  # updated 2026-07-23T10:31Z by phase 2, see
+        # observed_2026-07-23T10:31Z_by_task-20260723-095201_phase_2 below for evidence
       recommended_immediate_action: "A dedicated repair task (mirroring phase2's own
         recovery playbook: attempt real recovery, quarantine + reinit if recovery fails, add
         detection) should be dispatched before any further task that depends on
@@ -232,10 +232,27 @@ source_3_execution_rules_audit:
         integrity re-checked again after this task's own next 15-min health-check cron cycle --
         see this phase's gap_closing_worker_log entry below for the actual result, cited with a
         real timestamp, not assumed."
+      observed_2026-07-23T10:31Z_by_task-20260723-095201_phase_2: "Checked
+        ai-os/logs/health-check-cron.log after the fix+repair landed (repair completed shortly
+        after 10:00Z; fix code committed 2026-07-23T10:05:18Z as commit 8632aa0): the 10:15:02Z
+        cron cycle logged anomalies=0 (no superboss-register.sqlite integrity_check failure in
+        its ANOMALIES list), and the 10:30:01Z cycle also logged anomalies=0 -- 2 consecutive
+        clean 15-min cron cycles post-fix, the first recurrence-free evidence of the day (every
+        prior repair attempt today -- 07:30, ~08:30 fts-damage, ~09:18/09:23 rebuild-b/c -- had
+        already re-corrupted by its very next 15-min cron check, per the quarantine file
+        timestamps under ai-os/memory/: fts-damage 08:30, recurrence2 09:20,
+        1000-freelist-mismatch 10:00). Independently re-ran `PRAGMA integrity_check` directly
+        against the live db at 10:31Z (python3 sqlite3 stdlib, no write attempted): result
+        ('ok',). Status updated FIXED_PENDING_OBSERVATION -> FIXED_OBSERVED_STABLE. CAVEAT: ~30
+        min / 2 cycles is a short observation window relative to how long some of today's prior
+        (pre-fix) corruptions took to manifest; recommend the next phase/worker re-check
+        ai-os/logs/health-check-cron.log again before fully retiring this finding rather than
+        treating 2 clean cycles as permanent proof."
   verdict_for_master_gap_list: "42 part-entries stand at 2 DONE / 35 PARTIAL / 5 MISSING as
-    audited; sqlite corruption finding moved from ACTIVE_UNRESOLVED to FIXED_PENDING_OBSERVATION
-    as of phase 2 (see fixed_2026-07-23T10:01Z_by_task-20260723-095201_phase_2 above and phase 2's
-    gap_closing_worker_log entry for the real post-fix observation evidence)."
+    audited; sqlite corruption finding moved from ACTIVE_UNRESOLVED to FIXED_OBSERVED_STABLE as
+    of phase 2, on the strength of 2 consecutive clean post-fix health-check cron cycles (see
+    observed_2026-07-23T10:31Z_by_task-20260723-095201_phase_2 above and phase 2's
+    gap_closing_worker_log entry)."
 
 # =========================================================================
 # SOURCE 4: gap_queue.yaml (25 queued items, 21 held_task_ids, dispatch_paused=true)
@@ -334,7 +351,7 @@ consolidated_summary:
     open items, not tens -- do not let this number be read as small."
   new_findings_not_in_any_prior_source:
     - "audit198 tool itself has 2 real breakages (path-drift bug, missing CONSTITUTION.yaml) -- see source_1 (path-drift FIXED, CONSTITUTION.yaml gracefully-degraded but content still missing, as of phase 1 below)"
-    - "superboss-register.sqlite corrupted 4 distinct times today (2026-07-23) before phase 2's fix -- see source_3: phase 1 re-confirmed it ACTIVE_UNRESOLVED with a 3rd distinct signature, then phase 2 found and fixed 3 real code defects (subprocess-timeout-vs-busy_timeout SIGKILL race, missing write serialization, missing FTS5 AFTER UPDATE trigger), repaired the live db with zero data loss, and status now reads FIXED_PENDING_OBSERVATION pending real post-fix evidence (see gap_closing_worker_log phase 2)"
+    - "superboss-register.sqlite corrupted 4 distinct times today (2026-07-23) before phase 2's fix -- see source_3: phase 1 re-confirmed it ACTIVE_UNRESOLVED with a 3rd distinct signature, then phase 2 found and fixed 3 real code defects (subprocess-timeout-vs-busy_timeout SIGKILL race, missing write serialization, missing FTS5 AFTER UPDATE trigger), repaired the live db with zero data loss, and status now reads FIXED_OBSERVED_STABLE after 2 consecutive clean post-fix health-check cron cycles (see gap_closing_worker_log phase 2)"
     - "gap_queue.yaml's own status labels are unreliable (retry-count artifacts, not real investigation) -- see source_4 root_cause_finding"
 
 # =========================================================================
@@ -374,3 +391,82 @@ gap_closing_worker_log:
     self_dispatch_decision: "Continuing to phase 2: superboss-register.sqlite root-cause fix
       (write serialization), since it is now the single highest-severity active-and-unresolved
       item and blocks trustworthy future work on check-duplicate/system_index/execution_log."
+  - phase: 2
+    task_id: task-20260723-095201-gap-closing-phase2-sqlite-corruption-roo
+    started_2026-07-23T09:52Z_completed_approx: "2026-07-23T10:35Z"
+    batch_picked: "Single well-scoped item per this phase's own SCOPE: root-cause + fix +
+      repair + verify superboss-register.sqlite's same-day repeated corruption (4 distinct
+      signatures by the time this phase started), flagged critical/ACTIVE_UNRESOLVED by phase 1."
+    diagnosis_summary: "Full read of superboss-register.py's every write path plus
+      veridian-task.py's _auto_log_task_event found 3 real, code-evidenced defects: (1)
+      veridian-task.py wrapped every superboss-register.py subprocess write call (fired every
+      5 min by EVERY active worker's background checkpoint loop, plus ad-hoc log-work/log-action
+      calls) in subprocess.run(timeout=10) -- shorter than superboss-register.py's own
+      sqlite3.connect(DB_PATH, timeout=30) busy_timeout, so a writer still legitimately inside
+      its declared 30s busy-wait could be SIGKILLed by its own caller at 10s (failure silently
+      swallowed by a bare except: pass). (2) No serialization existed across concurrent
+      superboss-register.py writer processes -- they relied solely on sqlite3's internal
+      busy_timeout to arbitrate. (3) system_index's index_add() upserts via
+      ON CONFLICT(path) DO UPDATE but system_index_fts (external-content FTS5) only had an
+      AFTER INSERT sync trigger, no AFTER UPDATE, silently desyncing the FTS shadow table on
+      every re-verification of an already-indexed path. HONESTY NOTE (unchanged from the
+      in-file fix note, restated here for the log): a blind concurrent-SIGKILL stress test (up
+      to 150 concurrent log-action processes, sustained random kills) did NOT reproduce actual
+      corruption on either pre-fix or post-fix code within the available test budget, so full
+      certainty on the exact causal mechanism was not reached -- defects (1)/(2)/(3) are real
+      and consistent with phase 1's own observation (an ordinary write coincided with the
+      ok->corrupt flip), and (1)/(2) mirror the already-proven controller_lock() fix pattern
+      from the 2026-07-18 CONTROLLER.yaml incident; applied as the most defensible mitigation
+      available, not a guaranteed-proven root cause."
+    fix_implemented:
+      - "/opt/veridian/scripts/superboss-register.py: added _write_lock() (fcntl.flock-based OS
+        lock on a sidecar .writelock file), wraps every write subcommand (init/log-instruction/
+        log-work/log-action/index-add/log-execution/index-transcript) at CLI dispatch -- a
+        losing writer now blocks entirely outside any sqlite transaction, so killing it while
+        it waits can never corrupt the file, and flock auto-releases if its holder is killed."
+      - "/opt/veridian/scripts/veridian-task.py: raised _auto_log_task_event's subprocess
+        timeout from 10s to 35s (>30s busy_timeout + margin) at all 3 call sites (create/
+        checkpoint/record_usage)."
+      - "/opt/veridian/scripts/superboss-register.py: added the missing system_index_au
+        AFTER UPDATE FTS5 sync trigger."
+    functional_verification_pre_repair:
+      - "40 concurrent log-action invocations against a scratch db with 20 SIGKILLed mid-flight
+        at randomized delays -> integrity_check = ok, repeated across trials, with the fix
+        applied."
+      - "FTS5 UPDATE-sync fix verified on a scratch db: old search term disappears, new term
+        appears after an upsert."
+    repair_performed: "Quarantined the corrupted live file as
+      ai-os/memory/superboss-register.sqlite.CORRUPTED-2026-07-23-1000-freelist-mismatch (4th
+      distinct signature of the day: 'Freelist: size is 0 but should be 1'), ran
+      `superboss-register.py init` (fixed code), then recovered ALL 449 rows (235 instructions +
+      13 work_items + 169 actions + 32 system_index + 2 execution_log -- zero data loss, the
+      quarantined file's tables were still fully readable despite the freelist corruption) into
+      the fresh db, verified row-count and FTS-row-count parity exactly, then ran a live CLI
+      smoke test (search/log-action/check-duplicate) plus PRAGMA integrity_check = ok. Repair
+      ran as a single sequential operation from one process only, per this phase's own
+      CONSTRAINTS (multiple independent repair attempts colliding is what produced today's
+      earlier stray .rebuild-2026-07-23b/c artifacts)."
+    post_fix_observation_evidence: "See
+      source_3_execution_rules_audit.new_finding_this_task_degrading_existing_partials_further[0].observed_2026-07-23T10:31Z_by_task-20260723-095201_phase_2
+      above: ai-os/logs/health-check-cron.log shows 2 consecutive clean 15-min cron cycles after
+      the fix+repair landed (10:15:02Z anomalies=0, 10:30:01Z anomalies=0) -- the first
+      recurrence-free evidence of the day (every prior same-day repair attempt had already
+      re-corrupted by its very next 15-min cycle). Independently re-ran PRAGMA integrity_check
+      directly against the live db at 10:31Z: ('ok',). Status FIXED_PENDING_OBSERVATION ->
+      FIXED_OBSERVED_STABLE. Caveat stated plainly: ~30min/2 cycles is a short window relative
+      to how long some of today's prior corruptions took to manifest; not claimed as permanent
+      proof."
+    items_closed:
+      - "source_3 superboss-register.sqlite corruption: root-caused (3 real defects, full
+        certainty on exact causal mechanism explicitly NOT claimed), fixed, repaired with zero
+        data loss, and observed stable across 2 post-fix health-check cycles -- moved
+        ACTIVE_UNRESOLVED -> FIXED_OBSERVED_STABLE."
+    commit_evidence: "See git log on this branch for the commit(s) accompanying this phase --
+      commit message references 'Phase 2' explicitly (script fix + repair) plus a follow-up
+      commit for this audit-doc update."
+    self_dispatch_decision: "Continuing to phase 3: no Owner-decision blocker exists for the
+      next batch (the two items that do need Owner sign-off -- 4-repo merge scoping,
+      veda-advisors Supabase severance -- are already parked in
+      ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml by phase 1 and stay parked). Phase 3 should
+      pick the next small, well-defined, low-risk batch from consolidated_summary's remaining
+      ~185 open items, same style as phases 1-2."
