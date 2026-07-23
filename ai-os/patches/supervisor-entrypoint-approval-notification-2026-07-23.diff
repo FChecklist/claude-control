@@ -1,0 +1,27 @@
+--- a/scripts/supervisor-entrypoint.sh
++++ b/scripts/supervisor-entrypoint.sh
+@@ -199,6 +199,24 @@
+   python3 /opt/veridian/scripts/veridian-task.py checkpoint "$TASK_ID" --status blocked --note "tier1, Superboss-approved, but SCOPE VIOLATION (file-ownership) blocked the merge — see supervisor.log: $PR_URL"
+ elif [ "$VERDICT" = "approve" ] && [ "$TIER" = "tier2" ]; then
+   python3 /opt/veridian/scripts/veridian-task.py checkpoint "$TASK_ID" --status awaiting_human_approval --note "tier2, Superboss-approved, held for human merge: $PR_URL"
++  # Governance item 49 (active_approval_notification, 2026-07-23): the checkpoint
++  # above is only a passive DB status -- actively tell the Owner, reusing
++  # notify-owner.py directly (same mechanism as items 27/28/56) rather than
++  # building a second escalation path. Best-effort: a notification failure must
++  # never block the checkpoint already recorded above.
++  APPROVAL_BODY="Hi Rajat,
++
++A task on your Veridian server is ready to merge, but it needs your OK first
++because it touches something sensitive (like a database change, login/security
++code, billing, or a big deletion).
++
++Task: $TASK_ID
++Pull request: $PR_URL
++
++Please take a look and merge it yourself when you get a chance.
++
++- Veridian supervisor"
++  python3 /opt/veridian/scripts/notify-owner.py --subject "Veridian: a task needs your approval" --body "$APPROVAL_BODY" --dedupe-key "awaiting-approval-$TASK_ID" >> "$TASK_DIR/supervisor.log" 2>&1 || true
+ else
+   python3 /opt/veridian/scripts/veridian-task.py checkpoint "$TASK_ID" --status blocked --note "Superboss rejected: $PR_URL — see review.json for issues"
+ fi
