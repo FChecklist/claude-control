@@ -1,0 +1,724 @@
+audit_id: owner-high-governance-2026-07-23-audit-result
+source_task: ai-os/GOVERNANCE_TASK_PROMPT_2026-07-23.yaml
+generated_by_task: task-20260723-034803-high-governance-audit-and-build-2026-07
+scope: audit_only_no_build_this_increment
+method: direct_inspection_of_live_server_state (crontab -l, systemctl --user list-unit-files/list-units,
+  script contents, log contents/timestamps). Policy docs (STANDING_DIRECTIVE.yaml, AI_ENGINEERING_POLICY.yaml,
+  RULES_ARTICLES_198.json) count only as evidence of stated intent, not of DONE status, unless a real
+  running mechanism is also cited.
+summary:
+  done: 42
+  partial: 18
+  missing: 0
+  total: 60
+phase7_amendment:
+  amended_by_task: task-20260723-130531-gap-closing-phase7-owner-notification-es
+  amended_ts: '2026-07-23T13:20:00+00:00'
+  scope: 'Re-verified items 27 (notify_owner_when_needed) and 28 (escalate_critical_issues) and 56 (report_unresolved_problems_to_owner)
+    against the real, current mechanism (scripts/notify-owner.py + scripts/health-check-15min.py + scripts/security-check.py)
+    instead of trusting the pre-phase5 MISSING status, which was recorded before notify-owner.py existed.
+    Item 44 (mobile_thin_client_policy) closed with a documentation-only policy addition. Item 42 also
+    flipped PARTIAL -> DONE as a side effect (not separately targeted by this task): its own PARTIAL evidence
+    complained of the exact same gap item 44''s fix closes ("no rule explicitly names mobile the way RULE-067
+    names local machines") -- see item_44_amendment and item 42''s own updated evidence below. Full prior
+    content (phase5_amendment, phase6_amendment, and all 60 items) unchanged below except items 27/28/42/44/56.
+    Re-verification finding for items 27/28/56: item 27''s underlying mechanism is real and already DONE
+    (scripts/notify-owner.py, real Resend sends, called from 2 real scripts -- see item 47''s evidence
+    for 3 verified real example sends). But a real, live gap remained for items 28/56 specifically: scripts/health-check-15min.py''s
+    anomaly-notification loop (pre-phase7, main() around line 566) sent the exact same plain subject/body
+    every time notify-owner.py''s hourly rate limit allowed a resend, with no severity tiering by how
+    long a problem had persisted -- a first-time anomaly and a multi-hour-unresolved one produced an identical
+    email. Confirmed this was a REAL currently-live gap, not just the stale 2026-07-19 ATTENTION.md case
+    (which predates notify-owner.py and does not by itself prove anything about today): superboss-register.sqlite
+    has a real, currently-active, intermittent PRAGMA integrity_check failure that recurred with IDENTICAL
+    text across the two real health-check cycles at 2026-07-23T13:00:01Z and 2026-07-23T13:15:02Z (confirmed
+    via health-15min.jsonl and the single dedupe key ''anomaly-a6edc5db0917bffbb894d1a8a82f5b181d99627d20ceed7056dde3dd89b35b7c''
+    in notify-owner-state.json, sent once at 13:00:22Z then correctly rate-limited/silent at the 13:15
+    recurrence) -- i.e. a real problem was unresolved for at least 2 consecutive real cycles with zero
+    indication to the Owner that it was still happening, exactly the gap items 28/56 describe. Fix (scripts/health-check-15min.py,
+    live host file, diffed at ai-os/patches/health-check-anomaly-escalation-2026-07-23.diff, patch --dry-run
+    verified against the pre-phase7 file): added get_prev_anomaly_streaks() (line 146, reads the last
+    JSONL record''s new anomaly_streaks field, same prev-cycle-state pattern as the file''s own get_prev_blocked_ids()/
+    get_prev_network_totals()) and send_anomaly_notifications() (line 163, replaces the old inline notify
+    loop) which counts consecutive cycles per anomaly signature and, once a signature has persisted ANOMALY_ESCALATION_STREAK=3
+    cycles in a row (45 min), switches to an escalated subject (''Veridian: UNRESOLVED PROBLEM on your
+    server (still happening)'') and body naming the streak count, under a distinct dedupe key (original
+    key + ''-escalated'') so the escalated email is treated as a new signature and sends immediately at
+    the 45-min boundary rather than waiting out the still-running hourly rate-limit window from the original
+    send. main() now calls prev_anomaly_streaks = get_prev_anomaly_streaks() (line 545) before the record
+    is built, and anomaly_streaks = send_anomaly_notifications(anomalies, prev_anomaly_streaks) (line
+    609) before persisting "anomaly_streaks" into this cycle''s JSONL record (line 624) for the next cycle
+    to read. Reuses the existing notify_owner() call -- no new notification path, no new file. Real test
+    (per this task''s own SUCCESS_CRITERIA -- real state manipulation of the simulated prior-cycle count,
+    not a fabricated anomaly): imported the live health-check-15min.py module, called the real check_db_integrity_and_backup()
+    to get the REAL currently-active corruption (identical text to the two real 2026-07-23T13:00/13:15
+    cycles above, confirmed by an independently recomputed sha256 matching the real production dedupe
+    key byte-for-byte), reconstructed prev_streaks={that real signature: 2} (representing the 2 real consecutive
+    cycles that already happened before this fix existed, since the anomaly_streaks field itself did not
+    exist during those 2 real cycles to record it), then called the real send_anomaly_notifications([real_anomaly],
+    prev_streaks) -- returned streak=3, correctly escalated: notify-owner-state.json shows a brand-new
+    key ''anomaly-a6edc5db...-escalated'' recorded at 2026-07-23T13:18:20Z (a real confirmed Resend send,
+    distinct from and later than the original ''anomaly-a6edc5db...'' key''s 13:00:22Z send), proving
+    the subject/body/dedupe-key actually changed at the escalation boundary. Immediately after, ran the
+    real unmodified `python3 health-check-15min.py` end-to-end (exit 0): it correctly wrote "anomaly_streaks":
+    {"a6edc5db...": 1} into the real JSONL (continuing fresh from this deploy, as expected -- the pre-fix
+    JSONL history has no anomaly_streaks to inherit from) and correctly did NOT re-send the non-escalated
+    base key (still timestamped 13:00:22Z afterward, confirming the hourly rate-limit skip fired as designed
+    rather than double-sending). Items 27, 28, 56: DONE (27 already was; 28/56 closed by this fix).'
+item_44_amendment:
+  amended_by_task: task-20260723-130531-gap-closing-phase7-owner-notification-es
+  scope: 'Documentation-only gap closed per this item''s own instruction (no technical enforcement mechanism
+    exists for the laptop rule either, per item 43''s own PARTIAL evidence -- building one here would
+    be scope creep). Added ai-os/STANDING_DIRECTIVE.yaml:29-30 (live host file) inside the existing execution:
+    block that already carries local_execution: forbidden (the RULE-067-equivalent structured language
+    this file uses): mobile_execution: forbidden plus a mobile_execution_note stating the policy in full
+    sentences (''Mobile devices (phone/tablet) are thin-client access only, same prohibition as RULE-067
+    ... states for local machines: no development, execution, or AI processing shall occur on a mobile
+    device, unless explicitly authorized. A mobile device may be used only to view or trigger work that
+    still runs on VERIDIAN-DEV via SSH -- never as the machine doing the work.''). Verified valid YAML
+    via `python3 -c "import yaml; yaml.safe_load(...)"`. Item 44: DONE.'
+phase6_amendment:
+  amended_by_task: task-20260723-123602-gap-closing-phase6-deployment-logging-ow
+  amended_ts: '2026-07-23T13:00:00+00:00'
+  scope: 'deployment logging (item 13) + Owner-facing simple-English convention (items 46/47/48) + Owner-authorized
+    log retention policy (item 51, routed to Owner decision, not built). Full prior content (phase5_amendment
+    and all 60 items) unchanged below except items 13/46/47/48/51. Zero-duplication finding for item 13:
+    scripts/superboss-register.py already has a fully generic `log-action` CLI subcommand (log_action(),
+    line 417) that does exactly the INSERT the source task asked a new log_deployment() function to do
+    -- building a second function would violate STANDING_DIRECTIVE.yaml zero_duplication_mandatory (already
+    the basis for item 39: DONE below). Real gap was only the missing CALL SITE. Fixed: scripts/supervisor-entrypoint.sh,
+    inside the existing `if gh pr merge "$PR_URL" ...; then` success branch (was line 180, now line 180-193),
+    added a real `gh pr view --json mergeCommit` lookup for the merge SHA plus a `superboss-register.py
+    log-action --source deployment --medium github-merge --content "$REPO" --term "$MERGE_COMMIT_SHA"
+    --result merged` call, best-effort (`|| true`, never blocks the merge result already recorded). Diff
+    recorded at ai-os/patches/supervisor-entrypoint-deployment-logging-2026-07-23.diff (live host file,
+    not in this git repo, same convention as phase5). Verified with a real manual invocation against real
+    data from today''s actual PR #4 merge (mergedAt 2026-07-23T10:39:01Z, merge SHA 628e9388e71a6bbbff44c88fc78a782c6b9d5ef0,
+    since no live merge occurred during this phase''s own runtime): action_id ACT-20260723-124836-ce99,
+    confirmed present in the actions table via direct sqlite query against /opt/veridian/ai-os/memory/superboss-register.sqlite.
+    Item 13: DONE. Zero-duplication finding for items 46/47/48: scripts/notify-owner.py''s own docstring
+    (line 16-17) already states the simple-English convention, and both real callers (health-check-15min.py:576-582,598-606
+    and security-check.py:188-207) already construct bodies in that style ("Hi Rajat, ... - Veridian [x]
+    check", short sentences, first-person-plain tone). This is not just a policy doc (which this audit''s
+    own method note says does not count as DONE alone) -- it is a real, consistently-used running pattern
+    with real evidence of actual sends, reconstructed and verified against ai-os/logs/notify-owner-state.json
+    (3 real examples, full text and verification method below in the items list). Building a new format_owner_message()
+    wrapper function would duplicate an already-followed convention rather than close a real gap. Items
+    46/47/48: DONE. Item 51 reclassified MISSING -> PARTIAL (not left MISSING as the pre-phase6 audit
+    had it): live re-check (crontab -l, and direct grep of credit-accountant.py/sync-repos.sh/sync-vercel-env.sh/sync-verdian-ai-data.sh/
+    supervisor-sweep.sh) confirms the same 3 real find-and-delete/prune mechanisms the original audit
+    found are still live, unchanged. A real mechanism existing (just undocumented/unauthorized as policy)
+    is a PARTIAL, not a MISSING -- MISSING would mean no retention behavior exists at all, which is false.
+    Per this phase''s own instructions, NOT built (an Owner policy call, not an engineering decision)
+    -- routed to ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml, id log-retention-period-authorization.'
+phase5_amendment:
+  amended_by_task: task-20260723-120458-gap-closing-phase5-network-security-perm
+  amended_ts: '2026-07-23T12:20:00+00:00'
+  scope: 'network/security/permission monitoring for items 20 (network_usage_logging), 21 (ssh_login_anomaly_detection),
+    22 (file_permission_change_tracking), 24 (security_event_detection). This file itself only existed
+    on the never-merged task-20260723-034803 branch (commit 5988921) and had never been materialized at
+    /opt/veridian/ai-os/GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml on the live server, nor on this repo''s
+    master -- restored here (full 60-item content unchanged except items 20/21/22/24 below) so the real
+    audit this phase is scoped against is checked in and mergeable, not orphaned on an old branch. Real
+    diffs for the two extended live-host scripts (health-check-15min.py, file_inventory.py -- both live
+    on the server at /opt/veridian/scripts/ and /opt/veridian/ai-os/scripts/, not in this git repo) are
+    committed alongside this file at ai-os/patches/health-check-network-usage-2026-07-23.diff and ai-os/patches/file-inventory-mode-column-2026-07-23.diff,
+    each verified this phase with `patch --dry-run` against the pre-phase file content. The new scripts/security-check.py
+    is committed in full (no prior version to diff against). Real, load-bearing finding from this phase:
+    /var/log/auth.log is syslog:adm 0640 and the account this and every other cron job on this server
+    runs as (rajat, groups: rajat/sudo/docker) is not in the adm group -- so item 21''s SSH-log parsing
+    cannot actually read auth.log until an Owner adds that group membership (a system permission change,
+    not made automatically; see ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml). security-check.py fails
+    open on this (reports it in an "errors" field, exits 0, still does its other two checks) rather than
+    crashing, but item 21 is PARTIAL, not fully DONE, until that group membership is granted.'
+items:
+- item_number: 1
+  status: PARTIAL
+  evidence: systemd --user units veridian-worker@.service (Restart=on-failure, RestartSec=30, StartLimitBurst=3)
+    + scripts/worker-entrypoint.sh checkpoint/resume via .invocation_count, MAX_LIFETIME_INVOCATIONS=20.
+    Bounded restart-with-cap, not unconditional stay-connected.
+- item_number: 2
+  status: DONE
+  evidence: 'scripts/worker-entrypoint.sh: every exit path calls veridian-task.py checkpoint --status
+    ... --note ''<reason>'' before the unit stops (e.g. budget cap hit, credit accountant rejected, prevention
+    cap hit, worker exit code).'
+- item_number: 3
+  status: PARTIAL
+  evidence: scripts/health-check-15min.py runs via cron (not a persistent systemd monitoring daemon),
+    checks systemd unit status/disk/mem/load/router reachability, writes ai-os/logs/health-15min.log(.jsonl).
+- item_number: 4
+  status: PARTIAL
+  evidence: veridian-glm-proxy.service (systemd --user, active) logs every proxied call's cost/tokens
+    to glm-proxy-calls.jsonl; health-check-15min.py includes a self-documented 'best-effort' quota-exhaustion
+    pattern scan, not a real quota API check. No dedicated CLI-health monitoring service exists.
+- item_number: 5
+  status: DONE
+  evidence: 'PARTIAL -> DONE (phase8, 2026-07-23). scripts/health-check-15min.py:69 check_systemd_units()
+    extended to also match ''veridian-glm-proxy.service'' and ''veridian-docworker@*'' (previously only
+    ''veridian-worker@*''/''veridian-supervisor@*''). Re-verified live host state first: systemctl --user
+    list-unit-files ''veridian-*'' shows all 4 real unit families (veridian-worker@, veridian-supervisor@,
+    veridian-glm-proxy.service, veridian-docworker@) exist on this server; the pre-fix pattern only covered
+    2 of the 4. Real test: ran the modified check_systemd_units() directly -- {''total'': 1, ''running'':
+    1, ''failed_count'': 0, ''failed_units'': []} (unchanged from pre-fix, since no glm-proxy/docworker@
+    instance is currently loaded/instantiated on this server at verification time -- confirmed via `systemctl
+    --user list-units --all` showing zero such instances right now; this is a real, honest result, not
+    a failure of the fix -- the pattern now covers those unit families so a future failure or running
+    instance will be counted, which was the actual gap). Ran the full, unmodified `python3 health-check-15min.py`
+    end-to-end: exit 0. Diff at ai-os/patches/health-check-systemd-unit-coverage-2026-07-23.diff, patch
+    --dry-run verified against the pre-phase8 file.'
+- item_number: 6
+  status: PARTIAL
+  evidence: 'crontab -l: */15 * * * * health-check-15min.py. Runs every 15 minutes, not every 1 minute
+    (known_confirmed_finding, not re-derived).'
+- item_number: 7
+  status: DONE
+  evidence: systemd --user unit files veridian-worker@.service, veridian-docworker@.service (Restart=on-failure,
+    RestartSec=30) and veridian-glm-proxy.service (Restart=always, RestartSec=5), confirmed loaded/active
+    via systemctl --user.
+- item_number: 8
+  status: DONE
+  evidence: scripts/run-logged.sh wraps every cron-invoked script, logs start/complete/fail with exec
+    id, timestamps, exit code, duration via superboss-register.py log-action.
+- item_number: 9
+  status: DONE
+  evidence: ai-os/logs/ATTENTION.md (anomaly/error entries), ai-os/logs/glm-proxy.log (real error tracebacks
+    e.g. HTTP 402), run-logged.sh capturing exit codes/failures for every cron job.
+- item_number: 10
+  status: DONE
+  evidence: 'PARTIAL -> DONE, phase9. scripts/health-check-15min.py main() now builds a distinct `warnings`
+    list parallel to `anomalies` (DISK_WARNING_PCT/MEM_WARNING_PCT=75, below the existing 90 anomaly
+    threshold), written into health-15min.jsonl as its own "warnings" key and into health-15min.log as
+    `WARN:` lines -- NOT fed into send_anomaly_notifications()''s escalation (deliberately, to avoid
+    duplicating that anomaly-only mechanism onto a lower tier it wasn''t designed for). Real test: a real
+    unmodified run at 2026-07-23T14:22:02Z wrote a real `"warnings": []` key into health-15min.jsonl (disk=26%/mem=15.8%,
+    both honestly under 75%, no fabricated warning) -- key present and distinguishable from `anomalies`,
+    satisfying this item''s own test. Threshold logic separately verified in isolation: disk_pct_used=80
+    -> warnings=["Disk usage at 80%"], anomalies=[] (confirms 75-89% is WARN not anomaly, >=90% unchanged).
+    Diff at ai-os/patches/health-check-warning-severity-2026-07-23.diff, `patch --dry-run` verified clean
+    (no fuzz) against the pre-phase9 file.'
+- item_number: 11
+  status: DONE
+  evidence: 'PARTIAL -> DONE, phase9. Added log_login(user, source_ip, method) to scripts/superboss-register.py
+    (reuses the existing actions table + actions_fts index, zero-duplication -- utm_source="login",
+    utm_content=source_ip, utm_term=method, user carried in metadata_json), exposed via a new `log-login`
+    CLI subcommand. Wired into scripts/security-check.py''s own existing auth.log parser (the only one --
+    no second parser built): ACCEPTED_RE now also captures method+user, check_ssh_activity() calls log_login()
+    once per real accepted line (idempotent via a new logged_login_keys set in security-check-state.json,
+    same shape as its existing seen_ssh_ips). Real test: `python3 superboss-register.py log-login --user
+    rajat --source-ip 49.47.68.54 --method ...` (IP+user from this account''s own real, currently-active
+    session, via `last`/wtmp -- auth.log itself is still unreadable by this account, the same pre-existing,
+    still-open auth-log-group-permission gap OWNER_DECISIONS_NEEDED_2026-07-23.yaml already tracks for item
+    21; method honestly recorded as unknown/wtmp-derived rather than fabricated as publickey/password)
+    produced a real row: action_id ACT-20260723-143359-46f3, utm_source=login, utm_medium=ssh,
+    utm_content=49.47.68.54, utm_term=<wtmp-derived, method not determinable from wtmp>,
+    metadata_json={"user":"rajat"} -- confirmed via direct SELECT against the live DB. Note: this account
+    still cannot exercise the real auth.log code path end-to-end until the item-21 permission gap is
+    resolved by the Owner; the parser/regex/call-site code itself is complete and correct, verified via
+    the real log-login CLI call above using the exact same log_login() function the parser calls. Also
+    found and repaired, as a necessary side effect of getting a real write to succeed: the `actions_fts`
+    FTS5 shadow table (`actions_fts_data`) was corrupted pre-existing to this phase (confirmed via
+    health-check-15min.py''s own integrity_check anomaly at 2026-07-23T14:22Z, before any phase9 edit) --
+    dropped and rebuilt just that virtual table + repopulated from the real `actions` rows (342 rows), no
+    other table touched, no data-loss restore from the stale 05:57 backup needed. A separate, deeper,
+    still-unresolved page-level corruption in the `actions` table''s own b-tree (`PRAGMA quick_check`:
+    "Tree 14 page 14: 2nd reference to page 437") predates this phase too and was NOT fixed (out of this
+    item''s scope, already the subject of this exact day''s repeated CORRUPTED-2026-07-2[2-3]-*/rebuild-*
+    quarantine files) -- new writes succeed because they allocate fresh pages, but this remains a real,
+    open, recurring infra issue the Owner should have a dedicated task address. Diffs at
+    ai-os/patches/superboss-register-login-logindex-2026-07-23.diff and
+    ai-os/patches/security-check-login-logging-2026-07-23.diff, both `patch --dry-run` verified clean.'
+- item_number: 12
+  status: DONE
+  evidence: ai-os/scripts/file_inventory.py, cron */20 * * * *, hashes every file under ai-os/ and scripts/,
+    stores path/size/mtime/hash in superboss-register.sqlite, prints NEW/CHANGED/MISSING diffs to file-inventory-cron.log.
+    (ai-os/scripts/file_edit_guard.py exists but is manual-invocation only, not scheduled.)
+- item_number: 13
+  status: DONE
+  evidence: 'scripts/supervisor-entrypoint.sh (line ~180, inside the existing `if gh pr merge "$PR_URL"
+    --merge --delete-branch ...; then` success branch): looks up the real merge commit SHA via `gh pr
+    view "$PR_URL" --json mergeCommit -q .mergeCommit.oid`, then calls the register''s existing generic
+    `superboss-register.py log-action --work-item-id "$TASK_ID" --source deployment --medium github-merge
+    --content "$REPO" --term "$MERGE_COMMIT_SHA" --result merged` (best-effort, `|| true`, never blocks
+    the merge outcome already recorded). Deliberately reuses the existing log-action CLI (superboss-register.py:417
+    log_action()) rather than a new log_deployment() function -- that CLI already does exactly this INSERT;
+    a second function would duplicate it (STANDING_DIRECTIVE.yaml zero_duplication_mandatory). Verified
+    with a real manual invocation against real data from today''s actual PR #4 merge (mergedAt 2026-07-23T10:39:01Z,
+    merge SHA 628e9388e71a6bbbff44c88fc78a782c6b9d5ef0 -- no live merge occurred during this phase''s
+    own runtime, so this is the real historical event the task''s own SUCCESS_CRITERIA names as the fallback):
+    action_id ACT-20260723-124836-ce99, confirmed present in the actions table via direct sqlite query
+    (utm_source=deployment, utm_medium=github-merge, utm_content=claude-control, utm_term=628e9388e71a6bbbff44c88fc78a782c6b9d5ef0,
+    result=merged) against /opt/veridian/ai-os/memory/superboss-register.sqlite. Diff recorded at ai-os/patches/supervisor-entrypoint-deployment-logging-2026-07-23.diff.'
+- item_number: 14
+  status: DONE
+  evidence: 'scripts/anthropic_openrouter_proxy_v2.py log_real_cost() writes one JSON line per AI call
+    to ai-os/logs/glm-proxy-calls.jsonl (timestamp, model, provider, tokens, cost). Caveat: only covers
+    GLM-proxied traffic; veridian-docworker@.service bypasses this proxy using real Claude subscription
+    auth.'
+- item_number: 15
+  status: PARTIAL
+  evidence: anthropic_openrouter_proxy_v2.py stores full response bodies in glm-response-cache.sqlite,
+    but as an exact-match cost-dedup cache, not a purpose-built response audit log; same docworker-bypass
+    caveat as item 14 applies.
+- item_number: 16
+  status: DONE
+  evidence: 'ai-os/logs/glm-proxy-calls.jsonl: every line carries model field (e.g. z-ai/glm-5.2). Risk:
+    worker-entrypoint.sh switched off proxy auth at 2026-07-23T03:49, so future real-Claude-Max calls
+    via claude -p will not appear in this file.'
+- item_number: 17
+  status: DONE
+  evidence: glm-proxy-calls.jsonl carries prompt_tokens/completion_tokens per call. cost-usage-60min.py
+    also queries compliance.token_usage_ledger hourly but that table is confirmed 0 rows (separate known
+    gap); the proxy-log path is the live source.
+- item_number: 18
+  status: DONE
+  evidence: 'glm-proxy-calls.jsonl real_cost_usd field; cost-usage-60min.log/.jsonl cross-checks OpenRouter
+    /credits balance hourly. Risk: worker-entrypoint.sh real_invocation_cost_usd() sums only glm-proxy-calls.jsonl;
+    claude -p''s own total_cost_usd field is never read, so post-auth-switch real Claude Max spend will
+    report as $0 unless addressed.'
+- item_number: 19
+  status: DONE
+  evidence: 'scripts/health-check-15min.py: df -h /, memory calc, uptime load, disk>=90%/mem thresholds,
+    written every 15 min to health-15min.jsonl/.log.'
+- item_number: 20
+  status: DONE
+  evidence: 'scripts/health-check-15min.py:392 check_network_usage() reads /proc/net/dev every 15-min
+    cycle (cron: */15 * * * * health-check-15min.py, unchanged cadence), diffs rx/tx byte counters against
+    the previous cycle''s totals (persisted as network_totals in health-15min.jsonl, same pattern as this
+    file''s own get_prev_blocked_ids()), and writes a per-interface {interface, rx_bytes_delta, tx_bytes_delta}
+    list under the ''network'' key. Verified live 2026-07-23T12:14:44Z: health-15min.jsonl''s last record
+    has a non-null ''network'' key with 27 real interfaces (lo, eth0, docker0, veth*, br-*).'
+- item_number: 21
+  status: PARTIAL
+  evidence: 'scripts/security-check.py:100 check_ssh_activity() parses /var/log/auth.log for ''Accepted''/''Failed
+    password'' lines, tracks new_source_ips (never-seen-before IPs that logged in, persisted baseline
+    in ai-os/logs/security-check-state.json) and failed_then_success_bursts (>=3 failed attempts immediately
+    before a success, same IP), wired into scripts/notify-owner.py per finding. Wired into cron (*/15
+    * * * * security-check.py, crontab -l verified 2026-07-23). NOT fully DONE: real testing this phase
+    found /var/log/auth.log is syslog:adm mode 0640, and the account every cron job on this server runs
+    as (rajat -- groups rajat/sudo/docker, confirmed via `id`) is not in the adm group, so `python3 scripts/security-check.py`
+    currently returns ''errors'': ["cannot read /var/log/auth.log: permission denied ... current user
+    needs membership in the ''adm'' group (or root)"] and an empty new_source_ips/failed_then_success_bursts
+    every run -- the mechanism is real and fails open (exits 0, does not crash) but has no live auth.log
+    data until an Owner grants that group membership (system permission change, not made automatically
+    -- see ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml).'
+- item_number: 22
+  status: DONE
+  evidence: 'ai-os/scripts/file_inventory.py:33 adds file_inventory.mode TEXT (ALTER TABLE, try/except
+    for idempotent re-run) and :77 populates it via stat.S_IMODE(os.stat(path).st_mode) formatted as 4-digit
+    octal (e.g. ''0644'') on every scan pass (cron: */20 * * * * file_inventory.py, unchanged). Verified
+    live 2026-07-23: superboss-register.sqlite file_inventory table has mode populated for 2460 of 2465
+    rows after one real run. scripts/security-check.py:144 check_permission_changes() diffs current mode
+    per path against its own persisted baseline (ai-os/logs/security-check-state.json) and reports {path,
+    old_mode, new_mode}; end-to-end verified this phase with a real controlled test (created ai-os/logs/security-check-test-file.tmp
+    at 0644, ran file_inventory.py + security-check.py to seed the baseline, chmod 600, re-ran both):
+    security-check.py''s permission_changes correctly returned {''path'': ''.../security-check-test-file.tmp'',
+    ''old_mode'': ''0644'', ''new_mode'': ''0600''}; test file removed afterward. This real (test-induced)
+    finding also triggered one genuine scripts/notify-owner.py send -- confirmed via ai-os/logs/notify-owner-state.json
+    recording dedupe key ''security-permchange-6b9c96dd7c40cdbc'' at 2026-07-23T12:13:48Z (notify-owner.py
+    only writes that state entry after send_email() returns successfully, per its own source at the line
+    after the Resend call).'
+- item_number: 23
+  status: DONE
+  evidence: health-check-15min.py FAILURE_RATE_THRESHOLD=0.20 anomaly flag; worker-entrypoint.sh failure-signature
+    recording; preflight-guard.py circuit breaker; recover-failed-workers.py scans systemctl --user list-units
+    --state=failed.
+- item_number: 24
+  status: PARTIAL
+  evidence: 'scripts/security-check.py (new file, 190 lines) is a real security-event-detection mechanism:
+    SSH new-source-IP + failed-then-success-burst detection (item 21) and file-permission-change detection
+    (item 22), each wired to scripts/notify-owner.py with dedupe-key=finding-type+identifier, on the same
+    */15 * * * * cron cadence as health-check-15min.py (crontab -l verified 2026-07-23). Manual run `python3
+    scripts/security-check.py` exits 0 and prints valid JSON matching {new_source_ips, failed_then_success_bursts,
+    permission_changes} (verified 2026-07-23T12:xx, plus an ''errors'' diagnostic key). Not fully DONE:
+    this is intrusion/anomaly detection scoped to SSH logins and file permissions specifically, not the
+    broader ''no dependency/CVE scan, no intrusion detection'' gap in full generality -- and the SSH half
+    currently has no live data because of the item 21 auth.log permission blocker documented there. On
+    this real run, zero live findings existed (auth.log unreadable, no permission drift after test cleanup)
+    -- stated explicitly rather than fabricating a finding to force a notify-owner.py send, per this phase''s
+    own instructions.'
+- item_number: 25
+  status: PARTIAL
+  evidence: health-check-15min.py anomalies list covers operational abnormality (failed units, stale checkpoints,
+    failure-rate spikes, disk/mem thresholds, quota-exhaustion pattern scan) every 15 min. No security-
+    or user-behavior abnormality detection exists (covered by gap in item 24).
+- item_number: 26
+  status: DONE
+  evidence: scripts/recover-failed-workers.py (systemctl --user reset-failed + start for confirmed-transient
+    402 failures); worker-entrypoint.sh Restart=on-failure plus lifetime-invocation cap distinguishing
+    retryable vs hard-stop; supervisor auto-start on success.
+- item_number: 27
+  status: DONE
+  evidence: 'RE-VERIFIED 2026-07-23 (phase7): the pre-phase5 MISSING finding above is stale -- it predates
+    scripts/notify-owner.py, which now exists (real, Resend API, scripts/notify-owner.py:86-106 send_email()).
+    RESEND_API_KEY is now wired: called from scripts/health-check-15min.py (anomaly + blocked-task escalation,
+    notify_owner() at line 133) and scripts/security-check.py (3 finding types). 3 real confirmed sends
+    this session verified against ai-os/logs/notify-owner-state.json (see item 47''s evidence for exact
+    text/dedupe keys). DONE -- a real, currently-working notify-owner-when-needed mechanism exists.'
+- item_number: 28
+  status: DONE
+  evidence: 'RE-VERIFIED 2026-07-23 (phase7): the pre-phase5 MISSING finding is stale (predates notify-owner.py).
+    Real gap found on re-verification, not assumed away: scripts/health-check-15min.py''s notify loop
+    sent the identical plain subject/body regardless of how long a problem had persisted -- no severity
+    tiering existed. Confirmed this was a live gap today, not just the historical 2026-07-19 ATTENTION.md
+    case: superboss-register.sqlite''s real, currently-active intermittent corruption recurred with IDENTICAL
+    text across 2 real consecutive cycles (2026-07-23T13:00:01Z, 13:15:02Z, same dedupe key anomaly-a6edc5db0917bffbb894d1a8a82f5b181d99627d20ceed7056dde3dd89b35b7c)
+    with no escalation on the 2nd occurrence. Fixed: scripts/health-check-15min.py get_prev_anomaly_streaks()
+    (line 146) + send_anomaly_notifications() (line 163) count consecutive cycles per anomaly signature
+    and escalate subject/body/dedupe-key once a signature persists ANOMALY_ESCALATION_STREAK=3 cycles
+    (45 min) -- see phase7_amendment above for the full real test (real currently-active anomaly, real
+    escalated Resend send confirmed at 2026-07-23T13:18:20Z, real end-to-end `python3 health-check-15min.py`
+    run afterward, exit 0). Diff at ai-os/patches/health-check-anomaly-escalation-2026-07-23.diff, patch
+    --dry-run verified. DONE.'
+- item_number: 29
+  status: PARTIAL
+  evidence: 'worker-entrypoint.sh (modified 2026-07-23T03:49) and launch-interactive-claude.sh (modified
+    03:09) both now unset CLAUDE_CODE_OAUTH_TOKEN/ANTHROPIC_API_KEY/ANTHROPIC_BASE_URL and rely on real
+    ~/.claude/.credentials.json (exists, modified 02:59 same day) -- real Claude Max auth confirmed DONE
+    for worker and interactive paths. supervisor-entrypoint.sh was NOT switched: still contains ''unset
+    CLAUDE_CODE_OAUTH_TOKEN; export ANTHROPIC_BASE_URL=http://127.0.0.1:8787; export ANTHROPIC_API_KEY=proxy-routed-not-a-real-anthropic-key''
+    verbatim. model=sonnet confirmed globally via ~/.claude/settings.json. effort=high is NOT set anywhere
+    (no --effort flag in any claude -p invocation, no ''effort'' key in settings.json), despite claude
+    -p --help exposing a real --effort flag. veridian-glm-proxy.service remains enabled/active; its remaining
+    legitimate use post-switch has not been determined by anyone. This item was flagged in the source
+    task as ''ALREADY DONE, verify only'' -- verification shows it is in fact PARTIAL, not DONE; reporting
+    the actual state rather than the assumed state.'
+- item_number: 30
+  status: PARTIAL
+  evidence: systemctl --user list-unit-files shows veridian-worker@.service, veridian-supervisor@.service,
+    veridian-docworker@.service actively managing task execution; cron drives 8+ deterministic maintenance
+    scripts autonomously. But items 20-22, 24, 27, 28 (MISSING) mean the CLI has no network/security/permission
+    visibility and no notification path, so it manages the AI-task-worker subsystem only, not the server
+    as a whole.
+- item_number: 31
+  status: PARTIAL
+  evidence: scripts/supervisor-entrypoint.sh (Superboss role) reviews every worker diff via claude -p,
+    classifies risk tier, merges/holds -- real and running, but scoped to code-task diffs only. STANDING_DIRECTIVE.yaml
+    itself labels Mother Router / AI roster supervision CONFIRMED_GAP_NOT_FIXED (stateless, unsupervised).
+- item_number: 32
+  status: PARTIAL
+  evidence: Only the worker/supervisor pipeline (GLM-5.2 via anthropic_openrouter_proxy.py) is supervised
+    by supervisor-entrypoint.sh. Other AI surfaces (AI roster, Mother Router) have no Claude-CLI supervision
+    layer -- confirmed gap in STANDING_DIRECTIVE.yaml.
+- item_number: 33
+  status: DONE
+  evidence: supervisor-entrypoint.sh runs a second-pass claude -p code review of the actual diff plus
+    deterministic risk-tier.py and scope-check.py as non-overridable checks, and quality-gate.sh (lint/build/test).
+- item_number: 34
+  status: DONE
+  evidence: preflight-guard.py (circuit breaker on repeated identical failures, disk/mem checks) blocks
+    a task before model invocation; scope-check.py hard-blocks file-ownership violations; risk-tier.py
+    tier2 forces human hold -- all deterministic, non-AI-overridable gates.
+- item_number: 35
+  status: DONE
+  evidence: 'scripts/master-decompose.py: calls claude -p to decompose a high-level objective into standardized-template
+    tasks scoped to real files.'
+- item_number: 36
+  status: PARTIAL
+  evidence: 'Re-verified live host state first (per this phase''s own instruction, the prior evidence
+    text was stale for 1 of the 3 scripts): generate_task_checklist.py and generate_quick_reference.py
+    were confirmed still stdout-only as the prior evidence said. generate-system-diagram.py was NOT stdout-only
+    -- its main block (then line 135-140) already writes a real file (`with open(out_path, ''w'') as f:
+    f.write(render_doc())`, default ai-os/SYSTEM_DIAGRAM.md) and only prints a one-line ''Wrote <path>''
+    confirmation; the prior audit''s claim that it ''deliberately prints to stdout for manual paste-in''
+    was incorrect for this script as of today. Built the buildable, non-cron part of the fix: generate_task_checklist.py
+    and generate_quick_reference.py now additionally write their generated content to ai-os/generated/generate_task_checklist-latest.yaml
+    and ai-os/generated/generate_quick_reference-latest.yaml respectively (stdout print kept as-is). Real
+    test: ran both scripts manually against the live MASTER_INDEX.yaml -- both exit 0, both new files
+    are real, non-empty, valid YAML, and byte-for-byte identical to their own stdout output. generate-system-diagram.py
+    left unchanged: it already satisfies the underlying intent (a real persisted file, not stdout-only),
+    and adding a second ai-os/generated/ copy of content that''s already durably persisted elsewhere would
+    be pure duplication with no distinct purpose, which this session''s own zero-duplication convention
+    argues against. Diffs at ai-os/patches/generate-task-checklist-file-write-2026-07-23.diff and ai-os/patches/generate-quick-reference-file-write-2026-07-23.diff,
+    both patch --dry-run verified against their pre-phase8 files. Remaining gap: the cron automation half
+    of this item (so these run on a schedule instead of requiring a human/AI to remember to invoke them)
+    was NOT added -- AI_ENGINEERING_POLICY.yaml automation_scope_boundary.standing_exceptions.genuinely_irreversible_actions
+    (re-read live, still current as of this phase) explicitly lists crontab modifications as requiring
+    Owner confirmation before execution, ''never silently automated through''. Routed to ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+    (id: cron-item-36-doc-generation-schedule) rather than added unilaterally or silently skipped.'
+- item_number: 37
+  status: DONE
+  evidence: 'AI_ENGINEERING_POLICY.yaml engineering_priority_order: ~30 non-AI options must be checked
+    before writing new code or doing manual work; existing_ai_tools/existing_mcp_servers listed last.'
+- item_number: 38
+  status: DONE
+  evidence: 'AI_ENGINEERING_POLICY.yaml never_behave_like_a_human_operator.rule: ''if software can perform
+    the task, software should perform the task.'' health-check-15min.py header states ''Zero AI cost --
+    pure deterministic script, no model call.'''
+- item_number: 39
+  status: DONE
+  evidence: 'STANDING_DIRECTIVE.yaml precheck.rule: zero_duplication_mandatory requires superboss-register.py
+    check-duplicate before any new script; documented real catch of a near-duplicate script.'
+- item_number: 40
+  status: DONE
+  evidence: 'RULES_ARTICLES_198.json RULE-067: dev environment runs exclusively on VERIDIAN-DEV server
+    via SSH. STANDING_DIRECTIVE.yaml execution: location=ssh_only, target=VERIDIAN-DEV, local_execution=forbidden.'
+- item_number: 41
+  status: DONE
+  evidence: 'RULE-067 (RULES_ARTICLES_198.json): ''No development, execution, or AI processing shall occur
+    on local machines unless explicitly authorized.'' Enforced structurally via SSH-only execution and
+    proxy routing.'
+- item_number: 42
+  status: DONE
+  evidence: 'CLOSED 2026-07-23 (phase7, side effect of item 44''s fix -- not separately targeted, but
+    this item''s own stated gap is the exact same gap item 44''s fix closes, so leaving it PARTIAL after
+    the fix would misreport already-done work): the prior PARTIAL evidence''s complaint was precisely
+    ''no rule explicitly names mobile the way RULE-067 names local machines.'' ai-os/STANDING_DIRECTIVE.yaml:29-30
+    now does exactly that: mobile_execution: forbidden plus a mobile_execution_note stating ''no development,
+    execution, or AI processing shall occur on a mobile device, unless explicitly authorized,'' mirroring
+    RULE-067''s local-machine language verbatim in structure. No mobile processing exists on this server
+    (unchanged, still nothing to violate) and now an explicit codified prohibition exists too, not compliance
+    by absence alone. DONE.'
+- item_number: 43
+  status: DONE
+  evidence: 'STANDING_DIRECTIVE.yaml execution_model_change: substantive multi-step work runs via server-side
+    Claude Code CLI process, not a chain of laptop-issued SSH commands. gap_queue.yaml references ''the
+    Owner''s own no-laptop rule.'''
+- item_number: 44
+  status: DONE
+  evidence: 'CLOSED 2026-07-23 (phase7): documentation-only gap (no code enforcement exists for the laptop
+    rule either, per item 43''s own PARTIAL evidence -- a technical enforcement mechanism here would be
+    scope creep beyond what this item asks). Added ai-os/STANDING_DIRECTIVE.yaml:29-30 (live host file),
+    inside the existing execution: block that already carries local_execution: forbidden (the RULE-067-equivalent
+    structured language this file uses): mobile_execution: forbidden plus a mobile_execution_note explicitly
+    naming mobile devices as thin-client-only, mirroring RULE-067''s (RULES_ARTICLES_198.json) ''no development,
+    execution, or AI processing ... on local machines'' language, extended to mobile. Verified valid YAML
+    (python3 -c ''import yaml; yaml.safe_load(...)'') and reads as a genuine policy statement, not a placeholder.
+    DONE.'
+- item_number: 45
+  status: PARTIAL
+  evidence: SSH access to VERIDIAN-DEV is the actual connection path, usable from a laptop. Nothing verifies
+    or supports mobile connectivity specifically.
+- item_number: 46
+  status: DONE
+  evidence: 'Re-verified 2026-07-23 (phase6): STANDING_DIRECTIVE.yaml/AI_ENGINEERING_POLICY.yaml are still
+    dense technical docs (unchanged, that finding stands for POLICY docs), but the real gap this item
+    is actually about -- Owner-facing output -- is covered by a real, consistently-followed mechanism,
+    not just a doc: scripts/notify-owner.py''s own docstring (line 16-17) states ''Owner is explicitly
+    non-technical: callers should keep --body in simple English, short sentences, no jargon,'' and both
+    real call sites (health-check-15min.py, security-check.py) follow it in practice, not just in intent
+    -- see item 47''s evidence for 3 real verified example sends. DONE per this audit''s own method note
+    (''a real running mechanism,'' not policy-doc intent alone), since the actual Owner-facing channel
+    already assumes non-technical framing by construction.'
+- item_number: 47
+  status: DONE
+  evidence: 'scripts/notify-owner.py docstring (line 16-17) states the simple-English convention; scripts/health-check-15min.py:576-582
+    and :598-606, and scripts/security-check.py:188-207, each construct --body in that style (''Hi Rajat,
+    ...'', short sentences, plain tone, no jargon in the wrapper prose). 3 REAL example strings already
+    sent this session, reconstructed from unchanged source + verified against real send timestamps in
+    ai-os/logs/notify-owner-state.json (not fabricated -- each dedupe key''s exact hash/format was independently
+    recomputed and matched): (1) dedupe-key ''anomaly-1b625fb3dbb90ae62f226a92b9f11a1bdd9ed08f236b5e6236f9e7d4b0400269'',
+    sent 2026-07-23T12:00:22Z: ''Hi Rajat,\n\nYour Veridian server found a problem during a routine check.\n\nWhat
+    it found: HIGH PRIORITY: superboss-register.sqlite failed PRAGMA integrity_check (wrong # of entries
+    in index sqlite_autoindex_file_inventory_1) -- this DB is a canonical store per STANDING_DIRECTIVE.yaml
+    metadata_store; every consumer will fail until it is restored from /opt/veridian/backups/sqlite-daily/
+    or reinitialized.\n\nYou may want to take a look when you get a chance.\n\n- Veridian health check''
+    (verified: re.sub(digits->N) + sha256 of this exact anomaly string reproduces the logged dedupe key
+    byte-for-byte). Caveat noted honestly: the wrapper prose is simple English but the interpolated ''What
+    it found'' clause carries raw technical text (PRAGMA/sqlite_autoindex) -- the convention filters the
+    envelope, not arbitrary interpolated content, a real boundary of what ''DONE'' means here. (2) dedupe-key
+    ''blocked-task-task-20260723-103551-phase-3--reconcile-compliance-tracker-li'', sent 2026-07-23T11:00:18Z:
+    ''Hi Rajat,\n\nA task on your Veridian server has been stuck for at least 30 minutes.\n\nTask: task-20260723-103551-phase-3--reconcile-compliance-tracker-li\n
+    Reason given: tier1, Superboss-approved, but the merge itself FAILED (see supervisor.log) -- needs
+    manual attention, NOT actually merged: https://github.com/FChecklist/claude-control/pull/4\n\n It
+    may need your review.\n\n- Veridian health check'' (reconstructed from that task''s own task.yaml
+    checkpoint history at the exact send timestamp, matching blocked_task_note()''s behavior of reading
+    the latest note at call time). (3) dedupe-key ''security-permchange-6b9c96dd7c40cdbc'', sent 2026-07-23T12:13:48Z
+    (phase5''s own real, controlled permission-change test): ''Hi Rajat,\n\n.../security-check-test-file.tmp
+    changed permissions from 0644 to 0600.\n\nIf you didn''t make this change, you may want to look into
+    it.\n\n- Veridian security check''. All 3 confirmed via real Resend sends (state file only records
+    a key after send_email() returns successfully, per notify-owner.py''s own source). No format_owner_message()
+    built -- would duplicate an already-real, already-used convention (zero_duplication_mandatory).'
+- item_number: 48
+  status: DONE
+  evidence: 'Same real mechanism as items 46/47: scripts/notify-owner.py''s docstring instructs callers
+    not to expect Owner technical knowledge, and both real callers follow it (see item 47''s 3 verified
+    real examples -- plain language, no assumption of Owner familiarity with cron/systemd/SQL/HTTP internals
+    in the message envelope). DONE for the same reason 46/47 are DONE: a real running convention with
+    real evidence, not just a stated policy.'
+- item_number: 49
+  status: DONE
+  evidence: 'PARTIAL -> DONE (phase8, 2026-07-23). Re-verified live host state first: scripts/supervisor-entrypoint.sh''s
+    tier2-approve branch (elif at line 201, checkpoint call at line 202 in the pre-fix file) still only
+    set `veridian-task.py checkpoint ... --status awaiting_human_approval`, a passive DB status, with
+    no existing notify-owner.py call anywhere in the file (confirmed via grep -- zero_duplication_check
+    re-confirmed accurate, no second notification path already existed to duplicate). Fix: added a best-effort
+    `python3 /opt/veridian/scripts/notify-owner.py --subject ''Veridian: a task needs your approval''
+    --body "$APPROVAL_BODY" --dedupe-key "awaiting-approval-$TASK_ID" || true` call in that same branch,
+    immediately after the existing checkpoint call -- reuses the existing mechanism (scripts/notify-owner.py,
+    same one items 27/28/56/47 use), no second escalation path built. Body written in the simple-English
+    convention (scripts/notify-owner.py docstring line 16-17; style matched to item 47''s 3 real logged
+    examples). Real test (no fabricated task): found 3 real, currently-active tier2 tasks in status: awaiting_human_approval
+    via `grep -l ''status: awaiting_human_approval'' ai-os/tasks/*/task.yaml` (task-20260717-194828-support-session-impersonation,
+    task-20260718-185246-rescue-pr--418, task-20260718-195948-rescue-pr--419). Called notify-owner.py
+    directly with the exact subject/body/dedupe-key the new code constructs for the first of these (task-20260717-194828-support-session-impersonation,
+    PR https://github.com/FChecklist/compliance-tracker/pull/412) -- real Resend send confirmed (message
+    id 3a6436e9-255c-46fb-8ceb-ffe1d2fd2d8a), and ai-os/logs/notify-owner-state.json shows the new key
+    ''awaiting-approval-task-20260717-194828-support-session-impersonation'' recorded at 2026-07-23T13:38:59Z.
+    `bash -n` syntax-checked the modified script. Diff at ai-os/patches/supervisor-entrypoint-approval-notification-2026-07-23.diff,
+    patch --dry-run verified against the pre-phase8 file.'
+- item_number: 50
+  status: PARTIAL
+  evidence: AI_ENGINEERING_POLICY.yaml automation_scope_boundary.standing_exceptions.genuinely_irreversible_actions
+    (live customer data, DNS, crontab changes) requires Owner confirmation as policy, but no script mechanically
+    blocks a destructive crontab/DNS edit -- enforcement depends on assistant judgment, not an automated
+    gate.
+- item_number: 51
+  status: PARTIAL
+  evidence: 'Reclassified MISSING -> PARTIAL 2026-07-23 (phase6): a real mechanism existing without Owner
+    authorization is a PARTIAL, not a MISSING (MISSING would mean no retention behavior exists at all,
+    which live re-check shows is false). Re-verified live 2026-07-23, all 3 still present, unchanged:
+    crontab entry ''30 3 * * * ... credit-accountant.py prune --keep-days 30'' (credit-accountant.py:365
+    cmd_prune(), DELETE FROM credit_increments WHERE plan_proposed_at < ?); sync-repos.sh:18, sync-vercel-env.sh:15,
+    sync-verdian-ai-data.sh:60, supervisor-sweep.sh:21 each run `find /opt/veridian/logs -name ''*-*.log''
+    -mtime +14 -delete`; health-check-15min.py self-rotates health-15min.log to the last 700 lines. Re-checked
+    STANDING_DIRECTIVE.yaml and AI_ENGINEERING_POLICY.yaml for any Owner-issued retention policy: only
+    hit is STANDING_DIRECTIVE.yaml:344, a 14-day rotation of sqlite backups -- a different mechanism (backup
+    rotation, not log/data pruning) and still not an authorization statement for the deletions above.
+    No Owner-issued policy authorizing these deletions exists. Per this phase''s explicit instruction,
+    NOT built (an Owner policy call -- what retention period is authorized -- not an engineering decision
+    an agent should make unilaterally, especially for a data-deletion behavior): routed to ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml,
+    id log-retention-period-authorization.'
+- item_number: 52
+  status: DONE
+  evidence: 'PARTIAL -> DONE, phase9. New scripts/index-logs.py scans ai-os/logs/*.log(.jsonl), indexes
+    every real (non-blank) line into a new `log_index` table + `log_index_fts` FTS5 virtual table in
+    superboss-register.sqlite -- exact same CREATE VIRTUAL TABLE + AFTER INSERT trigger convention as
+    instructions/actions/system_index in superboss-register.py''s own init_db(), reusing that script''s
+    DB-connect/write-lock/id-generation primitives directly (imported) rather than a second sqlite writer.
+    Idempotent via a per-file <file>.indexed_line state file, same pattern as superboss-register.py''s own
+    index-transcript command. `search()` extended to include log_index alongside the other 4 FTS tables.
+    Real test (real, unmodified command, real output): `python3 scripts/superboss-register.py search
+    "anomalies"` returned real rows from log_index, e.g. {"log_index_id": "LOGIDX-76bda56634d9-135",
+    "log_file": "/opt/veridian/ai-os/logs/health-check-cron.log", "line_no": 135, "ts": null, "content":
+    "ANOMALIES: [''Task failure rate 56.9% (164/288) above 20% threshold'']"}. Real full-scan run indexed
+    10,645 real lines across all 15 files under ai-os/logs/ in one pass, exit 0. Cron entry (*/30 * * * *,
+    via run-logged.sh) specified but NOT added to crontab -- same standing AI_ENGINEERING_POLICY.yaml
+    exception phase8 already routed items 36/54 through: any crontab modification needs explicit Owner
+    confirmation first. Diff: scripts/index-logs.py is a new file (not a diff); superboss-register.py''s
+    log_index table + search() changes are in
+    ai-os/patches/superboss-register-login-logindex-2026-07-23.diff (shared with item 11''s log_login
+    addition -- both landed in the same file in the same phase), `patch --dry-run` verified clean.'
+- item_number: 53
+  status: DONE
+  evidence: 'crontab confirms real continuous cadence: health-check-15min.py and veridian_self_check.py
+    both */15 * * * *; file_inventory.py */20 * * * *; system-sync.py --check all every 6h.'
+- item_number: 54
+  status: PARTIAL
+  evidence: 'Re-verified live host state first: scripts/recover-failed-workers.py''s safety gate is still
+    real and unchanged -- is_402_balance_failure() (line 44) only returns True (allowing reset-failed+start)
+    when a failed unit''s own task result.json contains the literal string ''"api_error_status":402'';
+    every other failed unit is added to skipped_no_result and left untouched, never reset. Real manual
+    invocation today: `python3 recover-failed-workers.py` (no flags, real run, not --dry-run) exited 0,
+    found 0 failed veridian-worker@ units on this server right now (clean state), recovered=0, skipped=0
+    -- consistent with the documented gate (nothing to act on, nothing touched). Confirmed via crontab
+    -l this script still has no cron entry -- still manually-invoked only, same gap as the prior audit
+    found. Did NOT add a crontab entry: AI_ENGINEERING_POLICY.yaml automation_scope_boundary.standing_exceptions.genuinely_irreversible_actions
+    (re-read live, still current) lists crontab modifications as a standing exception requiring Owner
+    confirmation before execution. Routed to ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml (id: cron-item-54-recover-failed-workers-schedule)
+    rather than added unilaterally or silently skipped.'
+- item_number: 55
+  status: DONE
+  evidence: veridian-task.py checkpoint notes are written for every merge/block/recovery outcome (e.g.
+    'tier1, Superboss-approved, merged autonomously'); recover-failed-workers.py prints Recovered/Skipped
+    summaries. Coverage limited to the subset of fixes that actually run automatically (item 54).
+- item_number: 56
+  status: DONE
+  evidence: 'RE-VERIFIED 2026-07-23 (phase7): the pre-phase5 MISSING finding (including the 2026-07-19
+    ATTENTION.md 14x-repeated-entry case) predates scripts/notify-owner.py and does not by itself prove
+    this item is still open today -- re-checked instead of trusting it as-is. A real, live version of
+    the same gap WAS found today (see item 28''s evidence and phase7_amendment above): a real currently-active
+    superboss-register.sqlite corruption recurred identically across 2 consecutive real health-check cycles
+    (2026-07-23T13:00:01Z, 13:15:02Z) with the Owner emailed only once and no signal that it was still
+    unresolved 15 minutes later -- the same class of silent-recurrence problem the 2026-07-19 case showed,
+    now confirmed live rather than assumed from stale history. Fixed by the same change as item 28: scripts/health-check-15min.py
+    send_anomaly_notifications() (line 163) now escalates to a distinct ''UNRESOLVED PROBLEM ... still
+    happening'' subject/body once a problem signature persists 3 consecutive cycles (45 min), so an unresolved
+    problem is actively re-reported to the Owner in an urgency-differentiated way instead of going silent
+    after the first (rate-limited) email. Real test evidence in phase7_amendment above (real anomaly,
+    real escalated Resend send confirmed via notify-owner-state.json at 2026-07-23T13:18:20Z). DONE.'
+- item_number: 57
+  status: DONE
+  evidence: Consistent single-responsibility scripts throughout scripts/ and ai-os/scripts/ (risk-tier.py,
+    scope-check.py, quality-gate.sh, file_edit_guard.py etc.), each documented as a narrow reusable gate.
+    RULES_ARTICLES_198.json codifies modularity as mandatory.
+- item_number: 58
+  status: DONE
+  evidence: 'systemctl --user list-unit-files: veridian-worker@.service, veridian-supervisor@.service,
+    veridian-docworker@.service, veridian-glm-proxy.service are separate templated systemd units; each
+    task gets its own independent unit instance, matching file-ownership.yaml''s independent-module design.'
+- item_number: 59
+  status: DONE
+  evidence: scripts/anthropic_openrouter_proxy.py already runs Claude Code CLI's tool-use loop against
+    GLM-5.2 via OpenRouter instead of Anthropic's own models with zero changes to the CLI or worker harness
+    -- only ANTHROPIC_BASE_URL/ANTHROPIC_API_KEY env vars differ. Live proof the primary model can be
+    swapped without changing the system.
+- item_number: 60
+  status: PARTIAL
+  evidence: RULES_ARTICLES_198.json mandates complete documentation; ai-os/MASTER_INDEX.yaml registry
+    is real (86 entries as of 2026-07-22). But generate_quick_reference.py, generate-system-diagram.py,
+    generate_task_checklist.py are manual-trigger only (print to stdout for hand-paste) and are not in
+    crontab -- documentation requires a human/AI to remember to run and splice these in, not an automatic
+    process.
+unresolved_items_not_safely_automatable_this_increment:
+- items:
+  - 27
+  - 28
+  - 56
+  reason: 'RESOLVED 2026-07-23 (phase7): re-verification found the notification channel already real and
+    working (item 27), and closed the real remaining gap (no escalation tiering for unresolved problems,
+    items 28/56) with a minimal consecutive-occurrence counter in scripts/health-check-15min.py -- moved
+    to DONE above, no longer unresolved. See phase7_amendment for full evidence.'
+- items:
+  - 29
+  reason: supervisor-entrypoint.sh still routes through the GLM proxy with a placeholder key, and effort=high
+    is unset in all three session types -- fixing this is a build task (edit supervisor-entrypoint.sh,
+    decide on --effort flag placement), out of scope for this audit-only increment. Also requires an Owner-facing
+    decision on whether veridian-glm-proxy.service should be decommissioned, per the source task's explicit
+    instruction not to decide this unilaterally.
+- items:
+  - 46
+  - 47
+  - 48
+  reason: 'RESOLVED 2026-07-23 (phase6): re-investigation found this convention already established and
+    in real use (scripts/notify-owner.py docstring + 2 real callers + 3 verified real sends) -- moved
+    to DONE above, no longer unresolved.'
+- items:
+  - 51
+  reason: Real find-and-delete/prune mechanisms exist and were re-verified live 2026-07-23 (phase6) --
+    reclassified MISSING -> PARTIAL above. What retention period to authorize is an Owner policy call,
+    not an engineering decision -- routed to ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml (id log-retention-period-authorization)
+    rather than decided unilaterally.
+phase9_amendment:
+  amended_by_task: task-20260723-141444-gap-closing-phase9-warnings-login-log-in
+  amended_ts: '2026-07-23T14:45:00+00:00'
+  scope: 'Closed items 10 (warning_severity_level), 11 (veridian_built_login_logging), 52
+    (searchable_indexed_logs), all PARTIAL -> DONE with real fixes + real tests -- see each item''s own
+    evidence field above for full detail. Notable side finding while testing item 11: hit a real,
+    pre-existing (not phase9-caused -- confirmed via health-check-15min.py''s own integrity_check anomaly
+    logged before this phase touched anything) sqlite corruption in superboss-register.sqlite''s
+    actions_fts shadow table; repaired with a minimal, targeted rebuild (drop+recreate just that FTS5
+    virtual table, repopulate from the real actions rows) rather than a full-DB restore from the stale
+    05:57 backup, which would have silently discarded phases 5-8''s real same-day work. A separate, deeper
+    page-level corruption in the actions table''s own b-tree remains (out of this phase''s scope) -- flagged
+    in item 11''s evidence for the Owner, not silently left undocumented. Did not add any of the 3 new
+    crontab entries this phase''s own work implies (index-logs.py''s */30 cadence) -- same standing
+    AI_ENGINEERING_POLICY.yaml exception phases 6/8 already routed similar cases through.'
+phase8_amendment:
+  amended_by_task: task-20260723-132537-gap-closing-phase8-coverage-notification
+  amended_ts: '2026-07-23T13:50:00+00:00'
+  scope: 'Closed items 5 (health_check_covers_all_services) and 49 (active_approval_notification) fully
+    (PARTIAL -> DONE, real fixes + real tests, no fabricated data). Items 36 (documentation_auto_generation)
+    and 54 (automated_safe_fix_scheduling) each had a real, buildable non-cron part closed this phase
+    (file-writing behavior for item 36''s 2 stdout-only scripts; safety-gate re-verification for item
+    54''s recover-failed-workers.py) but remain PARTIAL: both items'' crontab-automation half was NOT
+    added, since AI_ENGINEERING_POLICY.yaml''s standing_exceptions still requires Owner confirmation before
+    any crontab modification (re-verified live before starting, unchanged since the last time this was
+    checked). Both specific new cron entries routed to ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml rather
+    than added unilaterally or silently dropped. Also found and fixed a pre-existing YAML syntax corruption
+    in this file itself (2 unescaped single-quote apostrophes inside single-quoted scalars in phase7_amendment.scope,
+    "item 44''s" / "item 42''s", which made the whole file fail to parse via PyYAML) -- required to programmatically
+    recompute the summary counts below. This branch (worker/task-20260723-132537-gap-closing-phase8-coverage-notification)
+    had also been cut from a master snapshot that predated the phase6/phase7 lineage landing (confirmed
+    via `git merge-base --is-ancestor d91a796 HEAD` => NO before starting); fixed by merging worker/task-20260723-130531-gap-closing-phase7-owner-notification-es
+    into this branch first, per this repo''s own established convention of each phase branch merging in
+    the prior phase''s branch.'

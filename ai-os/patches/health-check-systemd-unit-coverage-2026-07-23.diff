@@ -1,0 +1,11 @@
+--- a/scripts/health-check-15min.py
++++ b/scripts/health-check-15min.py
+@@ -66,7 +66,7 @@
+
+
+ def check_systemd_units():
+-    out, _, _ = sh("systemctl --user list-units 'veridian-worker@*' 'veridian-supervisor@*' --all --no-legend --plain 2>/dev/null")
++    out, _, _ = sh("systemctl --user list-units 'veridian-worker@*' 'veridian-supervisor@*' 'veridian-glm-proxy.service' 'veridian-docworker@*' --all --no-legend --plain 2>/dev/null")
+     units = []
+     for line in out.splitlines():
+         parts = line.split(None, 4)

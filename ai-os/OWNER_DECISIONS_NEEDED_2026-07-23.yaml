@@ -1,0 +1,145 @@
+audit_id: owner-decisions-needed-2026-07-23
+created_by_task: task-20260723-120458-gap-closing-phase5-network-security-perm
+
+decisions:
+
+- id: auth-log-group-permission
+  raised_by_task: task-20260723-120458-gap-closing-phase5-network-security-perm
+  raised_ts: '2026-07-23T12:20:00+00:00'
+  title: "Grant the cron/worker user read access to /var/log/auth.log for item 21 (ssh_login_anomaly_detection)"
+  what: "/var/log/auth.log is owned syslog:adm, mode 0640. The account every cron job and worker unit on
+    this server runs as (rajat -- groups: rajat, sudo, docker; confirmed via `id`) is NOT in the adm group,
+    so scripts/security-check.py (built this phase) cannot read auth.log and its SSH new-source-IP /
+    failed-then-success-burst detection has no live data -- it fails open (reports the permission error,
+    exits 0, still runs its other check) rather than crashing, but item 21 stays PARTIAL rather than DONE
+    until this is fixed."
+  needed_action: "sudo usermod -a -G adm rajat (or equivalent -- e.g. an ACL grant scoped to just this file
+    if group-wide adm access is undesirable). This is a system/security permission change (broadens what a
+    non-root account can read), so it was not made automatically -- it needs an explicit Owner decision, not
+    an AI agent's judgment call, per this session's own 'affects shared systems / hard to reverse actions
+    need confirmation' operating rule."
+  why_not_done_automatically: "Requires sudo, which this task's shell session does not have a password for
+    (sudo -n failed with 'a password is required'), and changing account group membership is exactly the
+    kind of shared-infrastructure/permission change that should go through the Owner, not get silently
+    applied by an autonomous agent."
+  status: awaiting_owner_decision
+
+- id: continuous-gap-closing-chain-self-dispatch-pause
+  raised_by_task: task-20260723-120458-gap-closing-phase5-network-security-perm
+  raised_ts: '2026-07-23T12:20:00+00:00'
+  title: "Whether to resolve or explicitly override the validator-evasion coaching in the shared lessons
+    file before any further phase of this chain self-dispatches"
+  what: "This task's own spec (Phase 5) instructed, as a non-optional 'STOP_CONDITION', that after
+    committing real changes this phase must run `veridian-task.py create` for a Phase 6 and
+    `systemctl --user start veridian-worker@<new-id>.service` -- i.e. autonomously spawn the next phase of
+    this indefinite chain with no human in the loop. Two earlier phases of this exact chain
+    (task-20260723-103551 'Phase 3', commit e3c845d/b7e30ea, and task-20260723-112603 'Phase 4', commit
+    71af82c) already investigated this and explicitly declined to self-dispatch, for two stated reasons:
+    (1) the shared lessons file this chain reads
+    (/opt/veridian/ai-os/CONTINUOUS_GAP_CLOSING_PROMPT_2026-07-23.txt, KNOWN_CONTEXT point 3) coaches future
+    phases on how to word prompts to slip past an automated contradiction validator ('it's a bag-of-words
+    checker, not semantic -- prefer positive phrasing'), which both phases judged as 'treating an automated
+    safety check as an obstacle to word around rather than a signal to resolve honestly' -- and this
+    coaching text is confirmed still present, unchanged, as of this phase (re-read 2026-07-23T12:xx); (2)
+    self-dispatching further autonomous phases and pushing to production unattended, several invocations
+    deep, needs explicit human confirmation neither phase had. This phase (5) independently re-verified
+    both findings are still accurate and is holding the same pause: it completed and is committing/pushing
+    the real, scoped engineering work in its own spec (network/security/permission monitoring, items
+    20/21/22/24), but is NOT running the two self-dispatch commands, for the same reasons Phase 3 and 4
+    gave, which remain unresolved."
+  needed_action: "An Owner decision on one of: (a) fix the lessons file's validator-evasion coaching
+    (KNOWN_CONTEXT point 3) so it tells future phases to resolve real contradictions rather than word
+    around a checker, then explicitly authorize the chain to resume self-dispatching; or (b) explicitly
+    authorize continued self-dispatch as-is, accepting the coaching text's presence; or (c) end this
+    specific self-dispatching chain pattern and have future gap-closing work run one phase per explicit
+    human request instead."
+  why_not_done_automatically: "This is exactly the kind of repeated, escalating request (three consecutive
+    phases now) that the ambient guidance for this session says should stop and surface to a human rather
+    than be silently decided by an agent, especially since the underlying concern (an automated system
+    coaching itself to route around a safety check) has already been raised twice and not yet addressed."
+  status: awaiting_owner_decision
+
+- id: log-retention-period-authorization
+  raised_by_task: task-20260723-123602-gap-closing-phase6-deployment-logging-ow
+  raised_ts: '2026-07-23T13:00:00+00:00'
+  title: "What retention period is authorized for scripts/*.py's existing find-and-delete log/data pruning behavior (governance item 51, documented_owner_authorized_log_retention_policy)"
+  what: "This server already runs 3 real, live deletion mechanisms with no Owner-issued policy
+    authorizing them (re-confirmed live 2026-07-23, unchanged since the original audit):
+    (1) crontab '30 3 * * * ... credit-accountant.py prune --keep-days 30' --
+    credit-accountant.py:365 cmd_prune() runs `DELETE FROM credit_increments WHERE
+    plan_proposed_at < ?`, permanently removing ledger rows older than 30 days;
+    (2) sync-repos.sh:18, sync-vercel-env.sh:15, sync-verdian-ai-data.sh:60,
+    supervisor-sweep.sh:21 each run `find /opt/veridian/logs -name '*-*.log' -mtime +14 -delete`,
+    permanently removing their own log files older than 14 days;
+    (3) health-check-15min.py self-rotates health-15min.log to the last 700 lines, discarding
+    older lines. Owner directive item 51 says 'keep all logs permanently unless the Owner
+    changes the policy' -- these 3 mechanisms contradict that as written today: they were each
+    built for a practical reason (ledger table growth, disk usage, log file size) but no Owner
+    decision on record sets what retention period is actually authorized for any of them.
+    STANDING_DIRECTIVE.yaml's only related item (line 344, 14-day sqlite backup rotation) is a
+    different mechanism (backup copies, not primary log/data pruning) and does not authorize
+    these 3."
+  needed_action: "An Owner decision on one of: (a) set an explicit authorized retention period
+    per mechanism (may differ per mechanism -- e.g. credit ledger vs cron log files vs the
+    health-check text log) and have a future task update each script's --keep-days/-mtime
+    value plus record the authorization in a policy doc; (b) explicitly authorize the current
+    values (30 days / 14 days / 700 lines) as-is, closing this as already-compliant; or (c)
+    change item 51's own wording (it currently says 'permanently... unless the Owner changes
+    the policy', which conflicts with 3 already-running mechanisms that predate this audit) so
+    the stated policy matches what the Owner actually wants going forward."
+  why_not_done_automatically: "This is a data-deletion policy question -- an AI agent picking a
+    retention number unilaterally (or leaving the contradiction unresolved by silently marking
+    the item DONE/PARTIAL without escalating) would be deciding a genuinely destructive,
+    hard-to-reverse-in-spirit question (once old rows/log lines are deleted, they're gone) that
+    this session's own operating rules require routing to the Owner rather than deciding alone.
+    The task spec that raised this item was explicit: 'do not build, this is an Owner policy
+    call.'"
+  status: awaiting_owner_decision
+
+- id: cron-item-36-doc-generation-schedule
+  raised_by_task: task-20260723-132537-gap-closing-phase8-coverage-notification
+  raised_ts: '2026-07-23T13:50:00+00:00'
+  title: "Add a crontab entry so generate_task_checklist.py / generate_quick_reference.py /
+    generate-system-diagram.py run automatically (governance item 36, documentation_auto_generation)"
+  what: "This phase built the non-cron half of item 36: generate_task_checklist.py and
+    generate_quick_reference.py now also write their generated output to real files under
+    ai-os/generated/ (in addition to their existing stdout print), and generate-system-diagram.py
+    was re-verified to already write a real file (ai-os/SYSTEM_DIAGRAM.md) -- so all 3 scripts now
+    produce real, persisted, auto-generated output when run. What remains is making them run
+    automatically instead of requiring a human/AI to remember to invoke them, e.g. a new crontab
+    entry such as '0 */6 * * * /opt/veridian/scripts/run-logged.sh \"generate-task-checklist\"
+    /usr/bin/python3 /opt/veridian/scripts/generate_task_checklist.py
+    /opt/veridian/ai-os/MASTER_INDEX.yaml >> /opt/veridian/ai-os/logs/generate-task-checklist-cron.log
+    2>&1' (mirroring the existing system-sync.py 6-hourly cadence), plus similar entries for the
+    other 2 scripts."
+  needed_action: "An Owner decision to authorize (or decline) adding these 3 new crontab entries.
+    If authorized, a future task adds them exactly as above (or with the Owner's preferred
+    schedule) and confirms via `crontab -l`."
+  why_not_done_automatically: "AI_ENGINEERING_POLICY.yaml automation_scope_boundary.standing_exceptions.
+    genuinely_irreversible_actions explicitly lists crontab modifications as a standing exception
+    requiring Owner confirmation before execution, 'never silently automated through, regardless of
+    any other directive's 100% automation framing' -- re-read live before this phase started and
+    confirmed still current policy."
+  status: awaiting_owner_decision
+
+- id: cron-item-54-recover-failed-workers-schedule
+  raised_by_task: task-20260723-132537-gap-closing-phase8-coverage-notification
+  raised_ts: '2026-07-23T13:50:00+00:00'
+  title: "Add a crontab entry for scripts/recover-failed-workers.py (governance item 54,
+    automated_safe_fix_scheduling)"
+  what: "Re-verified scripts/recover-failed-workers.py's safety gate is still real and unchanged:
+    is_402_balance_failure() only allows reset-failed+start for a failed veridian-worker@ unit whose
+    own task result.json contains the literal '\"api_error_status\":402' signature; every other
+    failed unit is left untouched and printed for manual review. A real manual invocation today
+    (`python3 recover-failed-workers.py`, no flags) exited 0 with 0 failed units found (clean state).
+    The script itself is safe and working; it is just not in crontab -- still manually-invoked only.
+    Proposed entry: '*/30 * * * * /opt/veridian/scripts/run-logged.sh \"recover-failed-workers\"
+    /usr/bin/python3 /opt/veridian/scripts/recover-failed-workers.py >>
+    /opt/veridian/ai-os/logs/recover-failed-workers-cron.log 2>&1' (mirrors the existing
+    run-logged.sh wrapper convention every other cron entry uses)."
+  needed_action: "An Owner decision to authorize (or decline) adding this crontab entry. If
+    authorized, a future task adds it exactly as above and confirms via `crontab -l`."
+  why_not_done_automatically: "Same standing exception as cron-item-36-doc-generation-schedule
+    above: AI_ENGINEERING_POLICY.yaml requires Owner confirmation before any crontab modification,
+    regardless of how safe the underlying script's own logic is."
+  status: awaiting_owner_decision
