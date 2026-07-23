@@ -1,0 +1,141 @@
+--- /tmp/orig/health-check-15min.py	2026-07-23 13:15:45.751958019 +0000
++++ /opt/veridian/scripts/health-check-15min.py	2026-07-23 13:17:26.257072410 +0000
+@@ -33,6 +33,7 @@
+ MAX_LINES = 700
+ STALE_THRESHOLD_MIN = 25  # 15-min cadence + 1 grace period
+ FAILURE_RATE_THRESHOLD = 0.20  # 2026-07-20, constitution-audit gap #3
++ANOMALY_ESCALATION_STREAK = 3  # consecutive 15-min cycles (45 min) before escalating
+ ENV_FILE = "/opt/veridian/repos/compliance-tracker/.env.local"
+ CREDIT_LEDGER_PATH = "/opt/veridian/ai-os/memory/credit-ledger.sqlite"
+
+@@ -142,6 +143,76 @@
+         pass
+
+
++def get_prev_anomaly_streaks():
++    """Consecutive-occurrence count per anomaly signature as of the previous
++    cycle, read the same way get_prev_blocked_ids() reads previous state --
++    from the last JSONL record, before this cycle's record is appended."""
++    if not os.path.isfile(JSONL_LOG):
++        return {}
++    try:
++        with open(JSONL_LOG) as f:
++            lines = [l for l in f if l.strip()]
++        if not lines:
++            return {}
++        last = json.loads(lines[-1])
++        return last.get("anomaly_streaks", {})
++    except Exception:
++        return {}
++
++
++def send_anomaly_notifications(anomalies, prev_streaks):
++    """Owner email escalation (2026-07-23): ATTENTION.md is kept exactly as
++    before -- this only ADDS a real email so a genuinely new anomaly doesn't
++    sit unread. One email per distinct anomaly signature (digits stripped so
++    a changing count, e.g. "14 unit(s)" vs "15 unit(s)", stays the same
++    signature instead of re-notifying); notify-owner.py itself rate-limits
++    each signature to at most one send per hour, so this call is safe to
++    make every cycle.
++
++    2026-07-23 addition (items 27/28/56): a first-time anomaly and one that
++    has been found on every check for hours used to send the exact same
++    plain email -- no severity tiering existed once the hourly rate limit
++    kicked in. This counts consecutive cycles per signature (same
++    prev-cycle-JSONL-state pattern as get_prev_blocked_ids()/
++    get_prev_network_totals() above) and, once a signature has now persisted
++    ANOMALY_ESCALATION_STREAK cycles in a row (45 min), switches to an
++    escalated subject/body and a distinct dedupe key. The key change is
++    deliberate: it makes the escalated email a "new" signature to
++    notify-owner.py's own rate limiter, so it sends immediately at the
++    escalation boundary rather than waiting out the still-running hourly
++    window from the original (non-escalated) send. Reuses the existing
++    notify_owner() call -- no new notification path."""
++    streaks = {}
++    for anomaly in anomalies:
++        signature = re.sub(r"\d+", "N", anomaly)
++        sig_key = hashlib.sha256(signature.encode("utf-8")).hexdigest()
++        streak = prev_streaks.get(sig_key, 0) + 1
++        streaks[sig_key] = streak
++        escalated = streak >= ANOMALY_ESCALATION_STREAK
++        dedupe_key = "anomaly-" + sig_key + ("-escalated" if escalated else "")
++        if escalated:
++            subject = "Veridian: UNRESOLVED PROBLEM on your server (still happening)"
++            body = (
++                "Hi Rajat,\n\n"
++                f"Your Veridian server has found the same problem on {streak} checks in a "
++                "row (at least 45 minutes) without it being fixed.\n\n"
++                f"What it found: {anomaly}\n\n"
++                "This has been going on a while -- it likely needs your attention soon.\n\n"
++                "- Veridian health check"
++            )
++        else:
++            subject = "Veridian: a problem was found on your server"
++            body = (
++                "Hi Rajat,\n\n"
++                "Your Veridian server found a problem during a routine check.\n\n"
++                f"What it found: {anomaly}\n\n"
++                "You may want to take a look when you get a chance.\n\n"
++                "- Veridian health check"
++            )
++        notify_owner(subject, body, dedupe_key)
++    return streaks
++
++
+ BLOCKED_STALE_HOURS = 2
+
+
+@@ -471,6 +542,7 @@
+     units = check_systemd_units()
+     tasks = check_tasks()
+     prev_blocked_ids = get_prev_blocked_ids()  # must read before this cycle's record is appended below
++    prev_anomaly_streaks = get_prev_anomaly_streaks()  # same reason
+     router = check_mother_router_db()
+     app_failures = check_app_layer_failures()
+     server = check_server_health()
+@@ -531,6 +603,11 @@
+                 f"restored from /opt/veridian/backups/sqlite-daily/ or reinitialized."
+             )
+
++    # Sends real Owner emails (escalating subject/body once a signature has
++    # persisted ANOMALY_ESCALATION_STREAK cycles in a row) -- must run before
++    # anomaly_streaks is persisted into this cycle's record below.
++    anomaly_streaks = send_anomaly_notifications(anomalies, prev_anomaly_streaks)
++
+     record = {
+         "ts": now,
+         "systemd_units": units,
+@@ -544,6 +621,7 @@
+         "network": network,
+         "network_totals": network_totals,
+         "anomalies": anomalies,
++        "anomaly_streaks": anomaly_streaks,
+     }
+
+     with open(JSONL_LOG, "a") as f:
+@@ -563,25 +641,6 @@
+             for a in anomalies:
+                 f.write(f"- {a}\n")
+
+-    # Owner email escalation (2026-07-23): ATTENTION.md above is kept exactly
+-    # as before -- this only ADDS a real email so a genuinely new anomaly
+-    # doesn't sit unread. One email per distinct anomaly signature (digits
+-    # stripped so a changing count, e.g. "14 unit(s)" vs "15 unit(s)", stays
+-    # the same signature instead of re-notifying); notify-owner.py itself
+-    # rate-limits each signature to at most one send per hour, so this call
+-    # is safe to make every cycle.
+-    for anomaly in anomalies:
+-        signature = re.sub(r"\d+", "N", anomaly)
+-        dedupe_key = "anomaly-" + hashlib.sha256(signature.encode("utf-8")).hexdigest()
+-        body = (
+-            "Hi Rajat,\n\n"
+-            "Your Veridian server found a problem during a routine check.\n\n"
+-            f"What it found: {anomaly}\n\n"
+-            "You may want to take a look when you get a chance.\n\n"
+-            "- Veridian health check"
+-        )
+-        notify_owner("Veridian: a problem was found on your server", body, dedupe_key)
+-
+     # Blocked-task escalation (2026-07-23): only notify once a task has been
+     # status=blocked for two consecutive health-check cycles (30 min), not on
+     # the first (possibly transient) block. notify-owner.py's own per-signature

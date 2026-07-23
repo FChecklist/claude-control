@@ -1,0 +1,8 @@
+[Unit]
+Description=VERIDIAN task watchdog -- one-shot stall/loop scan of active veridian-worker@ units (ai-os/STANDING_DIRECTIVE.yaml v2_watchdog_service)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /opt/veridian/scripts/veridian-task-watchdog.py
+StandardOutput=append:/opt/veridian/ai-os/logs/watchdog-service.log
+StandardError=append:/opt/veridian/ai-os/logs/watchdog-service.log

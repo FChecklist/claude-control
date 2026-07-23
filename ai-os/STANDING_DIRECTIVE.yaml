@@ -1,0 +1,796 @@
+meta:
+  id: STANDING-TASK-DIRECTIVE
+  version: '2.6'
+  effective_date: '2026-07-23'
+  source: Owner directive, 2026-07-21 (chat)
+  usage: Cite ai-os/STANDING_DIRECTIVE.yaml (or say 'check STANDING_DIRECTIVE.yaml') alongside any task to invoke the full protocol below.
+precheck:
+  items:
+  - ai-os/MASTER_INDEX.yaml
+  - system_index (superboss-register.py check-duplicate)
+  rule: zero_duplication_mandatory
+execution:
+  location: ssh_only
+  target: VERIDIAN-DEV
+  ip: 167.233.220.35
+  auth: claude_code_cli_subscription
+  local_execution: forbidden
+  mobile_execution: forbidden
+  mobile_execution_note: 'Mobile devices (phone/tablet) are thin-client access only, same prohibition as RULE-067 (RULES_ARTICLES_198.json) already states for local
+    machines: no development, execution, or AI processing shall occur on a mobile device, unless explicitly authorized. A mobile device may be used only to view or
+    trigger work that still runs on VERIDIAN-DEV via SSH -- never as the machine doing the work.'
+guardrails:
+  mandatory:
+  - ai-os/RULES_ARTICLES_198.json
+  - ai-os/AI_ENGINEERING_POLICY.yaml
+  automation_scope_boundary: ai-os/AI_ENGINEERING_POLICY.yaml#automation_scope_boundary
+  note: irreversible_actions_and_NEEDS_HUMAN_JUDGMENT_items_surface_to_owner_never_forced
+logging:
+  targets:
+  - ai-os/boss/ACTIVE-CLAIMS.yaml
+  - ai-os/boss/COMPLETED.yaml
+  - system_index
+  scope: all_work_plus_this_conversation
+verification:
+  mechanism: ai-os/audit198/run-audit.mjs
+  method: re_run_evidence_based
+  self_certification: forbidden
+  targets:
+    contradiction: 0
+    duplication: 0
+    gaps: 0
+    implementation_pct: 100
+  mechanism_correction_note: 'corrected 2026-07-22: prior value ''ai-os/scripts/audit198/run-audit.mjs'' does not exist on disk (confirmed via exhaustive search across
+    the whole server, including every task worktree). Real script confirmed via git history (commit 1fde5a06) and live file presence.'
+automation:
+  level: 100
+  manual_steps: 0
+  exceptions_ref: guardrails.automation_scope_boundary
+sync_scope:
+  systems:
+  - server
+  - github
+  - vercel
+  - supabase
+  requirement: complete_sync
+on_complete: notify_owner
+assistant_working_protocol:
+  id: ASSISTANT-WORKING-PROTOCOL
+  version: '10.0'
+  effective_date: '2026-07-22'
+  source: Owner directive, 2026-07-22 (chat) -- 11 named shortcomings observed across this session's work
+  applies_to: claude_assistant_only
+  rule_1_system_map_required:
+    trigger: before_any_new_analysis
+    requirement: consult_standing_system_map_before_starting
+    map_location: ai-os/SYSTEM_MAP.yaml
+    map_status: BUILT_PARTIAL_2026_07_22
+    fixes:
+    - fragmented_analysis
+    - no_whole_system_view
+    - no_dependency_map
+    map_status_note: 26/28 subsystems, 30 real edges from sample files, not yet a full 913-route/5019-function call graph -- see ai-os/SYSTEM_MAP.yaml coverage_honesty
+      field
+  rule_2_no_forgetting:
+    trigger: start_of_every_task
+    mandatory_steps:
+    - run ai-os/scripts/session_bootstrap.py (now includes an automatic file-inventory diff -- new/changed/missing files since the last prompt, not just register
+      history)
+    - read the NEW/CHANGED/MISSING file list it prints before assuming nothing changed since last time
+    - state what is already known before starting new work
+    fixes:
+    - forgetting
+  rule_3_completion_gate:
+    trigger: before_marking_any_task_done
+    mandatory_questions:
+    - 'what_was_asked: exact scope in requester''s own words'
+    - 'what_was_delivered: with an attached evidence artifact'
+    - 'coverage_pct: exact number, never rounded up'
+    - 'depth: live-verified this session, or assumed/inferred'
+    status_chain: NOT_STARTED -> IN_PROGRESS -> CLAIMED -> VERIFIED -> REGRESSED
+    rule: CLAIMED_is_not_DONE_anywhere_including_chat_responses
+    fixes:
+    - reporting_incomplete_as_complete
+    - shallow_audit
+  rule_4_self_review_pass:
+    trigger: before_presenting_any_output_to_owner
+    mandatory_checks:
+    - 'unbacked_claims: flag and verify or remove before presenting'
+    - 'contradictions: check against system map and register history'
+    - 'scope_check: whole system vs the convenient slice that was easy to check'
+    fixes:
+    - no_self_audit
+    - no_self_review
+  rule_5_no_guessed_schemas:
+    trigger: before_writing_any_verification_script
+    requirement: read_one_real_sample_record_first_every_time
+    rule: never_assume_field_or_column_names
+    incident_ref: '2026-07-22: guessed field ''status'' (real: ''verdict'') in RULES_ARTICLES_198.json; guessed field ''name'' (real: ''table_name'') in DATABASE_CATALOG.json
+      -- both produced a false ''does not exist'' result before being caught and corrected same session'
+    fixes:
+    - preventable_mistakes
+    - shallow_work
+  enforcement: self_applied_every_session_by_the_assistant
+  violation_handling: disclose_immediately_when_caught_never_let_a_wrong_claim_stand_uncorrected
+  automated_enforcement:
+    session_bootstrap_script: ai-os/scripts/session_bootstrap.py
+    session_bootstrap_usage: python3 ai-os/scripts/session_bootstrap.py [N] -- run as the FIRST command of every task, no exception. Reads real register history (SQLite,
+      not keyword search) plus SYSTEM_MAP/MASTER_ARCHITECTURE/STANDING_DIRECTIVE state. Fixes rule_2_no_forgetting mechanically instead of relying on the assistant
+      remembering to check.
+    file_edit_guard_script: ai-os/scripts/file_edit_guard.py
+    file_edit_guard_usage: python3 ai-os/scripts/file_edit_guard.py <before_path> <after_path> -- run after EVERY edit to any tracked YAML/JSON file (STANDING_DIRECTIVE.yaml,
+      SYSTEM_MAP.yaml, MASTER_ARCHITECTURE_2026-07-22.yaml, or any future one). Exits non-zero if a header comment or a top-level key was silently lost. Fixes rule_4_self_review_pass
+      mechanically -- retroactively proven against the real 2026-07-22 header-strip incident (FAIL correctly reproduced on a synthetic broken copy) before being trusted.
+    principle: 'software checks, assistant does not self-certify -- per Owner directive 2026-07-22: minimum assistant judgment, maximum script enforcement'
+  rule_6_mandatory_close_out:
+    trigger: end_of_every_task_unconditionally
+    mandatory_updates:
+    - log-work in superboss-register.py (real, not skipped)
+    - update SYSTEM_MAP.yaml if any architecture fact changed
+    - update MASTER_ARCHITECTURE_2026-07-22.yaml if any subsystem/brand status changed
+    - append one line to changelog (this file, below) describing what changed and why
+    fixes:
+    - files_not_updated_after_task
+    - forgetting
+  the_one_command:
+    script: ai-os/scripts/veridian_self_check.py
+    usage: python3 ai-os/scripts/veridian_self_check.py -- run this FIRST, every task, no exception. Mechanically tests every checkable item in this directive against
+      real current state (file existence, script presence, self-test of file_edit_guard, SYSTEM_MAP completeness, recent work_item status hygiene) and logs the result
+      to directive_compliance_runs in the register. Replaces separately running session_bootstrap.py + manually reasoning about compliance.
+    note_2026_07_22: 'first real run caught 2 bugs in the checker itself before being trusted: a SQLite PRIMARY KEY collision (multiple checks sharing one run_id),
+      and an open-ended find over ai-os/tasks/* that hung 40s+ due to hundreds of stale worktree copies -- fixed to a bounded, fast check, honestly labeled as bounded
+      not exhaustive.'
+  metadata_store:
+    canonical_location: ai-os/memory/superboss-register.sqlite
+    tables:
+      work_items: status of every discrete task (DONE/PARTIAL/etc) -- query this, do not re-derive status from memory or prose
+      system_index: status of every registered mechanism/registry/script
+      directive_compliance_runs: history of every self-check run, new 2026-07-22, added by this session not a duplicate of the above
+    rule: this SQLite DB is THE metadata store. No second parallel store is to be created -- extend these tables, never fork a new one, per the zero-duplication precheck
+      rule already in this file.
+  automation_vs_guardrail_precedence:
+    rule: if 100pct-automation ever conflicts with a guardrail or an irreversible-action check, the guardrail always wins. Automation is the default; it is never
+      the override.
+    why: automation.level:100/manual_steps:0 could otherwise be read as license to auto-execute something guardrails.note says must surface to the Owner -- this makes
+      the precedence explicit so that conflict is never resolved by assumption.
+  rule_7_universal_task_registration:
+    scope: applies to EVERY actor -- this assistant, any AI model, AI agent, AI router (incl. Mother Router), AI team, or software process -- not the assistant alone
+    rule: every task, regardless of who/what performs it, must have an ai_task_id or software_task_id recorded in the register (ai-os/memory/superboss-register.sqlite).
+      No unlogged task is permitted.
+    fixes:
+    - work happening outside the register, invisible to future audits
+  rule_8_mandatory_audit_before_completion:
+    scope: applies to EVERY actor, same as rule_7 -- universal, not assistant-only
+    rule: no task may be recorded as DONE or FAILED except via ai-os/scripts/postflight_audit_gate.py, which runs a real audit command and records its actual exit
+      code before writing status. Self-certified DONE/FAILED (a bare superboss-register.py log-work call claiming a terminal status without going through the gate)
+      is DEPRECATED as of 2026-07-22.
+    mechanism: ai-os/scripts/postflight_audit_gate.py -- takes --audit-cmd (a real shell command), runs it, writes the real exit code to a new task_audits table,
+      and only then calls log-work with the status the exit code actually produced. There is no parameter to force DONE.
+    proof_2026_07_22: 'tested both directions before being trusted: a genuinely-passing audit command produced DONE (WRK-20260722-051809-555d, audit AUD-20260722-051809-de23e1);
+      a genuinely-failing one produced FAILED (WRK-20260722-051809-110f, audit AUD-20260722-051809-47f9ff), exit code 1, not silently overridden.'
+    honest_limitation: the gate proves the audit command's real exit code, not that the audit command itself was well-chosen for the task -- a shallow audit-cmd (e.g.
+      just checking a file exists) still passes the gate. Choosing a genuinely end-to-end audit command for each task remains a judgment call this gate cannot make;
+      it only guarantees that whatever command IS specified was actually run and not faked.
+  file_inventory:
+    script: ai-os/scripts/file_inventory.py
+    scope: ai-os/ and scripts/ only (canonical system-of-record) -- pruning ai-os/tasks/*/workspace (9.8 MILLION files confirmed there, correctly excluded), node_modules,
+      .git, per MASTER_INDEX.yaml's own documented exclusion_rules
+    mechanism: stores path+size+mtime+hash16 per file in a new file_inventory register table; every run diffs against the previous run and reports NEW/CHANGED/MISSING
+      before overwriting the baseline
+    wired_into: ai-os/scripts/session_bootstrap.py -- runs automatically as part of the one mandatory first command, not a separate thing to remember
+    proof_2026_07_22: baseline run found 2338 real files; a deliberately-added test file was correctly caught as the only NEW file on the next run; after deleting
+      it, correctly reported as MISSING; unrelated files (cron logs, the register DB) correctly reported as CHANGED, nothing silently missed
+    root_cause_fixed: files were being discovered reactively, one grep at a time, whenever a specific question happened to surface one -- this replaces that with
+      one exhaustive, diffable inventory that runs every prompt
+  pipeline_a_owner_assistant:
+    status: ACTIVE_MOST_STAGES_BUILT
+    conversation_store: ai-os/memory/superboss-register.sqlite, verified placeholder at ai-os/RAJAT_PROMPT_STORE.md
+    analysis_before_work: ai-os/scripts/session_bootstrap.py
+    software_first_decision: principle established, not mechanically gated (judgment call each time)
+    completion_audit: ai-os/scripts/postflight_audit_gate.py
+    reject_then_rca: task_audits + rca_open tables; OPEN_NEEDS_RCA items auto-surface in session_bootstrap.py -- proven 2026-07-22 with a real triggered failure (AUD-20260722-053955-ac5f50)
+    save_and_document: rule_6_mandatory_close_out
+    unresolved: what 'a proper prompt made for internal use by ai for ai by snip' refers to -- not guessed, needs Owner clarification
+  pipeline_b_end_user_veridian:
+    status: DOCUMENTED_TARGET_NOT_BUILT
+    reason_deferred: 'Owner directive 2026-07-22: build the system to run the assistant reliably BEFORE building the analogous system for VERIDIAN AI OS end users.
+      This is product-level work (VERI Chat, live end-user conversation storage, a live completion-certificate gate on real user-facing tasks) -- structurally the
+      same pattern as pipeline_a, not started.'
+    structural_analogy: end_user -> browser/web app -> server -> software -> END_USER_store (VERI<->end-user conversation) -> prompt analysis -> software/AI dispatch
+      decision -> completion -> software audit -> accept or RCA -> save+document -> verified placeholder pointer to the END_USER store
+    do_not_start_until: pipeline_a is confirmed stable across a real multi-session test, and the still-open items (task 1-15 list, SYSTEM_MAP completeness) are resolved
+  certificate_of_completion_terminology:
+    note: Owner's phrase 'AI needs a certificate of completion by the software after software does the audit' is exactly what ai-os/scripts/postflight_audit_gate.py
+      already produces (an audit_id + verdict, backed by a real exit code) -- renaming the concept here for clarity, no new mechanism needed.
+  system_is_the_memory:
+    principle: 'Owner directive 2026-07-22: no AI agent''s own conversational memory is the source of truth for anything. The SYSTEM (server-side software, scripts,
+      databases) is the memory. Every actor below must persist its own state in software, not rely on being remembered.'
+    per_actor_memory_audit_2026_07_22:
+      superboss_this_assistant:
+        status: ACTIVE
+        store: ai-os/memory/superboss-register.sqlite
+        detail: instructions/work_items/actions/system_index/file_inventory/task_audits/rca_open tables, all confirmed live this session
+      per_task:
+        status: ACTIVE
+        store: ai-os/tasks/<id>/task.yaml
+        detail: 291 real task.yaml checkpoint files confirmed to exist on disk 2026-07-22 -- this mechanism is real and in use, not aspirational
+      mother_router:
+        status: CONFIRMED_GAP_NOT_FIXED
+        detail: grep of mother-router.ts found ZERO persistence references (no pgTable, no sqlite, no memory/persist keyword) -- it is fully stateless per call today.
+          This is real VERIDIAN AI OS product code (compliance-tracker repo), not assistant-ops tooling -- deferred to pipeline_b per the Owner's own established
+          sequencing (fix the assistant's own system first). NOT built tonight, honestly, not silently skipped.
+      ai_router_hierarchy_roster:
+        status: CONFIRMED_GAP_NOT_FIXED
+        detail: src/lib/ai-team/roster.ts (195 roles) is a static in-code array, zero persistent per-role memory table found. Same deferral reasoning as mother_router.
+    execution_model_change:
+      rule: 'Owner directive 2026-07-22, standing until otherwise instructed: substantive multi-step work between Owner and Assistant should run via a server-side
+        Claude Code CLI process (or another AI model on the server), NOT as a long chain of individual SSH commands issued one at a time from the laptop-side conversation.'
+      mechanism_reused_not_reinvented: /opt/veridian/scripts/veridian-task.py (create/checkpoint/resume-context/record-usage/status) + /opt/veridian/scripts/worker-entrypoint.sh
+        -- this infrastructure already exists (systemd --user services, auto-checkpointing, survives disconnection) and is the correct existing mechanism to dispatch
+        through, not a new one.
+      honest_status: adopted as the standing rule 2026-07-22; NOT yet proven end-to-end in this exact session (no new worker was spawned via veridian-task.py this
+        turn, given time already spent) -- next concrete step, not claimed done.
+  cron_scheduled_automation_2026_07_22:
+    principle: 'Owner directive 2026-07-22: everything built before this point in the session (session_bootstrap.py, veridian_self_check.py, file_inventory.py) still
+      depended on an AI choosing to run it -- one layer removed from the exact forgetfulness problem this whole session exists to fix. The only mechanism that runs
+      independent of any AI''s memory, presence, or discipline is the OS scheduler itself.'
+    what_changed: veridian_self_check.py and file_inventory.py are now REAL crontab entries, wrapped through the existing /opt/veridian/scripts/run-logged.sh (the
+      same universal execution wrapper every other cron job on this server already uses -- not a new mechanism, the proven existing one). They now run every 15/20
+      minutes respectively, whether or not any AI session, Claude Code instance, or human is active.
+    schedule:
+      veridian-self-check: '*/15 * * * *, logs to ai-os/logs/veridian-self-check-cron.log'
+      file-inventory: '*/20 * * * *, logs to ai-os/logs/file-inventory-cron.log'
+    failure_escalation: veridian_self_check.py now writes directly to ai-os/logs/ATTENTION.md (the same live alert surface already used by health-check-15min.py etc.)
+      whenever any check FAILs or ERRORs -- proven with a real triggered write during this session (RUN-20260722-061117, the genuine SYSTEM_MAP 26/28 gap), not a
+      synthetic test.
+    installation_proof: crontab backed up before editing, new file installed, then diffed against the backup -- confirmed the ONLY change was the 2 new lines appended,
+      all 10 pre-existing cron jobs byte-identical, nothing disturbed.
+    honest_remaining_dependency: this closes the loop for THIS server's own compliance/inventory checks. It does NOT yet mean every OTHER AI actor (Mother Router,
+      other AI agents/routers) is covered -- those still have no persistent memory at all (see cross_system_memory_map_2026_07_22 in MASTER_INDEX.yaml), so there
+      is nothing yet for a cron job to audit there. Automating the audit of a system that itself has no memory is the next problem, not solved by this change.
+  registry_completeness_2026_07_22:
+    root_cause: 'Owner caught a precise, damning fact: run-logged.sh was already registered in MASTER_INDEX.yaml since 2026-07-20, with a detailed, correct entry
+      -- and this session still had to rediscover it by accident via crontab -l while building tonight''s cron automation. This was not a missing-data problem for
+      that one case, it was a not-checking-the-tool-that-already-existed problem.'
+    second_real_finding: separately, a mechanical cross-reference of all real .py/.sh files in /opt/veridian/scripts and /opt/veridian/ai-os/scripts against MASTER_INDEX.yaml
+      found 32 of 41 real scripts (78 percent) had NO registry entry at all -- a genuine data-completeness gap, distinct from the process failure above.
+    fixes_applied:
+      data_gap: 'all 32 missing scripts registered in MASTER_INDEX.yaml (registries: 54 -> 86), each with a purpose string taken from the script''s own header comment,
+        not assistant-authored, guard-checked before being logged done'
+      process_gap: 'session_bootstrap.py now prints the FULL 86-entry registry (not just recent history) as part of its mandatory output, and explicitly instructs
+        running superboss-register.py check-duplicate before writing any new script -- proven working: check-duplicate "cron wrapper logging" returned a STOP verdict
+        with 11 real matches including the exact mechanism that was almost rebuilt from scratch'
+    principle: the memory layers described across this whole session (Superboss register, per-task memory, MASTER_INDEX registry) are only useful if they are actually
+      queried before new work starts, not just written to after. check-duplicate and the full registry printout are now the mechanical enforcement of that -- available
+      in every bootstrap run, not dependent on the assistant remembering they exist.
+  auto_propagation_2026_07_22:
+    mechanism: 'postflight_audit_gate.py now automatically, on EVERY call (not optionally): (1) re-runs file_inventory.py so the file diff reflects the just-completed
+      task immediately, (2) scans the task''s own --content for a file path under ai-os/ or scripts/ not yet in MASTER_INDEX.yaml and writes it to a new unregistered_mentions
+      table if found'
+    proof_2026_07_22: tested with a deliberately fake unregistered path in --content -- correctly auto-flagged into unregistered_mentions with zero further AI action;
+      then confirmed session_bootstrap.py automatically surfaces it on the next run
+    principle: this is memory updating other memory automatically, inside the one shared gate every actor's terminal status already goes through -- not a separate
+      step an AI could forget to run
+    scope_honesty: this covers layer_2 (Superboss) <-> layer_7 (script registry) propagation. It does NOT create any memory for Mother Router or the AI roster, because
+      those layers have no memory to propagate to or from -- see system_memory_architecture layers 3/4/5
+changelog:
+- date: '2026-07-23'
+  change: 'Found ai-os/memory/superboss-register.sqlite silently corrupted (truncated write, disk image malformed) since 2026-07-22T12:20 -- ~17.5 hours during which
+    session_bootstrap.py, check-duplicate, log-work, veridian_self_check.py (15-min cron) and file_inventory.py (20-min cron) were all failing with no ATTENTION.md
+    escalation, because the failure occurred before any of those scripts reached their own alerting code (which itself wrote to the same broken DB). Root cause: file
+    was exactly one 4096-byte page short of its own header-declared size (a truncated write). Recovery attempted 3 independent ways (page padding, real sqlite3 CLI
+    .recover/.dump -- lacks dbpage vtab in this Ubuntu build, apsw build from source) before concluding data recovery was not feasible with available tools; corrupt
+    original quarantined at ai-os/memory/superboss-register.sqlite.CORRUPTED-2026-07-22-quarantined plus 2 backups under /opt/veridian/backups/sqlite-recovery-2026-07-23/,
+    then reinitialized via superboss-register.py init (real schema, not guessed). Fixed the escalation gap itself, not just this one incident: added check_db_integrity_and_backup()
+    to scripts/health-check-15min.py (runs every 15min via the existing cron, reuses the existing anomalies -> ATTENTION.md -> notify-owner.py path, adds the first-ever
+    daily backup of both sqlite DBs to /opt/veridian/backups/sqlite-daily/, 14-day retention). Verified end-to-end via postflight_audit_gate.py (AUD-20260723-055909-480161,
+    DONE) from task-20260723-052857-execution-rules-phase0-analysis-and-buil.'
+- date: '2026-07-22'
+  change: added automated_enforcement (session_bootstrap.py, file_edit_guard.py) and rule_6_mandatory_close_out to assistant_working_protocol, per Owner directive
+    that rules must be software-enforced, not self-promised
+- date: '2026-07-22'
+  change: 'added the_one_command (veridian_self_check.py), metadata_store (declares superboss-register.sqlite as canonical, no second store), automation_vs_guardrail_precedence.
+    Per Owner directive: build the system to run the assistant reliably before continuing VERIDIAN AI OS work.'
+- date: '2026-07-22'
+  change: 'added rule_7_universal_task_registration and rule_8_mandatory_audit_before_completion, backed by new ai-os/scripts/postflight_audit_gate.py and task_audits
+    table. Per Owner directive: applies to every AI agent/router/model/software, not just this assistant.'
+- date: '2026-07-22'
+  change: added file_inventory.py, wired into session_bootstrap.py so every prompt automatically gets a NEW/CHANGED/MISSING file diff against the canonical ai-os/+scripts/
+    tree, using MASTER_INDEX.yaml's own prune-based exclusion rule. Fixes the repeated 'finding new files reactively' pattern named explicitly by the Owner.
+- date: '2026-07-22'
+  change: formalized pipeline_a (Owner<->Assistant, active) and pipeline_b (end-user<->VERIDIAN, documented target, explicitly deferred) per Owner's dual-pipeline
+    description. Added rca_open auto-surfacing to session_bootstrap.py (proven with a real triggered failure). Added verified RAJAT_PROMPT_STORE.md placeholder (checked
+    live counts before writing, then proven by following its own instructions).
+- date: '2026-07-22'
+  change: 'formalized system_is_the_memory: per-actor memory audit (Superboss+task memory ACTIVE and real; Mother Router+AI Router roster CONFIRMED stateless, honestly
+    flagged as deferred VERIDIAN-product work, not fixed tonight) and execution_model_change (dispatch via existing veridian-task.py/worker-entrypoint.sh server-side
+    CLI infra going forward, adopted but not yet proven this session).'
+- date: '2026-07-22'
+  change: 'Moved veridian_self_check.py and file_inventory.py from AI-invoked scripts to real crontab entries via the existing run-logged.sh wrapper -- runs every
+    15/20 min independent of any AI session. Added automatic ATTENTION.md escalation on FAIL, proven with a real triggered write. This is the definitive answer to
+    the Owner''s repeated ''accept-apologize-forget-repeat'' complaint: the check no longer depends on any AI remembering to run it.'
+- date: '2026-07-22'
+  change: 'Closed a real 32-of-41 script registry gap in MASTER_INDEX.yaml (54->86 entries). Fixed the deeper process failure: session_bootstrap.py now prints the
+    complete registry and mandates superboss-register.py check-duplicate before any new script is written -- proven to actually surface run-logged.sh via a real query,
+    not asserted.'
+- date: '2026-07-22'
+  change: 'Implemented auto-propagation in postflight_audit_gate.py: every terminal-status write now automatically re-scans file_inventory and flags unregistered
+    file mentions, surfaced automatically in session_bootstrap.py. Proven end-to-end with a real test before being logged done.'
+- date: '2026-07-23'
+  change: 'v2.0: added v2_execution_environment, v2_control_hierarchy, v2_communication_protocol, v2_storage_and_analysis, v2_tagging_indexing, v2_software_first_mandate,
+    v2_task_specification_requirements, v2_watchdog_service (status=TO_BE_BUILT), v2_truthfulness_enforcement, v2_efficiency_mandate. Owner directive 2026-07-23,
+    verbatim protocol text supplied in chat. Machine-language-only per v2_communication_protocol.non_human_to_non_human. Backup of pre-v2 file: ai-os/STANDING_DIRECTIVE.yaml.bak-2026-07-23-v2-preupdate.'
+- date: '2026-07-23'
+  change: 'v2.1: tightened v2_storage_and_analysis with exact inline table schemas + exact CLI command syntax (no external file lookup required). Added literal_template
+    + dispatch_exact_commands to v2_task_specification_requirements. Added exact_files to v2_watchdog_service. Owner directive: ''idiot proof, nothing left on assumption.'''
+- date: '2026-07-23'
+  change: 'v2.2: added v2_task_lifecycle_pipeline -- 12 numbered phases (intake through completion), each with exact input/exact_command/output/next_phase_trigger,
+    closing the Owner-identified gap: individual tools existed (superboss-register.py commands, watchdog, audit gate) but were never assembled into one explicit end-to-end
+    process. Added completeness_guarantees stating precisely how zero-duplication and 100% gap-analysis are structurally enforced, and honestly stating that 100%
+    task completion is a direction tracked incrementally, not a promised date.'
+- date: '2026-07-23'
+  change: 'v2.3: adversarial self-audit of v2.2''s own pipeline found 8 real remaining ambiguities and fixed all 8: (A) undefined trigger condition for entering the
+    pipeline at all, now phase_minus1_trigger_rule; (B) keyword extraction was AI-first not software-first, now has a mechanical regex baseline; (C) no single-source-of-truth
+    rule for audit files, risked fragmentation (already happened once, 2026-07-23 branch-location confusion); (D) phase sizing was informal, now codified 3-8 items;
+    (E) retry limits were informal, now codified max 5 self-fix attempts; (F) a real self-certification conflict-of-interest found -- verification commands must now
+    be predefined at dispatch time, not authored post-hoc by the same agent that did the work; (G) no collision-prevention rule for two tasks targeting the same gap/file;
+    (H) explicit interim-coverage statement for the gap between now and the watchdog going live. Owner directive: ''think start to end, make it idiot proof.'''
+- date: '2026-07-23'
+  change: 'v2.4: 4th self-audit pass (per the newly-codified phase_12) found 5 more real gaps and fixed them: (1) files/logs/memory-remain-on-server were implied
+    not explicit, now explicit data_residency fields; (2) raw source prompt text was not yet a queryable database row despite the instruction ''even this prompt will
+    be saved'' -- logged directly via log-instruction as part of this same fix; (3) resolved a real conflict between the original prompt''s 2-minute chat cadence
+    and the Owner''s later explicit 15-minute instruction -- Owner confirmed 900s is authoritative when asked directly; (4) ''audit again after completion, fill gaps''
+    was demonstrated 3 times this session but never codified as a standing rule -- now phase_12_mandatory_self_reaudit; (5) ''close-ended not open-ended'' was only
+    stated for task specs, now explicitly scoped across all 6 categories the Owner named (analysis, gap-ID, planning, implementation, audit, prompts). Honest limit
+    stated, not fixed: the document cannot be 100% English-free and remain maintainable -- YAML keys and short field descriptions retain English vocabulary; exact
+    commands, schemas, and machine-readable values are the parts kept strictly precise.'
+- date: '2026-07-23'
+  change: 'v2.5: added v2_task_gateway_software -- task-20260723-145839-build-task-gateway-software built scripts/task-gateway.py,
+    a single unified CLI implementing v2_task_lifecycle_pipeline phases 0/1/4/5/7/8/9/11 as real callable subcommands (submit/start/log/close/register-automation/status),
+    so no AI agent or router needs to manually sequence superboss-register.py/veridian-task.py/postflight_audit_gate.py in the right
+    order -- wraps those scripts, does not reimplement their logic. Also synced ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml (previously
+    only on a worker branch, a real sync gap) into this canonical live ai-os/ directory. Backup of pre-v2.5 file:
+    ai-os/STANDING_DIRECTIVE.yaml.bak-2026-07-23-v2.5-preupdate.'
+- date: '2026-07-23'
+  change: 'v2.6: added v2_knowledge_engine -- task-20260723-181151-knowledge-engine-phase1-build-populate-w built the real
+    knowledge_engine table (+ knowledge_engine_fts + AFTER INSERT trigger) per ai-os/KNOWLEDGE_ENGINE_SCHEMA_DESIGN_2026-07-23.yaml''s
+    verbatim create_statement, and populated it with 9 real pointer rows for every artifact in
+    ai-os/KNOWLEDGE_ENGINE_INVENTORY_2026-07-23.yaml''s step_1 inventory (6 exists_on_disk=1, 3 exists_on_disk=0 real-drift rows),
+    with entity_relationships edges sourced verbatim from that same file''s step_2 real_reference_edges. Added register-knowledge
+    and query-knowledge subcommands to scripts/superboss-register.py, and wired scripts/task-gateway.py''s submit to also call
+    query-knowledge (new knowledge_matches key in submit''s JSON output), per the Owner''s directive that any task submission
+    be matched against the Knowledge Engine, not just system_index. Also fixed a real pre-existing freelist corruption
+    (`PRAGMA integrity_check` reported "Freelist: size is 0 but should be 2") found in ai-os/memory/superboss-register.sqlite
+    while adding this table -- backed up the corrupt file, rebuilt via VACUUM INTO + REINDEX, verified all 7 pre-existing
+    tables'' row counts matched exactly before swapping the rebuilt file into place. Backup of pre-v2.6 file:
+    ai-os/STANDING_DIRECTIVE.yaml.bak-2026-07-23-v2.6-preupdate.'
+v2_execution_environment:
+  server_host: VERIDIAN-DEV
+  server_ip: 167.233.220.35
+  execution_location: server_only
+  cli_subscription_dependency: independent_of_laptop
+  laptop_role: ssh_client_only
+  laptop_forbidden:
+  - execution
+  - processing
+  - storage
+  - run_claude_code_cli
+  - run_ai_tasks
+  independence_model:
+    ssh_session_vs_cli_execution: no_relation_fully_independent
+    laptop_close_effect: no_stop
+    browser_close_effect: no_stop
+    laptop_network_interrupt_effect: no_stop
+    server_autonomy: runs_until_task_complete_or_stopped_on_server
+  data_residency:
+    files_remain_on_server: true
+    logs_remain_on_server: true
+    memory_remains_on_server: true
+    exception: none -- laptop never holds a persistent copy of any of the above, only transient display/relay
+v2_control_hierarchy:
+  controller: SUPERBOSS_IN_SERVER
+  controller_location: /opt/veridian/ai-os
+  controls_all_execution: true
+  owner_communication_route: chat_to_SUPERBOSS_IN_SERVER_directly
+  owner_input_evaluated_by: Claude Code CLI subscription on VERIDIAN-DEV
+v2_communication_protocol:
+  owner_to_ai:
+    input_form: human_language
+    conversion_required: true
+    conversion_target: machine_language
+    conversion_performed_by: Claude Code CLI on server
+    noise_removal: true
+  non_human_to_non_human:
+    language: machine_only
+    human_language_forbidden: true
+    applies_to: all_server_internal_communication_including_this_document
+  ai_to_owner_chat_default:
+    format: one_line
+    cadence_seconds: 900
+    template: '%complete|%incomplete|phase_x_of_y|one_line_status'
+    paragraphs_forbidden: true
+    cadence_history: originally specified as 120s in the 2026-07-23 source prompt; Owner explicitly changed this to 900s the same day when asked directly to resolve
+      the conflict -- 900s is authoritative
+  ai_to_owner_chat_on_request:
+    format: one_line
+  owner_decision_points:
+    format: explicit_options_list
+    trigger: owner_decision_required
+    example_target_file: ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+v2_storage_and_analysis:
+  database_file: /opt/veridian/ai-os/memory/superboss-register.sqlite
+  connect_pattern: sqlite3.connect(DB_PATH, timeout=30); conn.execute('PRAGMA journal_mode=WAL')
+  tables_exact_schema:
+    instructions: 'instruction_id TEXT PRIMARY KEY, ts TEXT, session_id TEXT, utm_source TEXT, utm_medium TEXT, utm_campaign TEXT, utm_content TEXT, utm_term TEXT,
+      raw_text TEXT, metadata_json TEXT, response_summary TEXT -- FTS5: instructions_fts'
+    work_items: 'work_item_id TEXT PRIMARY KEY, ts TEXT, instruction_id TEXT, software_task_id TEXT, ai_task_id TEXT, cache_id TEXT, ai_cache_id TEXT, utm_source
+      TEXT, utm_medium TEXT, utm_campaign TEXT, utm_content TEXT, utm_term TEXT, status TEXT, metadata_json TEXT -- FTS5: work_items_fts'
+    actions: 'action_id TEXT PRIMARY KEY, ts TEXT, work_item_id TEXT, instruction_id TEXT, utm_source TEXT, utm_medium TEXT, utm_campaign TEXT, utm_content TEXT,
+      utm_term TEXT, result TEXT, metadata_json TEXT -- FTS5: actions_fts'
+    system_index: 'path TEXT, category TEXT, layer TEXT, status TEXT, purpose TEXT, term TEXT, calls TEXT, called_by TEXT, tags TEXT(json_list), metadata_json TEXT
+      -- FTS5: system_index_fts'
+    execution_log: see scripts/superboss-register.py _ensure_execution_log_table() for exact columns, PRE/POST phase fields
+    known_fixes: signature TEXT PRIMARY KEY, fix_action TEXT, last_applied TEXT, success_count INTEGER -- built by watchdog task 2026-07-23
+  exact_cli_commands:
+    log_instruction: python3 /opt/veridian/scripts/superboss-register.py log-instruction --text <str> --source <owner|ai_agent> --medium <str> --session-id <str>
+      --response-summary <str>
+    log_work: python3 /opt/veridian/scripts/superboss-register.py log-work --instruction-id <id> --software-task-id <id> --status <open|closed>
+    log_action: python3 /opt/veridian/scripts/superboss-register.py log-action --work-item-id <id> --source <str> --medium <str> --content <str> --term <str> --result
+      <str>
+    search: python3 /opt/veridian/scripts/superboss-register.py search "<query>" --limit <int> --tag <optional_tag>
+    index_add: python3 /opt/veridian/scripts/superboss-register.py index-add --path <str> --category <cache|validation|guardrail|router|monitor|task_register|hallucination_detection|confidence_scoring|dispatch_entrypoint|classification|other>
+      --layer <shell|typescript|database|documentation> --status <live|partial|dead|deprecated|designed_not_built> --purpose <str> --tags <comma_separated>
+    check_duplicate: python3 /opt/veridian/scripts/superboss-register.py check-duplicate "<query>" --category <optional>
+    index_transcript: python3 /opt/veridian/scripts/superboss-register.py index-transcript --file <path_to_jsonl> --session-id <str>
+  every_communication_logged: true
+  analyzed_by: software_plus_ai
+v2_tagging_indexing:
+  mandatory: true
+  non_negotiable: true
+  method: software_automation
+  commands:
+  - superboss-register.py index-add
+  - superboss-register.py index-transcript
+  - superboss-register.py index-logs
+v2_software_first_mandate:
+  ai_role:
+  - evaluate
+  - build_reusable_automation
+  - never_manual_work
+  automation_inventory:
+    location: system_index table (category field), queryable via superboss-register.py search
+    new_automation_registration: mandatory via superboss-register.py index-add
+  duplication_prevention:
+    mechanism: superboss-register.py check-duplicate
+    precheck_mandatory: true
+  audit_mechanism:
+  - postflight_audit_gate.py
+  - ai-os/audit198/run-audit.mjs
+  monitoring_mechanism:
+  - health-check-15min.py
+  - security-check.py
+  - v2_watchdog_service (below)
+v2_task_specification_requirements:
+  format: closed_ended
+  required_fields:
+  - OBJECTIVE_with_exact_judgment_justification
+  - SCOPE_with_exact_input_output_per_deliverable
+  - KNOWN_CONTEXT_with_cited_evidence
+  - SUCCESS_CRITERIA_with_testable_commands
+  - EXPECTED_OUTPUT_with_exact_file_commit_checkpoint_spec
+  - CONSTRAINTS
+  - COMPLEXITY_TIER
+  forbidden_language:
+  - continue the chain
+  - do more
+  - keep going
+  - vague next steps
+  - open-ended continuation
+  self_dispatch_requirement:
+    when: chain_continuation_intended
+    mandatory_calls:
+    - python3 scripts/veridian-task.py create --title <t> --repo <r> --prompt <closed_ended_spec>
+    - systemctl --user start veridian-worker@<new-task-id>.service
+    both_required: true
+  literal_template: '## OBJECTIVE\nTASK REQUIRING AI JUDGMENT: <state exactly what needs interpretation/cross-referencing, not a file-read>\n\n## SCOPE\n<exact input
+    files/paths>. <exact output: function name, file, signature, or new-file path>.\n\n## KNOWN_CONTEXT\nzero_duplication_check_performed: true/false + evidence.
+    <cite prior real findings, do not re-derive>\n\n## SUCCESS_CRITERIA\n<exact test command per deliverable, real output expected>\n\n## EXPECTED_OUTPUT\nCOMMIT:
+    <exact files>. CHECKPOINT: status=pending_review, note=<real evidence>. NEXT_PHASE (if any): create AND start commands, both mandatory.\n\n## CONSTRAINTS\n<positive
+    phrasing only, avoid ''do not X'' where X shares words with a positive statement elsewhere in this document>\n\n## COMPLEXITY_TIER\nmechanical | integrative |
+    judgment'
+  dispatch_exact_commands:
+    create: python3 /opt/veridian/scripts/veridian-task.py create --title <kebab-case-title> --repo <repo_name> --prompt "$(cat <promptfile>)"
+    start: systemctl --user start veridian-worker@<task-id>.service
+    reset_if_rate_limited: systemctl --user reset-failed veridian-worker@<task-id>.service
+    check_status: python3 /opt/veridian/scripts/check_latest_task.py
+  close_ended_scope_explicit:
+    applies_to_all_of:
+    - analysis
+    - gap_identification
+    - planning
+    - implementation
+    - audit
+    - prompts_to_ai_or_software
+    rule: each of these 6 activity types must produce output with a defined end-state (specific fields filled, specific file written, specific status set) -- open-ended
+      output ('see what we find', 'continue exploring', 'keep improving') is non-compliant regardless of which of the 6 categories it falls under
+v2_watchdog_service:
+  name: veridian-task-watchdog
+  status: LIVE
+  status_evidence: 'task-20260723-142643-build-veridian-task-watchdog-service, 2026-07-23T14:45:12Z. systemctl --user status veridian-task-watchdog.timer: active
+    (running), Triggers veridian-task-watchdog.service; systemctl --user list-timers: NEXT 2026-07-23T14:46:12Z (46s). Script: /opt/veridian/scripts/veridian-task-watchdog.py.
+    Real oneshot run already fired (OnBootSec=60) and appended a real line to ai-os/logs/watchdog.jsonl for the then-active task-20260723-142643 itself (stalled=false,
+    loop_detected=false).'
+  poll_interval_seconds: 60
+  checks:
+  - task_status_per_active_worker
+  - 'stall_detection: no_new_checkpoint_within_N_minutes(default N=20)'
+  - 'infinite_loop_detection: identical_checkpoint_note_repeated_3_plus_times'
+  on_anomaly_detected:
+    step_1: query execution_log/task_audits/ATTENTION.md for prior identical error signature
+    step_2: 'if_solution_found: apply it, verify result, log outcome'
+    step_3: 'if_no_solution_or_verify_fails: escalate to Claude Code CLI (headless veridian-task.py create for an RCA task, OR tmux send-keys to interactive ''claude''
+      session if one is live)'
+  rca_requirement:
+    performed_by: Claude Code CLI
+    must_produce:
+    - root_cause_statement
+    - reusable_fix_as_software_not_manual_patch
+    - history_registration_in execution_log/system_index so recurrence is auto-resolved by step_2
+  claude_cli_active_check_interval_seconds: 600
+  exact_files:
+    script: /opt/veridian/scripts/veridian-task-watchdog.py
+    timer: /home/rajat/.config/systemd/user/veridian-task-watchdog.timer
+    service: /home/rajat/.config/systemd/user/veridian-task-watchdog.service
+    log: /opt/veridian/ai-os/logs/watchdog.jsonl
+    enable_command: systemctl --user enable --now veridian-task-watchdog.timer
+    check_command: systemctl --user status veridian-task-watchdog.timer
+  interim_coverage_until_live:
+    status_as_of_2026-07-23: NOT YET LIVE, build in progress
+    interim_mechanism: scripts/check_latest_task.py, polled every 15 minutes by the laptop-side session's Monitor tool -- weaker than the target 60-second/self-healing
+      design, but real and currently the only active coverage
+    handoff_rule: once v2_watchdog_service.status flips to LIVE (with real systemctl evidence), the laptop-side 15-minute poll becomes redundant backup only, not
+      primary -- state this explicitly in the checkpoint that marks it LIVE
+v2_task_gateway_software:
+  file: scripts/task-gateway.py
+  status: LIVE
+  purpose: Single unified CLI implementing v2_task_lifecycle_pipeline phases 0/1/4/5/7/8/9/11 as real, callable commands, so no AI
+    agent or router needs to remember/sequence superboss-register.py, veridian-task.py, and postflight_audit_gate.py in the right
+    order manually. Wraps those already-built scripts (delegates all real work to them); does not reimplement their logic. Any AI
+    router/agent on this server may invoke these subcommands identically -- takes no assumptions about who calls it.
+  subcommands:
+  - submit: 'phases 0+1. --text --source(owner|ai_agent) --session-id. Mechanical keyword extraction (regex: quoted strings, file
+      paths, snake/kebab-case identifiers, item/rule-number references) -> superboss-register.py log-instruction -> check-duplicate
+      + search with the extracted keywords -> collision_prevention_rule check (systemctl --user list-units veridian-worker@*
+      --state=active, cross-referenced against the extracted keywords). Output: {instruction_id, duplicate_found, duplicate_evidence,
+      prior_search_results, active_collision_task_ids, keywords_extracted, keyword_extraction_fallback_used}.'
+  - start: 'phases 4+5. --instruction-id --title --repo --prompt-file. Validates the prompt-file has all 7 literal_template sections
+      (## OBJECTIVE/SCOPE/KNOWN_CONTEXT/SUCCESS_CRITERIA/EXPECTED_OUTPUT/CONSTRAINTS/COMPLEXITY_TIER), rejecting with the exact
+      missing-section list if not -> veridian-task.py create -> systemctl --user start (verification/idempotent, create already
+      enables+starts) -> superboss-register.py log-work linking instruction_id to the new task via --ai-task-id. Output: {task_id,
+      systemd_active, work_item_id}.'
+  - log: 'mandatory call site for any AI agent doing real work under a task, so every step is logged without needing to know
+      log-action''s raw syntax. --task-id --event. Resolves work_item_id from task_id via a read-only lookup in work_items
+      (ai_task_id/software_task_id), then calls superboss-register.py log-action. Output: {action_id, work_item_id, work_item_resolved}.'
+  - close: 'phases 7+9+11. --task-id --audit-cmd --evidence. verification_command_predefinition_rule enforcement: reads the task''s
+      own prompt.txt, extracts its SUCCESS_CRITERIA section, and REJECTS if --audit-cmd is not found verbatim inside it (proven live,
+      see real_test_evidence below) -- the audit command must have been pre-defined at plan/dispatch time, never authored fresh at
+      close time. If it matches: runs postflight_audit_gate.py (the real audit, exit code decides DONE/FAILED). If verdict=DONE:
+      superboss-register.py log-work --status closed, then veridian-task.py checkpoint --status completed. If verdict != DONE: does
+      NOT close, task stays open, returns {audit_verdict, reason}.'
+  - register-automation: 'phase 8. --path --category --layer --purpose --tags. Thin wrapper over superboss-register.py index-add
+      (--status fixed to live), so registering a new artifact is discoverable under task-gateway.py --help alongside the other 5
+      commands instead of being a separate mental model.'
+  - status: '--task-id. Reads task.yaml, its latest checkpoint, live systemd active state, and the latest ai-os/logs/watchdog.jsonl
+      entry for this task-id -- one command, one JSON answer for "is this task actually done". Output: {status, last_checkpoint_note,
+      systemd_active, watchdog_last_action}.'
+  real_test_evidence: 'TEST_1 (submit): `python3 scripts/task-gateway.py submit --text "test gateway build" --source ai_agent
+    --session-id test-gw` returned real instruction_id INS-20260723-150851-e127 with real duplicate/search/collision data.
+    TEST_2 (status): `python3 scripts/task-gateway.py status --task-id task-20260723-142643-build-veridian-task-watchdog-service`
+    returned status=completed, last_checkpoint_note="worker finished, no changes to commit", systemd_active=false -- verified
+    identical to that task''s real task.yaml (yaml.safe_load) and `systemctl --user is-active` (exit 3, inactive) at test time.
+    TEST_3 (close, verification_command_predefinition_rule): `python3 scripts/task-gateway.py close --task-id
+    task-20260723-142643-build-veridian-task-watchdog-service --audit-cmd "echo this-is-a-deliberately-wrong-command-not-in-success-criteria"
+    --evidence "test rejection"` exited 1 with real rejection JSON: {"error": "verification_command_predefinition_rule violation:
+    --audit-cmd was not found verbatim in task-20260723-142643-build-veridian-task-watchdog-service''s own pre-defined SUCCESS_CRITERIA
+    (.../prompt.txt). postflight_audit_gate.py''s --audit-cmd must be copied VERBATIM from what was written at plan/dispatch time,
+    never authored fresh at close time (self-certification is exactly what this rule prevents).", "provided_audit_cmd": "echo
+    this-is-a-deliberately-wrong-command-not-in-success-criteria", "predefined_success_criteria": "TEST_1: `systemctl --user status
+    veridian-task-watchdog.timer` shows active...(real SUCCESS_CRITERIA text, 3 TESTs)"} -- the real task was NOT closed, confirming
+    the rule is enforced in software, not just documented.'
+v2_knowledge_engine:
+  table: knowledge_engine
+  status: LIVE
+  row_count: 9
+  query_command: python3 scripts/superboss-register.py query-knowledge "<search>" [--tag <tag>]
+  register_command: python3 scripts/superboss-register.py register-knowledge --path <str> --artifact-type <canonical|derived>
+    --purpose <str> --tags <str> --relationships <json_list_of_{path,relationship_type,evidence?}> [--secondary-path <str>]
+  wired_into_gateway: true
+  purpose: 'Real, evidence-based pointer registry (path + content_hash + entity_relationships, never a copy of an artifact''s
+    content) over every knowledge/rules/constitution artifact found in ai-os/KNOWLEDGE_ENGINE_INVENTORY_2026-07-23.yaml, built
+    per ai-os/KNOWLEDGE_ENGINE_SCHEMA_DESIGN_2026-07-23.yaml''s proposed_table (verbatim create_statement, not redesigned).
+    Extends system_index''s own proven "path + metadata, not a content copy" contract with two fields system_index has no
+    equivalent for -- artifact_type (canonical|derived) and entity_relationships (structured governs/derives-from/audits edges
+    to OTHER knowledge artifacts).'
+  seeded_rows: '9 (6 exists_on_disk=1 -- compliance-tracker/ai-os/CONSTITUTION.yaml, ai-os/RULES_ARTICLES_198.json,
+    ai-os/VERIDIAN_EXECUTION_RULES_2026-07-23.md, ai-os/MASTER_INDEX.yaml, ai-os/SYSTEM_MAP.yaml, ai-os/STANDING_DIRECTIVE.yaml;
+    3 exists_on_disk=0 real-drift rows -- ai-os/EXECUTION_RULES_AUDIT_2026-07-23.yaml, ai-os/GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml,
+    ai-os/MASTER_GAP_AUDIT_2026-07-23.yaml -- each cited as if real by a live document but never actually written to disk),
+    exactly matching KNOWLEDGE_ENGINE_SCHEMA_DESIGN_2026-07-23.yaml''s seed_rows_planned_for_phase_1_not_created_by_phase_0.count.'
+  gateway_wiring: 'scripts/task-gateway.py submit now also calls query-knowledge with the same mechanically-extracted keyword
+    string it already uses for check-duplicate/search, adding a knowledge_matches key to submit''s JSON output -- so every
+    future task submission is matched against the Knowledge Engine automatically, not just system_index.'
+  real_test_evidence: '`python3 scripts/superboss-register.py query-knowledge "constitution"` returns 3 real rows
+    (compliance-tracker/ai-os/CONSTITUTION.yaml, ai-os/RULES_ARTICLES_198.json, ai-os/MASTER_INDEX.yaml).
+    `python3 scripts/task-gateway.py submit --text "test knowledge engine wiring" --source ai_agent --session-id ke-test`
+    returned a non-null knowledge_matches key ({"found": 0, "matches": []} for that text; re-tested with
+    --text "check the constitution rules" returning found=6 real matches).'
+v2_truthfulness_enforcement:
+  no_fabrication: true
+  no_incomplete_reported_as_complete: true
+  evidence_required_per_claim:
+  - file_path
+  - command_output
+  - commit_hash
+v2_efficiency_mandate:
+  token_usage: minimize
+  priority: fast_completion_over_exhaustive_narrative
+v2_task_lifecycle_pipeline:
+  purpose: 'Numbered, sequential, closed-ended process every task must follow. Each phase: input, exact_command, output, next_phase_trigger. No phase may be skipped
+    or assumed.'
+  phase_0_intake:
+    input: raw owner/system instruction text
+    exact_command: python3 /opt/veridian/scripts/superboss-register.py log-instruction --text "<raw_text>" --source owner --medium <chat|cron|task> --session-id <id>
+    output: instruction_id (e.g. INS-YYYYMMDD-HHMMSS-xxxx)
+    next_phase_trigger: instruction_id exists
+  phase_1_software_first_search:
+    purpose: SOFTWARE (not AI) searches existing history/metadata BEFORE any AI judgment. This is how software tells AI what happened before.
+    input: instruction_id, extracted keywords from raw_text
+    exact_commands:
+    - python3 /opt/veridian/scripts/superboss-register.py check-duplicate "<keywords>" --category <optional>
+    - python3 /opt/veridian/scripts/superboss-register.py search "<keywords>" --limit 10
+    output: 'JSON: {instructions: [...], work_items: [...], actions: [...], system_index: [...]} -- real rows, or empty arrays if genuinely nothing found'
+    next_phase_trigger: search output received (even if empty)
+    keyword_extraction_baseline_mechanical_first:
+      step_1_mechanical: 'regex-extract: quoted strings, file paths (contains ''/'' or ''.py''/''.yaml''/''.md''), snake_case/kebab-case identifiers, numbers referencing
+        item/rule IDs -- zero AI judgment, pure regex'
+      step_2_ai_supplement: ONLY if step_1 yields zero usable terms, AI may supply up to 3 additional terms, each with a 1-clause reason logged in metadata_json
+      rule: step_1 output is what gets searched FIRST; step_2 only runs if step_1 search returns zero results AND zero duplicate-check hits
+  phase_2_ai_gap_analysis:
+    purpose: AI reads phase_1's software output FIRST. AI only does own research/reasoning for what software's structured search could not resolve (ambiguous intent,
+      missing evidence, judgment calls).
+    input: phase_1 output + instruction raw_text
+    output_file_naming_convention: ai-os/<TOPIC>_GAP_AUDIT_<YYYY-MM-DD>.yaml (e.g. ai-os/GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml -- established precedent)
+    output_required_fields_per_item:
+    - item_number
+    - 'status: DONE|PARTIAL|MISSING'
+    - 'evidence: <file:line OR command output OR commit hash, never a guess>'
+    next_phase_trigger: gap audit file committed with >=1 item classified
+    single_source_of_truth_rule:
+      before_creating_new_audit_file: python3 /opt/veridian/scripts/superboss-register.py search "<topic>" --limit 5 -- if an existing ai-os/*_GAP_AUDIT_*.yaml or
+        ai-os/*_AUDIT_RESULT_*.yaml already covers this exact topic, UPDATE that file in place (new commit, same filename), do not create a second dated file for
+        the same topic
+      new_file_only_when: topic genuinely has zero prior audit file (confirmed via the search above, cite the empty result as evidence)
+      canonical_location_rule: 'the MOST RECENT commit to a given audit filename, on whichever branch, IS the canonical version -- if found on a non-master branch,
+        note the branch name explicitly when citing it (established precedent: 2026-07-23 audits lived on worker branches, this caused real confusion, now must be
+        stated explicitly every time)'
+  phase_3_automation_percentage_estimate:
+    purpose: AI explicitly states, per gap/task, what fraction can be closed by software alone (mechanical) vs requires AI judgment. This step was MISSING before
+      2026-07-23, now mandatory.
+    input: phase_2 gap audit
+    output_required_fields:
+    - 'mechanical_pct: int(0-100)'
+    - 'judgment_pct: int(0-100, mechanical_pct+judgment_pct=100)'
+    - 'mechanical_reason: str'
+    - 'judgment_reason: str'
+    output_location: 'appended to the same gap audit file''s each item, key: automation_estimate'
+    next_phase_trigger: every item in phase_2's audit has an automation_estimate
+  phase_4_planning:
+    purpose: 'AI groups gaps into phases. Each phase becomes one closed-ended task spec, written using v2_task_specification_requirements.literal_template (line ref:
+      this document, key v2_task_specification_requirements).'
+    input: phase_2 + phase_3 outputs
+    exact_command_to_register_planned_phase: python3 /opt/veridian/scripts/superboss-register.py index-add --path <planned_task_title> --category task_register --layer
+      documentation --status designed_not_built --purpose "<one line>" --tags phase:<n>,parent_audit:<gap_audit_filename>
+    output: one prompt.txt-ready spec per phase, following literal_template exactly
+    next_phase_trigger: spec file written locally, ready for phase_5
+    phase_sizing_rule:
+      min_items_per_phase: 3
+      max_items_per_phase: 8
+      exception: a single item requiring a genuinely large build (e.g. a new subsystem) may be its own 1-item phase -- state explicitly why grouping was not possible
+      rule_source: codified 2026-07-23 from prior informal practice, now mandatory not optional
+    collision_prevention_rule:
+      before_dispatch: python3 /opt/veridian/scripts/superboss-register.py search "<target gap item numbers or file paths>" --limit 10 -- check no OTHER active task
+        (systemctl --user list-units veridian-worker@* --state=active) already targets the same gap item(s) or file(s)
+      if_collision_found: do not dispatch a duplicate -- either wait for the active task to finish, or explicitly scope this phase to a genuinely different item/file
+  phase_5_dispatch:
+    input: phase_4 spec
+    exact_commands:
+    - python3 /opt/veridian/scripts/veridian-task.py create --title <kebab-title> --repo <repo> --prompt "$(cat <specfile>)"
+    - systemctl --user start veridian-worker@<returned-task-id>.service
+    output: task_id, systemd unit active
+    next_phase_trigger: systemctl --user is-active returns 'active'
+    on_preflight_reject: read task.yaml checkpoints[-1].note, fix the specific prompt.txt line (see v2_task_specification_requirements known false-positive patterns),
+      systemctl --user reset-failed if StartLimitBurst, restart -- do not abandon
+    retry_limit_rule:
+      max_self_fix_attempts_same_phase: 5
+      on_exceeding_limit: STOP self-fixing, checkpoint status=blocked with full attempt history, send notify-owner.py email describing the stuck state plainly --
+        do not attempt a 6th silent fix
+      counts_toward: the task's own MAX_LIFETIME_INVOCATIONS=20 cap (worker-entrypoint.sh) -- retry limit here is stricter and should trigger first
+    verification_command_predefinition_rule:
+      purpose: Prevents self-certification. The agent that performs the work must NOT invent its own passing criteria after the fact.
+      rule: SUCCESS_CRITERIA in the phase_5 task spec (written at planning/phase_4 time, BEFORE execution) must already contain the exact, real, runnable verification
+        command(s) -- phase_7's postflight_audit_gate.py --audit-cmd argument is copied VERBATIM from this pre-defined SUCCESS_CRITERIA, never authored fresh at phase_7
+        time by the same agent that did phase_6's work
+      if_execution_reveals_the_predefined_test_was_wrong: the executing agent may PROPOSE a corrected test, but must flag this explicitly in the checkpoint note as
+        'predefined test amended, needs independent review' -- this case gets routed to Owner or a separate audit pass, not self-approved
+  phase_6_execution:
+    input: dispatched task runs autonomously on server
+    monitored_by: veridian-task-watchdog.py (see v2_watchdog_service), poll_interval_seconds=60
+    output: real commits, real file changes, checkpoint entries in task.yaml
+    next_phase_trigger: task.yaml status = pending_review or completed
+  phase_7_quality_audit:
+    purpose: Software-driven verification of the completed work, not AI self-certification.
+    exact_command: python3 /opt/veridian/ai-os/scripts/postflight_audit_gate.py --task-id <id> --audit-cmd "<real verification command specific to what was built>"
+    output: 'row in task_audits table: audit_id, verdict (DONE|FAIL|PARTIAL), stdout_tail, stderr_tail'
+    next_phase_trigger: task_audits row exists with a verdict
+    on_verdict_fail: route back to phase_5 with a corrective spec, do not mark the original task complete
+  phase_8_tagging_and_indexing:
+    purpose: Every new reusable artifact (script, function, table, doc) gets registered so phase_1 of every FUTURE task can find it -- this is how zero-duplication
+      is actually enforced, not just claimed.
+    exact_command: python3 /opt/veridian/scripts/superboss-register.py index-add --path <file_path> --category <cache|validation|guardrail|router|monitor|task_register|other>
+      --layer <shell|typescript|database|documentation> --status live --purpose "<one line, what it does>" --tags <comma_separated>
+    mandatory: true
+    next_phase_trigger: index-add returns success for every new artifact from phase_6
+  phase_9_history_registration:
+    purpose: Distinct from tagging -- this is recording WHAT WORKED so failure-recovery (phase_10) and future planning (phase_4) can reuse it without re-deriving.
+    exact_command_success_case: python3 /opt/veridian/scripts/superboss-register.py log-work --instruction-id <id> --software-task-id <task_id> --status closed
+    exact_command_reusable_fix_case: python3 /opt/veridian/scripts/superboss-register.py log-fix --signature <error_signature> --fix-action <what_fixed_it> (known_fixes
+      table, built by watchdog task 2026-07-23)
+    next_phase_trigger: row exists in work_items and/or known_fixes
+  phase_10_failure_handling:
+    purpose: What happens when phase_6/7 fails, stalls, or loops.
+    detected_by: veridian-task-watchdog.py, exact logic in v2_watchdog_service.checks
+    exact_sequence:
+    - 1. query known_fixes + ATTENTION.md + task_audits for matching error signature
+    - '2. if match found: apply recorded fix_action, re-verify, log outcome to watchdog.jsonl'
+    - '3. if no match or re-verify still fails: escalate -- create + start an RCA task (same phase_5 mechanism, title prefix ''rca-'')'
+    - 4. RCA task MUST end by calling log-fix so this exact signature auto-resolves next time (closes the loop back to step 1)
+    next_phase_trigger: watchdog.jsonl shows action_taken != null for the stalled task_id
+  phase_11_completion_and_report:
+    input: phase_7 verdict=DONE + phase_8 + phase_9 complete
+    exact_command: 'python3 /opt/veridian/scripts/veridian-task.py checkpoint <task_id> --status completed --note "<real evidence: files, commit hash, audit_id>"'
+    owner_notification: python3 /opt/veridian/scripts/notify-owner.py --subject <str> --body <simple_english_3_sentences_max> --dedupe-key <str> -- only if genuinely
+      significant, not every phase
+    owner_chat_update_format: 'one line: %complete|%incomplete|phase_x_of_y|status (per v2_communication_protocol.ai_to_owner_chat_default)'
+  completeness_guarantees:
+    zero_duplication: enforced structurally by phase_1 (mandatory search before any build) + phase_8 (mandatory registration after any build) -- a task cannot reach
+      phase_5 without phase_1's search output on record, cannot reach phase_9 without phase_8's index-add on record
+    hundred_pct_gap_analysis: enforced by phase_2's requirement that every item in the target audit have an explicit status, no silent omissions -- an audit file
+      missing this for any item is itself a phase_7 audit-gate FAIL
+    hundred_pct_completion: NOT claimed as achievable on a fixed timeline -- phase_11 only fires per-task on real verified evidence; the OVERALL gap list (187+ items
+      as of 2026-07-23) closes incrementally, phase by phase, chain by chain, tracked in ai-os/MASTER_GAP_AUDIT_2026-07-23.yaml -- 100% is a direction, not a promised
+      date, per v2_truthfulness_enforcement
+  phase_minus1_trigger_rule:
+    purpose: Defines WHEN the pipeline fires at all -- missing before 2026-07-23, causes ambiguity.
+    enter_full_pipeline_if_any:
+    - instruction requests new software/automation to be built or modified
+    - instruction requests a gap/audit/status check
+    - instruction requests server-side execution of any kind
+    skip_to_log_only_if_all:
+    - pure clarifying question with no build/audit/execution request
+    - answerable from already-loaded context with zero new file/command access
+    log_only_command: python3 /opt/veridian/scripts/superboss-register.py log-instruction --text <str> --source owner --medium chat --session-id <id> --response-summary
+      <one_line> (phase_1 onward skipped, this alone satisfies phase_0)
+    when_uncertain: default to full pipeline -- false positive (unnecessary rigor) is safe, false negative (skipped audit trail) is not
+  phase_12_mandatory_self_reaudit:
+    purpose: 'Owner directive: ''after completing this task you will audit it again, see if any gap, you will fill it.'' This must be a standing rule, not a one-off
+      that happened once.'
+    trigger: immediately after phase_11_completion_and_report, for ANY task that produced or modified a process/policy document (not required for simple content-fix
+      tasks)
+    exact_procedure:
+    - '1. re-read the just-completed output adversarially: for each stated rule/field, ask ''does this specify WHO does it, WHEN it fires, WHAT the exact command/file
+      is, and WHAT the pass/fail test is'' -- if any answer is missing, that is a gap'
+    - 2. cross-check the output against the original instruction line-by-line, confirm every explicit line item has a corresponding field, not just a paraphrase
+    - '3. if gaps found: fix them in the same document (new version bump), do not silently note and skip'
+    - '4. if zero gaps found: state explicitly what was checked and why nothing was found, do not skip this step even when the answer is ''none'''
+    real_precedent: STANDING_DIRECTIVE.yaml itself went through this exact cycle 3 times same-day (v2.1 tightened schemas, v2.2 built the missing lifecycle pipeline,
+      v2.3 found 8 more gaps via this exact procedure, v2.4 found 5 more) -- proof this step catches real things, not theoretical

@@ -1,0 +1,49 @@
+--- /tmp/orig/file_inventory.py	2026-07-23 12:18:46.649615615 +0000
++++ /opt/veridian/ai-os/scripts/file_inventory.py	2026-07-23 12:12:08.607144899 +0000
+@@ -15,7 +15,7 @@
+ already covered by FUNCTION_CATALOG.json/DATABASE_CATALOG.json/route catalogs, a different existing
+ mechanism) or /opt/veridian/workspace (ephemeral scratch, explicitly excluded, not system-of-record).
+ """
+-import subprocess, sqlite3, hashlib, datetime, os
++import subprocess, sqlite3, hashlib, datetime, os, stat
+ 
+ DB = "/opt/veridian/ai-os/memory/superboss-register.sqlite"
+ ROOTS = ["/opt/veridian/ai-os", "/opt/veridian/scripts"]
+@@ -26,6 +26,13 @@
+         path TEXT PRIMARY KEY, size INTEGER, mtime TEXT, hash16 TEXT,
+         first_seen TEXT, last_seen TEXT
+     )""")
++    # item 22 (file_permission_change_tracking): permission bits, added
++    # 2026-07-23. try/except keeps this idempotent on re-run against a DB
++    # that already has the column, no separate migration script needed.
++    try:
++        conn.execute("ALTER TABLE file_inventory ADD COLUMN mode TEXT")
++    except sqlite3.OperationalError:
++        pass
+     conn.commit()
+     conn.close()
+ 
+@@ -67,6 +74,7 @@
+         except FileNotFoundError:
+             continue
+         h = hash16(path)
++        mode_str = format(stat.S_IMODE(st.st_mode), "04o")
+         if path not in previous:
+             new_files.append(path)
+         elif previous[path] != h:
+@@ -74,11 +82,11 @@
+ 
+         c.execute("SELECT 1 FROM file_inventory WHERE path=?", (path,))
+         if c.fetchone():
+-            c.execute("UPDATE file_inventory SET size=?, mtime=?, hash16=?, last_seen=? WHERE path=?",
+-                       (st.st_size, datetime.datetime.fromtimestamp(st.st_mtime, datetime.timezone.utc).isoformat(), h, now, path))
++            c.execute("UPDATE file_inventory SET size=?, mtime=?, hash16=?, last_seen=?, mode=? WHERE path=?",
++                       (st.st_size, datetime.datetime.fromtimestamp(st.st_mtime, datetime.timezone.utc).isoformat(), h, now, mode_str, path))
+         else:
+-            c.execute("INSERT INTO file_inventory (path, size, mtime, hash16, first_seen, last_seen) VALUES (?,?,?,?,?,?)",
+-                       (path, st.st_size, datetime.datetime.fromtimestamp(st.st_mtime, datetime.timezone.utc).isoformat(), h, now, now))
++            c.execute("INSERT INTO file_inventory (path, size, mtime, hash16, first_seen, last_seen, mode) VALUES (?,?,?,?,?,?,?)",
++                       (path, st.st_size, datetime.datetime.fromtimestamp(st.st_mtime, datetime.timezone.utc).isoformat(), h, now, now, mode_str))
+ 
+     missing_files = [p for p in previous if p not in current_paths]
+ 
