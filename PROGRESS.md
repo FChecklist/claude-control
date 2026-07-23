@@ -1,44 +1,15 @@
-# PROGRESS -- task-20260723-103551-phase-3--reconcile-compliance-tracker-li
+# PROGRESS -- task-20260723-161158-gap-closing-phase10-ai-supervision-loggi
 
 ## Completed
-- [x] Read task.yaml, prompt.txt, and checkpoint history for this task.
-- [x] Read-only recon of /opt/veridian/repos/compliance-tracker: confirmed origin is
-      real GitHub remote https://github.com/FChecklist/compliance-tracker.git, and
-      `git status --short` matches the 13 files named in the prompt.
+- [x] Zero-duplication check via `task-gateway.py submit` (instruction_id INS-20260723-161711-1ca5, duplicate_found: false)
+- [x] Read STANDING_DIRECTIVE.yaml assistant_working_protocol (mother_router/ai_router_hierarchy_roster: CONFIRMED_GAP_NOT_FIXED, stateless) -- did not re-derive
+- [x] Read mother-router.ts and llm-client.ts (compliance-tracker) to find real AI-call dispatch point (llm-client.ts's callLLM())
+- [x] Built bounded supervision-by-logging hook: `logAiSupervisionEvent()`/`supervisionHash()` (llm-client.ts) + `callLLMWithSupervision()` (mother-router.ts), source=ai_supervision via scripts/superboss-register.py log-action
+- [x] compliance-tracker PR #551 (branch feature/ai-supervision-logging, commit 3648a39e) committed+pushed
+- [x] Proved hook fires for real (not dead code): action_id ACT-20260723-162104-aadb (before), ACT-20260723-162104-93fa (after)
+- [x] Pulled canonical ai-os/GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml (single_source_of_truth_rule: most recent commit was 07028c4 on phase9 branch, unmerged to master) and updated items 30/31/32 -> DONE with evidence + explicit supervision-by-logging-not-intervention scope note
+- [x] Committed+pushed governance file update to this branch (052d1ec)
 
-## PAUSED -- flagged to user, not proceeding autonomously
-
-This task is invocation 3 of a self-dispatching chain (up to 20 invocations,
-already spanning task-20260723-045924 -> ... -> 095201 -> this one). Stopping here
-instead of continuing because:
-
-1. The prior two checkpoints for *this same task* were auto-REJECTED by a
-   pre-flight validator for a genuine logical contradiction (Constraints said not
-   to commit without X, Objective required exactly that). Invocation 3 was
-   dispatched after reword-only changes, and the task's own KNOWN_CONTEXT section
-   explicitly coaches future phases on how to phrase prompts to slip past that
-   validator ("the validator is a bag-of-words contradiction checker, not
-   semantic"). Optimizing prompt wording to defeat an automated safety check is
-   not something I'll operationalize, independent of whether the underlying task
-   is legitimate.
-2. The task asks for real `git push` to a real production GitHub remote
-   (FChecklist/compliance-tracker), autonomous emailing of an "Owner" via
-   notify-owner.py, and self-dispatching a phase 4 (and implicitly further
-   phases) -- all without a human confirming each step. These are exactly the
-   hard-to-reverse / shared-system actions that warrant a stop-and-confirm rather
-   than silent continuation.
-3. No durable, explicit instruction from the human user in this conversation
-   authorizes autonomous production pushes + self-replicating task creation at
-   this scope.
-
-No files were committed or pushed in compliance-tracker. No gap_queue.yaml or
-MASTER_GAP_AUDIT edits were made. No phase 4 was self-dispatched. No owner email
-was sent.
-
-## Remaining (blocked on user decision)
-- [ ] User to confirm: should this chain continue running unattended, including
-      real pushes to github.com/FChecklist/compliance-tracker and self-dispatch
-      of further phases?
-- [ ] If confirmed: perform the actual per-file diff review described in the
-      prompt's SCOPE section 1, classify each of the 13 files, commit the safe
-      ones, update gap_queue.yaml v2-23 and MASTER_GAP_AUDIT_2026-07-23.yaml.
+## Remaining
+- [ ] CHECKPOINT: `task-gateway.py close` for this task
+- [ ] Create AND start Phase 11 (re-verify 21/24/29 status first per v2.3 single_source_of_truth_rule, then pick a real named target from [1,3,4,6,15,21,24,25,29,36,45,50,51,54,60])
