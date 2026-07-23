@@ -7,8 +7,8 @@ method: direct_inspection_of_live_server_state (crontab -l, systemctl --user lis
   RULES_ARTICLES_198.json) count only as evidence of stated intent, not of DONE status, unless a real
   running mechanism is also cited.
 summary:
-  done: 46
-  partial: 14
+  done: 47
+  partial: 13
   missing: 0
   total: 60
 phase7_amendment:
@@ -595,11 +595,39 @@ items:
     `bash -n` syntax-checked the modified script. Diff at ai-os/patches/supervisor-entrypoint-approval-notification-2026-07-23.diff,
     patch --dry-run verified against the pre-phase8 file.'
 - item_number: 50
-  status: PARTIAL
-  evidence: AI_ENGINEERING_POLICY.yaml automation_scope_boundary.standing_exceptions.genuinely_irreversible_actions
-    (live customer data, DNS, crontab changes) requires Owner confirmation as policy, but no script mechanically
-    blocks a destructive crontab/DNS edit -- enforcement depends on assistant judgment, not an automated
-    gate.
+  status: DONE
+  evidence: 'PARTIAL -> DONE 2026-07-23 (phase 12). Built the missing mechanical gate for the
+    crontab case of AI_ENGINEERING_POLICY.yaml''s automation_scope_boundary.standing_exceptions.genuinely_irreversible_actions
+    (the only one of the three -- crontab, production DNS, live customer data -- with live evidence
+    of actually being touched by tasks on this host; DNS/customer-data have no live code path on this
+    single dev VM, confirmed by re-grep, out of scope by non-applicability, not fabricated).
+    Re-verified live before building: `crontab -l` baseline captured (13 real lines); `grep -n
+    "def check_\|^if __name__" preflight-guard.py` confirmed the check_circuit_breaker/
+    check_tight_task_schema/check_disk/check_mem/check_worktree/check_credit_accountant_approval/
+    check_proxy_health/check_openrouter_balance sequential-call pattern was still accurate;
+    `grep -rln "subprocess.*crontab\|\"crontab\"\|''crontab''" scripts/*.py` still returned zero
+    matches (exit 1) -- confirmed no script programmatically touched crontab before this phase.
+    Added `check_crontab_unauthorized_change(task_dir, snapshot_path, decisions_path, crontab_cmd)`
+    to scripts/preflight-guard.py, wired into the existing sequential check_* call list in
+    `__main__` (same fail()/ok() convention as every other check). Compares live `crontab -l`
+    against a new last-known-approved snapshot at ai-os/CRONTAB_APPROVED_SNAPSHOT.txt (seeded from
+    today''s live crontab -- confirmed identical via `diff`). On a mismatch, fails closed UNLESS
+    prompt.txt contains the exact citation "OWNER_DECISIONS_NEEDED_2026-07-23.yaml entry id=<id>
+    status=approved" AND that id''s status is independently verified as literally "approved" in the
+    real, live OWNER_DECISIONS_NEEDED_2026-07-23.yaml (never trusts the prompt''s own unverified
+    claim). Real test written and run (scripts/test_check_crontab_unauthorized_change.py, all
+    mocked via temp files + a fake crontab_cmd, the real live crontab/snapshot/decisions files were
+    never touched during the test): (1) unchanged crontab -> pass clean: PASS; (2) changed crontab,
+    no citation -> fail closed (`{"proceed": false, "reason": "crontab_unauthorized_change"}`): PASS;
+    (3) changed crontab, citation present but that id NOT actually approved in the (fake) decisions
+    file -> still fails closed, proving it does not trust an unverified claim: PASS; (4) changed
+    crontab, citation present AND verified approved in the (fake) decisions file -> pass clean: PASS.
+    All 4/4 passed. Post-build sanity: `diff <(crontab -l) ai-os/CRONTAB_APPROVED_SNAPSHOT.txt` still
+    empty (real live crontab untouched throughout this phase); ran the real check function directly
+    against the real live crontab + real snapshot (no fail() raised, confirms the gate is inert
+    against current unchanged state); full end-to-end smoke test of preflight-guard.py --no-proxy
+    with a legacy-format prompt.txt returned `{"proceed": true, ...}` unchanged, confirming the new
+    check does not break the existing pipeline. `python3 -m py_compile` clean.'
 - item_number: 51
   status: PARTIAL
   evidence: 'Reclassified MISSING -> PARTIAL 2026-07-23 (phase6): a real mechanism existing without Owner

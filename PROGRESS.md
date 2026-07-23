@@ -48,3 +48,75 @@
 ## Remaining
 - Nothing further for this task -- Phase 12 is live and will continue the chain (its own NEXT_PHASE
   points to Phase 13).
+
+---
+
+# PROGRESS -- task-20260723-164109-gap-closing-phase12-item50-crontab-enfor
+
+## Completed
+- [x] Zero-duplication check via `task-gateway.py submit` (instruction_id INS-20260723-164120-761d,
+      duplicate_found: true against historical *system_index* entries only (preflight-guard.py,
+      worker-entrypoint.sh, queue-dispatcher.py etc. as known live files -- not prior attempts at this
+      exact gate), active_collision_task_ids: [] -- no other task currently working this. Proceeding.
+- [x] Rebased this branch onto `origin/worker/task-20260723-162833-gap-closing-phase11-item29-auth-verifica`
+      (commit 8df5b6b) per governance_file_provenance -- confirmed via
+      `git branch -a --contains 8df5b6b` that this was the branch holding phase11's item-29 closure
+      (it wasn't visible in a plain truncated `branch -a` grep at first pass; found via `--contains`).
+- [x] Re-verified live state, did not trust prompt framing:
+  1. `crontab -l` baseline captured (13 real lines: sync-repos, sync-vercel-env, sync-verdian-ai-data,
+     a #DISABLED supervisor-sweep line, sync-controller-back, queue-dispatcher, health-check-15min,
+     cost-usage-60min, system-sync, credit-ledger-prune, veridian-self-check, file-inventory,
+     security-check).
+  2. `grep -n "def check_\|^if __name__" preflight-guard.py` -- confirmed check_circuit_breaker,
+     check_disk, check_mem, check_tight_task_schema, check_worktree, check_credit_accountant_approval,
+     check_proxy_health, check_openrouter_balance, called sequentially in `__main__` at the bottom.
+     Matches phase11 recon, still accurate.
+  3. `grep -rln "subprocess.*crontab\|\"crontab\"\|'crontab'" scripts/*.py` -- still zero matches
+     (exit 1). Confirmed: nothing programmatically touches `crontab` today.
+- [x] Added `check_crontab_unauthorized_change(task_dir, snapshot_path=..., decisions_path=...,
+      crontab_cmd=None)` to `/opt/veridian/scripts/preflight-guard.py` (live host file), wired into
+      the existing sequential `check_*` call list in `__main__` right after `check_worktree`, same
+      `fail()`/`ok()` convention as every other check. Added `import re` and `import yaml` to the
+      file's top-level imports (yaml confirmed importable). Compares live `crontab -l` against
+      `ai-os/CRONTAB_APPROVED_SNAPSHOT.txt`; on mismatch, fails closed unless prompt.txt contains the
+      exact citation `OWNER_DECISIONS_NEEDED_2026-07-23.yaml entry id=<id> status=approved` AND that
+      id's status is independently re-verified as `approved` in the real, live
+      `OWNER_DECISIONS_NEEDED_2026-07-23.yaml` (never trusts the prompt's own unverified claim).
+      `python3 -m py_compile` clean.
+- [x] Seeded `/opt/veridian/ai-os/CRONTAB_APPROVED_SNAPSHOT.txt` from today's live `crontab -l`
+      output (13 real lines, captured in the recon step above) -- `diff <(crontab -l)
+      ai-os/CRONTAB_APPROVED_SNAPSHOT.txt` confirmed byte-identical immediately after seeding.
+- [x] Wrote a real, executable test: `/opt/veridian/scripts/test_check_crontab_unauthorized_change.py`.
+      Loads the real `preflight-guard.py` module by path, calls the real
+      `check_crontab_unauthorized_change()` function directly with temp snapshot/decisions files and
+      a fake `crontab_cmd` (`/bin/sh -c 'printf %s <fake-content>'`) -- the real live crontab and the
+      real snapshot/decisions files are never touched by the test. 4/4 assertions passed:
+      (1) crontab unchanged from snapshot -> pass clean; (2) crontab changed, prompt.txt has no
+      citation -> fails closed with `{"proceed": false, "reason": "crontab_unauthorized_change"}`;
+      (3) crontab changed, prompt.txt cites an id but that id's real status is
+      `awaiting_owner_decision` (not approved) in the fake decisions file -> STILL fails closed,
+      proving the gate does not trust an unverified claim in the prompt alone; (4) crontab changed,
+      prompt.txt cites an id whose real status IS `approved` in the fake decisions file -> pass clean.
+      Actual run output: "Test 1 ... PASS / Test 2 ... PASS / Test 3 ... PASS / Test 4 ... PASS /
+      All tests passed." (exit 0).
+- [x] Post-build safety re-verification (never touched the real live crontab at any point): `diff
+      <(crontab -l) ai-os/CRONTAB_APPROVED_SNAPSHOT.txt` still empty; ran the real
+      `check_crontab_unauthorized_change()` directly against the real live crontab + real snapshot --
+      no `fail()`/`sys.exit` raised, confirming the gate is currently inert (as expected, since no
+      unauthorized change exists). Full end-to-end smoke test of
+      `preflight-guard.py <task_dir> <workspace> --no-proxy` with a legacy-format prompt.txt still
+      returned `{"proceed": true, ...}` unchanged -- new check does not break the existing pipeline
+      (`tight_task_schema` correctly still rejects a tight-schema prompt missing a Scope field,
+      unrelated to this change, confirming that check still runs too).
+- [x] Updated `ai-os/GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml` item 50 PARTIAL -> DONE with full fresh
+      evidence (commands run, test results, diff confirmation); corrected top-level `summary` block
+      from done:46/partial:14 to done:47/partial:13/missing:0/total:60, verified programmatically
+      against a fresh count of the `items` list (Counter matches).
+- [x] DNS/customer-data scope: re-confirmed no live DNS-modifying code path exists anywhere in
+      `scripts/*.py` or `ai-os/` on this host (single dev VM, not DNS-authoritative) -- explicitly
+      out-of-scope-by-non-applicability, not fabricated. Scope stayed crontab-only per spec.
+
+## Remaining
+- [ ] Commit + push to this phase's own worker branch.
+- [ ] `task-gateway.py close` with the verbatim SUCCESS_CRITERIA command.
+- [ ] Create AND start Phase 13 with a fresh, re-verified target.
