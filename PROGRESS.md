@@ -30,8 +30,21 @@
       verified programmatically that summary now matches a fresh count of the `items` list).
 - [x] Committed + pushed to this phase's own worker branch.
 
+- [x] `task-gateway.py close --audit-cmd "<SUCCESS_CRITERIA line, verbatim>"` -- real result:
+      `{"audit_verdict": "DONE", "checkpoint_status": "completed", "audit_id": "AUD-20260723-163735-93959e",
+      "work_item_id": "WRK-20260723-163736-fb8f"}`.
+- [x] Surveyed remaining target list [1,3,4,6,15,25,36,45,50,51,54,60] for Phase 12: items 36/51/54 each
+      already have their AI-buildable half done by prior phases, with their only remaining gap being an
+      Owner-confirmation-gated crontab schedule addition (already correctly routed to
+      ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml, not re-litigable by an AI agent) -- picked item 50
+      instead (build a mechanical enforcement gate for that same crontab-change policy; building a
+      detector is not itself an irreversible action, so it's fully AI-closable).
+- [x] Created AND started Phase 12 (task-20260723-164109-gap-closing-phase12-item50-crontab-enfor):
+      validated its prompt.txt against `tight_task_validation.validate_tight_task()` directly before
+      dispatch (`{'valid': True}`) to avoid repeating phase 10's contradiction-detector defect;
+      `systemctl --user status` confirms real `claude -p ... --effort high --dangerously-skip-permissions
+      --max-budget-usd 10` process active and running.
+
 ## Remaining
-- [ ] Run `task-gateway.py close --audit-cmd "<SUCCESS_CRITERIA line, verbatim>"` and cite the real result.
-- [ ] Judgment call on veridian-glm-proxy.service disposition is recorded above (keep installed+disabled).
-- [ ] Create AND start Phase 12 targeting a real item from [1,3,4,6,15,25,36,45,50,51,54,60], after
-      re-checking `git log --all --oneline -- '*GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml'` first.
+- Nothing further for this task -- Phase 12 is live and will continue the chain (its own NEXT_PHASE
+  points to Phase 13).
