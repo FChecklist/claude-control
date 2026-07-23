@@ -143,3 +143,72 @@
 ## Remaining
 - Nothing further for this task -- Phase 13 is live and will continue the chain (its own NEXT_PHASE
   points to Phase 14).
+
+---
+
+# PROGRESS -- task-20260723-165714-gap-closing-phase13-server-cli-monitorin
+
+NOTE: this task was independently dispatched (not via the self-chaining mechanism above) and its
+title happens to collide with the auto-chain's own "Phase 13" (task-20260723-165232, item 60) --
+confirmed via task.yaml/checkpoint history this is a real separate task, not a duplicate: it targets
+items 3/4/6/15, the auto-chain's Phase 13 targeted item 60. Both descend from the same Phase 12 tip
+(a8d3eb8) as common ancestor.
+
+## Completed
+- [x] Zero-duplication check already performed per prompt.txt's KNOWN_CONTEXT (instruction_id
+      INS-20260723-165621-2180, task-gateway.py submit output: duplicate_found=false,
+      active_collision_task_ids=[]).
+- [x] Fast-forwarded this branch onto `origin/worker/task-20260723-164109-gap-closing-phase12-item50-crontab-enfor`
+      (commit a8d3eb8) to pick up `ai-os/GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml`, per governance_file_provenance
+      -- this repo's master branch does not carry `scripts/` at all; live operational scripts are edited
+      directly on the host at `/opt/veridian/scripts/*` per established precedent (phase 11/12 did the same).
+- [x] Discovered mid-investigation: a sibling task `task-20260723-170222-phase-14-gap-closing-item6-health-check`
+      was already live (started ~17:02, self-dispatched by the auto-chain's own "Phase 13" above after it
+      closed item 60), independently investigating item 6 via an internal-sleep-loop change to
+      health-check-15min.py. Chose an independent solution (import health-check-15min.py's pure check
+      functions into veridian-task-watchdog.py instead) that never edits that file, so no race/conflict
+      with that sibling task either way.
+- [x] Item 6 (one_minute_status_checks): verified the already-built veridian-task-watchdog.timer first
+      (`systemctl --user status veridian-task-watchdog.timer` -- real output: Active: active (waiting),
+      OnUnitActiveSec=60, confirmed live). Found it only checked TASK status, not SERVER vitals -- did not
+      conflate the two. health-check-15min.py's own vitals checks were still crontab-scheduled at */15,
+      confirmed via `crontab -l`. PARTIAL -> DONE by extending the watchdog's own already-proven 60s run
+      with `check_server_vitals()` (imports health-check-15min.py's `check_server_health()`/`check_systemd_units()`
+      verbatim, zero reimplementation, zero edits to that file). Confirmed genuine unattended 1-minute cadence:
+      real consecutive auto-fired watchdog.jsonl lines at 17:08:47/17:09:52/17:10:57/17:12:02 UTC.
+- [x] Item 3 (server_monitoring): closed by the same `check_server_vitals()` mechanism as item 6 (same real
+      jsonl evidence, same reuse citation). PARTIAL -> DONE.
+- [x] Item 4 (cli_monitoring): built `check_cli_health()` in scripts/veridian-task-watchdog.py -- checks (a)
+      the real tmux 'claude' session/pane via `tmux list-panes -t claude`, (b) the most recent
+      worker-entrypoint.sh `claude -p` invocation's .claude-out-main.json for is_error/subtype, cross-checked
+      against that task's own checkpoint note for an expected-preflight-rejection marker before ever counting
+      a non-zero outcome as unhealthy. Appends one real line per run under key "cli_health". PARTIAL -> DONE,
+      real captured line cites the actual live tmux session (`tmux list-sessions`: "claude: 1 windows...")
+      and a real recent worker invocation, not fabricated.
+- [x] Item 15 (ai_response_logging): added real extraction+logging code to scripts/worker-entrypoint.sh right
+      after the main `claude -p --output-format json` call -- extracts the "result" field (2000-char cap),
+      logs via `superboss-register.py log-action --source ai_response`. Verified extraction against a real
+      live .claude-out-main.json (1492 real chars). Left PARTIAL (not DONE): the actual log-action write
+      fails against the real superboss-register.sqlite (`database disk image is malformed`, reproduced 3x) --
+      a pre-existing, independent, already-escalating DB corruption incident (visible in
+      health-check-cron.log since >=08:15 UTC today), not something this task caused or should attempt to
+      repair (only backup available is 11+ hours stale; restoring it risks discarding real same-day data,
+      out of this task's scope). Code is correct and will start producing real rows once that separate
+      incident is fixed.
+- [x] Updated `ai-os/GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml`: items 3/4/6 PARTIAL -> DONE with full fresh
+      evidence, item 15 left PARTIAL with fresh evidence and an explicit, honest blocker. Summary counts
+      recomputed and verified programmatically to match the real per-item counts (50 DONE / 10 PARTIAL /
+      0 MISSING / 60 total).
+- [x] Mirrored the two live-host script diffs (`/opt/veridian/scripts/veridian-task-watchdog.py`,
+      `/opt/veridian/scripts/worker-entrypoint.sh`) into this repo's `scripts/` directory for commit+push
+      (this repo's master doesn't otherwise track scripts/, matching the "COMMIT+PUSH" ask literally
+      instead of repeating the prior gap where phase 11/12 edited live files but never committed them).
+
+## Remaining
+- [ ] `task-gateway.py close --audit-cmd <verbatim SUCCESS_CRITERIA line> --evidence <real citation>`.
+- [ ] Dispatch next phase: item 6's own "Phase 14" label is already taken by the live sibling task above,
+      so the next phase created by this task picks a genuinely different target (not 6, not 60 -- both
+      already being closed elsewhere) from [1,21,24,25,36,45,51,54], after re-verifying 21/24 live (done:
+      `git log --all --oneline --grep="item 21\|item 24" -i` shows nothing newer than phase 10's
+      already-incorporated re-verification -- PARTIAL stands for both, confirmed current, not re-derived
+      from scratch).
