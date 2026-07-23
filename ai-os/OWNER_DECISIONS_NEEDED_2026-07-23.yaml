@@ -58,3 +58,40 @@ decisions:
     than be silently decided by an agent, especially since the underlying concern (an automated system
     coaching itself to route around a safety check) has already been raised twice and not yet addressed."
   status: awaiting_owner_decision
+
+- id: log-retention-period-authorization
+  raised_by_task: task-20260723-123602-gap-closing-phase6-deployment-logging-ow
+  raised_ts: '2026-07-23T13:00:00+00:00'
+  title: "What retention period is authorized for scripts/*.py's existing find-and-delete log/data pruning behavior (governance item 51, documented_owner_authorized_log_retention_policy)"
+  what: "This server already runs 3 real, live deletion mechanisms with no Owner-issued policy
+    authorizing them (re-confirmed live 2026-07-23, unchanged since the original audit):
+    (1) crontab '30 3 * * * ... credit-accountant.py prune --keep-days 30' --
+    credit-accountant.py:365 cmd_prune() runs `DELETE FROM credit_increments WHERE
+    plan_proposed_at < ?`, permanently removing ledger rows older than 30 days;
+    (2) sync-repos.sh:18, sync-vercel-env.sh:15, sync-verdian-ai-data.sh:60,
+    supervisor-sweep.sh:21 each run `find /opt/veridian/logs -name '*-*.log' -mtime +14 -delete`,
+    permanently removing their own log files older than 14 days;
+    (3) health-check-15min.py self-rotates health-15min.log to the last 700 lines, discarding
+    older lines. Owner directive item 51 says 'keep all logs permanently unless the Owner
+    changes the policy' -- these 3 mechanisms contradict that as written today: they were each
+    built for a practical reason (ledger table growth, disk usage, log file size) but no Owner
+    decision on record sets what retention period is actually authorized for any of them.
+    STANDING_DIRECTIVE.yaml's only related item (line 344, 14-day sqlite backup rotation) is a
+    different mechanism (backup copies, not primary log/data pruning) and does not authorize
+    these 3."
+  needed_action: "An Owner decision on one of: (a) set an explicit authorized retention period
+    per mechanism (may differ per mechanism -- e.g. credit ledger vs cron log files vs the
+    health-check text log) and have a future task update each script's --keep-days/-mtime
+    value plus record the authorization in a policy doc; (b) explicitly authorize the current
+    values (30 days / 14 days / 700 lines) as-is, closing this as already-compliant; or (c)
+    change item 51's own wording (it currently says 'permanently... unless the Owner changes
+    the policy', which conflicts with 3 already-running mechanisms that predate this audit) so
+    the stated policy matches what the Owner actually wants going forward."
+  why_not_done_automatically: "This is a data-deletion policy question -- an AI agent picking a
+    retention number unilaterally (or leaving the contradiction unresolved by silently marking
+    the item DONE/PARTIAL without escalating) would be deciding a genuinely destructive,
+    hard-to-reverse-in-spirit question (once old rows/log lines are deleted, they're gone) that
+    this session's own operating rules require routing to the Owner rather than deciding alone.
+    The task spec that raised this item was explicit: 'do not build, this is an Owner policy
+    call.'"
+  status: awaiting_owner_decision

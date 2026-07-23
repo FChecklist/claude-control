@@ -1,0 +1,22 @@
+--- /tmp/orig/supervisor-entrypoint.sh	2026-07-23 12:55:00.000000000 +0000
++++ /opt/veridian/scripts/supervisor-entrypoint.sh	2026-07-23 12:48:21.511530544 +0000
+@@ -178,6 +178,19 @@
+     sleep 15
+   done
+   if gh pr merge "$PR_URL" --merge --delete-branch >> "$TASK_DIR/supervisor.log" 2>&1; then
++    # Deployment logging (governance item 13, 2026-07-23): log the real merge
++    # as an action via the register's existing generic log-action CLI --
++    # deliberately NOT a new log_deployment() function, since log-action
++    # already does exactly this INSERT and STANDING_DIRECTIVE.yaml's
++    # zero_duplication_mandatory forbids a second parallel write path for
++    # the same thing (see run-logged.sh for the same existing-CLI-reuse
++    # pattern). Best-effort: a logging failure must never block the merge
++    # result already recorded above.
++    MERGE_COMMIT_SHA=$(gh pr view "$PR_URL" --json mergeCommit -q .mergeCommit.oid 2>>"$TASK_DIR/supervisor.log")
++    timeout 10 python3 /opt/veridian/scripts/superboss-register.py log-action \
++      --work-item-id "$TASK_ID" --source deployment --medium github-merge \
++      --content "$REPO" --term "${MERGE_COMMIT_SHA:-unknown}" --result merged \
++      >> "$TASK_DIR/supervisor.log" 2>&1 || true
+     python3 /opt/veridian/scripts/veridian-task.py checkpoint "$TASK_ID" --status completed --note "tier1, Superboss-approved, merged autonomously: $PR_URL"
+   else
+     python3 /opt/veridian/scripts/veridian-task.py checkpoint "$TASK_ID" --status blocked --note "tier1, Superboss-approved, but the merge itself FAILED (see supervisor.log) — needs manual attention, NOT actually merged: $PR_URL"
