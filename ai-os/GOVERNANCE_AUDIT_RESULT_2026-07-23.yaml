@@ -1,0 +1,260 @@
+audit_id: owner-high-governance-2026-07-23-audit-result
+source_task: ai-os/GOVERNANCE_TASK_PROMPT_2026-07-23.yaml
+generated_by_task: task-20260723-034803-high-governance-audit-and-build-2026-07
+scope: audit_only_no_build_this_increment
+method: direct_inspection_of_live_server_state (crontab -l, systemctl --user list-unit-files/list-units, script contents, log contents/timestamps). Policy docs (STANDING_DIRECTIVE.yaml, AI_ENGINEERING_POLICY.yaml, RULES_ARTICLES_198.json) count only as evidence of stated intent, not of DONE status, unless a real running mechanism is also cited.
+summary:
+  done: 26
+  partial: 21
+  missing: 13
+  total: 60
+
+items:
+
+- item_number: 1
+  status: PARTIAL
+  evidence: "systemd --user units veridian-worker@.service (Restart=on-failure, RestartSec=30, StartLimitBurst=3) + scripts/worker-entrypoint.sh checkpoint/resume via .invocation_count, MAX_LIFETIME_INVOCATIONS=20. Bounded restart-with-cap, not unconditional stay-connected."
+
+- item_number: 2
+  status: DONE
+  evidence: "scripts/worker-entrypoint.sh: every exit path calls veridian-task.py checkpoint --status ... --note '<reason>' before the unit stops (e.g. budget cap hit, credit accountant rejected, prevention cap hit, worker exit code)."
+
+- item_number: 3
+  status: PARTIAL
+  evidence: "scripts/health-check-15min.py runs via cron (not a persistent systemd monitoring daemon), checks systemd unit status/disk/mem/load/router reachability, writes ai-os/logs/health-15min.log(.jsonl)."
+
+- item_number: 4
+  status: PARTIAL
+  evidence: "veridian-glm-proxy.service (systemd --user, active) logs every proxied call's cost/tokens to glm-proxy-calls.jsonl; health-check-15min.py includes a self-documented 'best-effort' quota-exhaustion pattern scan, not a real quota API check. No dedicated CLI-health monitoring service exists."
+
+- item_number: 5
+  status: PARTIAL
+  evidence: "scripts/health-check-15min.py covers veridian-worker@/supervisor@ units, checkpoint staleness, router reachability, disk/mem/load. Does not check veridian-glm-proxy.service or veridian-docworker@.service explicitly -- not literally 'all services'."
+
+- item_number: 6
+  status: PARTIAL
+  evidence: "crontab -l: */15 * * * * health-check-15min.py. Runs every 15 minutes, not every 1 minute (known_confirmed_finding, not re-derived)."
+
+- item_number: 7
+  status: DONE
+  evidence: "systemd --user unit files veridian-worker@.service, veridian-docworker@.service (Restart=on-failure, RestartSec=30) and veridian-glm-proxy.service (Restart=always, RestartSec=5), confirmed loaded/active via systemctl --user."
+
+- item_number: 8
+  status: DONE
+  evidence: "scripts/run-logged.sh wraps every cron-invoked script, logs start/complete/fail with exec id, timestamps, exit code, duration via superboss-register.py log-action."
+
+- item_number: 9
+  status: DONE
+  evidence: "ai-os/logs/ATTENTION.md (anomaly/error entries), ai-os/logs/glm-proxy.log (real error tracebacks e.g. HTTP 402), run-logged.sh capturing exit codes/failures for every cron job."
+
+- item_number: 10
+  status: PARTIAL
+  evidence: "health-15min.log/.jsonl carries an anomalies=N counter feeding ATTENTION.md, but there is no distinct WARNING severity level separate from error/anomaly (grep for WARN in health-15min.log: no hits)."
+
+- item_number: 11
+  status: PARTIAL
+  evidence: "/var/log/auth.log (standard Linux sshd/PAM logging) records real login history, but this is OS infrastructure, not a Veridian-built mechanism -- no veridian script references login logging."
+
+- item_number: 12
+  status: DONE
+  evidence: "ai-os/scripts/file_inventory.py, cron */20 * * * *, hashes every file under ai-os/ and scripts/, stores path/size/mtime/hash in superboss-register.sqlite, prints NEW/CHANGED/MISSING diffs to file-inventory-cron.log. (ai-os/scripts/file_edit_guard.py exists but is manual-invocation only, not scheduled.)"
+
+- item_number: 13
+  status: MISSING
+  evidence: "No dedicated deployment-logging mechanism in scripts/* or ai-os/scripts/*. worker-entrypoint.sh explicitly never merges/deploys (branch push only). sync-vercel-env.sh logs its own env-sync run, not actual deployments."
+
+- item_number: 14
+  status: DONE
+  evidence: "scripts/anthropic_openrouter_proxy_v2.py log_real_cost() writes one JSON line per AI call to ai-os/logs/glm-proxy-calls.jsonl (timestamp, model, provider, tokens, cost). Caveat: only covers GLM-proxied traffic; veridian-docworker@.service bypasses this proxy using real Claude subscription auth."
+
+- item_number: 15
+  status: PARTIAL
+  evidence: "anthropic_openrouter_proxy_v2.py stores full response bodies in glm-response-cache.sqlite, but as an exact-match cost-dedup cache, not a purpose-built response audit log; same docworker-bypass caveat as item 14 applies."
+
+- item_number: 16
+  status: DONE
+  evidence: "ai-os/logs/glm-proxy-calls.jsonl: every line carries model field (e.g. z-ai/glm-5.2). Risk: worker-entrypoint.sh switched off proxy auth at 2026-07-23T03:49, so future real-Claude-Max calls via claude -p will not appear in this file."
+
+- item_number: 17
+  status: DONE
+  evidence: "glm-proxy-calls.jsonl carries prompt_tokens/completion_tokens per call. cost-usage-60min.py also queries compliance.token_usage_ledger hourly but that table is confirmed 0 rows (separate known gap); the proxy-log path is the live source."
+
+- item_number: 18
+  status: DONE
+  evidence: "glm-proxy-calls.jsonl real_cost_usd field; cost-usage-60min.log/.jsonl cross-checks OpenRouter /credits balance hourly. Risk: worker-entrypoint.sh real_invocation_cost_usd() sums only glm-proxy-calls.jsonl; claude -p's own total_cost_usd field is never read, so post-auth-switch real Claude Max spend will report as $0 unless addressed."
+
+- item_number: 19
+  status: DONE
+  evidence: "scripts/health-check-15min.py: df -h /, memory calc, uptime load, disk>=90%/mem thresholds, written every 15 min to health-15min.jsonl/.log."
+
+- item_number: 20
+  status: MISSING
+  evidence: "No hits for network/bandwidth/proc-net monitoring across scripts/*.py, scripts/*.sh, ai-os/scripts/*.py. Only incidental mentions are generic 'fails open on network error' comments in preflight-guard.py."
+
+- item_number: 21
+  status: MISSING
+  evidence: "No hits for auth.log parsing, fail2ban, ufw, iptables, or SSH-login-anomaly tracking in any veridian script."
+
+- item_number: 22
+  status: MISSING
+  evidence: "No hits for chmod/chown/permission-change tracking. ai-os/scripts/file_edit_guard.py checks YAML/JSON structural integrity post-edit only, not permission bits."
+
+- item_number: 23
+  status: DONE
+  evidence: "health-check-15min.py FAILURE_RATE_THRESHOLD=0.20 anomaly flag; worker-entrypoint.sh failure-signature recording; preflight-guard.py circuit breaker; recover-failed-workers.py scans systemctl --user list-units --state=failed."
+
+- item_number: 24
+  status: MISSING
+  evidence: "No security-scanning logic anywhere (no dependency/CVE scan, no auth-anomaly detection, no intrusion detection). postflight_audit_gate.py and file_edit_guard.py validate task/file correctness, not security threats."
+
+- item_number: 25
+  status: PARTIAL
+  evidence: "health-check-15min.py anomalies list covers operational abnormality (failed units, stale checkpoints, failure-rate spikes, disk/mem thresholds, quota-exhaustion pattern scan) every 15 min. No security- or user-behavior abnormality detection exists (covered by gap in item 24)."
+
+- item_number: 26
+  status: DONE
+  evidence: "scripts/recover-failed-workers.py (systemctl --user reset-failed + start for confirmed-transient 402 failures); worker-entrypoint.sh Restart=on-failure plus lifetime-invocation cap distinguishing retryable vs hard-stop; supervisor auto-start on success."
+
+- item_number: 27
+  status: MISSING
+  evidence: "known_confirmed_finding: zero hits for resend/sendmail/smtp/notify_owner/webhook/slack/telegram across scripts/*.py, scripts/*.sh, ai-os/scripts/*.py. RESEND_API_KEY present in shared/.env but unwired to any script. No re-investigation performed per task instruction."
+
+- item_number: 28
+  status: MISSING
+  evidence: "known_confirmed_finding: same as item 27 -- anomalies/hard-stops only write to ATTENTION.md and task checkpoints; no outbound channel exists to actually reach the Owner for escalation."
+
+- item_number: 29
+  status: PARTIAL
+  evidence: "worker-entrypoint.sh (modified 2026-07-23T03:49) and launch-interactive-claude.sh (modified 03:09) both now unset CLAUDE_CODE_OAUTH_TOKEN/ANTHROPIC_API_KEY/ANTHROPIC_BASE_URL and rely on real ~/.claude/.credentials.json (exists, modified 02:59 same day) -- real Claude Max auth confirmed DONE for worker and interactive paths. supervisor-entrypoint.sh was NOT switched: still contains 'unset CLAUDE_CODE_OAUTH_TOKEN; export ANTHROPIC_BASE_URL=http://127.0.0.1:8787; export ANTHROPIC_API_KEY=proxy-routed-not-a-real-anthropic-key' verbatim. model=sonnet confirmed globally via ~/.claude/settings.json. effort=high is NOT set anywhere (no --effort flag in any claude -p invocation, no 'effort' key in settings.json), despite claude -p --help exposing a real --effort flag. veridian-glm-proxy.service remains enabled/active; its remaining legitimate use post-switch has not been determined by anyone. This item was flagged in the source task as 'ALREADY DONE, verify only' -- verification shows it is in fact PARTIAL, not DONE; reporting the actual state rather than the assumed state."
+
+- item_number: 30
+  status: PARTIAL
+  evidence: "systemctl --user list-unit-files shows veridian-worker@.service, veridian-supervisor@.service, veridian-docworker@.service actively managing task execution; cron drives 8+ deterministic maintenance scripts autonomously. But items 20-22, 24, 27, 28 (MISSING) mean the CLI has no network/security/permission visibility and no notification path, so it manages the AI-task-worker subsystem only, not the server as a whole."
+
+- item_number: 31
+  status: PARTIAL
+  evidence: "scripts/supervisor-entrypoint.sh (Superboss role) reviews every worker diff via claude -p, classifies risk tier, merges/holds -- real and running, but scoped to code-task diffs only. STANDING_DIRECTIVE.yaml itself labels Mother Router / AI roster supervision CONFIRMED_GAP_NOT_FIXED (stateless, unsupervised)."
+
+- item_number: 32
+  status: PARTIAL
+  evidence: "Only the worker/supervisor pipeline (GLM-5.2 via anthropic_openrouter_proxy.py) is supervised by supervisor-entrypoint.sh. Other AI surfaces (AI roster, Mother Router) have no Claude-CLI supervision layer -- confirmed gap in STANDING_DIRECTIVE.yaml."
+
+- item_number: 33
+  status: DONE
+  evidence: "supervisor-entrypoint.sh runs a second-pass claude -p code review of the actual diff plus deterministic risk-tier.py and scope-check.py as non-overridable checks, and quality-gate.sh (lint/build/test)."
+
+- item_number: 34
+  status: DONE
+  evidence: "preflight-guard.py (circuit breaker on repeated identical failures, disk/mem checks) blocks a task before model invocation; scope-check.py hard-blocks file-ownership violations; risk-tier.py tier2 forces human hold -- all deterministic, non-AI-overridable gates."
+
+- item_number: 35
+  status: DONE
+  evidence: "scripts/master-decompose.py: calls claude -p to decompose a high-level objective into standardized-template tasks scoped to real files."
+
+- item_number: 36
+  status: PARTIAL
+  evidence: "AI_ENGINEERING_POLICY.yaml build_assets_not_tasks / continuous_optimization_checklist codify this as policy, but generate_quick_reference.py, generate-system-diagram.py, generate_task_checklist.py deliberately print to stdout for manual paste-in rather than auto-writing files."
+
+- item_number: 37
+  status: DONE
+  evidence: "AI_ENGINEERING_POLICY.yaml engineering_priority_order: ~30 non-AI options must be checked before writing new code or doing manual work; existing_ai_tools/existing_mcp_servers listed last."
+
+- item_number: 38
+  status: DONE
+  evidence: "AI_ENGINEERING_POLICY.yaml never_behave_like_a_human_operator.rule: 'if software can perform the task, software should perform the task.' health-check-15min.py header states 'Zero AI cost -- pure deterministic script, no model call.'"
+
+- item_number: 39
+  status: DONE
+  evidence: "STANDING_DIRECTIVE.yaml precheck.rule: zero_duplication_mandatory requires superboss-register.py check-duplicate before any new script; documented real catch of a near-duplicate script."
+
+- item_number: 40
+  status: DONE
+  evidence: "RULES_ARTICLES_198.json RULE-067: dev environment runs exclusively on VERIDIAN-DEV server via SSH. STANDING_DIRECTIVE.yaml execution: location=ssh_only, target=VERIDIAN-DEV, local_execution=forbidden."
+
+- item_number: 41
+  status: DONE
+  evidence: "RULE-067 (RULES_ARTICLES_198.json): 'No development, execution, or AI processing shall occur on local machines unless explicitly authorized.' Enforced structurally via SSH-only execution and proxy routing."
+
+- item_number: 42
+  status: PARTIAL
+  evidence: "No mobile processing exists anywhere on this server (nothing to violate), but no rule explicitly names 'mobile' the way RULE-067 names local machines -- compliance is by absence, not codified prohibition."
+
+- item_number: 43
+  status: DONE
+  evidence: "STANDING_DIRECTIVE.yaml execution_model_change: substantive multi-step work runs via server-side Claude Code CLI process, not a chain of laptop-issued SSH commands. gap_queue.yaml references 'the Owner's own no-laptop rule.'"
+
+- item_number: 44
+  status: MISSING
+  evidence: "No document or script references mobile access as an operational control on this server; mobile UI is an aspirational product feature (unrelated app roadmap item), not an enforced thin-client policy here."
+
+- item_number: 45
+  status: PARTIAL
+  evidence: "SSH access to VERIDIAN-DEV is the actual connection path, usable from a laptop. Nothing verifies or supports mobile connectivity specifically."
+
+- item_number: 46
+  status: MISSING
+  evidence: "No hits for 'non-technical' framing anywhere in governing docs except the audit source prompt itself. STANDING_DIRECTIVE.yaml and AI_ENGINEERING_POLICY.yaml are dense technical/YAML documents."
+
+- item_number: 47
+  status: MISSING
+  evidence: "No simple-English Owner-output convention exists in any script; on-complete Owner notification is not even implemented (see item 56)."
+
+- item_number: 48
+  status: MISSING
+  evidence: "No guardrail found requiring non-technical framing for the Owner; governing docs assume an engineering-literate reader throughout."
+
+- item_number: 49
+  status: PARTIAL
+  evidence: "risk-tier.py tier2 classification (migrations, auth, payment, billing, RLS, security, .env, heavy deletion) sets veridian-task.py checkpoint status=awaiting_human_approval. This is a passive DB status, not an active approval request -- no notification is sent to the Owner (same gap as item 56)."
+
+- item_number: 50
+  status: PARTIAL
+  evidence: "AI_ENGINEERING_POLICY.yaml automation_scope_boundary.standing_exceptions.genuinely_irreversible_actions (live customer data, DNS, crontab changes) requires Owner confirmation as policy, but no script mechanically blocks a destructive crontab/DNS edit -- enforcement depends on assistant judgment, not an automated gate."
+
+- item_number: 51
+  status: MISSING
+  evidence: "Directly contradicted by live code: crontab entry '30 3 * * * credit-accountant.py prune --keep-days 30' (credit-accountant.py DELETE FROM credit_increments WHERE plan_proposed_at < ?); sync-repos.sh/sync-vercel-env.sh/sync-verdian-ai-data.sh/supervisor-sweep.sh each run find /opt/veridian/logs -name '*-*.log' -mtime +14 -delete; health-check-15min.py self-rotates health-15min.log to last 700 lines. No Owner-issued policy authorizing these deletions found."
+
+- item_number: 52
+  status: PARTIAL
+  evidence: "RULES_ARTICLES_198.json RULE-080/ARTICLE-048 mandate searchable/indexed conversation records, but this applies to conversation records only -- ai-os/logs/*.log(.jsonl) files are plain-text/JSONL grep-only, no index/search service exists."
+
+- item_number: 53
+  status: DONE
+  evidence: "crontab confirms real continuous cadence: health-check-15min.py and veridian_self_check.py both */15 * * * *; file_inventory.py */20 * * * *; system-sync.py --check all every 6h."
+
+- item_number: 54
+  status: PARTIAL
+  evidence: "recover-failed-workers.py has real safety logic (only resets units matching a specific 402-balance failure signature, skips everything else) but is NOT in crontab -- manually invoked only. supervisor-entrypoint.sh tier1 auto-merge is the one genuinely automatic 'safe fix' path that runs unattended."
+
+- item_number: 55
+  status: DONE
+  evidence: "veridian-task.py checkpoint notes are written for every merge/block/recovery outcome (e.g. 'tier1, Superboss-approved, merged autonomously'); recover-failed-workers.py prints Recovered/Skipped summaries. Coverage limited to the subset of fixes that actually run automatically (item 54)."
+
+- item_number: 56
+  status: MISSING
+  evidence: "known_confirmed_finding: no active owner-notification channel exists. Direct evidence of consequence: ai-os/logs/ATTENTION.md logs the identical unresolved entry '1 systemd unit(s) in failed state: veridian-worker@task-20260719-070240-projexa-e2e-phase-2-batch-b--resources-d.service' 14 times from 2026-07-19T13:44 through at least 2026-07-19T16:00 with no resolution/escalation entry ever following; the unit no longer exists in systemctl, meaning it was silently abandoned, not fixed or reported. on_complete: notify_owner is declared in STANDING_DIRECTIVE.yaml but has no implementing script. Root cause and disposition not investigated further this increment -- out of scope per this increment's instructions (audit only, no build/fix)."
+
+- item_number: 57
+  status: DONE
+  evidence: "Consistent single-responsibility scripts throughout scripts/ and ai-os/scripts/ (risk-tier.py, scope-check.py, quality-gate.sh, file_edit_guard.py etc.), each documented as a narrow reusable gate. RULES_ARTICLES_198.json codifies modularity as mandatory."
+
+- item_number: 58
+  status: DONE
+  evidence: "systemctl --user list-unit-files: veridian-worker@.service, veridian-supervisor@.service, veridian-docworker@.service, veridian-glm-proxy.service are separate templated systemd units; each task gets its own independent unit instance, matching file-ownership.yaml's independent-module design."
+
+- item_number: 59
+  status: DONE
+  evidence: "scripts/anthropic_openrouter_proxy.py already runs Claude Code CLI's tool-use loop against GLM-5.2 via OpenRouter instead of Anthropic's own models with zero changes to the CLI or worker harness -- only ANTHROPIC_BASE_URL/ANTHROPIC_API_KEY env vars differ. Live proof the primary model can be swapped without changing the system."
+
+- item_number: 60
+  status: PARTIAL
+  evidence: "RULES_ARTICLES_198.json mandates complete documentation; ai-os/MASTER_INDEX.yaml registry is real (86 entries as of 2026-07-22). But generate_quick_reference.py, generate-system-diagram.py, generate_task_checklist.py are manual-trigger only (print to stdout for hand-paste) and are not in crontab -- documentation requires a human/AI to remember to run and splice these in, not an automatic process."
+
+unresolved_items_not_safely_automatable_this_increment:
+- items: [27, 28, 56]
+  reason: "Building an Owner-notification channel (item 27/28/56) requires wiring the already-present but unused RESEND_API_KEY into a new send-path and deciding delivery semantics (what counts as 'needed', rate limiting, message content) -- an actual build task, explicitly out of scope for this audit-only increment."
+- items: [29]
+  reason: "supervisor-entrypoint.sh still routes through the GLM proxy with a placeholder key, and effort=high is unset in all three session types -- fixing this is a build task (edit supervisor-entrypoint.sh, decide on --effort flag placement), out of scope for this audit-only increment. Also requires an Owner-facing decision on whether veridian-glm-proxy.service should be decommissioned, per the source task's explicit instruction not to decide this unilaterally."
+- items: [46, 47, 48]
+  reason: "Requires establishing a permanent Owner-communication convention (plain-English output template) across all report-generating scripts -- a design decision plus multi-script build, out of scope this increment."
