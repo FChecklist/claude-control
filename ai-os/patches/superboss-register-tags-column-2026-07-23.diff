@@ -1,0 +1,93 @@
+--- a/scripts/superboss-register.py
++++ b/scripts/superboss-register.py
+@@ -178,6 +178,7 @@
+         calls TEXT,
+         called_by TEXT,
+         verified_ts TEXT,
++        tags TEXT,
+         metadata_json TEXT NOT NULL DEFAULT '{}'
+     );
+     CREATE VIRTUAL TABLE IF NOT EXISTS system_index_fts USING fts5(
+@@ -193,8 +194,22 @@
+     CREATE UNIQUE INDEX IF NOT EXISTS idx_system_index_path ON system_index(path);
+     """)
+     conn.commit()
++    _migrate_schema(conn)
+     conn.close()
+     print(json.dumps({"ok": True, "db": DB_PATH}))
++
++
++def _migrate_schema(conn):
++    """Additive, idempotent migrations for DBs created before a column existed.
++    CREATE TABLE IF NOT EXISTS above only covers brand-new DBs; a pre-existing
++    system_index needs ALTER TABLE to pick up new columns (2026-07-23:
++    nullable `tags`, JSON-encoded list, per ai-os/EXECUTION_RULES_AUDIT_2026-07-23.yaml
++    Part 14/15/20 -- zero-duplication extension of the existing table, not a
++    second tags store)."""
++    cols = {row["name"] for row in conn.execute("PRAGMA table_info(system_index)").fetchall()}
++    if "tags" not in cols:
++        conn.execute("ALTER TABLE system_index ADD COLUMN tags TEXT")
++        conn.commit()
+
+
+ def log_instruction(args):
+@@ -280,6 +295,15 @@
+             results[table] = [dict(r) for r in rows]
+         except sqlite3.OperationalError as e:
+             results[table] = {"error": str(e)}
++    if getattr(args, "tag", None):
++        # tags is a JSON-encoded list (see index_add) -- membership check done
++        # in Python rather than a JSON1 SQL function, since JSON1 is an
++        # optional sqlite3 build-time extension not confirmed present here.
++        rows = conn.execute("SELECT * FROM system_index").fetchall()
++        results["system_index"] = [
++            dict(r) for r in rows if args.tag in json.loads(r["tags"] or "[]")
++        ]
++    conn.close()
+     print(json.dumps(results, indent=2, default=str))
+
+
+@@ -292,14 +316,15 @@
+     conn = _connect()
+     iid = _new_id("IDX")
+     now = _now_iso()
++    tags_list = [t.strip() for t in args.tags.split(",") if t.strip()] if args.tags else []
+     conn.execute(
+-        "INSERT INTO system_index (index_id, ts, path, category, layer, status, purpose, utm_term, calls, called_by, verified_ts, metadata_json) "
+-        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?) "
++        "INSERT INTO system_index (index_id, ts, path, category, layer, status, purpose, utm_term, calls, called_by, verified_ts, tags, metadata_json) "
++        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?) "
+         "ON CONFLICT(path) DO UPDATE SET category=excluded.category, layer=excluded.layer, status=excluded.status, "
+         "purpose=excluded.purpose, utm_term=excluded.utm_term, calls=excluded.calls, called_by=excluded.called_by, "
+-        "verified_ts=excluded.verified_ts, metadata_json=excluded.metadata_json",
++        "verified_ts=excluded.verified_ts, tags=excluded.tags, metadata_json=excluded.metadata_json",
+         (iid, now, args.path, args.category, args.layer, args.status, args.purpose, args.term,
+-         args.calls, args.called_by, now, json.dumps(json.loads(args.metadata) if args.metadata else {})),
++         args.calls, args.called_by, now, json.dumps(tags_list), json.dumps(json.loads(args.metadata) if args.metadata else {})),
+     )
+     conn.commit()
+     row = conn.execute("SELECT index_id FROM system_index WHERE path=?", (args.path,)).fetchone()
+@@ -347,6 +372,7 @@
+         conn.close()
+     conn = _connect()
+     conn.execute("SELECT 1 FROM instructions LIMIT 1")
++    _migrate_schema(conn)
+     conn.close()
+
+
+@@ -396,6 +422,7 @@
+     p_search = sub.add_parser("search")
+     p_search.add_argument("query")
+     p_search.add_argument("--limit", type=int, default=10)
++    p_search.add_argument("--tag", default=None, help="filter system_index results to rows whose tags list contains this exact tag")
+
+     p_idx = sub.add_parser("index-add")
+     p_idx.add_argument("--path", required=True, help="file/table/mechanism location, e.g. src/lib/task-tightening.ts")
+@@ -406,6 +433,7 @@
+     p_idx.add_argument("--term", default="")
+     p_idx.add_argument("--calls", default="")
+     p_idx.add_argument("--called-by", dest="called_by", default="")
++    p_idx.add_argument("--tags", default="", help="comma-separated list, e.g. module:dispatch,priority:high -- stored as a JSON-encoded list")
+     p_idx.add_argument("--metadata", default="")
+
+     p_dup = sub.add_parser("check-duplicate")

@@ -2,6 +2,20 @@ audit_id: owner-execution-rules-2026-07-23-phase0
 source_task: ai-os/VERIDIAN_EXECUTION_RULES_2026-07-23.md
 generated_by_task: task-20260723-052857-execution-rules-phase0-analysis-and-buil
 scope: phase0_audit_plus_smallest_verified_fix
+phase1_amendment:
+  amended_by_task: task-20260723-060600-execution-rules-phase1-tagging-extension
+  amended_ts: '2026-07-23T06:38:00+00:00'
+  scope: 'ops-layer tagging extension (roadmap_next_phases item 1): system_index tags column + --tag filter
+    (superboss-register.py), 29/29 real ops scripts tagged (18 previously not_yet_tagged + 11 restored after
+    discovering the prior phase''s DB reinit had emptied system_index to 0 rows). Updated Parts 14/15/20 with
+    real before/after evidence; added one-line PHASE1 NOTE to Parts 16/17/18/19/21/22 explaining why each stays
+    at its phase0 status. Verified via postflight_audit_gate.py AUD-20260723-063804-0d89cc (DONE),
+    WRK-20260723-063804-cbc2. summary counts below (2 done/34 partial/6 missing) are UNCHANGED -- this phase
+    deepened evidence within existing PARTIAL verdicts (14/15/20), it did not flip any Part to DONE/MISSING.
+    superboss-register.py itself lives on the live server (/opt/veridian/scripts/), not in this git repo --
+    its real diff for this phase is committed alongside this file at
+    ai-os/patches/superboss-register-tags-column-2026-07-23.diff (verified this phase to `patch -p1
+    --dry-run` cleanly against the pre-phase1 file content).'
 method: |
   direct_inspection_of_live_server_state (crontab -l, systemctl --user list-units, real script contents
   read line-by-line, real log/ATTENTION.md contents, live sqlite schema/PRAGMA integrity_check, live dry-runs
@@ -173,20 +187,47 @@ items:
   evidence: "Real auto-generated, tagged, GIN-indexed, cached registry exists in compliance-tracker (platform_assets
     table, asset-registry-service.ts's registerAsset() calling DB sequence compliance.generate_asset_id()), but by
     the code's own comment covers only 4 object types ('this pass: worker_agents, computation_engines,
-    prompt_templates, dynamic_chains'), not 'every object'; at the ops layer MASTER_INDEX.yaml shows only 12/28
-    scripts tagged, 18 not yet tagged."
+    prompt_templates, dynamic_chains'), not 'every object'. PHASE1 UPDATE (2026-07-23,
+    task-20260723-060600-execution-rules-phase1-tagging-extension): at the ops layer, extended the existing
+    system_index mechanism (superboss-register.py) rather than building a second tagging system -- added a
+    nullable `tags` TEXT column (JSON-encoded list, ALTER TABLE, idempotent auto-migration in
+    _migrate_schema()), a --tags argument on index-add, and a --tag filter on search, then tagged all 29 real
+    ops scripts named in MASTER_INDEX.yaml's file_inventory (module:<name> per script, inferred from each
+    script's own header docstring -- e.g. module:dispatch, module:sync, module:monitoring, module:validation,
+    module:audit, module:repair, module:ai_routing, module:logging). BEFORE: system_index had 0 real rows for
+    any of the 28/29 named ops scripts (MASTER_INDEX.yaml's 'system_index_tagged: 12' claim was stale --
+    the prior phase's sqlite corruption+reinit had silently emptied the table, discovered this phase). AFTER:
+    29/29 real named scripts tagged (18 previously not_yet_tagged + 11 of the 12 previously-claimed-tagged
+    restored; software-request-analyzer.py, the 12th, does not exist on disk -- not fabricated, see
+    MASTER_INDEX.yaml file_inventory.ops_scripts.count_note for that and a separate real gap: 9 more scripts
+    exist on disk but were never named in file_inventory at all). Verified via postflight_audit_gate.py
+    AUD-20260723-063804-0d89cc (verdict DONE, work_item WRK-20260723-063804-cbc2) -- real assertions: tags
+    column present, all 18 formerly-untagged scripts have a non-empty tags entry, and a live `search sync --tag
+    module:sync` query returns 5 real rows. Still PARTIAL, not DONE: this closes the ops-script-tagging gap
+    specifically (Parts 14/15/20's 'ops layer' citation); it does not give platform_assets 'every object'
+    coverage, nor does it address Parts 16-19/21/22 (see their own entries below, each independently
+    evaluated this phase)."
 - part: 15
   title: Mandatory Tags
   status: PARTIAL
   evidence: "platform_assets columns literally include module, owner_id, status, version, tags(jsonb),
     dependencies(jsonb), asset_type -- but Feature/Entity/Workflow/Process/Category/Priority/Environment/AI-Model/Software-Component
-    are not present as distinct fields anywhere found."
+    are not present as distinct fields anywhere found. PHASE1 UPDATE (2026-07-23): system_index.tags (see Part
+    14) gives the ops layer a real, populated, freeform tag list (currently module:<name> values, 29/29 real
+    scripts) -- a genuine mandatory-tag mechanism for that layer, but freeform/single-dimension (module only),
+    not the specific 9-field Feature/Entity/Workflow/... schema this Part asks for, and scoped to ops scripts
+    only, not every object class. Before this phase the ops layer had zero real tag rows (see Part 14); still
+    PARTIAL overall for the same reason Part 14 remains PARTIAL, not DONE."
 - part: 16
   title: Relationship Tags
   status: PARTIAL
   evidence: "entity_relationships (source_type/id, target_type/id, relationship_type) plus asset-relationship-service.ts's
     linkAssetDependency/linkAssetRelationship/getRelatedAssets and platform_assets.parent_asset_id give real
-    Parent/Child/Related/Dependencies tracking, but scoped to platform_assets only, not APIs/DB-tables/Screens/Reports/Calculations/Business-Rules."
+    Parent/Child/Related/Dependencies tracking, but scoped to platform_assets only, not APIs/DB-tables/Screens/Reports/Calculations/Business-Rules.
+    PHASE1 NOTE (2026-07-23): status unchanged -- this phase's system_index.tags column (Part 14) is a flat
+    freeform tag list, not a relationship/parent-child mechanism; system_index's pre-existing calls/called_by
+    columns are the closer real analog here and were not in this phase's scope. Genuine relationship-tagging
+    work is separate follow-up, not sized for self-dispatch this phase."
 - part: 17
   title: AI Tags
   status: PARTIAL
@@ -194,39 +235,63 @@ items:
     jsonb, reason, policy_version), activity_log (confidence_percentage, confidence_band, duration_ms,
     complexity_tier, self_assessment jsonb), and every task.yaml has a token_usage block (input/output/cache
     tokens); no unified single tag schema ties these together, and execution-type/AI-output tags per se were not
-    found."
+    found. PHASE1 NOTE (2026-07-23): status unchanged -- this phase's tags column tags ops scripts by module,
+    not AI executions/outputs; unrelated population, no effect on this Part's gap."
 - part: 18
   title: Development Tags
   status: MISSING
   evidence: "No mechanism found that tags files by Source-Code/Scripts/Automation/Configuration/YAML/Metadata/Documentation/APIs;
     MASTER_INDEX.yaml's canonical_dirs/file_inventory groups files descriptively by directory, not via a per-file
-    tag attribute."
+    tag attribute. PHASE1 NOTE (2026-07-23): status unchanged -- this phase's module:<name> tags (dispatch,
+    sync, monitoring, validation, audit, repair, ai_routing, logging) are a real per-file tag attribute now,
+    but only for the 29 named ops scripts, not this Part's file-type taxonomy (Source-Code/Scripts/Automation/
+    Configuration/YAML/Metadata/Documentation/APIs) and not extended to non-script files (docs, YAML, configs).
+    Closer than before (a real per-file tag column now exists and is proven live), but still MISSING against
+    this Part's literal ask -- not re-graded to PARTIAL since the specific taxonomy asked for is still absent."
 - part: 19
   title: Audit Tags
   status: PARTIAL
   evidence: "Real, running audit tables exist: audit_logs (action/entity_type/entity_id/actor/ip/user_agent),
     activity_log, ai_routing_audit_log, and postflight_audit_gate.py's own task_audits sqlite table
     (audit_id/exit_code/verdict) -- solid but not unified across every event class (deployment/login/security-event
-    coverage not independently confirmed as tagged the same way)."
+    coverage not independently confirmed as tagged the same way). PHASE1 NOTE (2026-07-23): status unchanged --
+    this phase's own postflight_audit_gate.py run (AUD-20260723-063804-0d89cc) is itself one more real row in
+    that same task_audits evidence base, but adds no new audit-tagging mechanism."
 - part: 20
   title: Search Rules (Tagging)
   status: PARTIAL
   evidence: "MASTER_INDEX.yaml's self_use_task_checklist explicitly mandates 'superboss-register.py check-duplicate
     <term>' against system_index before any task -- this was BROKEN by the sqlite corruption (fixed this same
     phase, see critical_finding, now verified working again). asset-query-service.ts's queryByTags/queryByKeywords
-    (GIN/tsvector-indexed) works but only for the scoped platform_assets population."
+    (GIN/tsvector-indexed) works but only for the scoped platform_assets population. PHASE1 UPDATE (2026-07-23,
+    task-20260723-060600-execution-rules-phase1-tagging-extension): system_index now has a real, working
+    tag-search path of its own -- `superboss-register.py search <query> --tag <tag>` -- extending the existing
+    search subcommand (no second search mechanism). BEFORE: no --tag filter existed, and system_index had 0
+    real rows to search over (see Part 14). AFTER: verified live, `search sync --tag module:sync` returns 5
+    real rows (all sync-category ops scripts); full command and output captured in this phase's postflight
+    audit (AUD-20260723-063804-0d89cc). Still PARTIAL: this is real but ops-scripts-only, and does not give
+    asset-query-service.ts's queryByTags equivalent tag-search coverage over platform_assets or any other
+    object population."
 - part: 21
   title: Maintenance Rules of Tagging
   status: MISSING
   evidence: "No dedup/validation/auto-merge/auto-remove logic found for tags anywhere in asset-registry-service.ts
-    (tags array is stored as-supplied on insert/update with no validation)."
+    (tags array is stored as-supplied on insert/update with no validation). PHASE1 NOTE (2026-07-23): status
+    unchanged -- system_index.tags (Part 14) has the same property (index_add stores --tags as-supplied, no
+    dedup/validation/auto-merge logic added); this phase did not build maintenance logic for either tag store,
+    deliberately out of scope (SCOPE named 2 gaps to fix, this is a 3rd, separate mechanism)."
 - part: 22
   title: Core Principles of Tagging
   status: PARTIAL
   evidence: "platform_assets/asset-registry-service.ts is explicitly software-managed (application code, not AI,
     writes tags), matching the principle for its scope; the prior audit198 engine independently scored related
     items ARTICLE-047/048 ('every system event shall generate structured metadata'/'metadata shall be searchable,
-    indexed, reusable') as PARTIALLY_ENFORCED with real file-grep evidence -- corroborating 'partial, not none.'"
+    indexed, reusable') as PARTIALLY_ENFORCED with real file-grep evidence -- corroborating 'partial, not none.'
+    PHASE1 NOTE (2026-07-23): status unchanged -- this phase's tags were written by an AI agent reading each
+    script's own header docstring and choosing a module value (real judgment, not a fixed pattern a regex could
+    replicate, per this task's own OBJECTIVE), not by autonomous software the way platform_assets' pipeline is;
+    a different, not-strictly-better position on the Software-vs-AI axis this Part asks about, so not re-graded
+    on this evidence alone."
 - part: 23
   title: File & Knowledge Connection Rules
   status: PARTIAL
