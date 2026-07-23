@@ -1,0 +1,96 @@
+--- /tmp/orig/health-check-15min.py	2026-07-23 12:19:58.854428022 +0000
++++ /opt/veridian/scripts/health-check-15min.py	2026-07-23 12:11:51.925957937 +0000
+@@ -346,6 +346,76 @@
+     return results
+ 
+ 
++def read_proc_net_dev():
++    """Raw cumulative rx/tx byte counters per interface, straight from the
++    kernel (/proc/net/dev). These are monotonically-increasing totals since
++    boot, not deltas -- check_network_usage() below diffs them against the
++    previous cycle's totals."""
++    interfaces = {}
++    try:
++        with open("/proc/net/dev") as f:
++            lines = f.readlines()[2:]  # first 2 lines are header
++    except Exception:
++        return interfaces
++    for line in lines:
++        if ":" not in line:
++            continue
++        iface, rest = line.split(":", 1)
++        iface = iface.strip()
++        fields = rest.split()
++        if len(fields) < 9:
++            continue
++        try:
++            interfaces[iface] = {"rx_bytes": int(fields[0]), "tx_bytes": int(fields[8])}
++        except ValueError:
++            continue
++    return interfaces
++
++
++def get_prev_network_totals():
++    """Previous cycle's raw counters, read the same way get_prev_blocked_ids()
++    reads previous tasks state above -- from the last JSONL record, before
++    this cycle's record is appended."""
++    if not os.path.isfile(JSONL_LOG):
++        return {}
++    try:
++        with open(JSONL_LOG) as f:
++            lines = [l for l in f if l.strip()]
++        if not lines:
++            return {}
++        last = json.loads(lines[-1])
++        return last.get("network_totals", {})
++    except Exception:
++        return {}
++
++
++def check_network_usage():
++    """item 20 (network_usage_logging): per-interface rx/tx byte deltas since
++    the last 15-min cycle, from /proc/net/dev. Returns (per_interface_list,
++    current_totals) -- current_totals is persisted into this cycle's JSONL
++    record so the next cycle can compute its own delta, same pattern as
++    get_prev_blocked_ids()/tasks.blocked_task_ids."""
++    current = read_proc_net_dev()
++    prev = get_prev_network_totals()
++    per_interface = []
++    for iface, counters in current.items():
++        p = prev.get(iface)
++        if p:
++            rx_delta = counters["rx_bytes"] - p["rx_bytes"]
++            tx_delta = counters["tx_bytes"] - p["tx_bytes"]
++            # counter reset (interface reset/reboot) shows up as a negative
++            # delta -- treat it as "delta since reset" rather than negative
++            if rx_delta < 0:
++                rx_delta = counters["rx_bytes"]
++            if tx_delta < 0:
++                tx_delta = counters["tx_bytes"]
++        else:
++            rx_delta = 0
++            tx_delta = 0
++        per_interface.append({"interface": iface, "rx_bytes_delta": rx_delta, "tx_bytes_delta": tx_delta})
++    return per_interface, current
++
++
+ def check_server_health():
+     disk_out, _, _ = sh("df -h / | tail -1")
+     disk_pct = None
+@@ -407,6 +477,7 @@
+     claude_signal = scan_claude_exhaustion_signatures()
+     credit_health = check_credit_accountant_health()
+     db_integrity = check_db_integrity_and_backup()
++    network, network_totals = check_network_usage()
+ 
+     anomalies = []
+     if units["failed_count"] > 0:
+@@ -470,6 +541,8 @@
+         "claude_quota_proxy_signal": claude_signal,
+         "db_integrity": db_integrity,
+         "credit_accountant": credit_health,
++        "network": network,
++        "network_totals": network_totals,
+         "anomalies": anomalies,
+     }
+ 
