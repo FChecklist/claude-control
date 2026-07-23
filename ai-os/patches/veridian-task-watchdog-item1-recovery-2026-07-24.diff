@@ -1,0 +1,64 @@
+--- a/scripts/veridian-task-watchdog.py
++++ b/scripts/veridian-task-watchdog.py
+@@ -89,6 +89,7 @@
+ SUPERBOSS_REGISTER = "/opt/veridian/scripts/superboss-register.py"
+ VERIDIAN_TASK = "/opt/veridian/scripts/veridian-task.py"
+ HEALTH_CHECK_SCRIPT = "/opt/veridian/scripts/health-check-15min.py"
++RECOVER_FAILED_WORKERS_SCRIPT = "/opt/veridian/scripts/recover-failed-workers.py"
+ 
+ 
+ def _load_health_check_module():
+@@ -469,6 +470,38 @@
+     }
+ 
+ 
++def recover_confirmed_failed_workers():
++    """Governance item 1 (keep_server_and_cli_connected): closes the real
++    remaining gap in item 1's own PARTIAL evidence -- systemd's
++    Restart=on-failure/RestartSec=30 only retries within StartLimitBurst=3
++    attempts per StartLimitIntervalSec=1800; once that burst is exhausted a
++    unit sits in a permanent 'failed' state until something runs
++    `systemctl --user reset-failed && start` on it. recover-failed-workers.py
++    (built 2026-07-20) already does exactly that, but ONLY for the one
++    confirmed-safe, confirmed-transient failure class it gates on
++    (result.json containing the literal '"api_error_status":402' string) --
++    every other failure is left untouched for manual review, by that
++    script's own design. It was previously invoked manually only (item 54,
++    still PARTIAL, blocked on a separate Owner crontab-authorization
++    decision for giving IT its own standalone cron entry -- see
++    OWNER_DECISIONS_NEEDED_2026-07-23.yaml id cron-item-54-recover-failed-workers-schedule,
++    unrelated to this integration).
++
++    This calls the SAME unmodified script (subprocess, not reimplemented --
++    zero_duplication_mandatory) from inside the watchdog's own already-live,
++    already-Owner-approved 60s systemd timer instead, exactly the same
++    "reuse an already-scheduled mechanism, no new crontab/systemd unit"
++    pattern items 28/56/60 used. This is a DIFFERENT mechanism from item 54's
++    own (still-blocked) direct cron entry -- does not close item 54, does
++    not touch crontab, and never resets/starts a unit outside the identical
++    confirmed-402-only gate recover-failed-workers.py already enforces."""
++    r = subprocess.run(
++        ["python3", RECOVER_FAILED_WORKERS_SCRIPT],
++        capture_output=True, text=True, timeout=60,
++    )
++    return {"exit_code": r.returncode, "stdout_tail": r.stdout[-1500:], "stderr_tail": r.stderr[-500:]}
++
++
+ def append_jsonl(entry):
+     os.makedirs(os.path.dirname(WATCHDOG_LOG), exist_ok=True)
+     with open(WATCHDOG_LOG, "a") as f:
+@@ -500,7 +533,13 @@
+     append_jsonl(cli_health_entry)
+     print(json.dumps(cli_health_entry))
+ 
+-    results = [server_vitals_entry, cli_health_entry]
++    # Item 1 (keep_server_and_cli_connected): confirmed-safe auto-recovery
++    # pass, same 60s cadence, see recover_confirmed_failed_workers() docstring.
++    recovery_entry = {"ts": _now_iso(), "recovery_pass": recover_confirmed_failed_workers()}
++    append_jsonl(recovery_entry)
++    print(json.dumps(recovery_entry))
++
++    results = [server_vitals_entry, cli_health_entry, recovery_entry]
+     for task_id in task_ids:
+         task = load_task_yaml(task_id)
+         entry = process_task(task_id, task, dry_run_escalation=args.dry_run_escalation)

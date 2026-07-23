@@ -1,0 +1,32 @@
+--- /tmp/supervisor-entrypoint.sh.orig	2026-07-23 20:11:18.999835910 +0000
++++ /opt/veridian/scripts/supervisor-entrypoint.sh	2026-07-23 20:15:49.493895839 +0000
+@@ -79,6 +79,29 @@
+ SUPERVISOR_START_EPOCH=$(date -u +%s)
+ claude -p "$REVIEW_PROMPT" --model sonnet --effort high --dangerously-skip-permissions --max-budget-usd "$SUPERVISOR...
+ 
++# --- AI response logging (2026-07-24, governance item 15: ai_response_logging) ---
++# Same fix as worker-entrypoint.sh's own MAIN_OUT block, applied to the
++# supervisor's own second-pass review call -- previously the only AI
++# invocation on this server with no response-text record at all (its own
++# review-verdict.json/review.json only carry the STRUCTURED verdict, not the
++# CLI's raw response text). Reuses the existing log-action CLI, no new
++# function. Best-effort: a logging failure must never fail the review.
++SUPERVISOR_RESPONSE_TEXT=$(python3 -c "
++import json
++try:
++    with open('$TASK_DIR/supervisor-result.json') as f:
++        d = json.load(f)
++    print((d.get('result') or '')[:2000])
++except Exception:
++    pass
++")
++if [ -n "$SUPERVISOR_RESPONSE_TEXT" ]; then
++  python3 /opt/veridian/scripts/superboss-register.py log-action \
++    --source ai_response --medium claude_code_cli --campaign supervisor-entrypoint-review-invocation \
++    --content "$SUPERVISOR_RESPONSE_TEXT" --term "$TASK_ID" --result "tier=$TIER" \
++    >> "$TASK_DIR/supervisor.log" 2>&1 || true
++fi
++
+ # Real-cost check (see worker-entrypoint.sh for why this reads the proxy's
+ # own log instead of the CLI's self-reported total_cost_usd).
+ SUPERVISOR_COST=$(python3 -c "

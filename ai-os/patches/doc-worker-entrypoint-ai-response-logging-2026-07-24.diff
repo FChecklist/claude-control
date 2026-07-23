@@ -1,0 +1,31 @@
+--- /tmp/doc-worker-entrypoint.sh.orig	2026-07-23 20:11:18.997835888 +0000
++++ /opt/veridian/scripts/doc-worker-entrypoint.sh	2026-07-23 20:15:37.462760441 +0000
+@@ -133,6 +133,28 @@
+ EXIT_CODE=$?
+ cat "$MAIN_OUT" >> "$TASK_DIR/result.json"
+ 
++# --- AI response logging (2026-07-24, governance item 15: ai_response_logging) ---
++# Same fix as worker-entrypoint.sh's own MAIN_OUT block: this docworker path
++# is the "docworker-bypass caveat" items 14/15 explicitly flagged (real
++# subscription auth, never routed through glm-response-cache.sqlite). Reuses
++# the existing superboss-register.py log-action CLI, no new function.
++# Best-effort: a logging failure must never fail the docworker task itself.
++AI_RESPONSE_TEXT=$(python3 -c "
++import json
++try:
++    with open('$MAIN_OUT') as f:
++        d = json.load(f)
++    print((d.get('result') or '')[:2000])
++except Exception:
++    pass
++")
++if [ -n "$AI_RESPONSE_TEXT" ]; then
++  python3 /opt/veridian/scripts/superboss-register.py log-action \
++    --source ai_response --medium claude_code_cli --campaign doc-worker-entrypoint-main-invocation \
++    --content "$AI_RESPONSE_TEXT" --term "$TASK_ID" --result "exit_code=$EXIT_CODE" \
++    >> "$TASK_DIR/worker.log" 2>&1 || true
++fi
++
+ kill "$CHECKPOINT_PID" 2>/dev/null || true
+ wait "$CHECKPOINT_PID" 2>/dev/null || true
+ 
