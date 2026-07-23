@@ -4457,3 +4457,23 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260723-130531-gap-closing-phase7-owner-notification-es/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-23'
+
+  - id: WORKER-20260723-132537-gap-closing-phase8-coverage-notification
+    project: veridian
+    type: worker-task
+    status: done
+    summary: Server-worker task 'gap-closing-phase8-coverage-notification-scheduling-gaps'
+      on claude-control reached status=completed. worker finished, no changes to commit
+    where: /opt/veridian/ai-os/tasks/task-20260723-132537-gap-closing-phase8-coverage-notification/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-23'
+
+  - id: WORKER-20260723-133902-x-post-ai-tool-analysis-2026-07-23-lowpr
+    project: veridian
+    type: worker-task
+    status: done
+    summary: Server-worker task 'x-post-ai-tool-analysis-2026-07-23-lowpri' on claude-control
+      reached status=completed. worker finished, no changes to commit
+    where: /opt/veridian/ai-os/tasks/task-20260723-133902-x-post-ai-tool-analysis-2026-07-23-lowpr/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-23'
