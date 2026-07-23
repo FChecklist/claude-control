@@ -4437,3 +4437,23 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260723-120458-gap-closing-phase5-network-security-perm/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-23'
+
+  - id: WORKER-20260723-123602-gap-closing-phase6-deployment-logging-ow
+    project: veridian
+    type: worker-task
+    status: done
+    summary: Server-worker task 'gap-closing-phase6-deployment-logging-owner-framing'
+      on claude-control reached status=completed. worker finished, no changes to commit
+    where: /opt/veridian/ai-os/tasks/task-20260723-123602-gap-closing-phase6-deployment-logging-ow/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-23'
+
+  - id: WORKER-20260723-130531-gap-closing-phase7-owner-notification-es
+    project: veridian
+    type: worker-task
+    status: done
+    summary: Server-worker task 'gap-closing-phase7-owner-notification-escalation-mobile-policy'
+      on claude-control reached status=completed. worker finished, no changes to commit
+    where: /opt/veridian/ai-os/tasks/task-20260723-130531-gap-closing-phase7-owner-notification-es/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-23'
