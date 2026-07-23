@@ -1,0 +1,405 @@
+audit_id: owner-execution-rules-2026-07-23-phase0
+source_task: ai-os/VERIDIAN_EXECUTION_RULES_2026-07-23.md
+generated_by_task: task-20260723-052857-execution-rules-phase0-analysis-and-buil
+scope: phase0_audit_plus_smallest_verified_fix
+method: |
+  direct_inspection_of_live_server_state (crontab -l, systemctl --user list-units, real script contents
+  read line-by-line, real log/ATTENTION.md contents, live sqlite schema/PRAGMA integrity_check, live dry-runs
+  of session_bootstrap.py/veridian_self_check.py/check-duplicate/postflight_audit_gate.py, plus the
+  compliance-tracker product repo for parts 14-31/36-41). Policy/YAML docs (STANDING_DIRECTIVE.yaml,
+  AI_ENGINEERING_POLICY.yaml, RULES_ARTICLES_198.json) count only as evidence of stated intent, not of DONE
+  status, unless a real running mechanism is also cited -- same methodology as the proven precedent
+  ai-os/GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml (note: that file's own commit 5988921 is itself truncated at
+  item 7 of 60, with a stray "... more files changed" line baked into the file -- a real prior-session
+  output-capture defect. This audit does not repeat that pattern; it is complete for all 42 part-entries below.)
+note_on_granularity: The source document has ~41 Part-blocks with ~600+ individual near-duplicate DO/DO-NOT
+  lines. Per the task's own framing ("roughly 200 individual rules"), this audit classifies at the PART level
+  (one verdict synthesizing that part's real distinct asks), matching the precedent's one-entry-per-item grain,
+  rather than one verdict per sub-bullet. Part 38 is labeled twice in the source document (H2M Translation, then
+  a second unrelated "Mandatory Pre-Execution Rules" block) -- kept as 38a/38b here, giving 42 total part-entries
+  for 41 Part numbers.
+critical_finding_this_phase: |
+  ai-os/memory/superboss-register.sqlite (the canonical metadata store per STANDING_DIRECTIVE.yaml
+  metadata_store) was found silently corrupted (PRAGMA integrity_check: "database disk image is malformed")
+  since 2026-07-22T12:20:01 -- confirmed root cause: file was exactly one 4096-byte page short of its own
+  header-declared page count (a truncated write). This had been silently failing session_bootstrap.py (the
+  mandatory first command of every task), superboss-register.py check-duplicate/log-work (rule_7/rule_8
+  compliance for EVERY actor server-wide), and the veridian_self_check.py (15-min) and file_inventory.py
+  (20-min) crons for ~17.5 hours with ZERO ATTENTION.md escalation, because the failure occurred before those
+  scripts reached their own alerting code (which itself depended on writing to the same broken DB) -- a
+  chicken-and-egg gap in the escalation design itself, not just one bad file. This very likely explains why
+  this task's own prior 11 invocations made no progress (session_bootstrap.py, the mandatory first step, would
+  have crashed every time).
+  Fix applied and verified this phase: 3 independent data recovery attempts were tried and failed (page-padding;
+  real sqlite3 CLI .recover/.dump -- this Ubuntu build lacks the dbpage vtab; apsw built from source -- build
+  failed) before concluding recovery was not feasible with available tools. Corrupt original quarantined (2
+  backups under /opt/veridian/backups/sqlite-recovery-2026-07-23/ plus an in-place rename to
+  ai-os/memory/superboss-register.sqlite.CORRUPTED-2026-07-22-quarantined), DB reinitialized via the real
+  superboss-register.py init schema (not guessed), and the escalation gap itself was closed by adding
+  check_db_integrity_and_backup() to scripts/health-check-15min.py -- runs every 15min via the EXISTING cron,
+  reuses the EXISTING anomalies -> ATTENTION.md -> notify-owner.py path (zero new mechanisms), and adds the
+  first-ever daily backup of both sqlite DBs (14-day retention; confirmed no backup of either DB existed
+  anywhere on the server before this). Verified via postflight_audit_gate.py, AUD-20260723-055909-480161,
+  verdict DONE, work_item WRK-20260723-055927-8289 (real audit-gated close-out, not self-certified, per
+  STANDING_DIRECTIVE rule_8), and independently re-confirmed clean by the parts-14-31/36-41 research pass run
+  in parallel during this same phase (which had started before the fix landed and correctly reported the DB as
+  corrupted at that point).
+  This finding also surfaced a second real, pre-existing capability the task's own SCOPE did not anticipate:
+  /opt/veridian/repos/compliance-tracker's "Universal Metadata Registry" (asset-registry-service.ts +
+  platform_assets/entity_relationships tables) is a real, tested, running tagging/relationship subsystem --
+  narrower than Parts 14-22/23 ask for (covers 4 object types by its own documented scope, not "every object"),
+  but a genuine partial implementation the roadmap should extend rather than duplicate.
+summary:
+  done: 2
+  partial: 34
+  missing: 6
+  total: 42
+items:
+- part: 1
+  title: Primary Rules
+  status: PARTIAL
+  evidence: "Software-first execution is real and broad: run-logged.sh wraps every cron job, veridian-task.py/worker-entrypoint.sh
+    is the standard dispatch path, superboss-register.py check-duplicate is a real reuse-before-build gate (proven
+    this session: correctly returned 0 matches for a genuinely new capability). NOT done: 'DO search GitHub for
+    relevant open source libraries' -- no automated GitHub-library-search step found anywhere in scripts/ or
+    ai-os/scripts/. 'DO ensure every task is properly tagged' -- no ops-layer tagging mechanism exists (Parts 14-22
+    all PARTIAL/MISSING); a narrower product-layer tagging system does exist (see critical_finding, Universal
+    Metadata Registry)."
+- part: 2
+  title: Software First
+  status: PARTIAL
+  evidence: "Reuse-before-create is real (superboss-register.py check-duplicate, MASTER_INDEX.yaml 87-entry registry,
+    mandated in session_bootstrap.py's own printed output: '*** MANDATORY: before writing any new script, run:
+    check-duplicate ***'). 'DO improve existing Software before creating new' is a stated principle
+    (STANDING_DIRECTIVE.yaml pipeline_a.software_first_decision) but explicitly NOT mechanically gated -- it says
+    so itself: 'judgment call each time', so items 8/12 (no duplication) rely on the AI remembering to run
+    check-duplicate, not a hard gate that blocks writing a duplicate file."
+- part: 3
+  title: Search First
+  status: PARTIAL
+  evidence: "Real software search exists (session_bootstrap.py prints full 87-entry registry + recent register
+    history; check-duplicate greps real matches). But item 33 'DO NOT let AI search manually' / item 32 'DO let
+    Software perform every search' is NOT met as a hard rule: this very audit (and ordinary task work generally)
+    is done by the AI running direct grep/Read calls against the filesystem, not exclusively through a dedicated
+    search service -- an honest, structural gap between the rule's letter and current practice, not a minor
+    omission."
+- part: 4
+  title: Server First
+  status: DONE
+  evidence: "STANDING_DIRECTIVE.yaml execution: {location: ssh_only, target: VERIDIAN-DEV, local_execution: forbidden}.
+    systemd --user slice app-veridian-worker.slice confirmed live (systemctl --user list-units) capped at
+    CPUQuota=640%/MemoryMax=12800M (80% of 8vCPU/16GB, per this task's own KNOWN_CONTEXT, independently confirmed
+    live). All task execution runs server-side via veridian-worker@<task>.service units; no laptop/mobile
+    execution path exists in worker-entrypoint.sh."
+- part: 5
+  title: Automation First
+  status: PARTIAL
+  evidence: "13 real crontab entries (crontab -l, all wrapped via run-logged.sh) plus systemd --user units
+    (veridian-worker@, veridian-glm-proxy, veridian-docworker@) cover most repeatable server-side work. 'DO let
+    AI create/improve/extend Software' happens per-task but there is no mechanized trigger that automatically
+    converts a repeated manual/AI pattern into a script -- still an AI judgment call each time (same gap as Part 2)."
+- part: 6
+  title: Logging (16 categories)
+  status: PARTIAL
+  evidence: "Real, working: AI cost/token logging (credit-accountant.py + cost-usage-60min.py + cost-reconciliation.py;
+    every task.yaml has a token_usage block), error/warning logging (run-logged.sh captures stdout/stderr per cron
+    job; ATTENTION.md for anomalies, now including DB-integrity failures per this phase's fix), file-change
+    logging (file_inventory.py NEW/CHANGED/MISSING diff -- this exact mechanism was itself silently broken by the
+    sqlite corruption above until this phase's fix), deployment logging (sync-repos.sh/sync-vercel-env.sh via
+    run-logged.sh), AI-routing decisions (ai_routing_audit_log table: resolved_provider/model/reason/policy_version).
+    NOT verified this phase: a dedicated 'every AI request/every AI response' verbatim log (Claude Code CLI's own
+    session transcripts are not centrally aggregated); 'every login' (no login concept on this single-Owner SSH
+    server)."
+- part: 7
+  title: History
+  status: PARTIAL
+  evidence: "superboss-register.py work_items/actions/instructions tables + 291 real per-task ai-os/tasks/<id>/task.yaml
+    checkpoint files (STANDING_DIRECTIVE per-task memory audit, independently re-confirmed live this session via
+    this task's own task.yaml). This exact mechanism was unusable for ~17.5 hours due to the sqlite corruption
+    (fixed this phase, see critical_finding). 'DO NOT lose historical knowledge' -- the corrupted original register
+    (potentially days of history) could not be recovered with available tools; quarantined, not deleted, in case
+    better tooling becomes available later."
+- part: 8
+  title: AI Governance
+  status: DONE
+  evidence: "Claude Code CLI is the real execution engine for every task (systemd veridian-worker@ units). 'DO stop
+    unsafe actions automatically' is concretely proven by this exact task's own task.yaml: 9 of 11 pre-flight
+    attempts before this run were REJECTED by preflight-guard.py/credit-accountant.py for vague scope, self-contradiction,
+    or unbounded-spend risk, with zero model cost incurred on 7 of those. notify-owner.py sends real Owner email
+    (Resend API, verified message id d08a0b6e-35a4-4c70-a0fa-bef7e26be6a9 same day per this task's own KNOWN_CONTEXT)."
+- part: 9
+  title: Monitoring
+  status: PARTIAL
+  evidence: "health-check-15min.py (cron, every 15min not continuous) covers systemd units, task checkpoint staleness,
+    Mother Router DB reachability, disk/mem/load, credit-accountant health, and now (this phase) sqlite integrity
+    for both canonical DBs. Restart-on-failure is real (systemd Restart=on-failure). NOT verified this phase:
+    dedicated network-usage monitoring; security-event monitoring beyond the app-layer failure check."
+- part: 10
+  title: Core Principles
+  status: PARTIAL
+  evidence: "The Search->Reuse->Software->Script->Automation->AI->Validate->Execute->Log->Save-History order is
+    documented as the mandatory bootstrap sequence (STANDING_DIRECTIVE assistant_working_protocol) but is a
+    discipline requirement the AI follows, not a single mechanically-enforced pipeline gate -- same honest gap
+    as rule_5 in STANDING_DIRECTIVE ('NOT_MECHANICALLY_TESTABLE', confirmed live via veridian_self_check.py
+    output this session)."
+- part: 11
+  title: Analysis First
+  status: PARTIAL
+  evidence: "Real task decomposition exists: master-decompose.py (calls claude -p to break an objective into
+    standardized tasks) + task-template.py (standard TASK ID/MODULE/FILES-ALLOWED/STEPS/DONE-CRITERIA template)
+    + scope-check.py (deterministic, path-glob file-ownership enforcement -- 'the AI reviewer cannot talk its
+    way around this') + risk-tier.py (deterministic tier1/tier2 risk classification). This is real and
+    substantial but classifies by module/risk-tier, not literally the rule's 'Software vs AI vs Human-Approval'
+    3-way split."
+- part: 12
+  title: Continuous Learning
+  status: PARTIAL
+  evidence: "postflight_audit_gate.py evaluates every task's real completion (exit-code gated, proven live this
+    session: AUD-20260723-055909-480161). worker_agent_learnings and assistant_memories DB tables (found by the
+    parallel research pass) store real learned content with metadata/validity windows. 'DO convert successful AI
+    work into Software automatically' is NOT mechanized -- STANDING_DIRECTIVE says so itself ('judgment call each
+    time')."
+- part: 13
+  title: Automated Audit
+  status: PARTIAL
+  evidence: "Two real, substantial audit mechanisms exist: postflight_audit_gate.py (per-task completion, real
+    exit-code-gated verdicts stored in task_audits, self-certification forbidden) and ai-os/audit198/run-audit.mjs
+    (a DIFFERENT, deterministic keyword+category evidence engine already built 2026-07-21 for the separate
+    198-item RULES_ARTICLES_198.json corpus -- not this document, checked to avoid duplicating it). NOT covered:
+    dedicated audits of permission-changes or security-events specifically."
+- part: 14
+  title: VERIDIAN Tagging Rules (general)
+  status: PARTIAL
+  evidence: "Real auto-generated, tagged, GIN-indexed, cached registry exists in compliance-tracker (platform_assets
+    table, asset-registry-service.ts's registerAsset() calling DB sequence compliance.generate_asset_id()), but by
+    the code's own comment covers only 4 object types ('this pass: worker_agents, computation_engines,
+    prompt_templates, dynamic_chains'), not 'every object'; at the ops layer MASTER_INDEX.yaml shows only 12/28
+    scripts tagged, 18 not yet tagged."
+- part: 15
+  title: Mandatory Tags
+  status: PARTIAL
+  evidence: "platform_assets columns literally include module, owner_id, status, version, tags(jsonb),
+    dependencies(jsonb), asset_type -- but Feature/Entity/Workflow/Process/Category/Priority/Environment/AI-Model/Software-Component
+    are not present as distinct fields anywhere found."
+- part: 16
+  title: Relationship Tags
+  status: PARTIAL
+  evidence: "entity_relationships (source_type/id, target_type/id, relationship_type) plus asset-relationship-service.ts's
+    linkAssetDependency/linkAssetRelationship/getRelatedAssets and platform_assets.parent_asset_id give real
+    Parent/Child/Related/Dependencies tracking, but scoped to platform_assets only, not APIs/DB-tables/Screens/Reports/Calculations/Business-Rules."
+- part: 17
+  title: AI Tags
+  status: PARTIAL
+  evidence: "Real DB columns/tables carry AI tags: ai_routing_audit_log (resolved_provider, resolved_model, context
+    jsonb, reason, policy_version), activity_log (confidence_percentage, confidence_band, duration_ms,
+    complexity_tier, self_assessment jsonb), and every task.yaml has a token_usage block (input/output/cache
+    tokens); no unified single tag schema ties these together, and execution-type/AI-output tags per se were not
+    found."
+- part: 18
+  title: Development Tags
+  status: MISSING
+  evidence: "No mechanism found that tags files by Source-Code/Scripts/Automation/Configuration/YAML/Metadata/Documentation/APIs;
+    MASTER_INDEX.yaml's canonical_dirs/file_inventory groups files descriptively by directory, not via a per-file
+    tag attribute."
+- part: 19
+  title: Audit Tags
+  status: PARTIAL
+  evidence: "Real, running audit tables exist: audit_logs (action/entity_type/entity_id/actor/ip/user_agent),
+    activity_log, ai_routing_audit_log, and postflight_audit_gate.py's own task_audits sqlite table
+    (audit_id/exit_code/verdict) -- solid but not unified across every event class (deployment/login/security-event
+    coverage not independently confirmed as tagged the same way)."
+- part: 20
+  title: Search Rules (Tagging)
+  status: PARTIAL
+  evidence: "MASTER_INDEX.yaml's self_use_task_checklist explicitly mandates 'superboss-register.py check-duplicate
+    <term>' against system_index before any task -- this was BROKEN by the sqlite corruption (fixed this same
+    phase, see critical_finding, now verified working again). asset-query-service.ts's queryByTags/queryByKeywords
+    (GIN/tsvector-indexed) works but only for the scoped platform_assets population."
+- part: 21
+  title: Maintenance Rules of Tagging
+  status: MISSING
+  evidence: "No dedup/validation/auto-merge/auto-remove logic found for tags anywhere in asset-registry-service.ts
+    (tags array is stored as-supplied on insert/update with no validation)."
+- part: 22
+  title: Core Principles of Tagging
+  status: PARTIAL
+  evidence: "platform_assets/asset-registry-service.ts is explicitly software-managed (application code, not AI,
+    writes tags), matching the principle for its scope; the prior audit198 engine independently scored related
+    items ARTICLE-047/048 ('every system event shall generate structured metadata'/'metadata shall be searchable,
+    indexed, reusable') as PARTIALLY_ENFORCED with real file-grep evidence -- corroborating 'partial, not none.'"
+- part: 23
+  title: File & Knowledge Connection Rules
+  status: PARTIAL
+  evidence: "entity_relationships+platform_assets gives real, auto-synced parent/dependency links (see Part 16),
+    but this is DB-entity-only; MASTER_INDEX.yaml's own file_inventory.ai_os_governance_docs.unindexed_docs_named_2026_07_20
+    lists 15 real doc files 'genuinely absent from this file's text' -- i.e. isolated files are explicitly
+    acknowledged to exist."
+- part: 24
+  title: Search Rules (File/Knowledge)
+  status: PARTIAL
+  evidence: "asset-query-service.ts genuinely uses btree/GIN/tsvector indexes with ts_rank relevance ordering and
+    is cache-first via asset-registry-cache.ts (real index-before-scan + rank + cache, for platform_assets); the
+    broader ai-os knowledge base (MASTER_INDEX.yaml, docs) is searched by protocol-mandated manual grep/read, not
+    an index."
+- part: 25
+  title: Cache Rules
+  status: PARTIAL
+  evidence: "asset-registry-cache.ts is a real, tested, in-process cache with 60s TTL, explicit invalidateOrgCache()/invalidateAllCaches()
+    on writes, and an observability endpoint getCacheStats() (exposed at /api/assets/cache/stats); a separate
+    independent AI-response cache also exists (glm-response-cache.sqlite). Real and working, but scoped to two
+    subsystems, not a universal cache-every-search-result layer."
+- part: 26
+  title: Performance Rules
+  status: PARTIAL
+  evidence: "execution_seconds is recorded in every task.yaml; queue-dispatcher.py enforces CONCURRENCY_CAP = 5 for
+    parallel worker execution; preflight-guard.py's circuit-breaker and disk/mem checks exist specifically to avoid
+    wasted duplicate processing. No single unified 'measure every execution' mechanism, but timing/parallelism/waste-avoidance
+    are real in multiple places."
+- part: 27
+  title: Configuration Rules
+  status: PARTIAL
+  evidence: "Env-var-driven config is real and widespread (os.environ.get(...) in 11+ ops scripts); orchestra-model-resolver.ts
+    was explicitly refactored to pull model choice from ai_model_registry DB table instead of hardcoded constants
+    -- but many hardcoded defaults/constants remain alongside this (e.g. CONCURRENCY_CAP, a literal repo name in
+    queue-dispatcher.py)."
+- part: 28
+  title: Interchangeability Rules
+  status: PARTIAL
+  evidence: "Strong, real, specific evidence for AI-model interchangeability only: orchestra-model-resolver.ts's
+    getRoleModel() looks up model/provider by role from ai_model_registry (DB row change = live swap, no deploy),
+    with hardcoded literals demoted to last-resort fallback only. No comparable evidence found for interchangeable
+    databases/workflows/generic services."
+- part: 29
+  title: Modular Design Rules
+  status: PARTIAL
+  evidence: "Codebase is organized as small service files with adjacent unit tests (asset-registry-cache.test.ts),
+    a real, emergent modular pattern; the prior audit198 run separately scored its SOLID_ENGINEERING_DISCIPLINE
+    category (11 items) as NEEDS_HUMAN_JUDGMENT=5/PARTIALLY_ENFORCED=6 -- no dedicated new mechanism enforces this
+    as a rule."
+- part: 30
+  title: Knowledge Rules
+  status: PARTIAL
+  evidence: "Real DB tables built for exactly this exist: worker_agent_learnings (content, metadata jsonb) and
+    assistant_memories (category, content, metadata, valid_from/valid_until, superseded_by_memory_id);
+    postflight_audit_gate.py auto-creates an rca_open sqlite row on any failed audit. Coverage/consistent use
+    across every task not confirmed."
+- part: 31
+  title: Core Principles (File/Knowledge)
+  status: PARTIAL
+  evidence: "Rollup of Parts 14-30: fragments of searchable/replaceable/version-controlled/traceable exist for
+    specific subsystems (Universal Metadata Registry, git, ai_model_registry, audit tables) but no evidence of a
+    system-wide guarantee across 'everything.'"
+- part: 32
+  title: SUPERBOSS IN SERVER - Core Role
+  status: PARTIAL
+  evidence: "Baseline AI-independent operation is real for the monitoring/logging/sync layer: all 13 crontab
+    jobs (health-check-15min.py, file_inventory.py, veridian_self_check.py, queue-dispatcher.py, system-sync.py,
+    sync-repos.sh, etc.) are plain Python/bash with zero Claude/Anthropic calls at runtime, so monitoring/logging/scheduled-jobs
+    genuinely continue with no AI available (Rules 5/7 partially met). NOT built: a named 'SUPERBOSS' component,
+    explicit AI-unavailability detection with automatic queue-and-retry-when-available for AI-dependent work
+    (Rules 6/13/14), or the ownership/replaceability framing of Rules 11/12. Per this task's own SCOPE, the
+    full SUPERBOSS execution core is deliberately deferred to a future roadmap phase, not built this phase."
+- part: 33
+  title: Owner Conversation Memory Rules
+  status: MISSING
+  evidence: "STANDING_DIRECTIVE.yaml's own 2026-07-22 audit already found this gap and it is unchanged today:
+    RAJAT_PROMPT_STORE.md is an explicitly-labeled 'verified placeholder', not a real conversation store; no
+    Conversation-ID/Message-ID schema, no per-message tagging, no search-before-reply mechanism exists. Per
+    this task's own SCOPE, this is deliberately deferred to a future roadmap phase (substantial new subsystem),
+    not built this phase."
+- part: 34
+  title: Customer Organization Memory Rules
+  status: MISSING
+  evidence: "Same structure as Part 33, applied to Organization scope -- no Organization-ID/Workspace-ID
+    conversation store exists. Deferred to roadmap per SCOPE, same as Part 33/35."
+- part: 35
+  title: End User Memory Rules
+  status: MISSING
+  evidence: "Same structure again, End User scope. STANDING_DIRECTIVE.yaml's own per-actor memory audit
+    (2026-07-22) already found Mother Router 'CONFIRMED_GAP_NOT_FIXED... fully stateless per call today' (zero
+    pgTable/sqlite/memory/persist references in mother-router.ts) and the AI roster hierarchy the same way --
+    real product code (compliance-tracker repo), consistent with today's finding. Deferred to roadmap per SCOPE."
+- part: 36
+  title: VERIDIAN AI Logic Rules
+  status: PARTIAL
+  evidence: "Real enforcement exists for parts of this: preflight-guard.py's circuit breaker refuses a 3rd
+    identical-signature retry (anti-guessing, not policy-only); postflight_audit_gate.py runs the actual audit
+    command and only records DONE on real exit-code 0, auto-filing failures to rca_open (root-cause tracking, not
+    self-certified); ai_routing_audit_log logs a reason+policy_version per AI-routing decision (explainable/auditable).
+    'No hallucination'/'step-by-step reasoning' have no mechanical check found."
+- part: 37
+  title: VERIDIAN AI Planning & Truthfulness Rules
+  status: PARTIAL
+  evidence: "Substantially real and enforced by software, not self-promised: postflight_audit_gate.py (rule_8,
+    'no task may be recorded as DONE/FAILED except via the gate... there is no parameter to force DONE', proven
+    both directions 2026-07-22 and again live this session AUD-20260723-055909-480161), preflight-guard.py +
+    credit-accountant.py (proven live this session: 9 real pre-flight REJECTED/blocked entries in this very
+    task's task.yaml, for vague scope / self-contradiction / unbounded-spend risk, $0 cost on most), file_edit_guard.py
+    (proven live this session: caught a real YAML-syntax break this task introduced while editing STANDING_DIRECTIVE.yaml,
+    forcing a fix before the edit was accepted). NOT verified as a literal enforced artifact: the specific
+    'DO NOT state Done/Completed/Fixed/Implemented/Working unless...' rule is enforced at the postflight-gate
+    level (terminal status), not at the level of every sentence an AI writes in chat/PROGRESS.md."
+- part: 38a
+  title: Human-to-Machine Translation Rules
+  status: PARTIAL
+  evidence: "master-decompose.py is real, running H2M translation for the task-decomposition use case: takes a
+    human 'high-level objective,' calls claude -p to decompose into standardized-template tasks scoped to real
+    files, cross-validates each task's declared module against file-ownership.yaml ('not trusting the AI's own
+    module label'), and writes structured YAML (status: NEW) into ai-os/queues/<module>.yaml. Doesn't cover
+    general chat H2M translation, only this one pipeline."
+- part: 38b
+  title: Mandatory Pre-Execution Rules
+  status: PARTIAL
+  evidence: "MASTER_INDEX.yaml's software-generated self_use_task_checklist (built by ai-os/scripts/generate_task_checklist.py)
+    is a real, concrete 'before/while/after' instruction set pointing at real files (system_index, quick_reference,
+    constitution, credit_spend_governance); preflight-guard.py hard-gates on disk/mem/circuit-breaker before
+    invoking the model. It's advisory-checklist not a hard automatic gate for context recovery specifically, and
+    its lookup DB was corrupted until this phase's fix."
+- part: 39
+  title: VERIDIAN Pre-Execution Checklist (A-J, ~77 items)
+  status: MISSING
+  evidence: "Real checklist found (self_use_task_checklist, ~11 items across before/while/after) but it is nowhere
+    near the ~77-item A-J structure with a Final Validation list the rules doc describes; no A-J structure exists
+    anywhere in the filesystem."
+- part: 40
+  title: Pre/Post-Execution Log format (YES/NO machine-readable)
+  status: PARTIAL
+  evidence: "postflight_audit_gate.py's task_audits sqlite table is a real per-task machine-readable log
+    (audit_cmd/exit_code/verdict/stdout_tail); the prior audit198-results.json/audit198-summary.md is a genuine
+    Rule|Verdict|Evidence table across 198 items with a 7-value verdict vocabulary (ENFORCED/PARTIALLY_ENFORCED/etc,
+    each with a real evidence array) -- structurally close to what's asked, but scored against a different, older
+    198-item ruleset, not the ~38+20-field pre/post-execution checklist this Part specifies, and not literal
+    YES/NO fields."
+- part: 41
+  title: Machine-to-Machine Communication Rules
+  status: PARTIAL
+  evidence: "Real structured-only interfaces exist in places: preflight-guard.py emits {'proceed': true/false,
+    'reason':..., 'detail':...} JSON; ai-os/queues/backend.yaml and gap_queue.yaml are structured YAML task
+    records (id/module/objective/files_allowed/dependencies/status). But the payload inside those structured
+    envelopes is natural-language prose (e.g. queues/backend.yaml's objective/input fields are full English
+    sentences), and master-decompose.py/worker entrypoints still dispatch AI-to-AI work via claude -p
+    '<natural-language prompt>' -- so internal machine communication is a structured wrapper around
+    conversational English, not pure JSON/schema/event-codes."
+roadmap_next_phases:
+  - phase: tagging_system_extension
+    parts: [14, 15, 16, 17, 18, 19, 20, 21, 22]
+    approach: "Extend the existing Universal Metadata Registry (platform_assets/entity_relationships in
+      compliance-tracker) to more object types, and extend superboss-register.py's existing system_index table
+      with a real tag column (per STANDING_DIRECTIVE zero-duplication rule: extend, do not fork a new store),
+      rather than building a new tagging system from scratch, as this task's own SCOPE directs."
+  - phase: pre_execution_checklist_automation
+    parts: [38b, 39, 40]
+    approach: "session_bootstrap.py + veridian_self_check.py + self_use_task_checklist already implement a real
+      subset of the A-J checklist (context recovery, duplicate-check, compliance self-test). Extending them with
+      the remaining checklist fields and a structured YES/NO log table per task is additive to an existing
+      mechanism, not a new one."
+  - phase: superboss_execution_core
+    parts: [32]
+    approach: "Substantial new subsystem (AI-unavailability detection + automatic queue-and-retry for
+      AI-dependent work). Explicitly out of scope for this phase per the task's own instruction; scope as its
+      own future task."
+  - phase: conversation_memory_stores
+    parts: [33, 34, 35]
+    approach: "Substantial new subsystem (Owner/Organization/End-User conversation stores). Explicitly out of
+      scope for this phase per the task's own instruction and per STANDING_DIRECTIVE's own sequencing (pipeline_a
+      before pipeline_b); scope as its own future task(s)."
