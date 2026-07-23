@@ -4324,3 +4324,16 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260723-034803-high-governance-audit-and-build-2026-07/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-23'
+
+  - id: WORKER-20260723-045924-governance-build-owner-notifications-202
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''governance-build-owner-notifications-2026-07-23''
+      on claude-control reached status=blocked. PRE-FLIGHT HARD STOP (credit_accountant_rejected):
+      FAIL: No repo/existing code context provided to verify these two detection scripts
+      even exist or that a simpler wiring (e.g. a shared shell function calling an existing
+      alerting API) can''t be reused instead of framing this as novel AI-judgment work.'
+    where: /opt/veridian/ai-os/tasks/task-20260723-045924-governance-build-owner-notifications-202/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-23'
