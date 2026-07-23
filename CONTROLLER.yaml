@@ -4601,3 +4601,27 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260723-181151-knowledge-engine-phase1-build-populate-w/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-23'
+
+  - id: WORKER-20260723-200037-phase-15-gap-closing-items-1-3-4-15-25-4
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''phase-15-gap-closing-items-1-3-4-15-25-45'' on claude-control
+      reached status=blocked. PRE-FLIGHT HARD STOP (tight_task_schema_violation): Constraints
+      say not to do "grant yourself adm group membership not", but that same thing is
+      required elsewhere in the task. Could you resolve this contradiction before dispatch
+      -- either remove it from Constraints, or remove the requirement from Objective/Scope/Success
+      criteria/Expected output?'
+    where: /opt/veridian/ai-os/tasks/task-20260723-200037-phase-15-gap-closing-items-1-3-4-15-25-4/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-23'
+
+  - id: WORKER-20260723-200617-phase-15-v2-gap-closing-items-1-3-4-15-2
+    project: veridian
+    type: worker-task
+    status: done
+    summary: Server-worker task 'phase-15-v2-gap-closing-items-1-3-4-15-25-45' on claude-control
+      reached status=completed. worker finished, no changes to commit
+    where: /opt/veridian/ai-os/tasks/task-20260723-200617-phase-15-v2-gap-closing-items-1-3-4-15-2/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-23'
