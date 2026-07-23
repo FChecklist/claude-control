@@ -1,0 +1,10 @@
+[Unit]
+Description=Run veridian-task-watchdog every 60s (ai-os/STANDING_DIRECTIVE.yaml v2_watchdog_service)
+
+[Timer]
+OnUnitActiveSec=60
+OnBootSec=60
+AccuracySec=5
+
+[Install]
+WantedBy=timers.target
