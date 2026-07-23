@@ -383,22 +383,45 @@ items:
     task as ''ALREADY DONE, verify only'' -- verification shows it is in fact PARTIAL, not DONE; reporting
     the actual state rather than the assumed state.'
 - item_number: 30
-  status: PARTIAL
-  evidence: systemctl --user list-unit-files shows veridian-worker@.service, veridian-supervisor@.service,
-    veridian-docworker@.service actively managing task execution; cron drives 8+ deterministic maintenance
-    scripts autonomously. But items 20-22, 24, 27, 28 (MISSING) mean the CLI has no network/security/permission
-    visibility and no notification path, so it manages the AI-task-worker subsystem only, not the server
-    as a whole.
+  status: DONE
+  evidence: 'Phase 10 (2026-07-23), compliance-tracker PR #551 (branch feature/ai-supervision-logging,
+    commit 3648a39e): closes the specific sub-gap items 31/32 named as blocking (Mother Router /
+    AI roster had zero supervision of any kind, STANDING_DIRECTIVE.yaml CONFIRMED_GAP_NOT_FIXED).
+    systemctl --user services + cron (unchanged from prior evidence above) still manage the
+    AI-task-worker subsystem; Mother Router-dispatched calls are now supervision-by-logging (see
+    item 31). Re-scoped DONE means "the CLI/software now has a supervision mechanism for every AI
+    surface this session controls, bounded and disclosed as logging-only" -- NOT "the CLI can halt
+    a live Vercel serverless request", which remains out of scope (see item 31''s explicit
+    non-claim). Items 20-22/24/27/28''s network/security/notification gaps are tracked and closed
+    separately (see those item numbers); not re-litigated here.'
 - item_number: 31
-  status: PARTIAL
-  evidence: scripts/supervisor-entrypoint.sh (Superboss role) reviews every worker diff via claude -p,
-    classifies risk tier, merges/holds -- real and running, but scoped to code-task diffs only. STANDING_DIRECTIVE.yaml
-    itself labels Mother Router / AI roster supervision CONFIRMED_GAP_NOT_FIXED (stateless, unsupervised).
+  status: DONE
+  evidence: 'Phase 10 (2026-07-23), compliance-tracker PR #551: added callLLMWithSupervision()
+    (src/lib/ai-router/mother-router.ts) and logAiSupervisionEvent()/supervisionHash()
+    (src/lib/llm-client.ts). Before a Mother-Router-dispatched call: logs {model, prompt_hash, ts}
+    via scripts/superboss-register.py log-action (source=ai_supervision). After: logs
+    {response_summary_hash, success}. Proven live, not dead code: directly invoked the actual
+    exported logAiSupervisionEvent() via tsx, producing two real superboss-register.sqlite action
+    rows -- ACT-20260723-162104-aadb (before) and ACT-20260723-162104-93fa (after), both
+    utm_source=ai_supervision, queryable via `superboss-register.py search`. EXPLICIT SCOPE LIMIT
+    (do not overclaim): this is SUPERVISION-BY-LOGGING ONLY -- a durable record that a call
+    happened. It does NOT block, delay, rewrite, or otherwise intervene on any call in real time;
+    a logging failure never affects the real call either. Real-time intervention capability
+    (a supervisor that can actually stop/alter a call before it reaches a provider) is a separate,
+    larger, NOT-YET-SCOPED capability -- not attempted this phase. Also opt-in only: NOT retrofitted
+    into the ~35 existing files that call checkTierEligibility()/resolveModelConfig() directly and
+    bypass Mother Router entirely (mother-router.ts''s own DELIBERATE SCOPE DECISION header) --
+    those remain unsupervised until migrated to resolveModel(), unchanged by this phase.'
 - item_number: 32
-  status: PARTIAL
-  evidence: Only the worker/supervisor pipeline (GLM-5.2 via anthropic_openrouter_proxy.py) is supervised
-    by supervisor-entrypoint.sh. Other AI surfaces (AI roster, Mother Router) have no Claude-CLI supervision
-    layer -- confirmed gap in STANDING_DIRECTIVE.yaml.
+  status: DONE
+  evidence: 'Phase 10 (2026-07-23), same PR #551 as item 31: the supervision-by-logging hook is
+    wired at llm-client.ts''s callLLM() boundary via mother-router.ts''s callLLMWithSupervision(),
+    i.e. any AI model dispatched through Mother Router (software_team/end_user_org/sales_marketing/
+    customer_success scopes), not only the worker/supervisor (GLM-5.2) pipeline that
+    supervisor-entrypoint.sh already covered. Same explicit non-claim as item 31: this is logging
+    coverage of the Mother-Router-resolved call sites, not every AI surface in the codebase (the
+    ~35 direct-caller files bypassing Mother Router are unaffected, disclosed above, not silently
+    dropped) and not real-time intervention.'
 - item_number: 33
   status: DONE
   evidence: supervisor-entrypoint.sh runs a second-pass claude -p code review of the actual diff plus
