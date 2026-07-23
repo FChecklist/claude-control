@@ -4507,3 +4507,43 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260723-145839-build-task-gateway-software/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-23'
+
+  - id: WORKER-20260723-161158-gap-closing-phase10-ai-supervision-loggi
+    project: veridian
+    type: worker-task
+    status: done
+    summary: Server-worker task 'gap-closing-phase10-ai-supervision-logging' on claude-control
+      reached status=completed. worker finished, no changes to commit
+    where: /opt/veridian/ai-os/tasks/task-20260723-161158-gap-closing-phase10-ai-supervision-loggi/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-23'
+
+  - id: WORKER-20260723-162833-gap-closing-phase11-item29-auth-verifica
+    project: veridian
+    type: worker-task
+    status: done
+    summary: Server-worker task 'gap-closing-phase11-item29-auth-verification' on claude-control
+      reached status=completed. worker finished, no changes to commit
+    where: /opt/veridian/ai-os/tasks/task-20260723-162833-gap-closing-phase11-item29-auth-verifica/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-23'
+
+  - id: WORKER-20260723-163003-rca-20260723-162833-gap-closing-pha
+    project: veridian
+    type: worker-task
+    status: done
+    summary: Server-worker task 'rca-task-20260723-162833-gap-closing-phase11-item29-auth-verifica'
+      on claude-control reached status=completed. worker finished, no changes to commit
+    where: /opt/veridian/ai-os/tasks/task-20260723-163003-rca-task-20260723-162833-gap-closing-pha/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-23'
+
+  - id: WORKER-20260723-164109-gap-closing-phase12-item50-crontab-enfor
+    project: veridian
+    type: worker-task
+    status: done
+    summary: Server-worker task 'gap-closing-phase12-item50-crontab-enforcement-gate'
+      on claude-control reached status=completed. worker finished, no changes to commit
+    where: /opt/veridian/ai-os/tasks/task-20260723-164109-gap-closing-phase12-item50-crontab-enfor/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-23'
