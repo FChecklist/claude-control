@@ -7,8 +7,8 @@ method: direct_inspection_of_live_server_state (crontab -l, systemctl --user lis
   RULES_ARTICLES_198.json) count only as evidence of stated intent, not of DONE status, unless a real
   running mechanism is also cited.
 summary:
-  done: 42
-  partial: 18
+  done: 46
+  partial: 14
   missing: 0
   total: 60
 phase7_amendment:
@@ -370,18 +370,33 @@ items:
     run afterward, exit 0). Diff at ai-os/patches/health-check-anomaly-escalation-2026-07-23.diff, patch
     --dry-run verified. DONE.'
 - item_number: 29
-  status: PARTIAL
-  evidence: 'worker-entrypoint.sh (modified 2026-07-23T03:49) and launch-interactive-claude.sh (modified
-    03:09) both now unset CLAUDE_CODE_OAUTH_TOKEN/ANTHROPIC_API_KEY/ANTHROPIC_BASE_URL and rely on real
-    ~/.claude/.credentials.json (exists, modified 02:59 same day) -- real Claude Max auth confirmed DONE
-    for worker and interactive paths. supervisor-entrypoint.sh was NOT switched: still contains ''unset
-    CLAUDE_CODE_OAUTH_TOKEN; export ANTHROPIC_BASE_URL=http://127.0.0.1:8787; export ANTHROPIC_API_KEY=proxy-routed-not-a-real-anthropic-key''
-    verbatim. model=sonnet confirmed globally via ~/.claude/settings.json. effort=high is NOT set anywhere
-    (no --effort flag in any claude -p invocation, no ''effort'' key in settings.json), despite claude
-    -p --help exposing a real --effort flag. veridian-glm-proxy.service remains enabled/active; its remaining
-    legitimate use post-switch has not been determined by anyone. This item was flagged in the source
-    task as ''ALREADY DONE, verify only'' -- verification shows it is in fact PARTIAL, not DONE; reporting
-    the actual state rather than the assumed state.'
+  status: DONE
+  evidence: 'Phase 11 (2026-07-23) re-verified live, fresh commands run directly by this phase (not
+    trusting Phase 10''s spot-check or the stale PARTIAL evidence above): (1) `grep -n
+    "CLAUDE_CODE_OAUTH_TOKEN\|ANTHROPIC_API_KEY\|ANTHROPIC_BASE_URL"
+    /opt/veridian/scripts/supervisor-entrypoint.sh /opt/veridian/scripts/worker-entrypoint.sh
+    /opt/veridian/scripts/launch-interactive-claude.sh` -- all three files only contain `unset` lines
+    for all three vars (supervisor-entrypoint.sh:18-20, worker-entrypoint.sh:34-36,
+    launch-interactive-claude.sh:5-7); the old proxy-routed `export ANTHROPIC_BASE_URL=http://127.0.0.1:8787`
+    / `export ANTHROPIC_API_KEY=proxy-routed-not-a-real-anthropic-key` lines are gone from
+    supervisor-entrypoint.sh -- the specific sub-gap this item was PARTIAL on is now fixed. (2) `grep -rn
+    -- "--effort" /opt/veridian/scripts/*.sh /opt/veridian/scripts/*.py` -- all 6 real `claude -p`/`claude`
+    dispatch lines now carry `--effort high`: doc-worker-entrypoint.sh:127, supervisor-entrypoint.sh:80,
+    worker-entrypoint.sh:130 and :330, credit-accountant.py:205, master-decompose.py:105 -- the other
+    specific sub-gap this item was PARTIAL on is also now fixed. (3) `systemctl --user status
+    veridian-glm-proxy.service` -- Loaded: disabled; Active: inactive (dead), confirmed. Judgment call
+    (explicitly asked for by this item): keep the unit file installed but disabled, do not fully remove
+    it -- scripts/health-check-15min.py:71 check_systemd_units() explicitly lists
+    ''veridian-glm-proxy.service'' in its `systemctl --user list-units` monitoring call, so the installed
+    (disabled) unit gives that health check a real "confirmed disabled" signal to alert on if anything
+    ever re-enables it; an uninstalled unit would just silently not match instead of positively confirming
+    the safe state. generate-system-diagram.py and master-decompose.py also reference it as architecture/
+    history documentation. Net: no functional consumer needs it *enabled*, but the health-check drift-
+    detection and documentation value are real reasons to leave the (disabled, inactive) unit file in
+    place rather than deleting it outright. (4) ~/.claude/settings.json line 16: "model": "sonnet" --
+    reconfirmed still true, not re-derived beyond that. All 3 re-verifiable sub-gaps Phase 10''s spot-check
+    found now check out under this phase''s own independent fresh commands -- status upgraded PARTIAL ->
+    DONE.'
 - item_number: 30
   status: DONE
   evidence: 'Phase 10 (2026-07-23), compliance-tracker PR #551 (branch feature/ai-supervision-logging,
@@ -691,13 +706,6 @@ unresolved_items_not_safely_automatable_this_increment:
     working (item 27), and closed the real remaining gap (no escalation tiering for unresolved problems,
     items 28/56) with a minimal consecutive-occurrence counter in scripts/health-check-15min.py -- moved
     to DONE above, no longer unresolved. See phase7_amendment for full evidence.'
-- items:
-  - 29
-  reason: supervisor-entrypoint.sh still routes through the GLM proxy with a placeholder key, and effort=high
-    is unset in all three session types -- fixing this is a build task (edit supervisor-entrypoint.sh,
-    decide on --effort flag placement), out of scope for this audit-only increment. Also requires an Owner-facing
-    decision on whether veridian-glm-proxy.service should be decommissioned, per the source task's explicit
-    instruction not to decide this unilaterally.
 - items:
   - 46
   - 47
