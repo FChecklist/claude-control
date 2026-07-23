@@ -29,9 +29,12 @@
 - row count in knowledge_engine = 9, matches KNOWLEDGE_ENGINE_SCHEMA_DESIGN_2026-07-23.yaml's
   `seed_rows_planned_for_phase_1_not_created_by_phase_0.count: 9` exactly.
 
+- [x] Committed + pushed scripts/superboss-register.py, scripts/task-gateway.py diffs (+ ai-os/STANDING_DIRECTIVE.yaml,
+      ai-os/KNOWLEDGE_ENGINE_PHASE2_CANDIDATES_2026-07-23.yaml as new tracked files) -- commit 1231f37 on
+      worker/task-20260723-181151-knowledge-engine-phase1-build-populate-w, pushed to origin.
+- [x] CHECKPOINT: `task-gateway.py close --task-id task-20260723-181151-knowledge-engine-phase1-build-populate-w
+      --audit-cmd 'python3 scripts/superboss-register.py query-knowledge "constitution"' --evidence <real row citation>`
+      -> real verdict DONE, audit_id AUD-20260723-182352-0856e4, checkpoint_status completed.
+
 ## Remaining
-- [ ] Commit + push scripts/superboss-register.py, scripts/task-gateway.py diffs (+ ai-os/STANDING_DIRECTIVE.yaml,
-      ai-os/KNOWLEDGE_ENGINE_PHASE2_CANDIDATES_2026-07-23.yaml as new tracked files, since this branch's base
-      predates both scripts/ and ai-os/ existing in this repo).
-- [ ] CHECKPOINT: `task-gateway.py close --task-id <own-id> --audit-cmd "python3 scripts/superboss-register.py
-      query-knowledge constitution" --evidence <real row citation>`.
+- [ ] None -- task complete.
