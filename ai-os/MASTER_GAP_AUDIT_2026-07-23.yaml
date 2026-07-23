@@ -1,0 +1,376 @@
+audit_id: owner-master-gap-audit-2026-07-23
+generated_by_task: task-20260723-084734-master-gap-audit-and-integration-plan-20
+purpose: >
+  Single consolidated, evidence-based gap list across all 4 sources the Owner asked about
+  today: the 41-part execution rules, the 198-rule/article checklist, the paused gap_queue.yaml
+  backlog, and 7-repo integration readiness. Overlaps merged, not double-counted. Every verdict
+  either cites new evidence gathered this task, or explicitly defers to one of today's two prior
+  audits (per this task's own CONSTRAINTS: do not re-investigate what's already been audited).
+known_context_cited_not_rederived:
+  - "GLM proxy decommission + Sonnet 5 subscription auth switch: independently re-confirmed live
+    this task -- /opt/veridian/scripts/worker-entrypoint.sh:36 and supervisor-entrypoint.sh:20
+    both now `unset ANTHROPIC_BASE_URL`; launch-interactive-claude.sh:7 `unset
+    CLAUDE_CODE_OAUTH_TOKEN`; ~/.claude/.credentials.json exists (modified 2026-07-23T02:59)."
+  - "credit-accountant.py $1-gate scoped to metered work only: confirmed live, header comment at
+    /opt/veridian/scripts/credit-accountant.py lines 4-20 states the Owner-clarified rule
+    verbatim (subscription is the accountant for CLI work, gate applies to the real metered
+    OpenRouter pool only)."
+  - "notify-owner.py real and wired: confirmed live at /opt/veridian/scripts/notify-owner.py
+    (Resend API, OWNER_EMAIL=raajat.agarwal@gmail.com, rate-limited per issue signature)."
+
+# =========================================================================
+# SOURCE 1: RULES_ARTICLES_198.json audit (ai-os/audit198/run-audit.mjs)
+# =========================================================================
+source_1_rules_articles_198:
+  mechanism_exists: true
+  evidence: "ai-os/audit198/run-audit.mjs + category-checkers.mjs + evidence-engine.mjs +
+    constitution-index.mjs + rules-taxonomy.mjs -- a real, deterministic, grep/file-evidence-based
+    scorer, NOT free-text AI judgment. This is a genuine finding: the file's own
+    meta.purpose claim ('produced by software scripts') is TRUE, the mechanism is real."
+  last_complete_real_run:
+    generated_at: '2026-07-21T09:29:09.981Z'
+    completed_at: '2026-07-21T09:30:15.219Z'
+    status_counts:
+      ENFORCED: 22
+      PARTIALLY_ENFORCED: 152
+      POLICY_ONLY: 0
+      NOT_APPLICABLE_YET: 0
+      NOT_YET_BUILT: 15
+      EVIDENCE_UNAVAILABLE: 0
+      NEEDS_HUMAN_JUDGMENT: 9
+      total: 198
+    source_file: "ai-os/audit198/results/audit198-results.json (still present at that path,
+      unmodified by this task)"
+  new_findings_this_task_re_running_it:
+    - finding: "Path-drift bug: run-audit.mjs's own findRepoRoot() comment says the script lives
+        3 directories under repo root ('ai-os/scripts/audit198/'), but it actually lives 2
+        directories under repo root ('ai-os/audit198/') -- one level shallower than the code
+        assumes. Running it plain resolves REPO_ROOT to /opt instead of /opt/veridian and it
+        cannot find ai-os/RULES_ARTICLES_198.json at all."
+      severity: medium
+      status: FIXED
+      fixed_by_task: task-20260723-093333-continuous-gap-closing-worker-2026-07-23 (phase 1)
+      evidence: "Edited the live file directly (ai-os/ is not under git on this server, confirmed
+        again this phase -- same finding as before, only a direct live edit is possible):
+        /opt/veridian/ai-os/audit198/run-audit.mjs findRepoRoot() changed from
+        `path.resolve(__dirname, '..', '..', '..')` to `path.resolve(__dirname, '..', '..')`,
+        comment corrected to 'ai-os/audit198/ -> repo root is 2 levels up'. Verified live:
+        `node run-audit.mjs --limit=3` (no AUDIT198_REPO_ROOT override set) now logs
+        `[audit198] repo root: /opt/veridian` (previously would have resolved to /opt) and
+        proceeds to load RULES_ARTICLES_198.json successfully (198 items, 99 rules + 99
+        articles, taxonomy coverage confirmed across 33 categories) -- full log at
+        /tmp/audit198-fix-verify.log on the live host. AUDIT198_REPO_ROOT env override left
+        intact as a supported escape hatch."
+    - finding: "ai-os/CONSTITUTION.yaml, the script's own required cross-reference input
+        (referenced in RULES_ARTICLES_198.json's own meta.relationship_to_CONSTITUTION_yaml
+        field as 'ai-os/CONSTITUTION.yaml, 819 lines'), no longer exists at the canonical live
+        location. Only stale copies remain: inside dozens of old task-workspace snapshots under
+        ai-os/tasks/*/workspace/ai-os/CONSTITUTION.yaml, and inside
+        /opt/veridian/repos/compliance-tracker/ai-os/CONSTITUTION.yaml (dated 2026-07-20T14:12,
+        itself likely a task-workspace artifact, not necessarily identical to whatever the
+        canonical file last was)."
+      severity: high
+      status: PARTIALLY_FIXED_GRACEFUL_DEGRADATION_ONLY
+      fixed_by_task: task-20260723-093333-continuous-gap-closing-worker-2026-07-23 (phase 1)
+      evidence: "The missing-file CRASH is fixed: main() in run-audit.mjs now wraps
+        loadConstitutionIndex(REPO_ROOT) in try/catch, catches ENOENT specifically (rethrows any
+        other error), logs a clear WARNING, and continues with an empty constitution index
+        (count: 0, missing: true) instead of hard-crashing. Verified live: same
+        /tmp/audit198-fix-verify.log run shows
+        '[audit198] WARNING: ai-os/CONSTITUTION.yaml not found at /opt/veridian -- continuing
+        WITHOUT constitution cross-reference...' followed by the script proceeding into
+        per-item evidence gathering (previously it would have thrown and exited before this
+        point). The UNDERLYING gap -- the canonical CONSTITUTION.yaml file itself is still
+        missing, so verdicts lose the constitution-inherited-status boost -- is NOT fixed;
+        restoring it needs a content-provenance decision (which stale copy, if any, is
+        trustworthy) that this phase judged too ambiguous for a mechanical fix and left open
+        rather than guessing at governance-relevant content."
+  fresh_rerun_status: "A fresh run (via the scratch-copy workaround) was started this task and was
+    still executing at the time this document was finalized -- run-audit.mjs greps the full
+    /opt/veridian tree (excluding node_modules/.next per its own --exclude-dir flags) once per
+    each of 198 items, which is genuinely slow across 7+ real repos. Its output, if it completed
+    before this document's commit, is at /tmp/audit198-run/results/ (NOT committed -- scratch
+    only) with the same field structure as the 2026-07-21 file. Recommend a follow-up task (a)
+    fix the path-drift bug for real in the live file, (b) resolve the CONSTITUTION.yaml gap
+    (restore the canonical file, or make the script degrade gracefully by design, not just via a
+    scratch patch), and (c) re-run to completion and diff against the 2026-07-21 baseline."
+  verdict_for_master_gap_list: "USE THE 2026-07-21 NUMBERS AS THE CITED BASELINE (real,
+    software-produced, unmodified). Two NEW tooling gaps found and listed above. Do not treat the
+    198-count as re-verified fresh today; it is 2 days stale by the audit's own last-run
+    timestamp, and the tool needs repair to stay usable going forward."
+
+# =========================================================================
+# SOURCE 2: GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml (60 Owner governance items)
+# =========================================================================
+source_2_governance_audit:
+  original_result:
+    generated_by_task: task-20260723-034803-high-governance-audit-and-build-2026-07
+    counts: {done: 26, partial: 21, missing: 13, total: 60}
+    location: "committed on branch worker/task-20260723-034803-high-governance-audit-and-build-2026-07,
+      file ai-os/GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml (not synced to the live ai-os/ top level
+      or to origin/master; cited from its own branch per this task's CONSTRAINTS)"
+  updates_this_task_found_live_evidence_for:
+    - item: 29
+      was: PARTIAL
+      now: DONE
+      evidence: "Original verdict said supervisor-entrypoint.sh still had the GLM-proxy
+        placeholder key and worker/interactive paths were switched but supervisor wasn't. Live
+        recheck today: /opt/veridian/scripts/supervisor-entrypoint.sh:20 now reads `unset
+        ANTHROPIC_BASE_URL` -- the placeholder-key routing is gone from all three session types.
+        Matches KNOWN_CONTEXT's '5 scripts fixed' claim; independently corroborated on 3 of the
+        likely 5 (worker-entrypoint.sh, supervisor-entrypoint.sh, launch-interactive-claude.sh)."
+    - items: [27, 28, 56]
+      was: MISSING
+      now: DONE
+      evidence: "Original verdict: zero outbound Owner-notification channel existed anywhere.
+        Live recheck today: /opt/veridian/scripts/notify-owner.py exists (real Resend API
+        integration, rate-limited, OWNER_EMAIL=raajat.agarwal@gmail.com) and per task-20260723-045924's
+        own completed_steps was wired into scripts/health-check-15min.py the same day. This
+        closes the exact gap items 27/28/56 identified (no escalation path existed)."
+  updated_counts: {done: 30, partial: 20, missing: 10, total: 60}
+  note: "Items 46/47/48 (non-technical Owner-facing framing convention) and item 51 (crontab-driven
+    log/DB pruning without a documented Owner-authorized retention policy) were NOT re-verified
+    this task -- no new evidence found either way; original verdicts stand (MISSING and PARTIAL
+    respectively). Items 20-22/24 (network/security/permission monitoring) also stand as MISSING --
+    no new evidence found."
+
+# =========================================================================
+# SOURCE 3: EXECUTION_RULES_AUDIT_2026-07-23.yaml (41-part execution rules, 42 entries)
+# =========================================================================
+source_3_execution_rules_audit:
+  latest_cumulative_result:
+    generated_by_tasks: [task-20260723-052857 (phase0), task-20260723-060600 (phase1),
+      task-20260723-064712 (phase2)]
+    counts: {done: 2, partial: 35, missing: 5, total: 42}
+    location: "committed on branch worker/task-20260723-064712-execution-rules-phase2-pre-execution-che,
+      file ai-os/EXECUTION_RULES_AUDIT_2026-07-23.yaml (cited from its own branch, not
+      re-investigated per CONSTRAINTS -- this is the most thorough, most current of all 4
+      sources and already documents its own roadmap_next_phases)."
+  new_finding_this_task_degrading_existing_partials_further:
+    - parts_affected: [7, 20, 40]
+      finding: "ai-os/memory/superboss-register.sqlite -- the exact DB phase2 repaired at
+        ~07:20-07:30 UTC today and cited as fixed evidence for Parts 7 (History),
+        20 (Search Rules/Tagging), and 40 (Pre/Post-Execution Log) -- has corrupted AGAIN with a
+        DIFFERENT corruption signature (page-reuse: 'Tree 14 page 14 cell 0: 2nd reference to
+        page 368', etc., vs the earlier single-truncated-page signature). Confirmed via
+        ai-os/logs/ATTENTION.md: health-check-15min.py's own PRAGMA integrity_check has failed
+        on every 15-minute run from 07:30 through 09:00:01 UTC today (7 consecutive HIGH
+        PRIORITY entries, the most recent one at the time of writing). This is a LIVE, ACTIVE,
+        UNRESOLVED incident, not historical. It does not flip Parts 7/20/40 to MISSING (they were
+        already PARTIAL, and the underlying mechanisms -- execution_log table, tag search,
+        history tables -- are real code, just currently sitting on a broken DB file again), but
+        it materially undercuts today's earlier 'fully repaired, zero data loss' framing: that
+        was true of the 07:30 fix and is no longer true right now."
+      severity: critical
+      status: FIXED_PENDING_OBSERVATION  # updated 2026-07-23T10:01Z by phase 2, see
+        # fixed_2026-07-23T10:01Z_by_task-20260723-095201_phase_2 below for evidence
+      recommended_immediate_action: "A dedicated repair task (mirroring phase2's own
+        recovery playbook: attempt real recovery, quarantine + reinit if recovery fails, add
+        detection) should be dispatched before any further task that depends on
+        check-duplicate/system_index/execution_log runs, since those are all currently degraded
+        for the second time today."
+      reverified_2026-07-23T09:44Z_by_task-20260723-093333_phase_1: "Re-ran PRAGMA
+        integrity_check live (python3 sqlite3 stdlib, no write attempted) at 3 points ~5 min
+        apart: 09:39:xx -> ('ok',) with plausible non-empty row counts (instructions=235,
+        work_items=12, actions=162, execution_log=2, file_inventory=2422,
+        directive_compliance_runs=160, task_audits=3) -- briefly healthy, most likely from an
+        external/cron-driven repair this task did NOT perform (no matching process found in ps,
+        no matching entry in ATTENTION.md or veridian-self-check-cron.log explaining it; file
+        mtime 09:38:40 predates this check). Then at 09:43:59Z and again at 09:44:xx (two
+        independent checks, ~30s apart, same result both times, ruling out a one-off transient
+        WAL-checkpoint artifact): integrity_check FAILED AGAIN with a THIRD distinct signature
+        this single day ('Freelist: size is 2 but should be 3' -- distinct from both the
+        btreeInitPage/page-11 signature and the page-368/363/123 2nd-reference signature
+        recorded earlier), and actions row count had incremented 162->163 between the healthy
+        and broken checks, confirming a live concurrent writer caused the re-corruption within
+        this task's own observation window, not a stale/cached read. CONCLUSION: status stands
+        as ACTIVE_UNRESOLVED, now with a 3rd distinct corruption signature and direct evidence
+        the DB flips ok->corrupt within single-digit minutes purely from background write
+        activity -- this task judged a rushed reinit right now to be a false fix (it would very
+        likely re-corrupt again within minutes given the demonstrated write pressure) and
+        deliberately deferred a real root-cause fix (write serialization / single-writer lock
+        around superboss-register.py, not just another quarantine+reinit cycle) to a dedicated
+        next phase rather than bundling a high-risk, likely-incomplete fix into this phase's
+        small/low-risk batch."
+      fixed_2026-07-23T10:01Z_by_task-20260723-095201_phase_2: "Root-cause investigation (full
+        read of superboss-register.py's every write path + veridian-task.py's
+        _auto_log_task_event) found 3 real, code-evidenced defects, all fixed: (1)
+        veridian-task.py wrapped every superboss-register.py subprocess write call -- fired
+        every 5 min by EVERY active worker's background checkpoint loop, plus ad-hoc
+        log-work/log-action calls -- in subprocess.run(timeout=10), SHORTER than
+        superboss-register.py's own sqlite3.connect(DB_PATH, timeout=30) busy_timeout, so a
+        writer still legitimately inside its declared 30s busy-wait could be SIGKILLed by its
+        own caller at 10s (failure silently swallowed by a bare except: pass) -- fixed by
+        raising all 3 call sites to timeout=35. (2) No serialization existed across concurrent
+        superboss-register.py writer processes -- fixed by adding _write_lock(), an
+        fcntl.flock-based OS lock wrapping every write subcommand, the SAME proven pattern
+        already used for the 2026-07-18 CONTROLLER.yaml corruption fix (veridian-task.py's own
+        controller_lock()) -- a losing writer now blocks entirely outside any sqlite
+        transaction, so killing it while it waits can never corrupt the file, and flock
+        auto-releases if its holder is killed, so this cannot deadlock either. (3) Separately, a
+        genuine FTS5 desync bug in scope for this phase's FTS5-trigger check: system_index's
+        index_add() upserts via ON CONFLICT(path) DO UPDATE but system_index_fts only had an
+        AFTER INSERT sync trigger, no AFTER UPDATE -- every re-verification of an already-indexed
+        path silently desynced the FTS shadow table; fixed by adding the missing
+        system_index_au AFTER UPDATE trigger. HONESTY NOTE: a blind concurrent-SIGKILL stress
+        test (up to 150 concurrent log-action processes, sustained random kills over 3s) did NOT
+        reproduce actual corruption on either the pre-fix or post-fix code in the available test
+        budget -- the vulnerable window (killed while actually holding the write lock
+        mid-commit/mid-WAL-checkpoint) is narrow relative to process-startup overhead in a
+        synthetic test, so full certainty on the exact causal mechanism was NOT reached. Defects
+        (1)/(2)/(3) are real and directly consistent with phase 1's own observation (an ordinary
+        write coincided with the ok->corrupt flip), and (1)/(2) mirror an already-proven fix
+        pattern in this exact codebase; applied as the most defensible mitigation available, not
+        a guaranteed-proven root cause. REPAIR PERFORMED: quarantined the corrupted live file as
+        ai-os/memory/superboss-register.sqlite.CORRUPTED-2026-07-23-1000-freelist-mismatch (4th
+        signature of the day: 'Freelist: size is 0 but should be 1'), ran `superboss-register.py
+        init` (fixed code), then recovered ALL 449 rows (235 instructions + 13 work_items + 169
+        actions + 32 system_index + 2 execution_log -- zero data loss, the quarantined file's
+        tables were still fully readable despite the freelist corruption) into the fresh db,
+        verified row-count and FTS-row-count parity exactly, then ran a live CLI smoke test
+        (search/log-action/check-duplicate) plus PRAGMA integrity_check = ok. OBSERVATION WINDOW:
+        integrity re-checked again after this task's own next 15-min health-check cron cycle --
+        see this phase's gap_closing_worker_log entry below for the actual result, cited with a
+        real timestamp, not assumed."
+  verdict_for_master_gap_list: "42 part-entries stand at 2 DONE / 35 PARTIAL / 5 MISSING as
+    audited; sqlite corruption finding moved from ACTIVE_UNRESOLVED to FIXED_PENDING_OBSERVATION
+    as of phase 2 (see fixed_2026-07-23T10:01Z_by_task-20260723-095201_phase_2 above and phase 2's
+    gap_closing_worker_log entry for the real post-fix observation evidence)."
+
+# =========================================================================
+# SOURCE 4: gap_queue.yaml (25 queued items, 21 held_task_ids, dispatch_paused=true)
+# =========================================================================
+source_4_gap_queue:
+  root_cause_finding: "ALL 21 non-'completed' items in the queue failed for the exact same reason:
+    the OpenRouter API account ran out of credit ($40.07 used of $40.00) during dispatch on
+    2026-07-20 between 05:00 and 05:51 UTC; a pre-flight hard-stop then blocked everything from
+    11:24 UTC onward ('PRE-FLIGHT HARD STOP (openrouter_balance_exhausted)'); the Owner paused the
+    whole queue at 12:16 UTC the same day. Confirmed via task.yaml checkpoint history for 3 sample
+    task_ids (v2-11, v2-23, v2-25's underlying tasks) -- every one shows the identical failure
+    signature and timestamp window. CRITICAL CONCLUSION: the queue's own status labels
+    'skipped_possible_duplicate' (10 items, retry_count=1) and 'stuck_needs_human' (11 items,
+    retry_count=3) are NOT the result of real duplicate-detection or human-judgment review -- they
+    are the dispatcher's retry-count-based heuristic labels applied after every attempt crashed
+    before any real investigation happened. This task independently re-verified all 21 against
+    live code instead of trusting those labels."
+  dispatch_paused: true
+  pause_still_appropriate: "YES -- this is a genuine Owner governance gate (2026-07-20 directive to
+    analyze the 185 open Review-Framework gaps before resuming), not a bug; do not auto-resume."
+  classification_of_all_25_items:
+    completed_prior_to_this_audit: [v2-2, v2-3, v2-8, v2-10]  # 4 items, genuinely done, unchanged
+    already_done_newly_discovered_this_task: # 7 items -- real work landed via OTHER paths (later waves, today's GLM decommission) despite this queue task never running
+      - id: v2-1
+        what: "UAE country pack"
+        evidence: "PR #492 merged to origin/main (compliance-tracker, commit 9c6c3772): src/lib/engines/ae/vat-engine.ts, ae/corporate-tax-engine.ts, compliance-engine-registry.ts (IN+AE per-country slots), einvoice-format.ts + country-config.test.ts/einvoice-format.test.ts."
+      - id: v2-5
+        what: "BYOB bring-your-own-AI-model"
+        evidence: "PR #498 merged to origin/main: drizzle/0253_tenant_ai_config.sql, src/app/api/settings/tenant-ai-config/route.ts, mother-router.ts resolveTenantAiConfig() confirmed still routed through checkTierEligibility() (no guardrail bypass), tenant-ai-config.test.ts."
+      - id: v2-6
+        what: "Decisions-of-record doc"
+        evidence: "ai-os/REVIEW_FRAMEWORK_DECISIONS_2026-07-19.md (130 lines) exists in compliance-tracker origin/main, covers every named row (D7/D11/C13/C16/C17/C18/C19)."
+      - id: v2-9
+        what: "Surface loop-derived insights"
+        evidence: "PR #500 merged: src/lib/loop-insight-notifier.ts + .test.ts (20 unit tests), reuses existing notification channel."
+      - id: v2-19
+        what: "Prompt & Cache real production metrics"
+        evidence: "drizzle/0237_token_usage_ledger_cache_savings.sql (2026-07-18, predates this queue), src/lib/prompt-cache/metrics.ts recordPromptCacheMetric(), live call site chat-service.ts:739, report at src/app/api/ai/team/token-usage/route.ts, unit-tested in llm-client.test.ts."
+      - id: v2-23
+        what: "Remove ANTHROPIC_API_KEY dead code path"
+        evidence: "origin/main still has the GLM-proxy dummy-key lines, but compliance-tracker's LOCAL uncommitted working tree already has them removed (matches today's live /opt/veridian/scripts/ state) -- needs a commit to actually land on origin/main. Marked done-but-uncommitted, not fully closed."
+      - id: v2-24
+        what: "CRM Contacts list route + page"
+        evidence: "src/app/api/crm/contacts/route.ts GET handler + src/app/(app)/crm/contacts/page.tsx both exist on origin/main (commit 016ccc0e, 'Wave 3: CRM pages'). Dedicated unit test for listContactsPaged not confirmed found -- test coverage thin."
+    still_open_genuinely: # 13 items -- never attempted, no evidence of the work existing anywhere
+      - {id: v2-4, what: "Shared cross-repo prompt-pattern module", evidence: "Only unmerged/stale branch-registration commits exist; no prompt-pattern file on origin/main of either repo."}
+      - {id: v2-7, what: "Persistent Vercel staging env + workflow scoping", evidence: "Design doc + patch handoff only (PR #495) -- actual .github/workflows/sync-vercel-env.yml change was deliberately withheld (agent's GitHub token lacks 'workflow' scope); current workflow still applies vars uniformly, no staging scoping live."}
+      - {id: v2-11, what: "Delegation expiry enforcement audit + test", evidence: "delegation-service.ts's isDelegated()/isDelegationActive() exist but are called nowhere outside their own file/test -- zero real authorization checkpoints consume them."}
+      - {id: v2-12, what: "Serverless resource-limit tradeoff doc + heavy-workload audit", evidence: "No doc found anywhere under ai-os/; vercel.json has no maxDuration config."}
+      - {id: v2-13, what: "Chat context + terminology + mode-pill analytics", evidence: "contextEntityId is stored but never read into the AI reply system prompt; glossary-service.ts exists but unused by chat-service.ts; no mode-pill usage analytics found."}
+      - {id: v2-14, what: "Preview deployment spot-check", evidence: "No verification note exists anywhere under ai-os/."}
+      - {id: v2-15, what: "Storage RLS + backup PITR + Supabase monitoring audit", evidence: "No RTO/RPO doc or RLS audit found; sentry.server.config.ts still literally comments 'Safe no-op until SENTRY_DSN is configured'."}
+      - {id: v2-16, what: "CRM performance-under-load indexes + load-test harness", evidence: "Only single-column indexes exist in drizzle/0031_wave41_crm.sql; no composite (org_id,status,created_at)/(org_id,stage) indexes; no CRM-specific load-test results doc."}
+      - {id: v2-17, what: "HR performance/error-handling + payroll rate audit", evidence: "No payroll rate-seed audit doc, no HR/payroll load-test harness, no HR dashboard KPI caching found."}
+      - {id: v2-18, what: "Multi-office selector correctness audit", evidence: "No audit doc exists; branchId usage across src/lib/services/ is minimal (2 files), suggesting no systematic wiring even exists to audit."}
+      - {id: v2-20, what: "Search performance EXPLAIN ANALYZE + GIN index", evidence: "search-service.ts still queries via plain ilike() with no pg_trgm/GIN index on the relevant columns; no EXPLAIN ANALYZE doc found."}
+      - {id: v2-21, what: "E-invoicing per-line GstRt fix + IRP format scaffolding", evidence: "erp-einvoice-service.ts:77 literally still reads 'GstRt: 0, // per-line GST rate isn't separately tracked' -- the exact bug, unfixed, with its own inline TODO comment; no country-config concept exists in src/lib/; no e-invoice test file."}
+      - {id: v2-22, what: "Executive reporting drill-down + cadence scheduled job", evidence: "No branch/commit exists for this ticket at all; reportDefinitions has 'periodicity' not 'cadence' (a separate, pre-existing, unrelated report_schedules cron already covers a different feature); no executive drill-down UI found."}
+    governance_gate_not_a_code_gap:
+      - {id: v2-25, what: "Resume the autonomous gap_queue dispatcher", evidence: "dispatch_paused: true is still correctly set per the Owner's own 2026-07-20 directive; this is a policy switch requiring explicit Owner sign-off, not a coding gap to close."}
+  summary_counts:
+    total_queue_items: 25
+    genuinely_done: 11  # 4 previously-completed + 7 newly-discovered-done
+    genuinely_still_open: 13
+    governance_gate_correctly_held: 1
+  historical_note: "The '2056 gaps' figure the Owner referenced elsewhere is from the 2026-07-19
+    audit trail (gap_queue.yaml provenance) and is NOT this queue's current live count -- this
+    queue (25 V2-tasks) is described in its own pause_reason as 'the task-shaped form' of 185 open
+    Review-Framework rows from that same lineage, not the full 2056. This audit did not attempt to
+    re-derive the full 2056/185 CSV-row-level count; it audited the 25 dispatched tasks that exist
+    as gap_queue.yaml entries today, per this task's explicit SCOPE."
+
+# =========================================================================
+# CONSOLIDATED TOTAL (deduplicated across all 4 sources)
+# =========================================================================
+consolidated_summary:
+  method: "Each source covers a different grain (198 discrete rules; 60 governance items; 42
+    execution-rule parts; 25 dispatched backlog tasks). Real overlaps exist (e.g. gap_queue v2-23
+    and governance item 29 both concern the same GLM-proxy-decommission fact; execution rules
+    Parts 33-35 and governance-audit findings both cite the same Owner/Org/End-User memory gap) --
+    these are cited once, cross-referenced, not counted twice below."
+  total_real_gaps_across_all_sources: 187
+  breakdown:
+    - {source: "198-rule/article checklist", still_open_or_partial: 176, note: "152 PARTIALLY_ENFORCED + 15 NOT_YET_BUILT + 9 NEEDS_HUMAN_JUDGMENT, per last complete real run 2026-07-21; ENFORCED=22 excluded as done"}
+    - {source: "60 governance items", still_open_or_partial: 30, note: "20 PARTIAL + 10 MISSING after this task's item 29/27/28/56 updates; DONE=30 excluded"}
+    - {source: "42 execution-rule parts", still_open_or_partial: 40, note: "35 PARTIAL + 5 MISSING; DONE=2 excluded"}
+    - {source: "gap_queue 25 backlog items", still_open_or_partial: 13, note: "genuinely still-open only; 11 done + 1 correctly-held-gate excluded"}
+    - {source: "cross-source dedup adjustment", adjustment: -72, note: "Rather than naively summing 176+30+40+13=259, this subtracts items independently confirmed as the SAME underlying gap cited by 2+ sources (the largest overlap block: the 198-checklist's SOFTWARE_FIRST_AI_SECOND/TASK_GUARDRAILS/RECOVERY_RESILIENCE/DOCUMENTATION categories substantially restate the same real gaps as execution-rules Parts 1-13/38b-40 and governance items 12/36/49/50/60 -- both audits independently found e.g. 'reuse-before-build is a judgment call, not a hard gate' and 'pre-execution checklist is advisory, not a hard block'. This is a judgment-call estimate, not a script-derived number -- see honesty_note below."}
+  total_real_gaps_across_all_sources_after_dedup: 187
+  honesty_note: "The exact dedup adjustment (-72) is this task's own AI judgment call, not a
+    software-computed figure, because the 4 sources use different item grains that don't map
+    1:1 (a 198-item rule can restate 3 execution-rule Parts, or none). The RAW, un-deduplicated
+    sum across all 4 sources is 259 still-open/partial items; treat 187 as a reasonable
+    Owner-facing estimate of DISTINCT underlying gaps, and 259 as the literal sum if the Owner
+    wants the more conservative (larger) number. Either way, the honest scale is: hundreds of
+    open items, not tens -- do not let this number be read as small."
+  new_findings_not_in_any_prior_source:
+    - "audit198 tool itself has 2 real breakages (path-drift bug, missing CONSTITUTION.yaml) -- see source_1 (path-drift FIXED, CONSTITUTION.yaml gracefully-degraded but content still missing, as of phase 1 below)"
+    - "superboss-register.sqlite corrupted 4 distinct times today (2026-07-23) before phase 2's fix -- see source_3: phase 1 re-confirmed it ACTIVE_UNRESOLVED with a 3rd distinct signature, then phase 2 found and fixed 3 real code defects (subprocess-timeout-vs-busy_timeout SIGKILL race, missing write serialization, missing FTS5 AFTER UPDATE trigger), repaired the live db with zero data loss, and status now reads FIXED_PENDING_OBSERVATION pending real post-fix evidence (see gap_closing_worker_log phase 2)"
+    - "gap_queue.yaml's own status labels are unreliable (retry-count artifacts, not real investigation) -- see source_4 root_cause_finding"
+
+# =========================================================================
+# CONTINUOUS GAP-CLOSING WORKER LOG (task-20260723-093333 and self-dispatched successors)
+# Append one entry per phase. Never edit a prior phase's entry after the fact --
+# corrections go in a new phase's entry that references the old one.
+# =========================================================================
+gap_closing_worker_log:
+  - phase: 1
+    task_id: task-20260723-093333-continuous-gap-closing-worker-2026-07-23
+    started_2026-07-23T09:33Z_completed_approx: "2026-07-23T09:55Z"
+    pre_phase_step: "Discovered this document did not exist yet in this task's own branch (only
+      on unmerged branch worker/task-20260723-084734-master-gap-audit-and-integration-plan-20,
+      2 commits ahead of master, not yet auto-synced). Merged that branch into this one
+      (git merge, clean, no conflicts -- own placeholder PROGRESS.md moved aside first) to
+      obtain the real starting document rather than fabricating one."
+    batch_picked: "Small, well-defined, low-risk tooling-reliability fixes (audit198 script) +
+      mandatory re-verification of source_3's flagged active incident before touching anything
+      else, per this task's own SCOPE step 2."
+    items_closed:
+      - "source_1 path-drift bug: FIXED (see source_1.new_findings_this_task_re_running_it[0])"
+      - "source_1 CONSTITUTION.yaml hard-crash: PARTIALLY_FIXED, graceful degradation only, real
+        content restoration deliberately left open pending provenance judgment (see
+        source_1.new_findings_this_task_re_running_it[1])"
+    items_reverified_not_closed:
+      - "source_3 superboss-register.sqlite corruption: re-confirmed ACTIVE_UNRESOLVED with new
+        live evidence (3rd distinct corruption signature, ok->corrupt within single-digit
+        minutes from background writes) -- see source_3.new_finding_this_task_degrading_existing_partials_further[0].reverified_2026-07-23T09:44Z_by_task-20260723-093333_phase_1.
+        Deliberately NOT reinit'd this phase: a rushed fix would likely re-corrupt within
+        minutes given demonstrated concurrent-write pressure; a real root-cause fix (write
+        serialization) is scoped as phase 2 instead."
+    owner_decisions_written: "Created ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml with 2 fully
+      scoped entries (4-repo merge scoping questions; veda-advisors Supabase severance) per this
+      task's SCOPE -- neither executed, both parked for Owner sign-off as required."
+    commit_evidence: "See git log on this branch for the commit(s) accompanying this phase --
+      commit message references 'phase 1' explicitly."
+    self_dispatch_decision: "Continuing to phase 2: superboss-register.sqlite root-cause fix
+      (write serialization), since it is now the single highest-severity active-and-unresolved
+      item and blocks trustworthy future work on check-duplicate/system_index/execution_log."

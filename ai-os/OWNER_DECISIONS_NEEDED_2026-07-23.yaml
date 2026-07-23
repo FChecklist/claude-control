@@ -1,0 +1,92 @@
+doc_id: owner-decisions-needed-2026-07-23
+purpose: >
+  Fully scoped, ready-to-execute task descriptions for the 2 items the continuous
+  gap-closing worker (task-20260723-093333 and its self-dispatched successors) is
+  explicitly barred from executing automatically, per its own governing task spec:
+  destructive/hard-to-reverse repo-level action, and a live data-coupling severance
+  needing sign-off before cutting a production cross-write. Both are otherwise fully
+  planned -- an Owner "go" is the only missing input, not further analysis.
+created_by_task: task-20260723-093333-continuous-gap-closing-worker-2026-07-23
+source_of_scoping: "ai-os/REPO_CONSOLIDATION_PLAN_2026-07-23.md (written by
+  task-20260723-084734-master-gap-audit-and-integration-plan-20, merged into this
+  branch), cross-referenced against ai-os/MASTER_GAP_AUDIT_2026-07-23.yaml
+  consolidated_summary."
+
+decisions_needed:
+  - id: OWNER-DEC-1
+    title: "4-repo merge/consolidation (compliance-tracker + claude-control + projexa + veridian-ui-kit)"
+    why_owner_sign_off_required: "Destructive/hard-to-reverse at the repo level -- folding
+      veridian-ui-kit's source into compliance-tracker and retiring (or archiving) the
+      standalone repo changes the canonical location of shared UI source for good; a wrong
+      call here is expensive to undo once other work builds on top of the new location."
+    real_current_state:
+      - "compliance-tracker: 2,382 tracked files, ~194,900 LOC, 51 DB tables (Drizzle,
+        compliance+platform pg schemas), own git remote -- the proposed merge target."
+      - "projexa: 441 files, ~31,600 LOC, 11 DB tables, no table-name collisions with
+        compliance-tracker."
+      - "veridian-ui-kit: 32 files, ~1,940 LOC, peer-deps only. Both products consume it via
+        github:FChecklist/veridian-ui-kit#v0.2.2; current HEAD is v0.3.0, purely additive
+        (new prompt-patterns module) vs v0.2.2."
+      - "claude-control: docs/orchestration only, no app code (this repo)."
+      - "Two real, reconcilable dependency-version blockers found: lucide-react
+        (compliance-tracker ^1.24.0 vs projexa ^0.525.0) and react-resizable-panels
+        (compliance-tracker ^4.12.2 vs projexa ^3.0.3), both major-version splits -- only
+        matters if projexa is later expected to consume the same merged ui-kit instance."
+    questions_needing_an_owner_answer:
+      - "Does '4-repo merge' mean literally merging all 4 repos' git histories/codebases into
+        one, or specifically folding veridian-ui-kit's source into compliance-tracker (the
+        only piece that is actually low-risk/mechanical per the evidence gathered) while
+        claude-control and projexa stay separate? The evidence found does not support a
+        low-risk case for merging projexa or claude-control wholesale -- only ui-kit."
+      - "If ui-kit folds into compliance-tracker: retire the standalone veridian-ui-kit repo
+        outright, or keep it as a read-only historical mirror?"
+      - "Does projexa need to formally adopt the same merged ui-kit instance later (which
+        would force resolving the lucide-react / react-resizable-panels major-version splits),
+        or does it keep consuming its own independent copy indefinitely?"
+    ready_to_execute_plan_if_approved: "ai-os/REPO_CONSOLIDATION_PLAN_2026-07-23.md, Phase 1
+      (ui-kit -> compliance-tracker merge), 4 concrete steps, estimated 2-4 days, low risk
+      IF scoped to ui-kit only as described above."
+    status: awaiting_owner_decision
+
+  - id: OWNER-DEC-2
+    title: "veda-advisors live-Supabase-coupling severance"
+    why_owner_sign_off_required: "Cutting a live cross-write needs sign-off before execution --
+      this is real (if pre-launch) lead-capture data moving between Supabase projects, plus a
+      credential rotation and a governance-scope change; treat with production-cutover care
+      even though there are no paying customers yet."
+    real_current_state_contrary_to_prior_isolated_offline_framing:
+      - "Same live Supabase project: veda-advisors' .env.local NEXT_PUBLIC_SUPABASE_URL is
+        byte-identical to compliance-tracker's -- both point at project ref
+        pcrjmlpuqsbocqfwoxod."
+      - "Active cross-write, in production code (not a stub): veda-advisors/src/app/stage0/page.tsx
+        hardcodes that Supabase URL + anon key client-side and POSTs lead-capture form data
+        directly into stage0_submissions on the shared instance right now."
+      - "Governance entanglement: compliance-tracker/ai-os/sentinel/SENTINEL.yaml lists
+        veda-advisors in scope.repositories with authority: FULL_ACCESS for both Z.ai and
+        Claude Code agents -- today's AI agents already have write authority spanning both
+        repos."
+      - "Stale documentation risk: claude-control/CONTROLLER.yaml (lines 134-138) claims
+        veda-advisors' app code lives in veda-advisors/code-by-zai/ -- that path does not
+        exist; the real app is at repo root."
+    questions_needing_an_owner_answer:
+      - "Approve provisioning a new, separate Supabase project for veda-advisors (new project
+        ref, new credentials, real infra cost even if small)?"
+      - "Any objection to the migration window / acceptable downtime for the stage0
+        lead-capture flow during cutover?"
+      - "Confirm FULL_ACCESS removal from SENTINEL.yaml's scope.repositories for veda-advisors
+        is intended (i.e. AI agents should lose current write authority over veda-advisors
+        once isolated) -- this is a real permissions reduction, flagging explicitly rather
+        than assuming."
+    ready_to_execute_plan_if_approved: "ai-os/REPO_CONSOLIDATION_PLAN_2026-07-23.md, Phase 2
+      (veda-advisors real isolation cutover), 6 ordered steps (provision new Supabase project;
+      migrate stage0_submissions + verify row counts; update env/deploy + redeploy + smoke-test;
+      remove veda-advisors from SENTINEL.yaml scope.repositories; correct the code-by-zai/
+      stale path in CONTROLLER.yaml; grep-verify zero remaining references to the old shared
+      project ref), estimated about 1 week, medium risk -- has a real data-migration/
+      credential-rotation step, do NOT treat as low-risk."
+    status: awaiting_owner_decision
+
+notify_owner_on_creation: "This file was created by task-20260723-093333 phase 1
+  (2026-07-23, ~09:50 UTC). Per that task's own EXPECTED_OUTPUT, an immediate (not
+  batched) notify-owner.py email should accompany the first commit that adds this file,
+  since both items need an Owner decision."
