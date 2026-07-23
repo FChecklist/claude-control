@@ -4313,3 +4313,14 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260722-073927-mother-router-and-roster-persistent-memo/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-22'
+
+  - id: WORKER-20260723-034803-high-governance-audit-and-build-2026-07
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''high-governance-audit-and-build-2026-07-23'' on claude-control
+      reached status=blocked. PRE-FLIGHT HARD STOP (credit_accountant_rejected): accountant
+      call failed, failing closed: claude -p reported is_error: '
+    where: /opt/veridian/ai-os/tasks/task-20260723-034803-high-governance-audit-and-build-2026-07/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-23'
