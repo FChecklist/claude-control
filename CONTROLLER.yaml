@@ -4350,3 +4350,28 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260723-052857-execution-rules-phase0-analysis-and-buil/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-23'
+
+  - id: WORKER-20260723-060600-execution-rules-phase1-tagging-extension
+    project: veridian
+    type: worker-task
+    status: done
+    summary: Server-worker task 'execution-rules-phase1-tagging-extension-2026-07-23'
+      on claude-control reached status=completed. worker finished, no changes to commit
+    where: /opt/veridian/ai-os/tasks/task-20260723-060600-execution-rules-phase1-tagging-extension/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-23'
+
+  - id: WORKER-20260723-064712-execution-rules-phase2-pre-execution-che
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''execution-rules-phase2-pre-execution-checklist-automation-2026-07-23''
+      on claude-control reached status=failed. PRE-FLIGHT REJECTED (tight_task_schema_violation,
+      transient): Constraints say not to do "log pre post execution field yes", but
+      that same thing is required elsewhere in the task. Could you resolve this contradiction
+      before dispatch -- either remove it from Constraints, or remove the requirement
+      from Objective/Scope/Success criteria/Expected output? -- no model call made,
+      no cost incurred'
+    where: /opt/veridian/ai-os/tasks/task-20260723-064712-execution-rules-phase2-pre-execution-che/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-23'
