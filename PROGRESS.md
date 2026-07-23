@@ -12,11 +12,46 @@
 - [x] SUCCESS_CRITERIA grep (`sleep\|loop`) passes
 - [x] Merged phase 13's branch to get canonical GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml
 - [x] Updated GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml item 6 PARTIAL -> DONE with real evidence
-- [x] Committed and pushed to this phase's own worker branch
+- [x] Committed (d9be452) and pushed to this phase's own worker branch
+- [x] `task-gateway.py close` attempted TWICE (2 consecutive failures, then stopped per the
+      circuit-breaker rule -- not attempting a 3rd): both failed identically, NOT from my own command --
+      real, pre-existing, reproducible corruption in `/opt/veridian/ai-os/memory/superboss-register.sqlite`
+      (`PRAGMA integrity_check` -> `Freelist: size is 0 but should be 2, Page 2326: never used` +
+      `wrong # of entries in index sqlite_autoindex_file_inventory_1`, same 3x-retry-confirmed-real
+      corruption health-check-15min.py's own `check_db_integrity_and_backup()` already flags as a
+      HIGH PRIORITY anomaly every cycle -- not something this task introduced). Both times, real
+      stderr: `sqlite3.DatabaseError: database disk image is malformed` from `superboss-register.py
+      log-work`'s `conn.commit()` (SQLite can't safely allocate a page while the freelist header is
+      inconsistent).
+      IMPORTANT: traced `cmd_close()`'s actual flow (task-gateway.py:258-327) -- the real audit
+      verification (`postflight_audit_gate.py`, which runs the `--audit-cmd` against the evidence and
+      independently commits its own `task_audits` row) runs and commits BEFORE the failing `log-work`
+      bookkeeping call. Confirmed via a direct read of the live (corrupted-but-still-readable) DB that
+      BOTH attempts really did commit a real, independent verdict=DONE audit record:
+      `AUD-20260723-171103-9bbbb9` (2026-07-23T17:11:03) and `AUD-20260723-171655-d2c373`
+      (2026-07-23T17:16:55), both `software_task_id=task-20260723-170222-phase-14-gap-closing-item6-health-check`,
+      `audit_cmd` matching SUCCESS_CRITERIA verbatim, `exit_code=0`. So the audit criterion genuinely,
+      verifiably passed twice -- only the final `status=closed` bookkeeping write (a separate call,
+      after the verdict is already determined) is what the corruption blocks.
+- [x] Took a safety backup first (`/opt/veridian/backups/sqlite-daily/superboss-register.sqlite.pre-repair-phase14.bak`,
+      non-destructive, additive) and investigated a logical dump/rebuild repair on a **temp file only**
+      (`/tmp/superboss_rebuilt.sqlite`, never the live DB): `conn.iterdump()` succeeded fully (all real
+      row data still scannable -- only metadata/index/freelist structures are corrupted, not the actual
+      table pages), confirming this is repairable in principle. Rebuilding cleanly hit a real FTS5
+      virtual-table restore ordering issue (`vtable constructor failed: actions_fts` -- the dump's
+      writable-schema `sqlite_master` hack for each of 5 FTS5 tables needs its shadow tables created
+      and the connection's schema cache refreshed before that table's own data rows can be inserted).
+      Judgment call: stopped here rather than continuing to force a full fix -- this DB corruption is
+      a real, pre-existing, **out-of-scope** issue (unrelated to item 6), the live file is actively
+      written by multiple cron jobs every few minutes (a live shared resource, not safe to swap
+      carelessly), and the SPEC's own CHECKPOINT step explicitly allows citing a failed close attempt's
+      result instead of forcing a fake success. The existing alerting pipeline (ATTENTION.md +
+      notify-owner.py escalation via health-check-15min.py's anomalies list) already surfaces this
+      corruption on every cycle -- now at the improved 1-minute cadence this same phase just built --
+      so the Owner is not left uninformed; no silent gap introduced.
 
 ## Remaining
-- [ ] Close task via task-gateway.py
-- [ ] Create + start Phase 15 with a new target
+- [ ] Create + start Phase 15 with a new target, flagging this DB corruption finding for visibility
 
 ---
 
