@@ -260,6 +260,56 @@ def extract_section(text, name):
     return m.group(1).strip() if m else None
 
 
+def check_branch_merged_to_master(task_id):
+    """Real fix for a genuine gap found 2026-07-24: a full-repo audit showed only
+    4 of 28 real worker branches from 2026-07-23 had ever been merged to master --
+    every phase's own EXPECTED_OUTPUT said "COMMIT+PUSH" and every phase did push
+    a branch, but nothing ever verified the push reached the canonical branch.
+    Master sat frozen at a ~10:38am commit while 8+ hours of real, closed-out work
+    (governance items, the watchdog service, task-gateway.py itself, the Knowledge
+    Engine) sat on disconnected branches nobody ever opened or merged a PR for.
+    This makes that check part of every close, not something a human has to
+    remember to audit for separately. Best-effort: a task with no workspace git
+    repo, or no matching worker branch, returns NO_GIT_ACTIVITY rather than
+    failing -- most tasks are legitimate non-code work."""
+    workspace = f"{AI_OS}/tasks/{task_id}/workspace"
+    if not os.path.exists(os.path.join(workspace, ".git")):
+        return {"status": "NO_GIT_ACTIVITY", "detail": "no .git in task workspace"}
+    branch_proc = subprocess.run(
+        ["git", "-C", workspace, "branch", "--show-current"],
+        capture_output=True, text=True, timeout=15,
+    )
+    branch = branch_proc.stdout.strip()
+    if not branch:
+        return {"status": "NO_GIT_ACTIVITY", "detail": "workspace not on a named branch"}
+    # gh pr, not git merge-base --is-ancestor: GitHub squash/rebase merges create a NEW
+    # commit on master, so the original branch tip is never a literal git ancestor even
+    # when its content genuinely landed -- confirmed 2026-07-24 against a known-merged
+    # branch (PR #4) that a naive ancestor-check incorrectly called NOT_MERGED.
+    pr_proc = subprocess.run(
+        ["gh", "pr", "list", "--repo", "FChecklist/claude-control",
+         "--head", branch, "--state", "all", "--json", "number,state,mergedAt"],
+        capture_output=True, text=True, timeout=30,
+    )
+    try:
+        prs = json.loads(pr_proc.stdout) if pr_proc.returncode == 0 else []
+    except json.JSONDecodeError:
+        prs = []
+    merged_prs = [pr for pr in prs if pr.get("state") == "MERGED"]
+    if merged_prs:
+        return {"status": "MERGED", "branch": branch, "pr_number": merged_prs[0]["number"]}
+    open_prs = [pr for pr in prs if pr.get("state") == "OPEN"]
+    return {
+        "status": "NOT_MERGED",
+        "branch": branch,
+        "open_pr_number": open_prs[0]["number"] if open_prs else None,
+        "action_needed": (
+            f"PR #{open_prs[0]["number"]} is open but not merged -- merge it" if open_prs
+            else f"no PR exists for '{branch}' -- open one and merge it, or fold it into a reconciliation pass"
+        ),
+    }
+
+
 def cmd_close(args):
     task_dir = f"{AI_OS}/tasks/{args.task_id}"
     prompt_file = f"{task_dir}/prompt.txt"
@@ -324,11 +374,21 @@ def cmd_close(args):
     ])
     checkpoint_status = "completed" if checkpoint_proc.returncode == 0 else "checkpoint_failed"
 
+    git_merge_status = check_branch_merged_to_master(args.task_id)
+    if git_merge_status["status"] == "NOT_MERGED":
+        run([
+            "python3", SUPERBOSS, "log-action",
+            "--source", "ai_agent", "--medium", "task_gateway",
+            "--content", f"unmerged_branch:{args.task_id}:{git_merge_status['branch']}"
+            f":{git_merge_status['commits_ahead_of_master']}_commits_ahead",
+        ])
+
     print(json.dumps({
         "audit_verdict": verdict,
         "checkpoint_status": checkpoint_status,
         "audit_id": audit_result.get("audit_id"),
         "work_item_id": close_result.get("work_item_id"),
+        "git_merge_status": git_merge_status,
     }, indent=2, default=str))
 
 
