@@ -65,12 +65,18 @@ c70021f and merged into this branch -- not restated here, per this repo's own
       thin-client-only, mirroring RULE-067's "no development, execution, or AI
       processing ... on local machines" language, extended to mobile. Verified
       valid YAML.
-- [x] Updated `ai-os/GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml`: items 27/28/44/56
+- [x] **Item 42: PARTIAL -> DONE, as a side effect of item 44's fix** (not
+      separately targeted). Its own PARTIAL evidence complained of precisely the
+      gap item 44's fix closes ("no rule explicitly names mobile the way RULE-067
+      names local machines") -- leaving it PARTIAL after adding that exact rule
+      would have misreported already-done work, so updated it for consistency with
+      the same evidence citation.
+- [x] Updated `ai-os/GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml`: items 27/28/42/44/56
       updated with real evidence, added a `phase7_amendment` block and an
-      `item_44_amendment` block. Summary recomputed (done 32->36, partial 24->24,
+      `item_44_amendment` block. Summary recomputed (done 32->37, partial 24->23,
       missing 4->0) and cross-checked against an independent Python/PyYAML recount
-      of all 60 `items[].status` entries -- matches exactly (36 DONE / 24 PARTIAL /
-      0 MISSING / 60 total). Left items 1-26, 29-43, 45-55, 57-60 untouched.
+      of all 60 `items[].status` entries -- matches exactly (37 DONE / 23 PARTIAL /
+      0 MISSING / 60 total). Left items 1-26, 29-41, 43, 45-55, 57-60 untouched.
 
 ## Deliberately NOT done -- explained, not silently skipped
 - [ ] Did not build a new notification function/path -- reused `notify_owner()` and
@@ -84,17 +90,21 @@ c70021f and merged into this branch -- not restated here, per this repo's own
       for laptops either; out of this item's scope.
 
 ## Remaining (for a human to decide)
-- [ ] 24 items in `ai-os/GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml` still PARTIAL: 1,
-      3, 4, 5, 6, 10, 11, 15, 21, 24, 25, 29, 30, 31, 32, 36, 42, 45, 49, 50, 51, 52,
+- [ ] 23 items in `ai-os/GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml` still PARTIAL: 1,
+      3, 4, 5, 6, 10, 11, 15, 21, 24, 25, 29, 30, 31, 32, 36, 45, 49, 50, 51, 52,
       54, 60 -- targeted by Phase 8 (see NEXT_PHASE).
 - [ ] `ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml` still has 3 open entries from
       earlier phases (auth.log group permission, chain self-dispatch pause, log
       retention period) -- untouched this phase, not this phase's scope.
 
 ## NEXT_PHASE
-Created and started Phase 8, targeting the next set of concrete `PARTIAL` items
-from `ai-os/GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml`. Real task:
-`task-20260723-XXXXXX-gap-closing-phase8-*` (see task.yaml / systemd unit for the
-exact id), created via `veridian-task.py create` (which itself enables + starts the
-`veridian-worker@<task-id>.service` unit -- confirmed active via
-`systemctl --user status`).
+Created and started Phase 8, targeting items 5 (health_check_covers_all_services),
+36 (documentation_auto_generation), 49 (active_approval_notification), and 54
+(automated_safe_fix_scheduling) from `ai-os/GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml`
+-- each specified with exact file:line, exact fix, exact test, same structure as
+this task's own prompt. Real task:
+`task-20260723-132537-gap-closing-phase8-coverage-notification`, created via
+`veridian-task.py create` (which itself enables + starts the
+`veridian-worker@task-20260723-132537-gap-closing-phase8-coverage-notification.service`
+unit -- confirmed active via `systemctl --user status`, real PID 389962 running
+`claude -p`).

@@ -4,8 +4,8 @@ generated_by_task: task-20260723-034803-high-governance-audit-and-build-2026-07
 scope: audit_only_no_build_this_increment
 method: direct_inspection_of_live_server_state (crontab -l, systemctl --user list-unit-files/list-units, script contents, log contents/timestamps). Policy docs (STANDING_DIRECTIVE.yaml, AI_ENGINEERING_POLICY.yaml, RULES_ARTICLES_198.json) count only as evidence of stated intent, not of DONE status, unless a real running mechanism is also cited.
 summary:
-  done: 36
-  partial: 24
+  done: 37
+  partial: 23
   missing: 0
   total: 60
 
@@ -17,8 +17,12 @@ phase7_amendment:
     (scripts/notify-owner.py + scripts/health-check-15min.py + scripts/security-check.py)
     instead of trusting the pre-phase5 MISSING status, which was recorded before
     notify-owner.py existed. Item 44 (mobile_thin_client_policy) closed with a
-    documentation-only policy addition. Full prior content (phase5_amendment,
-    phase6_amendment, and all 60 items) unchanged below except items 27/28/44/56.
+    documentation-only policy addition. Item 42 also flipped PARTIAL -> DONE as a
+    side effect (not separately targeted by this task): its own PARTIAL evidence
+    complained of the exact same gap item 44's fix closes ("no rule explicitly
+    names mobile the way RULE-067 names local machines") -- see item_44_amendment
+    and item 42's own updated evidence below. Full prior content (phase5_amendment,
+    phase6_amendment, and all 60 items) unchanged below except items 27/28/42/44/56.
     Re-verification finding for items 27/28/56: item 27''s underlying mechanism is
     real and already DONE (scripts/notify-owner.py, real Resend sends, called from
     2 real scripts -- see item 47''s evidence for 3 verified real example sends).
@@ -423,8 +427,18 @@ items:
   evidence: "RULE-067 (RULES_ARTICLES_198.json): 'No development, execution, or AI processing shall occur on local machines unless explicitly authorized.' Enforced structurally via SSH-only execution and proxy routing."
 
 - item_number: 42
-  status: PARTIAL
-  evidence: "No mobile processing exists anywhere on this server (nothing to violate), but no rule explicitly names 'mobile' the way RULE-067 names local machines -- compliance is by absence, not codified prohibition."
+  status: DONE
+  evidence: "CLOSED 2026-07-23 (phase7, side effect of item 44's fix -- not separately
+    targeted, but this item's own stated gap is the exact same gap item 44's fix
+    closes, so leaving it PARTIAL after the fix would misreport already-done work):
+    the prior PARTIAL evidence's complaint was precisely 'no rule explicitly names
+    mobile the way RULE-067 names local machines.' ai-os/STANDING_DIRECTIVE.yaml:29-30
+    now does exactly that: mobile_execution: forbidden plus a mobile_execution_note
+    stating 'no development, execution, or AI processing shall occur on a mobile
+    device, unless explicitly authorized,' mirroring RULE-067's local-machine
+    language verbatim in structure. No mobile processing exists on this server
+    (unchanged, still nothing to violate) and now an explicit codified prohibition
+    exists too, not compliance by absence alone. DONE."
 
 - item_number: 43
   status: DONE
