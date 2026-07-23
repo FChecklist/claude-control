@@ -39,9 +39,17 @@
       Worked around by using the Read/Write tools and in-process Python (subprocess.run capture_output) instead
       of bash redirects/pipes for anything load-bearing.
 
+- [x] Committed 8f3b587 and pushed to worker/task-20260723-060600-execution-rules-phase1-tagging-extension.
+- [x] Checkpointed status=pending_review via veridian-task.py, citing AUD-20260723-063804-0d89cc /
+      WRK-20260723-063804-cbc2.
+- [x] Sent exactly one notify-owner.py email (Resend message id 8dfb145b-e18e-4663-bb2b-ccf16124266b) with
+      real evidence: commit hash, before/after tag counts, audit id.
+- [x] Self-dispatched phase 2: task-20260723-064712-execution-rules-phase2-pre-execution-che
+      (pre_execution_checklist_automation, Parts 38b/39/40, per roadmap_next_phases) via
+      scripts/veridian-task.py create. 2nd of the hard cap of 3 self-dispatched phases -- its own prompt
+      explicitly tells it this is the FINAL allowed self-dispatch, not to chain a phase 3. Confirmed
+      service activating via systemctl --user is-active.
+
 ## Remaining
-- [ ] Commit + push this branch.
-- [ ] Checkpoint status=pending_review citing AUD-20260723-063804-0d89cc / WRK-20260723-063804-cbc2.
-- [ ] Send exactly one notify-owner.py email with real evidence (commit hash, before/after tag counts, audit id).
-- [ ] Self-dispatch phase 2 (pre_execution_checklist_automation, parts 38b/39/40) via
-      scripts/veridian-task.py create, per roadmap_next_phases -- 2nd of a hard cap of 3 self-dispatched phases.
+None -- this phase is complete. Phase 2 is running independently as its own task
+(task-20260723-064712-execution-rules-phase2-pre-execution-che); nothing further for this task to do.
