@@ -16,6 +16,31 @@ phase1_amendment:
     its real diff for this phase is committed alongside this file at
     ai-os/patches/superboss-register-tags-column-2026-07-23.diff (verified this phase to `patch -p1
     --dry-run` cleanly against the pre-phase1 file content).'
+phase2_amendment:
+  amended_by_task: task-20260723-064712-execution-rules-phase2-pre-execution-che
+  amended_ts: '2026-07-23T07:20:00+00:00'
+  scope: 'pre-execution checklist automation (roadmap_next_phases item pre_execution_checklist_automation,
+    Parts 38b/39/40). (1) ai-os/scripts/generate_task_checklist.py restructured to software-generate the full
+    A-J, 77-item Part 39 structure (was a flat ~11-item, 3-list checklist) -- every one of the 77 source items
+    now carries an explicit REAL/NOT_YET_AVAILABLE status with cited evidence, spliced into MASTER_INDEX.yaml''s
+    self_use_task_checklist (60/77 real, 17/77 honest gaps, 0 silently dropped). (2) superboss-register.py:
+    added a 5th table, execution_log (additive, same CREATE TABLE IF NOT EXISTS pattern as postflight_audit_gate.py''s
+    task_audits), plus a `log-execution` subcommand that validates every field name against Part 40''s own literal
+    Pre-Execution (39 fields) / Post-Execution (20 fields) lists and rejects unknown fields or non-YES/NO statuses.
+    (3) Wired to two real, already-unconditional call sites: session_bootstrap.py (mandatory first command --
+    writes one Pre-Execution Log row per invocation) and postflight_audit_gate.py (sole terminal-status writer --
+    writes one Post-Execution Log row per call, auto-deriving mechanically-determinable fields from its own real
+    audit_cmd/exit_code/verdict, defaulting task-specific judgment fields to NO unless the caller supplies real
+    evidence via a new optional --post-fields-file). (4) Updated Parts 38b/40 with real before/after evidence
+    (deepened, stayed PARTIAL -- adoption is not yet retroactively true for already-closed tasks); flipped Part 39
+    MISSING -> PARTIAL (0/77 -> 77/77 items represented, 60/77 real). Verified via postflight_audit_gate.py (see
+    this file''s own Part 40 phase2_note for the real audit_id/execution_log_id evidence).
+    generate_task_checklist.py and superboss-register.py live on the live server (/opt/veridian/scripts/), not in
+    this git repo -- their real diffs for this phase are committed alongside this file at
+    ai-os/patches/execution-rules-phase2-pre-execution-checklist-2026-07-23.diff (also includes session_bootstrap.py
+    and postflight_audit_gate.py, which live at /opt/veridian/ai-os/scripts/ and are likewise outside any git repo).
+    summary counts below (2 done/34 partial/6 missing) become 2 done/35 partial/5 missing -- Part 39 MISSING -> PARTIAL,
+    no other Part''s verdict changed.'
 method: |
   direct_inspection_of_live_server_state (crontab -l, systemctl --user list-units, real script contents
   read line-by-line, real log/ATTENTION.md contents, live sqlite schema/PRAGMA integrity_check, live dry-runs
@@ -65,9 +90,12 @@ critical_finding_this_phase: |
   but a genuine partial implementation the roadmap should extend rather than duplicate.
 summary:
   done: 2
-  partial: 34
-  missing: 6
+  partial: 35
+  missing: 5
   total: 42
+  phase2_note: "Part 39 flipped MISSING -> PARTIAL this phase (task-20260723-064712-execution-rules-phase2-pre-execution-che);
+    no other Part's verdict changed. Was 2 done/34 partial/6 missing through phase1 (see phase1_amendment above,
+    which left these counts UNCHANGED)."
 items:
 - part: 1
   title: Primary Rules
@@ -420,12 +448,32 @@ items:
     constitution, credit_spend_governance); preflight-guard.py hard-gates on disk/mem/circuit-breaker before
     invoking the model. It's advisory-checklist not a hard automatic gate for context recovery specifically, and
     its lookup DB was corrupted until this phase's fix."
+  phase2_note: "PHASE2 (task-20260723-064712-execution-rules-phase2-pre-execution-che, pre_execution_checklist_automation):
+    still PARTIAL -- the checklist remains advisory (an AI/superboss reads it, nothing hard-blocks on it), and that
+    specific gap is unchanged. What did change: session_bootstrap.py (the closest thing to an automatic pre-execution
+    step, since it is the documented mandatory-first-command) now writes a real Pre-Execution Log row every time it
+    runs (superboss-register.py's new execution_log table, see Part 40 below) -- so 'automatic' now applies to the
+    LOGGING of checklist compliance, even though the checklist ITEMS themselves still are not hard-enforced.
+    Before: 0 real execution_log rows ever existed. After: 1 real row for this task itself
+    (EXL-20260723-071801-de2f, 14 YES / 25 NO of 39 Pre-Execution fields, cited in Part 40 below)."
 - part: 39
   title: VERIDIAN Pre-Execution Checklist (A-J, ~77 items)
-  status: MISSING
-  evidence: "Real checklist found (self_use_task_checklist, ~11 items across before/while/after) but it is nowhere
-    near the ~77-item A-J structure with a Final Validation list the rules doc describes; no A-J structure exists
-    anywhere in the filesystem."
+  status: PARTIAL
+  evidence: "PHASE2 (task-20260723-064712-execution-rules-phase2-pre-execution-che, pre_execution_checklist_automation):
+    flipped from MISSING to PARTIAL this phase -- ai-os/scripts/generate_task_checklist.py (extended, real diff at
+    ai-os/patches/execution-rules-phase2-pre-execution-checklist-2026-07-23.diff) now software-generates a full A-J
+    structure matching this Part's 10 lettered sections one-for-one, with all 77 individual source items represented
+    explicitly (none silently dropped), spliced into MASTER_INDEX.yaml's self_use_task_checklist and independently
+    yaml.safe_load-verified on both the live path and the compliance-tracker repo mirror.
+    Before: 0/77 items represented in any A-J structure (self_use_task_checklist was 3 flat lists, ~11 items total,
+    with no A-J mapping at all).
+    After: 77/77 items represented, each with an explicit status -- 60/77 (78%) backed by a REAL, currently-running
+    mechanism (script/table/file cited per item, e.g. rca_open queries, system_index, STANDING_DIRECTIVE.yaml,
+    prompt.txt's own structured OBJECTIVE/SCOPE/SUCCESS_CRITERIA/CONSTRAINTS fields), 17/77 (22%) honestly documented
+    as NOT_YET_AVAILABLE (a real gap, e.g. no Owner/Organization/End User memory store exists yet -- Parts 33-35 --
+    and no pending-approvals queue, execution-plan-validation script, or API registry exist at the ai-os layer).
+    Still PARTIAL, not DONE: 17 real gaps remain, and this is a software-generated document an AI/superboss reads,
+    not a hard pre-execution gate that blocks work automatically (same limitation Part 38b has)."
 - part: 40
   title: Pre/Post-Execution Log format (YES/NO machine-readable)
   status: PARTIAL
@@ -435,6 +483,28 @@ items:
     each with a real evidence array) -- structurally close to what's asked, but scored against a different, older
     198-item ruleset, not the ~38+20-field pre/post-execution checklist this Part specifies, and not literal
     YES/NO fields."
+  phase2_note: "PHASE2 (task-20260723-064712-execution-rules-phase2-pre-execution-che, pre_execution_checklist_automation):
+    deepened materially, still PARTIAL (adoption is not yet system-wide -- see caveat below). Built a real
+    execution_log table in superboss-register.py (real diff at
+    ai-os/patches/execution-rules-phase2-pre-execution-checklist-2026-07-23.diff), following the exact task_audits
+    pattern (additive CREATE TABLE IF NOT EXISTS, not a parallel store), plus a new `log-execution` CLI subcommand
+    that validates every field name against Part 40's own literal field lists (39 Pre-Execution fields, 20
+    Post-Execution fields) and rejects anything else -- a field can only be logged if it is one of the doc's own
+    named fields, and its status must be exactly YES or NO (never a guessed value). Wired to TWO real call sites,
+    chosen because each already runs unconditionally at the two moments Part 40 cares about: session_bootstrap.py
+    (the documented mandatory first command of every task) now writes one Pre-Execution Log row per invocation;
+    postflight_audit_gate.py (the sole path that may write a terminal DONE/FAILED status) now writes one
+    Post-Execution Log row per call, auto-deriving the mechanically-determinable fields from its own real
+    audit_cmd/exit_code/verdict and a real path-scan of --content, and defaulting any pure task-specific judgment
+    field (e.g. 'Automation Updated') to NO unless the caller supplies real evidence via a new optional
+    --post-fields-file -- zero fabricated YES values, verified by re-reading both scripts' own field-mapping code.
+    Before: 0 execution_log rows ever existed (table did not exist).
+    After: this task's own real rows exist -- Pre-Execution: EXL-20260723-071801-de2f (14 YES / 25 NO of 39 fields,
+    written by session_bootstrap.py); Post-Execution: written by this same phase's own postflight_audit_gate.py
+    close-out call (see this task's checkpoint note for that row's id). Caveat, honestly stated: this proves the
+    mechanism is real and wired, not that every OTHER task server-wide has adopted it yet -- that requires those
+    tasks' own future invocations of session_bootstrap.py/postflight_audit_gate.py, which now happens automatically
+    going forward since both call sites are unconditional, but cannot be retroactively true for already-closed tasks."
 - part: 41
   title: Machine-to-Machine Communication Rules
   status: PARTIAL
@@ -458,6 +528,23 @@ roadmap_next_phases:
       subset of the A-J checklist (context recovery, duplicate-check, compliance self-test). Extending them with
       the remaining checklist fields and a structured YES/NO log table per task is additive to an existing
       mechanism, not a new one."
+  - phase: pre_execution_checklist_followup
+    parts: [38b, 39, 40]
+    status: not_yet_dispatched_owner_approval_required
+    approach: "Real follow-up work remains after task-20260723-064712-execution-rules-phase2-pre-execution-che
+      (phase 2 of this roadmap item, and the 3rd/FINAL self-dispatched phase allowed by
+      task-20260723-052857-execution-rules-phase0-analysis-and-buil's own cap -- do NOT self-dispatch this,
+      it requires Owner-approved future dispatch): (1) close the 17/77 Part 39 NOT_YET_AVAILABLE gaps that
+      have a plausible real mechanism (e.g. a pending-approvals queue, an execution-plan-validation script,
+      an ai-os-layer API registry) -- some of the 17 (e.g. Owner/Organization/End User memory, Parts 33-35)
+      are correctly deferred to the conversation_memory_stores phase below instead, not duplicated here.
+      (2) Confirm system-wide adoption of execution_log: this phase proved the mechanism real and wired
+      unconditionally into session_bootstrap.py/postflight_audit_gate.py, but only this task's own invocation
+      has a real row so far -- a follow-up audit after enough elapsed time should confirm other tasks'
+      real rows accumulate automatically, not just this one. (3) Consider whether Part 38b/39's advisory
+      (AI/superboss reads it, nothing hard-blocks) should become an actual hard gate, matching preflight-guard.py's
+      pattern -- explicitly NOT attempted this phase, since 'hard-gate the checklist' is a materially bigger,
+      riskier change than 'extend the checklist + add a log,' and this task's own SCOPE was the latter only."
   - phase: superboss_execution_core
     parts: [32]
     approach: "Substantial new subsystem (AI-unavailability detection + automatic queue-and-retry for

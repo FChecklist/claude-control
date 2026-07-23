@@ -1,55 +1,58 @@
-# PROGRESS -- task-20260723-060600-execution-rules-phase1-tagging-extension
+# PROGRESS -- task-20260723-064712-execution-rules-phase2-pre-execution-che
 
 ## Completed
-- [x] Merged in phase0's branch (worker/task-20260723-052857-execution-rules-phase0-analysis-and-buil,
-      commit f71aaa9) to get ai-os/EXECUTION_RULES_AUDIT_2026-07-23.yaml, which this branch's base (master)
-      did not yet have.
-- [x] Real finding, not assumed: system_index had 0 rows (not the 12 MASTER_INDEX.yaml claimed) -- the prior
-      phase's sqlite corruption+reinit had silently emptied it. Discovered via direct query before building
-      anything (STANDING_DIRECTIVE precheck).
-- [x] superboss-register.py (live, /opt/veridian/scripts/): added nullable `tags` TEXT column to system_index
-      (idempotent ALTER TABLE via new `_migrate_schema()`, called from init_db/init_db_silent so it self-heals
-      on any invocation), `--tags` on index-add, `--tag` filter on search. Verified via a scratch-DB test
-      (fresh DB + a schema-stripped DB to prove the migration path) before touching the live DB.
-      Diff committed at ai-os/patches/superboss-register-tags-column-2026-07-23.diff (verified `patch -p1
-      --dry-run` applies cleanly).
-- [x] Tagged all 29 real ops scripts named in MASTER_INDEX.yaml's file_inventory (18 previously not_yet_tagged
-      + 11 of the 12 previously-claimed-tagged restored -- software-request-analyzer.py, the 12th, does not
-      exist on disk, not fabricated). module:<name> tags (dispatch/sync/monitoring/validation/audit/repair/
-      ai_routing/logging) inferred from each script's own header docstring, cross-checked against real
-      crontab/systemd evidence for status/priority framing (e.g. supervisor-sweep.sh's cron trigger confirmed
-      DISABLED since 2026-07-18; anthropic_openrouter_proxy.py confirmed superseded by v2 via its systemd
-      unit's .v1.bak).
-- [x] MASTER_INDEX.yaml: moved the 18 out of not_yet_tagged into system_index_tagged (now empty list), added
-      count_note flagging 2 real pre-existing inventory-accuracy gaps found along the way (not fixed, out of
-      this phase's scope): the file's own count:28 is stale (real is 38 scripts on disk), and 9 real scripts
-      were never named in file_inventory at all.
-- [x] ai-os/EXECUTION_RULES_AUDIT_2026-07-23.yaml: Part 14/15/20 evidence updated with real before/after
-      counts and the postflight audit id; Parts 16/17/18/19/21/22 given a one-line PHASE1 NOTE each explaining
-      why they stay at phase0's status (this phase's tags column doesn't address their specific gaps).
-      Verified structurally intact after edit (42 parts before/after, summary counts unchanged, top-level keys
-      diffed via git show HEAD vs current in-memory, not just eyeballed).
-- [x] Verified via postflight_audit_gate.py: AUD-20260723-063804-0d89cc, verdict DONE,
-      WRK-20260723-063804-cbc2. Real audit_cmd asserted: tags column present, all 18 formerly-untagged scripts
-      have a non-empty tags entry, and a live `search sync --tag module:sync` query returns 5 real rows.
-- [x] Environment note (not part of the task, but worth recording): this sandbox's bash-command wrapper
-      (`snip`) silently truncates large redirected/piped command output and appends a fake "... more files
-      changed" marker into the truncated file -- the exact same defect ai-os/GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml
-      already documents for a different commit, now confirmed as a recurring environment issue, not a one-off.
-      Worked around by using the Read/Write tools and in-process Python (subprocess.run capture_output) instead
-      of bash redirects/pipes for anything load-bearing.
-
-- [x] Committed 8f3b587 and pushed to worker/task-20260723-060600-execution-rules-phase1-tagging-extension.
-- [x] Checkpointed status=pending_review via veridian-task.py, citing AUD-20260723-063804-0d89cc /
-      WRK-20260723-063804-cbc2.
-- [x] Sent exactly one notify-owner.py email (Resend message id 8dfb145b-e18e-4663-bb2b-ccf16124266b) with
-      real evidence: commit hash, before/after tag counts, audit id.
-- [x] Self-dispatched phase 2: task-20260723-064712-execution-rules-phase2-pre-execution-che
-      (pre_execution_checklist_automation, Parts 38b/39/40, per roadmap_next_phases) via
-      scripts/veridian-task.py create. 2nd of the hard cap of 3 self-dispatched phases -- its own prompt
-      explicitly tells it this is the FINAL allowed self-dispatch, not to chain a phase 3. Confirmed
-      service activating via systemctl --user is-active.
+- [x] Merged phase1's branch (worker/task-20260723-060600-execution-rules-phase1-tagging-extension,
+      commit 0a934c2, fast-forward) to get ai-os/EXECUTION_RULES_AUDIT_2026-07-23.yaml and the phase1 patch,
+      which this branch's base (master, at d772246) did not yet have.
+- [x] generate_task_checklist.py (live, /opt/veridian/scripts/): restructured self_use_task_checklist from a
+      flat 3-list ~11-item checklist into the full A-J, 77-item structure of Part 39, every item tagged
+      REAL/NOT_YET_AVAILABLE (60 REAL, 17 NOT_YET_AVAILABLE, 0 silently dropped). Spliced into MASTER_INDEX.yaml
+      (live + compliance-tracker mirror), both yaml.safe_load-verified.
+- [x] superboss-register.py (live): added 5th table `execution_log` (additive, same pattern as task_audits) +
+      `log-execution` CLI subcommand, validated against Part 40's literal 39-field PRE / 20-field POST lists
+      (unknown field names and non-YES/NO statuses are rejected, tested on a scratch DB first).
+- [x] Wired session_bootstrap.py (writes one real PRE row per invocation -- mandatory-first-command call site)
+      and postflight_audit_gate.py (writes one real POST row per call -- sole terminal-status-writer call site).
+      Tested end-to-end against a scratch DB copy before running for real.
+- [x] Real rows produced for this task: PRE EXL-20260723-071801-de2f (14 YES/25 NO of 39), POST
+      EXL-20260723-072847-7f28 (12 YES/8 NO of 20).
+- [x] Registered all 4 changed scripts in system_index (index-add) -- caught and fixed one accidental
+      near-duplicate row of my own (superboss-register.py registered under a relative path when an absolute-path
+      row already existed from phase1; deleted and re-added correctly under the existing path).
+- [x] Mirrored generate_task_checklist.py/superboss-register.py to compliance-tracker/ai-os/scripts/ via
+      system-sync.py --check mirror (session_bootstrap.py/postflight_audit_gate.py have no compliance-tracker
+      mirror to begin with -- confirmed before assuming one was needed).
+- [x] ai-os/EXECUTION_RULES_AUDIT_2026-07-23.yaml: added phase2_amendment; Part 39 flipped MISSING -> PARTIAL
+      (0/77 -> 77/77 items represented, 60 real); Parts 38b/40 deepened (still PARTIAL, honestly -- advisory not
+      hard-gated, and adoption isn't retroactively true for already-closed tasks). summary: 2 done/35 partial/5
+      missing (was 2/34/6). Added roadmap_next_phases.pre_execution_checklist_followup documenting real
+      remaining gaps for future Owner-approved dispatch (NOT self-dispatched -- this is the 3rd/FINAL phase).
+- [x] Patch committed at ai-os/patches/execution-rules-phase2-pre-execution-checklist-2026-07-23.diff (all 4
+      live scripts live outside this git repo) -- verified `patch -p1 --dry-run` applies cleanly against
+      pre-phase2 file content.
+- [x] Environment note: the live superboss-register.sqlite hit the exact same "1 page short" truncation
+      signature phase0 documented (page_size=4096, header declared 291 pages, file 1 page short) during this
+      phase's own writes. Unlike phase0's case, all real application tables (instructions/work_items/actions/
+      system_index/task_audits/execution_log/directive_compliance_runs) remained fully queryable (COUNT(*) and
+      targeted SELECTs both succeeded) -- only PRAGMA integrity_check itself failed, consistent with the damage
+      being confined to an FTS5 shadow-table/index page, not core data. Did not attempt full recovery (out of
+      this task's scope, and phase0 already exhausted 3 real recovery methods for the worse prior incident) --
+      confirmed working data is intact and proceeded; flagging this as a recurring environment risk worth a
+      future task, not something this phase's scope covers fixing.
+- [x] Verified via postflight_audit_gate.py: AUD-20260723-072846-33226f, verdict DONE,
+      work_item_id WRK-20260723-072847-7a97. Real audit_cmd asserted: PRE execution_log row exists for this
+      task, generate_task_checklist.py's coverage_summary is exactly 77 items/10 sections, and both
+      MASTER_INDEX.yaml copies (live + mirror) have the spliced 10-section structure.
+- [x] Committed and pushed to worker/task-20260723-064712-execution-rules-phase2-pre-execution-che.
+- [x] Checkpointed status=pending_review via veridian-task.py, citing AUD-20260723-072846-33226f /
+      WRK-20260723-072847-7a97.
+- [x] Sent exactly one notify-owner.py email with real evidence: commit hash, before/after field-coverage
+      counts, audit id.
 
 ## Remaining
-None -- this phase is complete. Phase 2 is running independently as its own task
-(task-20260723-064712-execution-rules-phase2-pre-execution-che); nothing further for this task to do.
+None from this task's own SCOPE. This was the 3rd/FINAL self-dispatched phase allowed by
+task-20260723-052857-execution-rules-phase0-analysis-and-buil's cap -- per this task's own prompt, no further
+phase is self-dispatched. Real follow-up work is documented in
+ai-os/EXECUTION_RULES_AUDIT_2026-07-23.yaml's roadmap_next_phases.pre_execution_checklist_followup for
+Owner-approved future dispatch (the 17 NOT_YET_AVAILABLE Part 39 items with a plausible mechanism, confirming
+system-wide execution_log adoption over time, and whether to hard-gate the checklist).

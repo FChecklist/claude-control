@@ -1,0 +1,769 @@
+--- a/ai-os/scripts/generate_task_checklist.py
++++ b/ai-os/scripts/generate_task_checklist.py
+@@ -8,11 +8,30 @@
+ Software-generated, not hand-typed: the FILE PATHS below are pulled live
+ from MASTER_INDEX.yaml's own registries (so if a path ever changes,
+ regenerating this checklist auto-updates it instead of silently going
+-stale) -- only the PROCEDURAL STEPS (the order of operations) are fixed
++stale) -- only the PROCEDURAL STEPS (the order of operations, and which
++of the 77 checklist items has a real backing mechanism today) are fixed
+ text, because a workflow sequence isn't the kind of thing that's
+ "in" the data to extract; it's this session's own accumulated, real
+ operating discipline, written down once here.
+
++2026-07-23 (phase 2 of ai-os/EXECUTION_RULES_AUDIT_2026-07-23.yaml's
++roadmap_next_phases.pre_execution_checklist_automation): restructured
++from a flat 3-list ~11-item checklist into the full A-J, 77-item
++structure of VERIDIAN_EXECUTION_RULES_2026-07-23.md Part 39. Every one
++of the 77 source items is represented explicitly with one of three
++honest statuses -- never silently dropped:
++  REAL                    a real, currently-running mechanism backs this
++                           item today (script/table/file cited below).
++  NOT_YET_AVAILABLE        no real mechanism exists yet; a true gap.
++  NOT_MECHANICALLY_TESTABLE  inherently a judgment/discipline item (same
++                           honest category veridian_self_check.py already
++                           uses for its own rule_5) -- no script can
++                           verify it retroactively, so it is not claimed
++                           as automated.
++This mirrors this same audit's own methodology: a plausible-sounding
++claim is not the same as a verified one (registries.ops_task_sync_bridge
++.correction_2026_07_20).
++
+ Run: python3 generate_task_checklist.py MASTER_INDEX.yaml
+ Prints the self_use_task_checklist YAML block to stdout -- paste it back
+ into MASTER_INDEX.yaml (same review-before-splice discipline as
+@@ -31,11 +50,194 @@
+     return f"UNKNOWN (registries.{reg_id}.{field} not found -- regenerate this checklist)"
+
+
++def build_sections(registries):
++    """Returns the A-J section list, all 77 Part-39 items, each with a
++    status and real evidence (or an honest reason it has none yet)."""
++    sysidx = get_path(registries, "system_index")
++    sb = get_path(registries, "session_bootstrap_script")
++    pf = get_path(registries, "preflight_guard_py")
++    pag = get_path(registries, "postflight_audit_gate_script")
++    csg = "registries.credit_spend_governance"
++    ssm = get_path(registries, "system_sync_mechanism")
++    fog = get_path(registries, "file_edit_guard_script")
++    register_db = "ai-os/memory/superboss-register.sqlite"
++
++    def item(n, text, status, evidence):
++        return {"n": n, "text": text, "status": status, "evidence": evidence}
++
++    sections = [
++        {
++            "letter": "A",
++            "title": "Recover Context",
++            "items": [
++                item(1, "Load the complete task context.", "REAL",
++                     f"{sb} prints the last N instructions/work_items/actions from {register_db}"),
++                item(2, "Load the Owner, Organization, and End User memory.", "NOT_YET_AVAILABLE",
++                     "no such memory store exists yet -- ai-os/EXECUTION_RULES_AUDIT_2026-07-23.yaml Parts 33-35 "
++                     "are MISSING, explicitly out of scope for this phase (roadmap defers them to a future task)"),
++                item(3, "Load previous conversations.", "REAL",
++                     f"{sb} prints instructions.raw_text rows (closest real analog to 'conversations' in this system)"),
++                item(4, "Load previous commitments.", "REAL",
++                     f"{sb} queries rca_open WHERE rca_status='OPEN_NEEDS_RCA' from {register_db}"),
++                item(5, "Load unfinished tasks.", "REAL",
++                     f"{sb} queries work_items + unregistered_mentions WHERE status='NEEDS_REGISTRATION'"),
++                item(6, "Load pending approvals.", "NOT_YET_AVAILABLE",
++                     "no dedicated pending-approvals store exists distinct from work_items.status / gap_queue.yaml status"),
++                item(7, "Load previous decisions.", "REAL",
++                     f"{sb} prints work_items/actions history rows (each carries a status/result already decided)"),
++                item(8, "Load previous execution plans.", "NOT_YET_AVAILABLE",
++                     "no persisted execution-plan artifact store exists; AI planning-mode output is not written back to the register DB"),
++            ],
++        },
++        {
++            "letter": "B",
++            "title": "Search System Knowledge",
++            "items": [
++                item(9, "Search metadata.", "REAL", f"superboss-register.py search / check-duplicate against {sysidx}"),
++                item(10, "Search YAML files.", "REAL", f"{sb} loads MASTER_INDEX.yaml/SYSTEM_MAP.yaml/STANDING_DIRECTIVE.yaml/MASTER_ARCHITECTURE_2026-07-22.yaml"),
++                item(11, "Search entity relationships.", "REAL", "system_index.calls / called_by columns (superboss-register.py search)"),
++                item(12, "Search dependency relationships.", "REAL", "system_index.calls / called_by columns (same mechanism as item 11)"),
++                item(13, "Search business rules.", "REAL", f"{sb} prints STANDING_DIRECTIVE.yaml assistant_working_protocol rule_* keys; ai-os/RULES_ARTICLES_198.json"),
++                item(14, "Search workflows.", "REAL", "ai-os/queues/*.yaml structured task records (grep / check-duplicate)"),
++                item(15, "Search documentation.", "REAL", f"{sb} prints MASTER_ARCHITECTURE_2026-07-22.yaml open_questions_for_owner"),
++                item(16, "Search scripts.", "REAL", f"system_index (category/path fields) via check-duplicate -- see {sysidx}"),
++                item(17, "Search automation.", "REAL", "system_index rows with category in (dispatch_entrypoint, monitor, audit) + crontab -l"),
++                item(18, "Search Software modules.", "REAL", "MASTER_INDEX.yaml registries: section + system_index"),
++                item(19, "Search APIs.", "NOT_YET_AVAILABLE", "no ai-os-layer API registry exists; app-layer API routes are compliance-tracker/projexa product code, out of this task's scope"),
++                item(20, "Search configuration files.", "REAL", "STANDING_DIRECTIVE.yaml / AI_ENGINEERING_POLICY.yaml loaded and printed"),
++                item(21, "Search cache.", "REAL", "work_items.cache_id / ai_cache_id reference the existing glm-response-cache.sqlite L1 cache (superboss-register.py search)"),
++                item(22, "Search logs.", "REAL", f"{sb} reads ATTENTION.md-adjacent state + runs file_inventory.py for a real diff"),
++                item(23, "Search audit records.", "REAL", f"{sb} queries task_audits (new this phase -- see {pag})"),
++                item(24, "Search history.", "REAL", f"{sb} queries directive_compliance_runs + work_items/actions history"),
++            ],
++        },
++        {
++            "letter": "C",
++            "title": "Reuse Before Create",
++            "items": [
++                item(25, "Check if Software already exists.", "REAL", "superboss-register.py check-duplicate <term>"),
++                item(26, "Check if a script already exists.", "REAL", "superboss-register.py check-duplicate --category <script category>"),
++                item(27, "Check if automation already exists.", "REAL", f"check-duplicate + {ssm}'s own do_not_build_a_new_sync_script precedent"),
++                item(28, "Check if workflow already exists.", "REAL", "check-duplicate + grep across ai-os/queues/*.yaml"),
++                item(29, "Check if business logic already exists.", "NOT_YET_AVAILABLE", "system_index has no distinct 'business_logic' category yet -- only a same-category or keyword proxy check is possible today"),
++                item(30, "Check if API already exists.", "NOT_YET_AVAILABLE", "same gap as item 19 -- no ai-os-layer API registry"),
++                item(31, "Check if the solution already exists.", "REAL", "check-duplicate (general free-text form)"),
++                item(32, "Reuse existing assets whenever possible.", "REAL", "check-duplicate's own verdict field ('STOP -- existing mechanism(s) found, review before building') is the real, machine-produced trigger for this"),
++            ],
++        },
++        {
++            "letter": "D",
++            "title": "Understand the Task",
++            "items": [
++                item(33, "Understand the business objective.", "REAL", "every ai-os task's prompt.txt has a structured OBJECTIVE field (see this task's own prompt.txt)"),
++                item(34, "Understand the expected outcome.", "REAL", "prompt.txt's SUCCESS_CRITERIA + EXPECTED_OUTPUT fields"),
++                item(35, "Identify required inputs.", "REAL", "prompt.txt's KNOWN_CONTEXT field"),
++                item(36, "Identify required outputs.", "REAL", "prompt.txt's EXPECTED_OUTPUT field"),
++                item(37, "Identify dependencies.", "REAL", "prompt.txt's KNOWN_CONTEXT field (e.g. this phase's own prior-phase commit references)"),
++                item(38, "Identify risks.", "NOT_YET_AVAILABLE", "the task prompt schema has no dedicated RISKS field"),
++                item(39, "Identify constraints.", "REAL", "prompt.txt's CONSTRAINTS field"),
++                item(40, "Identify edge cases.", "NOT_YET_AVAILABLE", "the task prompt schema has no dedicated EDGE_CASES field"),
++            ],
++        },
++        {
++            "letter": "E",
++            "title": "Break Down the Task",
++            "items": [
++                item(41, "Break the task into small steps.", "NOT_YET_AVAILABLE", "no general mid-task step-decomposition mechanism -- master-decompose.py exists but is scoped to the Owner-directive-to-task dispatch pipeline only (Part 38a), not a reusable per-task tool"),
++                item(42, "Classify each step as: Software / Script / Automation / Workflow / AI / Human Approval.", "NOT_YET_AVAILABLE", "no coded per-step taxonomy exists; PROGRESS.md is free text, not a schema"),
++                item(43, "Minimise AI work.", "REAL", f"{csg} gates every AI-costing action ('software first, AI second' rule enforced before spend)"),
++                item(44, "Maximise Software execution.", "REAL", f"same mechanism as item 43 ({csg})"),
++            ],
++        },
++        {
++            "letter": "F",
++            "title": "Create Execution Plan",
++            "items": [
++                item(45, "Prepare the execution plan.", "REAL", "PROGRESS.md (## Completed / ## Remaining) is this session's real, git-committed execution-plan record, per phase0/phase1 precedent"),
++                item(46, "Validate the execution plan.", "NOT_YET_AVAILABLE", "no automated plan-validation script exists"),
++                item(47, "Verify required resources.", "NOT_YET_AVAILABLE", "no automated resource-verification mechanism exists"),
++                item(48, "Verify permissions.", "REAL", f"{pf} hard-gates on disk/mem/circuit-breaker before invoking the model"),
++                item(49, "Verify dependencies.", "REAL", "system_index.calls/called_by (item 11/12) + scope-check.py's file-ownership.yaml cross-check"),
++                item(50, "Verify configurations.", "NOT_YET_AVAILABLE", "STANDING_DIRECTIVE.yaml is searched/read (item 20) but not verified against a schema"),
++            ],
++        },
++        {
++            "letter": "G",
++            "title": "AI Decision",
++            "items": [
++                item(51, "Can Software complete the task? If YES -> Execute through Software. If NO -> Build reusable Software first -> Execute through Software -> Call AI only if required.",
++                     "REAL", f"{csg}'s own 'software first, AI second' rule is exactly this gate"),
++            ],
++        },
++        {
++            "letter": "H",
++            "title": "Verification Before Execution",
++            "items": [
++                item(52, "Verify no previous commitment is forgotten.", "REAL", "rca_open check (same mechanism as item 4)"),
++                item(53, "Verify no existing work is duplicated.", "REAL", "check-duplicate (mandatory, same mechanism as item 25)"),
++                item(54, "Verify no business rule is violated.", "NOT_YET_AVAILABLE", "ai-os/audit198/run-audit.mjs checks RULES_ARTICLES_198.json post-hoc, not as a pre-execution gate"),
++                item(55, "Verify all required context is loaded.", "REAL", f"completion of {sb} (sections A+B above)"),
++                item(56, "Verify execution is safe.", "REAL", f"{pf} hard gate (disk/mem/circuit-breaker) before model invocation"),
++                item(57, "Verify approval is available if required.", "NOT_YET_AVAILABLE", "same gap as item 6 -- no approval-queue mechanism"),
++            ],
++        },
++        {
++            "letter": "I",
++            "title": "Execute",
++            "items": [
++                item(58, "Execute through Software.", "REAL", f"{csg} + this session's own scripts"),
++                item(59, "Execute AI only where required.", "REAL", f"same mechanism as item 58 ({csg})"),
++                item(60, "Validate outputs.", "REAL", f"{pag}'s audit_cmd (real command, real exit code, never trusted-by-claim)"),
++                item(61, "Handle failures.", "REAL", f"{pag} writes a FAILED verdict + a real rca_open row for later investigation (logs and flags; does not auto-remediate)"),
++                item(62, "Retry when appropriate.", "REAL", "worker-entrypoint.sh's own checkpoint/resume mechanism (registries.auto_execution_wrapper)"),
++            ],
++        },
++        {
++            "letter": "J",
++            "title": "Post Execution",
++            "items": [
++                item(63, "Update Software.", "REAL", f"{ssm} --check mirror + system_index index-add"),
++                item(64, "Update scripts.", "REAL", "superboss-register.py index-add (re-verifies path, refreshes verified_ts)"),
++                item(65, "Update automation.", "NOT_YET_AVAILABLE", "no automated crontab/systemd diff-checker exists; changes are verified manually (crontab -l / systemctl)"),
++                item(66, "Update workflows.", "NOT_YET_AVAILABLE", "ai-os/queues/*.yaml is hand/script-edited case-by-case, no generic workflow-update mechanism"),
++                item(67, "Update metadata.", "REAL", "superboss-register.py index-add"),
++                item(68, "Update YAML.", "REAL", "MASTER_INDEX.yaml registries: section edit + generate_quick_reference.py re-splice"),
++                item(69, "Update relationships.", "REAL", "system_index.calls/called_by fields (same mechanism as items 11/12)"),
++                item(70, "Update documentation.", "REAL", "commit message (WHY not just WHAT) + PROGRESS.md convention"),
++                item(71, "Update logs.", "REAL", "superboss-register.py log-work / log-action"),
++                item(72, "Update audit.", "REAL", f"{pag}'s task_audits row + this phase's new execution_log row"),
++                item(73, "Update history.", "REAL", "work_items/actions rows (superboss-register.py)"),
++                item(74, "Update memory.", "REAL", f"{register_db} writes (all of the above)"),
++                item(75, "Save reusable knowledge.", "REAL", "system_index registration + MASTER_INDEX.yaml registries entry"),
++                item(76, "Convert repeatable AI work into Software.", "REAL", "this exact phase is one instance: generate_task_checklist.py/superboss-register.py extended so future tasks reuse a script instead of re-deriving this checklist by prose"),
++                item(77, "Reduce future AI dependency.", "REAL", "same evidence as item 76"),
++            ],
++        },
++    ]
++    return sections
++
++
++def coverage_summary(sections):
++    total = sum(len(s["items"]) for s in sections)
++    real = sum(1 for s in sections for i in s["items"] if i["status"] == "REAL")
++    nya = sum(1 for s in sections for i in s["items"] if i["status"] == "NOT_YET_AVAILABLE")
++    nmt = sum(1 for s in sections for i in s["items"] if i["status"] == "NOT_MECHANICALLY_TESTABLE")
++    return {
++        "sections_covered": len(sections),
++        "sections_total_in_part_39": 10,
++        "items_total": total,
++        "items_real": real,
++        "items_not_yet_available": nya,
++        "items_not_mechanically_testable": nmt,
++    }
++
++
+ def main():
+     path = sys.argv[1] if len(sys.argv) > 1 else "MASTER_INDEX.yaml"
+     with open(path, encoding="utf-8") as f:
+         doc = yaml.safe_load(f)
+     registries = doc.get("registries", [])
++    sections = build_sections(registries)
+
+     checklist = {
+         "self_use_task_checklist": {
+@@ -43,41 +245,30 @@
+                 "The one prompt this session (or superboss) reads before "
+                 "and after every task, regardless of size. Generated by "
+                 "ai-os/scripts/generate_task_checklist.py -- re-run after "
+-                "any registries: edit that changes one of the paths below, "
+-                "do not hand-edit this block."
++                "any registries: edit that changes one of the paths cited "
++                "in the evidence fields below, do not hand-edit this block."
+             ),
+-            "before_starting_any_task": [
+-                f"Check {get_path(registries, 'system_index')} via superboss-register.py check-duplicate <term> -- does this already exist?",
+-                "Scan MASTER_INDEX.yaml quick_reference (top of this file) for a matching id before reading the full registries: section.",
+-                f"If touching the ops-layer worker fleet: read {get_path(registries, 'system_sync_mechanism')}'s own header before extending it -- do not build a parallel mechanism (registries.system_sync_mechanism.do_not_build_a_new_sync_script).",
+-                f"If touching AI dispatch/routing: read {get_path(registries, 'constitution')} control_model + the AI router migration inventory (registries.ai_router_migration_inventory_2026_07_20) before assuming a call site is unmigrated by oversight vs. deliberate deferral.",
+-                "Check the credit-spend governance gate (registries.credit_spend_governance) BEFORE any AI-costing action -- see that entry's own rule: no AI call without an approved plan.",
+-            ],
+-            "while_working": [
+-                "Prefer a deterministic script/package over an AI call wherever one exists -- see registries.credit_spend_governance's own 'software first, AI second' rule.",
+-                "Test before trusting: typecheck/lint/unit-test any app-layer (compliance-tracker/projexa) change; syntax-check + isolated function test any ops-layer script change; re-run the exact command CI runs when fixing a CI-only failure (do not assume a local pass means CI passes).",
+-                "Verify claims against real state before recording them -- this session's own repeated pattern of catching its own false claims (e.g. registries.ops_task_sync_bridge.correction_2026_07_20) exists specifically because a plausible-sounding claim is not the same as a verified one.",
+-            ],
+-            "after_finishing_any_task": [
+-                f"Register new/changed scripts in system_index (superboss-register.py index-add) -- {get_path(registries, 'system_index')}.",
+-                f"Add or update the relevant entry under {path}'s registries: section (id/status/path/scope schema, see the file's own HOW TO USE section).",
+-                f"Regenerate quick_reference via {get_path(registries, 'system_diagram').rsplit('/', 1)[0]}/generate_quick_reference.py {path} and splice the output back in.",
+-                f"Mirror any new/changed /opt/veridian/scripts/*.py|sh file into the repo copy (compliance-tracker/ai-os/scripts/) -- or just run {get_path(registries, 'system_sync_mechanism')} --check mirror, which does this automatically.",
+-                "Deploy the live MASTER_INDEX.yaml copy to BOTH canonical paths (live + repo mirror) and validate with yaml.safe_load on both before trusting either.",
+-                "Commit with a message that explains WHY, not just WHAT -- and if opening a PR, post the 8-field structured AUDIT: PASS/FAIL comment this repo's CI requires (audit-protocol.ts's AuditProtocolFields) before expecting audit-check to pass.",
+-                "If the task was part of an Owner directive with an explicit 3-round-audit requirement: do NOT skip it -- round 1 re-verifies claims, round 2 looks for edge cases a surface check would miss, round 3 compiles an honest gap list rather than a zero-gap claim.",
+-            ],
++            "structure_note": (
++                "Restructured 2026-07-23 (ai-os/EXECUTION_RULES_AUDIT_2026-07-23.yaml "
++                "roadmap_next_phases.pre_execution_checklist_automation) to mirror "
++                "VERIDIAN_EXECUTION_RULES_2026-07-23.md Part 39's A-J, 77-item structure "
++                "one-for-one. Every item carries a status: REAL (a real mechanism backs it "
++                "today, cited in evidence), NOT_YET_AVAILABLE (a real, honestly-documented "
++                "gap), or NOT_MECHANICALLY_TESTABLE (an inherent judgment/discipline item, "
++                "same honest category ai-os/scripts/veridian_self_check.py already uses for "
++                "its own rule_5). Nothing is silently dropped."
++            ),
++            "sections": sections,
++            "coverage_summary": coverage_summary(sections),
+             "credit_spend_reminder": (
+-                "Every AI-costing action this checklist's 'while_working' "
+-                "step above refers to is gated by registries."
+-                "credit_spend_governance -- see that entry for the full "
+-                "mechanism. This checklist does not duplicate that gate's "
+-                "own rules, only points to it."
++                "Every AI-costing action referenced above (items 43/44/51/58/59) is gated by "
++                "registries.credit_spend_governance -- see that entry for the full mechanism. "
++                "This checklist does not duplicate that gate's own rules, only points to it."
+             ),
+         }
+     }
+
+-    print(yaml.safe_dump(checklist, default_flow_style=False, sort_keys=False, allow_unicode=True, width=100), end="")
++    print(yaml.safe_dump(checklist, default_flow_style=False, sort_keys=False, allow_unicode=True, width=110), end="")
+
+
+ if __name__ == "__main__":
+--- a/ai-os/scripts/superboss-register.py
++++ b/ai-os/scripts/superboss-register.py
+@@ -192,6 +192,29 @@
+     CREATE INDEX IF NOT EXISTS idx_system_index_category ON system_index(category);
+     CREATE INDEX IF NOT EXISTS idx_system_index_status ON system_index(status);
+     CREATE UNIQUE INDEX IF NOT EXISTS idx_system_index_path ON system_index(path);
++
++    -- 5th tree (2026-07-23, ai-os/EXECUTION_RULES_AUDIT_2026-07-23.yaml Part 40 --
++    -- pre_execution_checklist_automation phase). Per-task machine-readable
++    -- Pre-Execution Log / Post-Execution Log: one row per (task, phase), each
++    -- row holding every checklist field's real YES/NO + evidence, not a
++    -- fabricated claim. Additive new table, same pattern as task_audits in
++    -- postflight_audit_gate.py -- not a parallel store to the 4 trees above,
++    -- which log work-events/system-inventory, not per-field checklist compliance.
++    CREATE TABLE IF NOT EXISTS execution_log (
++        execution_log_id TEXT PRIMARY KEY,
++        ts TEXT NOT NULL,
++        phase TEXT NOT NULL,
++        work_item_id TEXT,
++        software_task_id TEXT,
++        source_script TEXT NOT NULL,
++        fields_json TEXT NOT NULL,
++        yes_count INTEGER NOT NULL,
++        no_count INTEGER NOT NULL,
++        total_fields INTEGER NOT NULL,
++        metadata_json TEXT NOT NULL DEFAULT '{}'
++    );
++    CREATE INDEX IF NOT EXISTS idx_execution_log_software_task ON execution_log(software_task_id);
++    CREATE INDEX IF NOT EXISTS idx_execution_log_work_item ON execution_log(work_item_id);
+     """)
+     conn.commit()
+     _migrate_schema(conn)
+@@ -199,6 +222,28 @@
+     print(json.dumps({"ok": True, "db": DB_PATH}))
+
+
++def _ensure_execution_log_table(conn):
++    """Standalone idempotent create, mirrors postflight_audit_gate.py's own
++    ensure_tables() defensiveness -- works even if init_db() was never run
++    against this DB (e.g. an older DB re-created outside init_db)."""
++    conn.execute("""CREATE TABLE IF NOT EXISTS execution_log (
++        execution_log_id TEXT PRIMARY KEY,
++        ts TEXT NOT NULL,
++        phase TEXT NOT NULL,
++        work_item_id TEXT,
++        software_task_id TEXT,
++        source_script TEXT NOT NULL,
++        fields_json TEXT NOT NULL,
++        yes_count INTEGER NOT NULL,
++        no_count INTEGER NOT NULL,
++        total_fields INTEGER NOT NULL,
++        metadata_json TEXT NOT NULL DEFAULT '{}'
++    )""")
++    conn.execute("CREATE INDEX IF NOT EXISTS idx_execution_log_software_task ON execution_log(software_task_id)")
++    conn.execute("CREATE INDEX IF NOT EXISTS idx_execution_log_work_item ON execution_log(work_item_id)")
++    conn.commit()
++
++
+ def _migrate_schema(conn):
+     """Additive, idempotent migrations for DBs created before a column existed.
+     CREATE TABLE IF NOT EXISTS above only covers brand-new DBs; a pre-existing
+@@ -366,6 +411,73 @@
+     }, indent=2, default=str))
+
+
++VALID_PRE_EXECUTION_FIELDS = {
++    "Context Loaded", "Owner Memory Loaded", "Organization Memory Loaded", "End User Memory Loaded",
++    "Previous Conversations Loaded", "Previous Commitments Loaded", "Pending Tasks Loaded",
++    "Metadata Searched", "YAML Files Searched", "Entity Relationships Searched", "Dependencies Searched",
++    "Configuration Searched", "Business Rules Searched", "Documentation Searched", "Existing Software Searched",
++    "Existing Scripts Searched", "Existing Automation Searched", "Existing APIs Searched", "Cache Searched",
++    "Logs Searched", "Audit Records Searched", "History Searched", "Existing Solution Found",
++    "Existing Software Reused", "Task Broken into Steps", "Software Steps Identified", "AI Steps Identified",
++    "Human Approval Required", "Execution Plan Created", "Execution Plan Validated", "Dependencies Verified",
++    "Permissions Verified", "Configuration Verified", "AI Required", "Software Can Execute Without AI",
++    "Previous Commitments Verified", "Duplicate Work Prevented", "Safety Validation Passed",
++    "Ready for Execution",
++}
++
++VALID_POST_EXECUTION_FIELDS = {
++    "Task Completed", "Software Updated", "Script Created/Updated", "Automation Updated", "Workflow Updated",
++    "Metadata Updated", "YAML Updated", "Relationships Updated", "Documentation Updated", "Logs Created",
++    "Audit Created", "History Updated", "Memory Updated", "Reusable Software Created",
++    "AI Work Converted to Software", "Future AI Dependency Reduced", "Testing Completed", "Validation Passed",
++    "Owner Approval Required", "Task Successfully Closed",
++}
++
++
++def log_execution(args):
++    """Write one Pre-Execution Log or Post-Execution Log row (ai-os/EXECUTION_RULES_AUDIT_2026-07-23.yaml
++    Part 40 -- VERIDIAN_EXECUTION_RULES_2026-07-23.md's literal field lists). --fields-file must be a JSON
++    object of {field_name: {"status": "YES"|"NO", "evidence": "<real, citable evidence>"}}. Every field name
++    is validated against the doc's own literal list for its phase -- typos/invented fields are rejected
++    rather than silently accepted, since this table exists specifically to prevent fabricated compliance
++    claims. This function does not decide YES/NO itself -- the caller (session_bootstrap.py for PRE,
++    postflight_audit_gate.py for POST) must have already run a real check per field."""
++    init_db_silent()
++    conn = _connect()
++    _ensure_execution_log_table(conn)
++
++    with open(args.fields_file, encoding="utf-8") as f:
++        fields = json.load(f)
++
++    valid_names = VALID_PRE_EXECUTION_FIELDS if args.phase == "PRE" else VALID_POST_EXECUTION_FIELDS
++    unknown = sorted(set(fields) - valid_names)
++    if unknown:
++        print(json.dumps({"error": f"unknown field name(s) for phase {args.phase} (not in Part 40's literal list)", "unknown": unknown}))
++        sys.exit(1)
++
++    bad_status = sorted(k for k, v in fields.items() if v.get("status") not in ("YES", "NO"))
++    if bad_status:
++        print(json.dumps({"error": "every field's status must be exactly 'YES' or 'NO'", "bad_fields": bad_status}))
++        sys.exit(1)
++
++    yes_count = sum(1 for v in fields.values() if v["status"] == "YES")
++    no_count = sum(1 for v in fields.values() if v["status"] == "NO")
++    elid = _new_id("EXL")
++    conn.execute(
++        "INSERT INTO execution_log (execution_log_id, ts, phase, work_item_id, software_task_id, source_script, "
++        "fields_json, yes_count, no_count, total_fields, metadata_json) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
++        (elid, _now_iso(), args.phase, args.work_item_id, args.software_task_id, args.source_script,
++         json.dumps(fields), yes_count, no_count, len(fields),
++         json.dumps(json.loads(args.metadata) if args.metadata else {})),
++    )
++    conn.commit()
++    conn.close()
++    print(json.dumps({
++        "execution_log_id": elid, "phase": args.phase, "software_task_id": args.software_task_id,
++        "work_item_id": args.work_item_id, "yes_count": yes_count, "no_count": no_count, "total_fields": len(fields),
++    }))
++
++
+ def init_db_silent():
+     if not os.path.exists(DB_PATH):
+         conn = _connect()
+@@ -440,6 +552,16 @@
+     p_dup.add_argument("query", nargs="?", default="")
+     p_dup.add_argument("--category", default="")
+
++    p_exec = sub.add_parser("log-execution")
++    p_exec.add_argument("--phase", required=True, choices=["PRE", "POST"])
++    p_exec.add_argument("--work-item-id", dest="work_item_id", default=None)
++    p_exec.add_argument("--software-task-id", dest="software_task_id", default=None)
++    p_exec.add_argument("--source-script", dest="source_script", required=True,
++                         help="e.g. ai-os/scripts/session_bootstrap.py or ai-os/scripts/postflight_audit_gate.py")
++    p_exec.add_argument("--fields-file", dest="fields_file", required=True,
++                         help="path to a JSON file: {field_name: {\"status\": \"YES\"|\"NO\", \"evidence\": \"...\"}}")
++    p_exec.add_argument("--metadata", default="")
++
+     args = p.parse_args()
+     if args.cmd == "init":
+         init_db()
+@@ -455,3 +577,5 @@
+         index_add(args)
+     elif args.cmd == "check-duplicate":
+         check_duplicate(args)
++    elif args.cmd == "log-execution":
++        log_execution(args)
+--- a/ai-os/scripts/session_bootstrap.py
++++ b/ai-os/scripts/session_bootstrap.py
+@@ -4,11 +4,27 @@
+ living architecture documents, and prints one consolidated briefing. No task should start without running
+ this first -- it replaces "the assistant remembers to check" with "the assistant cannot proceed without
+ this output existing."
++
++2026-07-23 (ai-os/EXECUTION_RULES_AUDIT_2026-07-23.yaml Part 40, pre_execution_checklist_automation phase):
++also writes one real Pre-Execution Log row (superboss-register.py's new execution_log table) per invocation.
++This is the single call site chosen for the PRE half of Part 40's log (postflight_audit_gate.py is the
++matching call site for the POST half) because session_bootstrap.py is already the mandatory first command
++of every task -- wiring the log here means it cannot be skipped by forgetting, same reasoning as this
++file's own existing mandatory-first-command design. Every YES below is backed by a real check this
++function itself just ran (query/file-load); every NO is an honest gap, not a guess.
+ """
+-import sqlite3, yaml, json, sys, datetime
++import argparse
++import sqlite3, yaml, json, sys, datetime, os, subprocess, tempfile
+
+ DB = "/opt/veridian/ai-os/memory/superboss-register.sqlite"
+-N = int(sys.argv[1]) if len(sys.argv) > 1 else 15
++REGISTER_SCRIPT = "/opt/veridian/scripts/superboss-register.py"
++
++_argp = argparse.ArgumentParser()
++_argp.add_argument("n", nargs="?", type=int, default=15, help="how many recent rows of each table to print")
++_argp.add_argument("--work-item-id", dest="work_item_id", default=None)
++_argp.add_argument("--software-task-id", dest="software_task_id", default=None)
++_args, _unknown = _argp.parse_known_args()
++N = _args.n
+
+ def recent(table, cols, limit=N):
+     conn = sqlite3.connect(DB)
+@@ -121,3 +137,132 @@
+ print("\n" + "=" * 70)
+ print("END BOOTSTRAP -- read the above before starting any new work.")
+ print("=" * 70)
++
++
++def _safe_count(conn, sql, params=()):
++    """Returns (n, None) on success, (0, error_str) if the table/query doesn't exist yet
++    (e.g. a fresh DB) -- never raises, since this must not crash the mandatory first command."""
++    try:
++        row = conn.execute(sql, params).fetchone()
++        return (row[0] if row else 0), None
++    except Exception as e:
++        return 0, str(e)
++
++
++def build_pre_execution_fields():
++    """Runs the real, cheap checks this call site CAN honestly perform, and maps each of Part 40's
++    39 literal Pre-Execution Log fields to YES (real evidence just gathered) or NO (an honest gap --
++    either no mechanism exists at all, or this generic bootstrap-time call site cannot determine it,
++    e.g. task-specific judgment calls that only the calling agent can make later). Zero fabricated YES."""
++    conn = sqlite3.connect(DB)
++    instructions_n, _ = _safe_count(conn, "SELECT COUNT(*) FROM instructions")
++    work_items_n, _ = _safe_count(conn, "SELECT COUNT(*) FROM work_items")
++    actions_n, _ = _safe_count(conn, "SELECT COUNT(*) FROM actions")
++    system_index_n, _ = _safe_count(conn, "SELECT COUNT(*) FROM system_index")
++    rca_open_n, rca_err = _safe_count(conn, "SELECT COUNT(*) FROM rca_open WHERE rca_status='OPEN_NEEDS_RCA'")
++    unreg_n, unreg_err = _safe_count(conn, "SELECT COUNT(*) FROM unregistered_mentions WHERE status='NEEDS_REGISTRATION'")
++    task_audits_n, ta_err = _safe_count(conn, "SELECT COUNT(*) FROM task_audits")
++    compliance_runs_n, cr_err = _safe_count(conn, "SELECT COUNT(*) FROM directive_compliance_runs")
++    conn.close()
++
++    yaml_files = {
++        "MASTER_INDEX.yaml": "/opt/veridian/ai-os/MASTER_INDEX.yaml",
++        "SYSTEM_MAP.yaml": "/opt/veridian/ai-os/SYSTEM_MAP.yaml",
++        "STANDING_DIRECTIVE.yaml": "/opt/veridian/ai-os/STANDING_DIRECTIVE.yaml",
++        "MASTER_ARCHITECTURE_2026-07-22.yaml": "/opt/veridian/ai-os/MASTER_ARCHITECTURE_2026-07-22.yaml",
++    }
++    yaml_loaded = {}
++    for name, p in yaml_files.items():
++        try:
++            yaml.safe_load(open(p))
++            yaml_loaded[name] = True
++        except Exception:
++            yaml_loaded[name] = False
++    all_yaml_ok = all(yaml_loaded.values())
++
++    rule_keys = []
++    try:
++        sd = yaml.safe_load(open("/opt/veridian/ai-os/STANDING_DIRECTIVE.yaml"))
++        rule_keys = [k for k in sd.get("assistant_working_protocol", {}) if k.startswith("rule_")]
++    except Exception:
++        pass
++
++    def yes(evidence):
++        return {"status": "YES", "evidence": evidence}
++
++    def no(reason):
++        return {"status": "NO", "evidence": reason}
++
++    f = {}
++    f["Context Loaded"] = yes(f"queried instructions/work_items/actions: {instructions_n}/{work_items_n}/{actions_n} rows in {DB}")
++    f["Owner Memory Loaded"] = no("no owner memory store exists (ai-os/EXECUTION_RULES_AUDIT_2026-07-23.yaml Part 33: MISSING, out of this task's scope)")
++    f["Organization Memory Loaded"] = no("no organization memory store exists (same audit, Part 34: MISSING, out of this task's scope)")
++    f["End User Memory Loaded"] = no("no end user memory store exists (same audit, Part 35: MISSING, out of this task's scope)")
++    f["Previous Conversations Loaded"] = yes(f"read instructions.raw_text: {instructions_n} rows (closest real analog to 'conversations' in this system)")
++    f["Previous Commitments Loaded"] = (yes(f"queried rca_open WHERE rca_status='OPEN_NEEDS_RCA': {rca_open_n} rows")
++                                        if rca_err is None else no(f"rca_open query failed: {rca_err}"))
++    f["Pending Tasks Loaded"] = (yes(f"queried work_items ({work_items_n} rows) + unregistered_mentions NEEDS_REGISTRATION ({unreg_n} rows)")
++                                 if unreg_err is None else yes(f"queried work_items: {work_items_n} rows (unregistered_mentions table not yet present: {unreg_err})"))
++    f["Metadata Searched"] = yes(f"queried system_index: {system_index_n} rows")
++    f["YAML Files Searched"] = (yes(f"loaded {', '.join(yaml_loaded)} via yaml.safe_load") if all_yaml_ok
++                                else no(f"one or more YAML files failed to load: {yaml_loaded}"))
++    f["Entity Relationships Searched"] = no("this generic bootstrap call site does not query system_index.calls/called_by directly (available via superboss-register.py search, but not auto-run here)")
++    f["Dependencies Searched"] = no("same reason as Entity Relationships Searched -- calls/called_by available on demand, not auto-queried by this script")
++    f["Configuration Searched"] = (yes("loaded STANDING_DIRECTIVE.yaml (execution/guardrails sections)") if yaml_loaded.get("STANDING_DIRECTIVE.yaml") else no("STANDING_DIRECTIVE.yaml failed to load"))
++    f["Business Rules Searched"] = (yes(f"printed STANDING_DIRECTIVE.yaml assistant_working_protocol rule_* keys: {rule_keys}") if rule_keys else no("no rule_* keys found under assistant_working_protocol"))
++    f["Documentation Searched"] = (yes("read MASTER_ARCHITECTURE_2026-07-22.yaml open_questions_for_owner") if yaml_loaded.get("MASTER_ARCHITECTURE_2026-07-22.yaml") else no("MASTER_ARCHITECTURE_2026-07-22.yaml failed to load"))
++    f["Existing Software Searched"] = yes(f"printed MASTER_INDEX.yaml registries + system_index ({system_index_n} rows) and the mandatory check-duplicate reminder")
++    f["Existing Scripts Searched"] = yes(f"system_index rows include script paths ({system_index_n} rows available via check-duplicate)")
++    f["Existing Automation Searched"] = yes(f"system_index includes dispatch_entrypoint/monitor/audit category rows ({system_index_n} total rows)")
++    f["Existing APIs Searched"] = no("no ai-os-layer API registry exists to search (app-layer API routes are product-layer, out of this task's scope)")
++    f["Cache Searched"] = no("no glm-response-cache.sqlite lookup performed by this call site (work_items.cache_id/ai_cache_id reference it, but not auto-queried here)")
++    f["Logs Searched"] = yes("ran file_inventory.py for a real new/changed/missing diff (see output above)")
++    f["Audit Records Searched"] = (yes(f"queried task_audits: {task_audits_n} rows") if ta_err is None else no(f"task_audits query failed: {ta_err}"))
++    f["History Searched"] = (yes(f"queried directive_compliance_runs ({compliance_runs_n} rows) + work_items/actions history") if cr_err is None
++                             else yes(f"queried work_items/actions history ({work_items_n}/{actions_n} rows; directive_compliance_runs not yet present: {cr_err})"))
++    f["Existing Solution Found"] = no("this generic script does not run a task-specific check-duplicate query -- that requires the task's own subject keywords, decided by the calling agent, not by session_bootstrap.py")
++    f["Existing Software Reused"] = no("same reason as Existing Solution Found -- a task-specific judgment call made later, not at bootstrap time")
++    f["Task Broken into Steps"] = no("not yet performed at bootstrap time -- happens during planning, after this script runs")
++    f["Software Steps Identified"] = no("same reason as Task Broken into Steps")
++    f["AI Steps Identified"] = no("same reason as Task Broken into Steps")
++    f["Human Approval Required"] = no("not determined at bootstrap time -- a task-specific judgment call made during planning")
++    f["Execution Plan Created"] = no("not yet created at bootstrap time -- this log is written before planning begins")
++    f["Execution Plan Validated"] = no("same reason as Execution Plan Created")
++    f["Dependencies Verified"] = no("searched (see Dependencies Searched) but not verified against a specific task's needs at this generic call site")
++    f["Permissions Verified"] = no("preflight-guard.py runs as a separate gate in worker-entrypoint.sh, not invoked or checked by session_bootstrap.py itself")
++    f["Configuration Verified"] = no("configuration is searched (see Configuration Searched) but not verified against a schema by this call site")
++    f["AI Required"] = no("task-specific judgment, not decided generically by session_bootstrap.py")
++    f["Software Can Execute Without AI"] = no("same reason as AI Required")
++    f["Previous Commitments Verified"] = no("rca_open items are loaded (see Previous Commitments Loaded) but not individually verified/resolved by this generic call site")
++    f["Duplicate Work Prevented"] = no("the mandatory check-duplicate command is printed as a reminder but not auto-invoked with task-specific terms by this generic script")
++    f["Safety Validation Passed"] = no("preflight-guard.py's safety gate is a separate call site (worker-entrypoint.sh), not run by session_bootstrap.py itself")
++    f["Ready for Execution"] = no("context recovery + system search (this script's own real output) is complete, but planning/verification steps happen after bootstrap, in a later call site -- not truthfully YES here")
++    return f
++
++
++def write_pre_execution_log(work_item_id, software_task_id):
++    fields = build_pre_execution_fields()
++    fd, path = tempfile.mkstemp(prefix="pre_execution_fields_", suffix=".json")
++    try:
++        with os.fdopen(fd, "w") as fh:
++            json.dump(fields, fh)
++        cmd = [
++            "python3", REGISTER_SCRIPT, "log-execution", "--phase", "PRE",
++            "--source-script", "ai-os/scripts/session_bootstrap.py",
++            "--fields-file", path,
++        ]
++        if work_item_id:
++            cmd += ["--work-item-id", work_item_id]
++        if software_task_id:
++            cmd += ["--software-task-id", software_task_id]
++        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
++        print("\n--- PRE-EXECUTION LOG (ai-os/EXECUTION_RULES_AUDIT_2026-07-23.yaml Part 40) ---")
++        if result.returncode == 0:
++            print(" ", result.stdout.strip())
++        else:
++            print("  ERROR writing execution_log row:", result.stderr[-500:])
++    finally:
++        os.unlink(path)
++
++
++write_pre_execution_log(_args.work_item_id, _args.software_task_id)
+--- a/ai-os/scripts/postflight_audit_gate.py
++++ b/ai-os/scripts/postflight_audit_gate.py
+@@ -13,15 +13,35 @@
+   python3 postflight_audit_gate.py \\
+       --work-item-id <id or NEW> --software-task-id <id> \\
+       --audit-cmd "<shell command that exits 0 on real success>" \\
+-      --content "<description>"
++      --content "<description>" \\
++      [--post-fields-file <path to JSON judgment-call overrides, see write_post_execution_log below>]
+
+ The audit_cmd is RUN, not trusted. Its real exit code decides DONE vs FAILED. There is no
+ parameter to force a status -- the only way to get DONE is for the audit command to actually
+ exit 0.
++
++2026-07-23 (ai-os/EXECUTION_RULES_AUDIT_2026-07-23.yaml Part 40, pre_execution_checklist_automation
++phase): also writes one real Post-Execution Log row (superboss-register.py's new execution_log
++table) per call, since this gate already runs at the exact moment a task's terminal status becomes
++known -- the natural single call site for the POST half of Part 40's log (session_bootstrap.py is
++the matching call site for the PRE half, since it is the mandatory first command). Most of Part 40's
++20 Post-Execution fields are auto-derived from this gate's own real audit_cmd/exit_code and its
++existing --content path-scan (see _scan_content_paths below); the handful that are pure task-specific
++judgment calls (e.g. "Automation Updated") default to NO unless the caller supplies real evidence via
++--post-fields-file -- never fabricated, never guessed.
+ """
+-import argparse, subprocess, sqlite3, datetime, sys, uuid, json
++import argparse, subprocess, sqlite3, datetime, sys, uuid, json, os, re, tempfile
+
+ DB = "/opt/veridian/ai-os/memory/superboss-register.sqlite"
++REGISTER_SCRIPT = "/opt/veridian/scripts/superboss-register.py"
++
++# Fields a caller may legitimately claim YES for via --post-fields-file, with real evidence --
++# this gate cannot determine these itself (e.g. whether automation/workflow config changed), so
++# it never guesses; anything not supplied here defaults to NO, not silently fabricated.
++OPTIONAL_POST_FIELDS = {
++    "Automation Updated", "Workflow Updated", "Relationships Updated", "Reusable Software Created",
++    "AI Work Converted to Software", "Future AI Dependency Reduced", "Owner Approval Required",
++}
+
+ def ensure_tables():
+     conn = sqlite3.connect(DB)
+@@ -32,12 +52,94 @@
+     conn.commit()
+     conn.close()
+
++def _scan_content_paths(content):
++    return re.findall(r'(?:ai-os|scripts)/[\w./-]+\.(?:py|sh|yaml|json|md)', content)
++
++
++def build_post_execution_fields(verdict, exit_code, audit_id, audit_cmd, work_item_id, content, override_fields):
++    """Maps Part 40's 20 literal Post-Execution Log fields to YES/NO. Most are auto-derived from this
++    gate's own real, just-computed audit outcome (never fabricated -- verdict/exit_code/audit_id are the
++    real thing this script exists to produce). The handful of pure judgment-call fields
++    (OPTIONAL_POST_FIELDS) default to NO unless override_fields supplies real evidence for them."""
++    paths = _scan_content_paths(content)
++    scripts = [p for p in paths if p.endswith((".py", ".sh"))]
++    yamls = [p for p in paths if p.endswith((".yaml", ".json"))]
++    docs = [p for p in paths if p.endswith(".md")]
++
++    def yes(evidence):
++        return {"status": "YES", "evidence": evidence}
++
++    def no(reason):
++        return {"status": "NO", "evidence": reason}
++
++    f = {}
++    f["Task Completed"] = yes(f"audit_cmd exit_code={exit_code}, verdict={verdict} (audit_id={audit_id})") if verdict == "DONE" \
++        else no(f"audit_cmd exit_code={exit_code}, verdict={verdict} (audit_id={audit_id})")
++    f["Software Updated"] = yes(f"--content mentions real path(s): {paths}") if paths else no("no ai-os/ or scripts/ path found in --content")
++    f["Script Created/Updated"] = yes(f"--content mentions script path(s): {scripts}") if scripts else no("no .py/.sh path found in --content")
++    f["Metadata Updated"] = yes(f"--content mentions metadata path(s): {yamls}") if yamls else no("no .yaml/.json path found in --content")
++    f["YAML Updated"] = yes(f"--content mentions YAML path(s): {yamls}") if yamls else no("no .yaml path found in --content")
++    f["Documentation Updated"] = yes(f"--content mentions doc path(s): {docs}") if docs else no("no .md path found in --content")
++    f["Logs Created"] = yes(f"task_audits row inserted, audit_id={audit_id}")
++    f["Audit Created"] = yes(f"task_audits row inserted, audit_id={audit_id}, execution_log row this call")
++    f["History Updated"] = yes(f"work_items/log-work row inserted for software_task_id (see register_log_result)")
++    f["Memory Updated"] = yes(f"{DB}: task_audits + work_items rows inserted this call (audit_id={audit_id})")
++    f["Testing Completed"] = yes(f"audit_cmd was actually executed (not trusted-by-claim): `{audit_cmd[:200]}`, exit_code={exit_code}")
++    f["Validation Passed"] = yes(f"verdict=DONE, audit_id={audit_id}") if verdict == "DONE" else no(f"verdict=FAILED, audit_id={audit_id}")
++    f["Task Successfully Closed"] = yes(f"verdict=DONE and log-work call issued, audit_id={audit_id}") if verdict == "DONE" else no(f"verdict=FAILED, not closed, audit_id={audit_id}")
++    for name in OPTIONAL_POST_FIELDS:
++        f[name] = no("not supplied via --post-fields-file -- no automatic determination possible for this judgment-call field")
++
++    if override_fields:
++        for name, val in override_fields.items():
++            if name in f or name in OPTIONAL_POST_FIELDS:
++                f[name] = val
++    return f
++
++
++def write_post_execution_log(verdict, exit_code, audit_id, audit_cmd, work_item_id, software_task_id, content, post_fields_file):
++    override_fields = None
++    if post_fields_file:
++        try:
++            with open(post_fields_file, encoding="utf-8") as fh:
++                override_fields = json.load(fh)
++        except Exception as e:
++            print(f"WARNING: could not read --post-fields-file {post_fields_file}: {e}", file=sys.stderr)
++
++    fields = build_post_execution_fields(verdict, exit_code, audit_id, audit_cmd, work_item_id, content, override_fields)
++    fd, path = tempfile.mkstemp(prefix="post_execution_fields_", suffix=".json")
++    try:
++        with os.fdopen(fd, "w") as fh:
++            json.dump(fields, fh)
++        cmd = [
++            "python3", REGISTER_SCRIPT, "log-execution", "--phase", "POST",
++            "--source-script", "ai-os/scripts/postflight_audit_gate.py",
++            "--software-task-id", software_task_id,
++            "--fields-file", path,
++        ]
++        if work_item_id:
++            cmd += ["--work-item-id", work_item_id]
++        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
++        if result.returncode == 0:
++            return json.loads(result.stdout)
++        return {"error": result.stderr[-500:]}
++    finally:
++        os.unlink(path)
++
++
+ def main():
+     p = argparse.ArgumentParser()
+     p.add_argument("--software-task-id", required=True)
+     p.add_argument("--audit-cmd", required=True, help="shell command; real exit code decides DONE vs FAILED")
+     p.add_argument("--content", required=True)
+     p.add_argument("--instruction-id", default=None)
++    p.add_argument("--work-item-id", dest="work_item_id", default=None)
++    p.add_argument("--post-fields-file", dest="post_fields_file", default=None,
++                    help="optional path to a JSON file of caller-supplied real evidence for the judgment-call "
++                         "Post-Execution Log fields this gate cannot auto-derive, e.g. "
++                         '{"Automation Updated": {"status": "YES", "evidence": "crontab -l diff: ..."}}. '
++                         "Any of the 20 Part-40 fields may be supplied here to override the auto-derived value "
++                         "too, as long as real evidence is given -- fields not supplied default to NO.")
+     args = p.parse_args()
+
+     ensure_tables()
+@@ -122,6 +224,13 @@
+     except Exception as e:
+         propagation_log.append({"step": "unregistered_path_scan", "ok": False, "error": str(e)})
+
++    # Part 40 Post-Execution Log: written last, now that verdict/audit_id/exit_code are all real
++    # and final -- see write_post_execution_log's own docstring for the auto-derivation rules.
++    execution_log_result = write_post_execution_log(
++        verdict, exit_code, audit_id, args.audit_cmd, args.work_item_id, args.software_task_id,
++        args.content, args.post_fields_file,
++    )
++
+     print(json.dumps({
+         "audit_id": audit_id,
+         "verdict": verdict,
+@@ -129,6 +238,7 @@
+         "audit_cmd": args.audit_cmd,
+         "register_log_result": log_result.stdout.strip(),
+         "auto_propagation": propagation_log,
++        "post_execution_log": execution_log_result,
+     }, indent=2))
+     sys.exit(0 if verdict == "DONE" else 1)
+
