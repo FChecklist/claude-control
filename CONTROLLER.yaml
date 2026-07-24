@@ -4830,3 +4830,26 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260724-063403-fix-supervisor-merge-report-bug/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/15'
     last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-113131-watertight-100pct-gate-and-auto-phase-co
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''watertight-100pct-gate-and-auto-phase-continuation''
+      on claude-control reached status=completed. tier1, Superboss-approved, merged
+      autonomously: https://github.com/FChecklist/claude-control/pull/30'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-113131-watertight-100pct-gate-and-auto-phase-co/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/30'
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-114058-test
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: Server-worker task 'test' on claude-control reached status=failed. Erroneously
+      created during tight_task_validation.py gate testing (task-20260724-113131). No
+      workspace/branch/PR was created; systemd unit stopped within 10s. Marking failed
+      to avoid a phantom in_progress entry.
+    where: /opt/veridian/ai-os/tasks/task-20260724-114058-test/ on VERIDIAN-DEV server
+      (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-24'
