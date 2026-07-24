@@ -1,0 +1,288 @@
+meta:
+  title: VERIDIAN CAPABILITY REGISTRY ENGINE -- Schema Design (Phase 0 deliverable)
+  created: '2026-07-24'
+  produced_by_task: task-20260724-053213-veridian-20engines-10gateways-phase0-inv
+  instruction: INS-20260724-053123-0e5a
+  scope_of_this_document: 'Schema design only, per this task''s own CONSTRAINTS. This is Engine 3 in
+    ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml''s engine_inventory (see that file''s row
+    engine_no=3) -- flagged there and by the Owner''s directive (PART4) as the single most important
+    missing piece. This document does NOT wire the schema live; a later phase (see that plan''s
+    phase closing this gap, referenced in closes_capability_registry_gap below) builds the real table +
+    lookup_contract enforcement.'
+  builds_on_not_replaces: 'compliance-tracker already has 2 real, live, partially-overlapping pieces this
+    schema is designed to sit on top of, not duplicate:
+      (1) src/lib/services/capability-registry-service.ts (Wave 43) -- indexCapability()/findSimilar()/
+          findSimilarCapabilities(), an embedding-based similarity index over 5 entity types
+          (worker_agent, automation_rule, module, prompt_pattern, dynamic_chain). This schema''s
+          `confidence` field is designed to be POPULATED FROM that embedding-similarity score when a
+          capability is auto-discovered, not a second scoring system.
+      (2) src/lib/services/capability-tree-service.ts -- CapabilityNode type (key, label, leaf, engineKey,
+          inputFields, codeReference, agentId), the cascading task-chain selector''s real option tree,
+          assembled from real registered rows (computation_engines, taskCapabilities, moduleRegistry),
+          not a hand-authored taxonomy. This schema''s `capability_name` and `inputs` fields are designed
+          to be DERIVABLE from a CapabilityNode''s key/inputFields, not a competing naming scheme.
+    Net: the real gap is not existence (both of the above are live, verified this session) -- it is that
+    neither carries the full PART4 field set (business_rules/workflow/automation/documents/reports/apis/
+    ui_screens/permissions/ai_required/version/owner) as queryable, structured data in one place. This
+    schema is that missing union.'
+  closes_capability_registry_gap: 'Designed here (Phase 0). Wired live -- new sqlite table or Postgres
+    table + population script + lookup_contract enforced in task-gateway.py -- in Phase 2 of
+    ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml (see that file''s phases[] block, phase id
+    capability_registry_live_wiring). This document only designs the shape and proves it against 5 real,
+    already-existing capabilities (see populated_capabilities below) -- it does not create a live table.'
+
+# ============================================================================
+# FIELD SCHEMA -- one record per registered capability. Every field below is
+# named directly from the Owner's PART4 directive. Types are given so a
+# future implementation (sqlite/Postgres/JSON) has an unambiguous contract.
+# ============================================================================
+capability_record_schema:
+  capability_name:
+    type: string
+    required: true
+    description: 'Stable, unique identifier -- reuses the real existing identifier a capability already
+      has in code wherever one exists (a computation_engines.key / capability-tree leaf key / dynamic
+      chain modePill+path), never a newly-minted parallel name for something already named.'
+  inputs:
+    type: array
+    item_schema: '{ key: string, label: string, type: number|text|select|number_list, optional?: bool,
+      options?: [{value,label}] }'
+    required: true
+    description: 'Directly reusable from capability-tree-service.ts''s existing CapabilityInputField type
+      -- not redesigned, just promoted to a first-class registry column so it is queryable without
+      re-deriving the whole capability tree.'
+  business_rules:
+    type: array
+    item_schema: '{ leaf_key: string, phase: input|process|output|logic, mechanism_path: string,
+      registered: bool }'
+    required: true
+    description: 'Points at guardrail-engine.ts registrations (guardrail-registrations.ts) for this
+      capability''s leaf_key, if any. registered=false is a real, valid, common value (guardrail-engine.ts
+      is opt-in/empty-by-default per its own header) -- absence of a rule is recorded, not omitted, so a
+      caller can distinguish "no rule exists" from "field not populated yet".'
+  workflow:
+    type: string, nullable
+    required: true
+    description: 'Which multi-step process (if any) this capability is dispatched through -- e.g.
+      task-execution-engine.ts''s dispatchEngine()/executeEngineDispatch() for VCEL calculations, or
+      task-gateway.py''s submit/start/log/close lifecycle for a server AI task. Null for a capability with
+      no workflow wrapper (a pure function called directly).'
+  automation:
+    type: string, nullable
+    required: true
+    description: 'Whether/how this capability can run unattended -- names the real trigger mechanism
+      (e.g. a cron entry, an automation_rule row keyed by this capability_name in the Capability Registry
+      Engine''s existing entity index) or null if human-triggered only.'
+  documents:
+    type: array of string, nullable
+    required: false
+    description: 'Real file paths of any spec/design doc this capability''s behavior is defined by (e.g.
+      a *.md wave doc, a CONSTITUTION.yaml rule id). Never a placeholder -- omit the capability from
+      populated_capabilities before inventing a citation.'
+  reports:
+    type: array of string, nullable
+    required: false
+    description: 'Real report/dashboard identifiers this capability feeds, if any (e.g. report-catalog-
+      service.ts / report-engine-service.ts domain+report ids, reused verbatim, not re-named).'
+  apis:
+    type: array of string
+    required: true
+    description: 'Real HTTP route path(s) or CLI entrypoint(s) that invoke this capability today. Every
+      entry here must be a route.ts path or script path that actually exists on disk -- verified live by
+      generate_capability_registry_candidates.py (see populated_capabilities below), same discipline as
+      ai-os/scripts/generate_engines_gateways_inventory.py used for the engine inventory.'
+  ui_screens:
+    type: array of string, nullable
+    required: false
+    description: 'Real component file(s) that render this capability to an end user, if any (e.g.
+      ChainSelector.tsx for anything reachable through the chain-path picker). Null for a
+      server-only/no-UI capability -- a real, valid value, not a gap.'
+  permissions:
+    type: string
+    required: true
+    description: 'The real access-control boundary this capability runs under today -- almost always
+      "org-scoped via withTenantContext/TenantDb" in compliance-tracker (drizzle-orm tenant isolation),
+      cited by the actual db/tenant-scoped.ts mechanism rather than a generic "RBAC" placeholder.'
+  ai_required:
+    type: boolean
+    required: true
+    description: 'Whether this capability''s real implementation calls an LLM (callLLM/callLLMJson/
+      callLLMVision) anywhere in its dispatch path. This is the literal field the lookup_contract below
+      exists to make checkable BEFORE any caller reaches for an AI call -- most of this codebase''s VCEL
+      engines are deliberately deterministic (ai_required: false), confirmed by this task''s own reading
+      of task-execution-engine.ts''s dispatch switch.'
+  confidence:
+    type: number, 0.0-1.0
+    required: true
+    description: 'How sure the registry is that this record accurately reflects live code. 1.0 = hand-
+      verified this session (every populated_capabilities row below). A future auto-discovery pass
+      (Phase 2) that surfaces a candidate via capability-registry-service.ts''s embedding similarity
+      should set this from the real cosine-similarity score, never hand-typed as 1.0 for an unverified
+      auto-discovered row.'
+  version:
+    type: string
+    required: true
+    description: 'The capability''s own version if one exists (e.g. computationEngines.engineVersion,
+      per engine-invocation.ts''s invokeEngine() stamping) -- "unversioned" is a valid, honest value for
+      capabilities with no version column (most capability-tree leaves today).'
+  owner:
+    type: string
+    required: true
+    description: 'Real accountable party -- a named codebase area/team convention already in use (this
+      codebase''s own "Wave N" attribution in file headers), not an individual person''s name. Falls back
+      to "VERIDIAN platform (unattributed, pre-Wave-numbering code)" only if genuinely no wave/owner
+      comment exists at the cited path.'
+
+# ============================================================================
+# LOOKUP CONTRACT -- what any future Intent/Decision Engine (or task-gateway.py
+# directly) calls BEFORE ever considering an AI call. Mirrors the calling
+# convention capability-registry-service.ts's findSimilarCapabilities() and
+# capability-tree-service.ts's buildCapabilityTree() already establish
+# (typed input, typed result array, no side effects), so a real
+# implementation can be built by composing those two functions rather than
+# writing new query logic.
+# ============================================================================
+lookup_contract:
+  function_signature: 'lookupCapability(query: { capability_name?: string, intent_text?: string,
+    domain?: string }) -> { found: boolean, matches: CapabilityRecord[], best_match_confidence: number }'
+  call_site_requirement: 'Any code path about to construct an LLM prompt to accomplish a named task MUST
+    call lookupCapability() first and inspect matches[].ai_required and matches[].apis before proceeding.
+    A match with ai_required=false and a real apis[] entry means the deterministic path must be used
+    instead of an AI call -- this is the literal mechanism that makes the Owner''s "most engines already
+    exist, don''t duplicate with AI" instruction structurally enforced rather than merely documented.'
+  resolution_order:
+    - 'Exact capability_name match against capability_record_schema rows (O(1) lookup).'
+    - 'domain-scoped substring/keyword match, reusing dynamic-chain-directory-service.ts''s existing
+      keyword-ranked search()  pattern (exact modePill match weighted highest, then path-label substring,
+      then description) rather than inventing a second ranking heuristic.'
+    - 'Embedding similarity fallback via capability-registry-service.ts''s findSimilar() -- only reached
+      when the two deterministic passes above return zero matches, and the returned confidence is the
+      real cosine-similarity score, not a fixed constant.'
+  false_negative_policy: 'If lookupCapability() returns found=false, the caller MAY proceed to an AI call
+    -- but the registry gains a new candidate row (confidence < 1.0, coverage: candidate) via the same
+    register-knowledge-style idempotent insert pattern scripts/knowledge_registry_multisource.py already
+    uses for the Knowledge Engine, so the next identical request finds a match instead of re-triggering
+    an AI call. This is what keeps the registry self-sustaining rather than requiring a human to notice
+    and register new capabilities by hand.'
+  non_goals_this_phase: 'This phase does not implement lookupCapability() as running code, does not
+    create a live table, and does not wire task-gateway.py to call it -- schema + contract design only,
+    per this task''s CONSTRAINTS. See closes_capability_registry_gap above for which phase does.'
+
+# ============================================================================
+# POPULATED CAPABILITIES -- 5 real, currently-existing capabilities, derived
+# from a live grep of compliance-tracker's route/workflow/guardrail
+# definitions (not invented). Every apis[]/ui_screens[] path below was
+# verified with a live os.path.exists() check by
+# ai-os/scripts/generate_capability_registry_candidates.py before being
+# written here -- see that script for the verification, re-run it to
+# reproduce/extend this list.
+# ============================================================================
+populated_capabilities:
+  - capability_name: gratuity_calculator
+    inputs:
+      - { key: monthlySalary, label: "Last drawn monthly salary (₹)", type: number }
+      - { key: yearsOfService, label: "Years of service", type: number }
+      - { key: gratuity, label: "Gratuity (₹, optional)", type: number, optional: true }
+    business_rules:
+      - leaf_key: gratuity_calculator
+        phase: process
+        mechanism_path: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+        registered: true
+    workflow: repos/compliance-tracker/src/lib/task-execution-engine.ts (dispatchEngine/executeEngineDispatch)
+    automation: null
+    documents: null
+    reports: null
+    apis:
+      - repos/compliance-tracker/src/lib/services/capability-tree-service.ts
+    ui_screens:
+      - repos/compliance-tracker/src/components/veri-chat/ChainSelector.tsx
+    permissions: "org-scoped via withTenantContext/TenantDb (repos/compliance-tracker/src/lib/db/tenant-scoped.ts)"
+    ai_required: false
+    confidence: 1.0
+    version: unversioned
+    owner: "VCEL HR/Payroll domain engines (src/lib/engines/hr-engine.ts, src/lib/engines/payroll-engine.ts)"
+
+  - capability_name: commission_calculator
+    inputs:
+      - { key: commissionRatePercent, label: "Commission rate (%)", type: number }
+    business_rules:
+      - leaf_key: commission_calculator
+        phase: process
+        mechanism_path: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+        registered: true
+    workflow: repos/compliance-tracker/src/lib/task-execution-engine.ts (dispatchEngine/executeEngineDispatch)
+    automation: null
+    documents: null
+    reports: null
+    apis:
+      - repos/compliance-tracker/src/lib/services/capability-tree-service.ts
+    ui_screens:
+      - repos/compliance-tracker/src/components/veri-chat/ChainSelector.tsx
+    permissions: "org-scoped via withTenantContext/TenantDb (repos/compliance-tracker/src/lib/db/tenant-scoped.ts)"
+    ai_required: false
+    confidence: 1.0
+    version: unversioned
+    owner: "VCEL Sales/CRM domain engine (src/lib/engines/sales-engine.ts, src/lib/engines/marketing-engine.ts)"
+
+  - capability_name: gst_calculation_engine
+    inputs:
+      - { key: gstRatePercent, label: "GST rate (%)", type: number }
+    business_rules:
+      - leaf_key: gst_calculation_engine
+        phase: process
+        mechanism_path: repos/compliance-tracker/src/lib/business-rule-validator.ts
+        registered: true
+    workflow: repos/compliance-tracker/src/lib/task-execution-engine.ts (dispatchEngine, GST_SPLIT_ENGINE_LEAVES group)
+    automation: null
+    documents: null
+    reports: null
+    apis:
+      - repos/compliance-tracker/src/lib/services/capability-tree-service.ts
+    ui_screens: null
+    permissions: "org-scoped via withTenantContext/TenantDb (repos/compliance-tracker/src/lib/db/tenant-scoped.ts)"
+    ai_required: false
+    confidence: 1.0
+    version: unversioned
+    owner: "VCEL India GST domain engine (src/lib/engines/in/gst-engine.ts)"
+
+  - capability_name: trend_analysis_engine
+    inputs:
+      - { key: values, label: "Time-ordered numeric series", type: number_list }
+    business_rules:
+      - leaf_key: trend_analysis_engine
+        phase: process
+        mechanism_path: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+        registered: false
+    workflow: repos/compliance-tracker/src/lib/task-execution-engine.ts (dispatchEngine, trend_analysis_engine case)
+    automation: null
+    documents: null
+    reports: null
+    apis:
+      - repos/compliance-tracker/src/lib/services/capability-tree-service.ts
+    ui_screens: null
+    permissions: "org-scoped via withTenantContext/TenantDb (repos/compliance-tracker/src/lib/db/tenant-scoped.ts)"
+    ai_required: false
+    confidence: 1.0
+    version: unversioned
+    owner: "VCEL Analytics domain engine (src/lib/engines/analytics-engine.ts)"
+
+  - capability_name: capability_registry_dedup
+    inputs:
+      - { key: name, label: "Candidate capability name", type: text }
+      - { key: domain, label: "Domain", type: text, optional: true }
+      - { key: description, label: "Description", type: text, optional: true }
+    business_rules: []
+    workflow: null
+    automation: "repos/compliance-tracker/src/lib/loops/capability-index-freshness-audit.ts (recurring freshness cron)"
+    documents:
+      - "PLATFORM_STRATEGY.md §24 (cited in capability-registry-service.ts header, Wave 43)"
+    reports: null
+    apis:
+      - repos/compliance-tracker/src/app/api/capability-registry
+    ui_screens:
+      - "repos/compliance-tracker/src/app/(app)/capability-registry"
+    permissions: "org-scoped via withTenantContext/TenantDb (repos/compliance-tracker/src/lib/db/tenant-scoped.ts)"
+    ai_required: false
+    confidence: 1.0
+    version: unversioned
+    owner: "VERIDIAN Capability Registry (Wave 43), src/lib/services/capability-registry-service.ts"

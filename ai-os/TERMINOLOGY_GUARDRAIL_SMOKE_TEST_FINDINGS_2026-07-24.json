@@ -1,0 +1,347 @@
+{
+  "meta": {
+    "script": "ai-os/TERMINOLOGY_GUARDRAIL_2026-07-24.py",
+    "status": "designed_and_smoke_tested_not_yet_rolled_out_or_ci_wired",
+    "dictionary_used": "/opt/veridian/ai-os/tasks/task-20260724-070131-veridian-terminology-standardization-pha/workspace/ai-os/VARIABLE_DICTIONARY_2026-07-24.yaml",
+    "registered_placeholder_count": 320,
+    "files_scanned": [
+      "/opt/veridian/repos/compliance-tracker/src/lib/services/communication-drafting-service.ts",
+      "/opt/veridian/repos/compliance-tracker/src/lib/orchestra-mock-data.ts",
+      "/opt/veridian/repos/compliance-tracker/src/db/seed.ts"
+    ],
+    "inline_string_scanned": false
+  },
+  "summary": {
+    "total_findings": 36,
+    "findings_by_category": {
+      "placeholder_company_name": 29,
+      "placeholder_email_domain": 7
+    }
+  },
+  "findings": [
+    {
+      "source": "/opt/veridian/repos/compliance-tracker/src/lib/services/communication-drafting-service.ts",
+      "line": 110,
+      "column": 98,
+      "category": "placeholder_company_name",
+      "matched_text": "ABC Corp",
+      "note": "Hardcoded placeholder-style company name -- replace with a registered <Entity.Attribute> placeholder (e.g. <Clients.Name>) instead of a literal example company.",
+      "line_excerpt": "context: string // freeform description of what to draft (e.g. \"weekly status update for the ABC Corp GST filing\" or the detected commitment's text)"
+    },
+    {
+      "source": "/opt/veridian/repos/compliance-tracker/src/lib/orchestra-mock-data.ts",
+      "line": 102,
+      "column": 29,
+      "category": "placeholder_company_name",
+      "matched_text": "ABC Corp",
+      "note": "Hardcoded placeholder-style company name -- replace with a registered <Entity.Attribute> placeholder (e.g. <Clients.Name>) instead of a literal example company.",
+      "line_excerpt": "{ id: \"c-abc-gst\", name: \"ABC Corp GST Pattern\", tier: \"client\", domain: \"ABC Corp > GST\", usageCount: 78, accuracy: 99.5 },"
+    },
+    {
+      "source": "/opt/veridian/repos/compliance-tracker/src/lib/orchestra-mock-data.ts",
+      "line": 102,
+      "column": 77,
+      "category": "placeholder_company_name",
+      "matched_text": "ABC Corp",
+      "note": "Hardcoded placeholder-style company name -- replace with a registered <Entity.Attribute> placeholder (e.g. <Clients.Name>) instead of a literal example company.",
+      "line_excerpt": "{ id: \"c-abc-gst\", name: \"ABC Corp GST Pattern\", tier: \"client\", domain: \"ABC Corp > GST\", usageCount: 78, accuracy: 99.5 },"
+    },
+    {
+      "source": "/opt/veridian/repos/compliance-tracker/src/lib/orchestra-mock-data.ts",
+      "line": 103,
+      "column": 29,
+      "category": "placeholder_company_name",
+      "matched_text": "ABC Corp",
+      "note": "Hardcoded placeholder-style company name -- replace with a registered <Entity.Attribute> placeholder (e.g. <Clients.Name>) instead of a literal example company.",
+      "line_excerpt": "{ id: \"c-abc-tds\", name: \"ABC Corp TDS Exceptions\", tier: \"client\", domain: \"ABC Corp > TDS\", usageCount: 52, accuracy: 100 },"
+    },
+    {
+      "source": "/opt/veridian/repos/compliance-tracker/src/lib/orchestra-mock-data.ts",
+      "line": 103,
+      "column": 80,
+      "category": "placeholder_company_name",
+      "matched_text": "ABC Corp",
+      "note": "Hardcoded placeholder-style company name -- replace with a registered <Entity.Attribute> placeholder (e.g. <Clients.Name>) instead of a literal example company.",
+      "line_excerpt": "{ id: \"c-abc-tds\", name: \"ABC Corp TDS Exceptions\", tier: \"client\", domain: \"ABC Corp > TDS\", usageCount: 52, accuracy: 100 },"
+    },
+    {
+      "source": "/opt/veridian/repos/compliance-tracker/src/lib/orchestra-mock-data.ts",
+      "line": 104,
+      "column": 35,
+      "category": "placeholder_company_name",
+      "matched_text": "ABC Corp",
+      "note": "Hardcoded placeholder-style company name -- replace with a registered <Entity.Attribute> placeholder (e.g. <Clients.Name>) instead of a literal example company.",
+      "line_excerpt": "{ id: \"c-abc-approvals\", name: \"ABC Corp Approval Chain\", tier: \"client\", domain: \"ABC Corp > Policy\", usageCount: 34, accuracy: 100 },"
+    },
+    {
+      "source": "/opt/veridian/repos/compliance-tracker/src/lib/orchestra-mock-data.ts",
+      "line": 104,
+      "column": 86,
+      "category": "placeholder_company_name",
+      "matched_text": "ABC Corp",
+      "note": "Hardcoded placeholder-style company name -- replace with a registered <Entity.Attribute> placeholder (e.g. <Clients.Name>) instead of a literal example company.",
+      "line_excerpt": "{ id: \"c-abc-approvals\", name: \"ABC Corp Approval Chain\", tier: \"client\", domain: \"ABC Corp > Policy\", usageCount: 34, accuracy: 100 },"
+    },
+    {
+      "source": "/opt/veridian/repos/compliance-tracker/src/lib/orchestra-mock-data.ts",
+      "line": 155,
+      "column": 51,
+      "category": "placeholder_company_name",
+      "matched_text": "ABC Corp",
+      "note": "Hardcoded placeholder-style company name -- replace with a registered <Entity.Attribute> placeholder (e.g. <Clients.Name>) instead of a literal example company.",
+      "line_excerpt": "{ id: \"t1\", title: \"File Q3 GST returns for ABC Corp\", client: \"ABC Corp\", status: \"completed\" },"
+    },
+    {
+      "source": "/opt/veridian/repos/compliance-tracker/src/lib/orchestra-mock-data.ts",
+      "line": 155,
+      "column": 71,
+      "category": "placeholder_company_name",
+      "matched_text": "ABC Corp",
+      "note": "Hardcoded placeholder-style company name -- replace with a registered <Entity.Attribute> placeholder (e.g. <Clients.Name>) instead of a literal example company.",
+      "line_excerpt": "{ id: \"t1\", title: \"File Q3 GST returns for ABC Corp\", client: \"ABC Corp\", status: \"completed\" },"
+    },
+    {
+      "source": "/opt/veridian/repos/compliance-tracker/src/lib/orchestra-mock-data.ts",
+      "line": 156,
+      "column": 51,
+      "category": "placeholder_company_name",
+      "matched_text": "XYZ Ltd",
+      "note": "Hardcoded placeholder-style company name -- replace with a registered <Entity.Attribute> placeholder (e.g. <Clients.Name>) instead of a literal example company.",
+      "line_excerpt": "{ id: \"t2\", title: \"Review TDS deductions \u2014 XYZ Ltd\", client: \"XYZ Ltd\", status: \"in_progress\" },"
+    },
+    {
+      "source": "/opt/veridian/repos/compliance-tracker/src/lib/orchestra-mock-data.ts",
+      "line": 156,
+      "column": 70,
+      "category": "placeholder_company_name",
+      "matched_text": "XYZ Ltd",
+      "note": "Hardcoded placeholder-style company name -- replace with a registered <Entity.Attribute> placeholder (e.g. <Clients.Name>) instead of a literal example company.",
+      "line_excerpt": "{ id: \"t2\", title: \"Review TDS deductions \u2014 XYZ Ltd\", client: \"XYZ Ltd\", status: \"in_progress\" },"
+    },
+    {
+      "source": "/opt/veridian/repos/compliance-tracker/src/lib/orchestra-mock-data.ts",
+      "line": 161,
+      "column": 99,
+      "category": "placeholder_company_name",
+      "matched_text": "XYZ Ltd",
+      "note": "Hardcoded placeholder-style company name -- replace with a registered <Entity.Attribute> placeholder (e.g. <Clients.Name>) instead of a literal example company.",
+      "line_excerpt": "{ id: \"m1\", from: \"assistant\", text: \"Orchestrated: TDS Calculation + TDS Filing agents for XYZ Ltd review. Running now.\" },"
+    },
+    {
+      "source": "/opt/veridian/repos/compliance-tracker/src/lib/orchestra-mock-data.ts",
+      "line": 175,
+      "column": 53,
+      "category": "placeholder_company_name",
+      "matched_text": "ABC Corp",
+      "note": "Hardcoded placeholder-style company name -- replace with a registered <Entity.Attribute> placeholder (e.g. <Clients.Name>) instead of a literal example company.",
+      "line_excerpt": "{ id: \"t5\", title: \"Month-end close entries \u2014 ABC Corp\", client: \"ABC Corp\", status: \"completed\" },"
+    },
+    {
+      "source": "/opt/veridian/repos/compliance-tracker/src/lib/orchestra-mock-data.ts",
+      "line": 175,
+      "column": 73,
+      "category": "placeholder_company_name",
+      "matched_text": "ABC Corp",
+      "note": "Hardcoded placeholder-style company name -- replace with a registered <Entity.Attribute> placeholder (e.g. <Clients.Name>) instead of a literal example company.",
+      "line_excerpt": "{ id: \"t5\", title: \"Month-end close entries \u2014 ABC Corp\", client: \"ABC Corp\", status: \"completed\" },"
+    },
+    {
+      "source": "/opt/veridian/repos/compliance-tracker/src/lib/orchestra-mock-data.ts",
+      "line": 177,
+      "column": 51,
+      "category": "placeholder_company_name",
+      "matched_text": "ABC Corp",
+      "note": "Hardcoded placeholder-style company name -- replace with a registered <Entity.Attribute> placeholder (e.g. <Clients.Name>) instead of a literal example company.",
+      "line_excerpt": "{ id: \"t7\", title: \"P&L variance analysis \u2014 ABC Corp\", client: \"ABC Corp\", status: \"pending\" },"
+    },
+    {
+      "source": "/opt/veridian/repos/compliance-tracker/src/lib/orchestra-mock-data.ts",
+      "line": 177,
+      "column": 71,
+      "category": "placeholder_company_name",
+      "matched_text": "ABC Corp",
+      "note": "Hardcoded placeholder-style company name -- replace with a registered <Entity.Attribute> placeholder (e.g. <Clients.Name>) instead of a literal example company.",
+      "line_excerpt": "{ id: \"t7\", title: \"P&L variance analysis \u2014 ABC Corp\", client: \"ABC Corp\", status: \"pending\" },"
+    },
+    {
+      "source": "/opt/veridian/repos/compliance-tracker/src/lib/orchestra-mock-data.ts",
+      "line": 195,
+      "column": 49,
+      "category": "placeholder_company_name",
+      "matched_text": "ABC Corp",
+      "note": "Hardcoded placeholder-style company name -- replace with a registered <Entity.Attribute> placeholder (e.g. <Clients.Name>) instead of a literal example company.",
+      "line_excerpt": "{ id: \"t9\", title: \"Internal audit plan \u2014 ABC Corp\", client: \"ABC Corp\", status: \"completed\" },"
+    },
+    {
+      "source": "/opt/veridian/repos/compliance-tracker/src/lib/orchestra-mock-data.ts",
+      "line": 195,
+      "column": 69,
+      "category": "placeholder_company_name",
+      "matched_text": "ABC Corp",
+      "note": "Hardcoded placeholder-style company name -- replace with a registered <Entity.Attribute> placeholder (e.g. <Clients.Name>) instead of a literal example company.",
+      "line_excerpt": "{ id: \"t9\", title: \"Internal audit plan \u2014 ABC Corp\", client: \"ABC Corp\", status: \"completed\" },"
+    },
+    {
+      "source": "/opt/veridian/repos/compliance-tracker/src/lib/orchestra-mock-data.ts",
+      "line": 197,
+      "column": 53,
+      "category": "placeholder_company_name",
+      "matched_text": "ABC Corp",
+      "note": "Hardcoded placeholder-style company name -- replace with a registered <Entity.Attribute> placeholder (e.g. <Clients.Name>) instead of a literal example company.",
+      "line_excerpt": "{ id: \"t11\", title: \"Risk assessment update \u2014 ABC Corp\", client: \"ABC Corp\", status: \"pending\" },"
+    },
+    {
+      "source": "/opt/veridian/repos/compliance-tracker/src/lib/orchestra-mock-data.ts",
+      "line": 197,
+      "column": 73,
+      "category": "placeholder_company_name",
+      "matched_text": "ABC Corp",
+      "note": "Hardcoded placeholder-style company name -- replace with a registered <Entity.Attribute> placeholder (e.g. <Clients.Name>) instead of a literal example company.",
+      "line_excerpt": "{ id: \"t11\", title: \"Risk assessment update \u2014 ABC Corp\", client: \"ABC Corp\", status: \"pending\" },"
+    },
+    {
+      "source": "/opt/veridian/repos/compliance-tracker/src/lib/orchestra-mock-data.ts",
+      "line": 215,
+      "column": 51,
+      "category": "placeholder_company_name",
+      "matched_text": "XYZ Ltd",
+      "note": "Hardcoded placeholder-style company name -- replace with a registered <Entity.Attribute> placeholder (e.g. <Clients.Name>) instead of a literal example company.",
+      "line_excerpt": "{ id: \"t13\", title: \"Annual return filing \u2014 XYZ Ltd\", client: \"XYZ Ltd\", status: \"in_progress\" },"
+    },
+    {
+      "source": "/opt/veridian/repos/compliance-tracker/src/lib/orchestra-mock-data.ts",
+      "line": 215,
+      "column": 70,
+      "category": "placeholder_company_name",
+      "matched_text": "XYZ Ltd",
+      "note": "Hardcoded placeholder-style company name -- replace with a registered <Entity.Attribute> placeholder (e.g. <Clients.Name>) instead of a literal example company.",
+      "line_excerpt": "{ id: \"t13\", title: \"Annual return filing \u2014 XYZ Ltd\", client: \"XYZ Ltd\", status: \"in_progress\" },"
+    },
+    {
+      "source": "/opt/veridian/repos/compliance-tracker/src/lib/orchestra-mock-data.ts",
+      "line": 221,
+      "column": 78,
+      "category": "placeholder_company_name",
+      "matched_text": "XYZ Ltd",
+      "note": "Hardcoded placeholder-style company name -- replace with a registered <Entity.Attribute> placeholder (e.g. <Clients.Name>) instead of a literal example company.",
+      "line_excerpt": "{ id: \"m4\", from: \"assistant\", text: \"AOC-4 + MGT-7 agents working for XYZ Ltd. Compliance Calendar agent syncing deadlines.\" },"
+    },
+    {
+      "source": "/opt/veridian/repos/compliance-tracker/src/lib/orchestra-mock-data.ts",
+      "line": 235,
+      "column": 50,
+      "category": "placeholder_company_name",
+      "matched_text": "ABC Corp",
+      "note": "Hardcoded placeholder-style company name -- replace with a registered <Entity.Attribute> placeholder (e.g. <Clients.Name>) instead of a literal example company.",
+      "line_excerpt": "{ id: \"t17\", title: \"Daily cash position \u2014 ABC Corp\", client: \"ABC Corp\", status: \"completed\" },"
+    },
+    {
+      "source": "/opt/veridian/repos/compliance-tracker/src/lib/orchestra-mock-data.ts",
+      "line": 235,
+      "column": 70,
+      "category": "placeholder_company_name",
+      "matched_text": "ABC Corp",
+      "note": "Hardcoded placeholder-style company name -- replace with a registered <Entity.Attribute> placeholder (e.g. <Clients.Name>) instead of a literal example company.",
+      "line_excerpt": "{ id: \"t17\", title: \"Daily cash position \u2014 ABC Corp\", client: \"ABC Corp\", status: \"completed\" },"
+    },
+    {
+      "source": "/opt/veridian/repos/compliance-tracker/src/lib/orchestra-mock-data.ts",
+      "line": 237,
+      "column": 49,
+      "category": "placeholder_company_name",
+      "matched_text": "ABC Corp",
+      "note": "Hardcoded placeholder-style company name -- replace with a registered <Entity.Attribute> placeholder (e.g. <Clients.Name>) instead of a literal example company.",
+      "line_excerpt": "{ id: \"t19\", title: \"FX exposure report \u2014 ABC Corp\", client: \"ABC Corp\", status: \"pending\" },"
+    },
+    {
+      "source": "/opt/veridian/repos/compliance-tracker/src/lib/orchestra-mock-data.ts",
+      "line": 237,
+      "column": 69,
+      "category": "placeholder_company_name",
+      "matched_text": "ABC Corp",
+      "note": "Hardcoded placeholder-style company name -- replace with a registered <Entity.Attribute> placeholder (e.g. <Clients.Name>) instead of a literal example company.",
+      "line_excerpt": "{ id: \"t19\", title: \"FX exposure report \u2014 ABC Corp\", client: \"ABC Corp\", status: \"pending\" },"
+    },
+    {
+      "source": "/opt/veridian/repos/compliance-tracker/src/lib/orchestra-mock-data.ts",
+      "line": 241,
+      "column": 66,
+      "category": "placeholder_company_name",
+      "matched_text": "ABC Corp",
+      "note": "Hardcoded placeholder-style company name -- replace with a registered <Entity.Attribute> placeholder (e.g. <Clients.Name>) instead of a literal example company.",
+      "line_excerpt": "{ id: \"m5\", from: \"assistant\", text: \"Cash Position agent: ABC Corp \u20b95.1Cr across 3 banks. Forecast agent running projections.\" },"
+    },
+    {
+      "source": "/opt/veridian/repos/compliance-tracker/src/db/seed.ts",
+      "line": 16,
+      "column": 12,
+      "category": "placeholder_company_name",
+      "matched_text": "Acme Corp",
+      "note": "Hardcoded placeholder-style company name -- replace with a registered <Entity.Attribute> placeholder (e.g. <Clients.Name>) instead of a literal example company.",
+      "line_excerpt": "name: 'Acme Corp',"
+    },
+    {
+      "source": "/opt/veridian/repos/compliance-tracker/src/db/seed.ts",
+      "line": 32,
+      "column": 37,
+      "category": "placeholder_email_domain",
+      "matched_text": "admin@acme.com",
+      "note": "Hardcoded placeholder-style email address -- replace with a registered <Entity.Attribute> placeholder (e.g. <Users.Email>) instead of a literal example address.",
+      "line_excerpt": "{ name: 'Admin User', email: 'admin@acme.com', passwordHash: PASSWORD_HASH, role: 'admin', orgId: org.id, departmentId: finance.id },"
+    },
+    {
+      "source": "/opt/veridian/repos/compliance-tracker/src/db/seed.ts",
+      "line": 33,
+      "column": 42,
+      "category": "placeholder_email_domain",
+      "matched_text": "manager.finance@acme.com",
+      "note": "Hardcoded placeholder-style email address -- replace with a registered <Entity.Attribute> placeholder (e.g. <Users.Email>) instead of a literal example address.",
+      "line_excerpt": "{ name: 'Finance Manager', email: 'manager.finance@acme.com', passwordHash: PASSWORD_HASH, role: 'manager', orgId: org.id, departmentId: finance.id },"
+    },
+    {
+      "source": "/opt/veridian/repos/compliance-tracker/src/db/seed.ts",
+      "line": 34,
+      "column": 40,
+      "category": "placeholder_email_domain",
+      "matched_text": "manager.legal@acme.com",
+      "note": "Hardcoded placeholder-style email address -- replace with a registered <Entity.Attribute> placeholder (e.g. <Users.Email>) instead of a literal example address.",
+      "line_excerpt": "{ name: 'Legal Manager', email: 'manager.legal@acme.com', passwordHash: PASSWORD_HASH, role: 'manager', orgId: org.id, departmentId: legal.id },"
+    },
+    {
+      "source": "/opt/veridian/repos/compliance-tracker/src/db/seed.ts",
+      "line": 35,
+      "column": 37,
+      "category": "placeholder_email_domain",
+      "matched_text": "member.ops@acme.com",
+      "note": "Hardcoded placeholder-style email address -- replace with a registered <Entity.Attribute> placeholder (e.g. <Users.Email>) instead of a literal example address.",
+      "line_excerpt": "{ name: 'Ops Member', email: 'member.ops@acme.com', passwordHash: PASSWORD_HASH, role: 'member', orgId: org.id, departmentId: operations.id },"
+    },
+    {
+      "source": "/opt/veridian/repos/compliance-tracker/src/db/seed.ts",
+      "line": 36,
+      "column": 36,
+      "category": "placeholder_email_domain",
+      "matched_text": "member.hr@acme.com",
+      "note": "Hardcoded placeholder-style email address -- replace with a registered <Entity.Attribute> placeholder (e.g. <Users.Email>) instead of a literal example address.",
+      "line_excerpt": "{ name: 'HR Member', email: 'member.hr@acme.com', passwordHash: PASSWORD_HASH, role: 'member', orgId: org.id, departmentId: hr.id },"
+    },
+    {
+      "source": "/opt/veridian/repos/compliance-tracker/src/db/seed.ts",
+      "line": 37,
+      "column": 41,
+      "category": "placeholder_email_domain",
+      "matched_text": "member.finance@acme.com",
+      "note": "Hardcoded placeholder-style email address -- replace with a registered <Entity.Attribute> placeholder (e.g. <Users.Email>) instead of a literal example address.",
+      "line_excerpt": "{ name: 'Finance Member', email: 'member.finance@acme.com', passwordHash: PASSWORD_HASH, role: 'member', orgId: org.id, departmentId: finance.id },"
+    },
+    {
+      "source": "/opt/veridian/repos/compliance-tracker/src/db/seed.ts",
+      "line": 38,
+      "column": 38,
+      "category": "placeholder_email_domain",
+      "matched_text": "viewer@acme.com",
+      "note": "Hardcoded placeholder-style email address -- replace with a registered <Entity.Attribute> placeholder (e.g. <Users.Email>) instead of a literal example address.",
+      "line_excerpt": "{ name: 'Viewer User', email: 'viewer@acme.com', passwordHash: PASSWORD_HASH, role: 'viewer', orgId: org.id, departmentId: operations.id },"
+    }
+  ]
+}
