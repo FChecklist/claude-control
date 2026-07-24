@@ -47,6 +47,9 @@ import sqlite3
 import subprocess
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import auditor_engine_events as _events  # Phase 7 shared event-emitter (AUDITOR_ENGINE_EVENT_SCHEMA)
+
 DB_PATH = os.environ.get("SUPERBOSS_REGISTER_DB", "/opt/veridian/ai-os/memory/superboss-register.sqlite")
 _WRITE_LOCK_PATH = DB_PATH + ".writelock"
 
@@ -320,11 +323,24 @@ def main():
     duration = (datetime.datetime.now(datetime.timezone.utc) - start).total_seconds()
     status = "ok" if not errors else ("partial" if tools_run else "failed")
 
+    run_traces = {}
+    if not args.dry_run:
+        for path in openapi_files:
+            rn = _REPO_BY_FILENAME.get(os.path.basename(path))
+            if rn and rn not in run_traces:
+                run_traces[rn] = _events.start_audit_run(
+                    domain=DOMAIN, repo=rn, producer_name=os.path.basename(__file__), run_id=run_id,
+                )
+
     new_count = 0
+    new_by_repo = {}
     if not args.dry_run:
         with _write_lock():
             conn = _connect()
             ensure_tables(conn)
+            for rn, rt in run_traces.items():
+                subset = [r for r in all_records if r["repo"] == rn]
+                new_by_repo[rn] = _events.stamp_new_finding_events(conn, subset, rt)
             new_count = upsert_findings(conn, all_records, run_id)
             # One audit_runs row per repo (matches audit_pipeline_security.py's
             # per-repo granularity) rather than one pooled row for all 3 docs.
@@ -347,6 +363,10 @@ def main():
                 ))
             conn.commit()
             conn.close()
+        for rn, rt in run_traces.items():
+            subset = [r for r in all_records if r["repo"] == rn]
+            _events.complete_audit_run(rt, status=status, total_findings=len(subset),
+                                        new_findings=new_by_repo.get(rn, 0), duration_s=duration)
 
     summary = {
         "ok": status != "failed",

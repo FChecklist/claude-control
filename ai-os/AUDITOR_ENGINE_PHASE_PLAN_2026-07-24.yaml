@@ -726,6 +726,64 @@ phases:
       by (not imports) every earlier phase's scripts, so it must exist as an interface (already designed,
       Phase 0) before Phase 1 code is written, but its OWN build/wiring work is sequenced last so it has real
       traffic to validate against by the time it's built."
+    status: event_emitter_and_relationship_graph_complete_pgaudit_owner_gated_2026-07-24
+    evidence:
+      task: task-20260724-213832-phase7-part6-observability-audit-trail-l
+      what_shipped: "Built ai-os-scripts/auditor_engine_events.py, the shared event-emitter library
+        implementing AUDITOR_ENGINE_EVENT_SCHEMA_2026-07-24.schema.json (real jsonschema validation, a new
+        append-only audit_events table in the shared knowledge_engine sqlite DB, real OpenTelemetry spans
+        via an SDK installed into ~/.local/share/veridian-tool-venvs/otel with correct parent/child
+        trace-context propagation). Found and fixed a real bug in Phase 0's own schema during this phase's
+        first real enforcement of it: the `domain` property's `type: string` contradicted its own enum
+        (which lists null) and its own description -- fixed to `type: [string, null]`. Wired the emitter
+        into all 10 existing audit_pipeline_*.py scripts (security, api_contract, architecture, data_model,
+        documentation, integration, metadata, product_quality, workflow_transitions, ai_governance), each
+        now populating the real event_id column on audit_findings (present since Phase 1 but unpopulated
+        until this phase) for every genuinely-new finding, while correctly leaving pre-existing findings'
+        event_id untouched rather than backfilling a fabricated event. Resolved Phase 0/6's own open
+        question via a real Supabase MCP investigation (not assumed): org 'MeetTrack' plan=free, and
+        pgaudit IS available in the extension catalog for both compliance-tracker's real project
+        (verdian-ai, pcrjmlpuqsbocqfwoxod) and projexa's real project (evpckeuxgvahguwsaeul), both
+        ACTIVE_HEALTHY -- confirmed distinct from the separate local `supabase start` CLI dev containers
+        also running in Docker on this box. Authored ai-os/pgaudit/ENABLE_PGAUDIT_2026-07-24.sql but did
+        NOT run it against either live production project -- filed as
+        pgaudit-enable-on-production-supabase in OWNER_DECISIONS_NEEDED_2026-07-23.yaml, matching this same
+        file's existing precedent for production-infrastructure-affecting changes needing Owner sign-off
+        before execution, not assumed authorized by this phase's own scope text. Ran
+        ai-os-scripts/close_phase7_observability_audit_trail.py to register this phase's own 13 real
+        deliverables into knowledge_engine and populate real, code-grounded entity_relationships edges
+        across the Phase 0-6 artifact graph (previously entity_relationships=[] on all of them except a
+        handful of self-registered edges) -- each edge cites the actual subprocess/import/read dependency
+        observed in the real source, not a placeholder."
+      real_run_result: "Live pipeline runs against real repo data, 2026-07-24, confirming the wiring works
+        end to end: security (29 findings, idempotent), api_contract (2 new finding_emitted events fired
+        for veda-advisors' pre-existing spectral findings whose event_id was still null, then idempotent),
+        architecture (10 findings across 3 repos, domain=null run-level events per the schema's own
+        repo-wide-event provision), data_model (1779 findings), documentation (14445 findings),
+        product_quality (351 findings), integration (0 -- all 3 repos still genuinely skipped, no base URL
+        configured, correctly 0 run-events emitted since no real run happened), metadata (6 findings),
+        workflow_transitions (9 findings), ai_governance (8 findings, --skip-run to avoid a live LLM call
+        cost during verification). Every pipeline's own idempotent-upsert convention preserved unchanged --
+        this phase only added event emission alongside it, never altered new/existing finding semantics."
+      not_duplicating_earlier_phases: "This phase did not re-scan, re-lint, or re-review anything -- it
+        added an observability layer on top of Phases 1-6's already-real finding-emission code, exactly as
+        this phase's own dependency_mechanism above specifies (imported by, not duplicating, earlier
+        phases' scripts)."
+      known_gaps_carried_forward: "(1) No OTel Collector process was stood up this phase -- doing so would
+        be an always-on network listener, the same risk category this session's own precedent
+        (OWNER_DECISIONS_NEEDED#webhook-receiver-network-exposure) already flagged as needing Owner
+        sign-off, not assumed; spans currently export to a local JSONL file
+        (ai-os/logs/otel-spans-auditor-engine.jsonl) and switch to a real OTLP collector the moment
+        AUDIT_OTEL_EXPORTER_ENDPOINT is set, zero code change needed. (2) pgAudit is investigated and ready
+        but NOT enabled on either live production Supabase project pending Owner sign-off (see above --
+        this is the SCOPE item's own parenthetical 'pending a real check... open question' now resolved,
+        but enablement itself is a separate, correctly-gated action). (3) entity_relationships population
+        this phase is real and grounded but not claimed to cover literally every one of the 40 Phase 0-6
+        artifacts exhaustively -- it prioritizes the highest-value, most-clearly-evidenced code/data
+        dependencies (pipeline-to-tool, pipeline-to-config, register-script-to-review-doc); a future phase
+        can extend coverage further using the same add-relationship mechanism, which is idempotent and safe
+        to re-run."
+
 
   - phase: 8
     name: Master orchestration, cron wiring, report software

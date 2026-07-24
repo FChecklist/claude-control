@@ -41,6 +41,9 @@ import subprocess
 import sys
 import tempfile
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import auditor_engine_events as _events  # Phase 7 shared event-emitter (AUDITOR_ENGINE_EVENT_SCHEMA)
+
 DB_PATH = os.environ.get("SUPERBOSS_REGISTER_DB", "/opt/veridian/ai-os/memory/superboss-register.sqlite")
 _WRITE_LOCK_PATH = DB_PATH + ".writelock"
 
@@ -399,6 +402,9 @@ def main():
     tools_run = {}
     all_records = []
     errors = {}
+    run_trace = None if args.dry_run else _events.start_audit_run(
+        domain=DOMAIN, repo=args.repo, producer_name=os.path.basename(__file__), run_id=run_id,
+    )
 
     for name, fn in (("gitleaks", run_gitleaks), ("trivy", run_trivy), ("checkov", run_checkov)):
         try:
@@ -416,6 +422,7 @@ def main():
         with _write_lock():
             conn = _connect()
             ensure_tables(conn)
+            _events.stamp_new_finding_events(conn, all_records, run_trace)
             new_count = upsert_findings(conn, all_records, run_id)
             conn.execute("""
                 INSERT INTO audit_runs (run_id, ts, domain, repo, tools_run, tools_skipped,
@@ -429,6 +436,8 @@ def main():
             ))
             conn.commit()
             conn.close()
+        _events.complete_audit_run(run_trace, status=status, total_findings=len(all_records),
+                                    new_findings=new_count, duration_s=duration)
 
     summary = {
         "ok": status != "failed",
