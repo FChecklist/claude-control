@@ -1,0 +1,44 @@
+meta:
+  id: CHATGPT-AUDIT-MASTER-CATALOGUE
+  generated_ts: '2026-07-24T14:23:58Z'
+  generated_by: scripts/generate_chatgpt_audit_index.py (re-run this to refresh -- do not hand-edit)
+  purpose: Real, machine-scanned index of every audit record file under /opt/veridian/chatgpt-audit --
+    built for INS-20260724-141101-89d8 (task-20260724-141323-chatgpt-audit-workspace-infrastructure).
+  workspace_root: /opt/veridian/chatgpt-audit
+  schema_ref: ai-os/CHATGPT_AUDIT_RECORD_SCHEMA_2026-07-24.yaml
+  guard_ref: scripts/chatgpt_audit_guard.py
+  local_index_ref: opt/veridian/chatgpt-audit/Metadata/INDEX.yaml
+summary:
+  total_audit_records: 0
+  subfolders_scanned: 23
+  by_subfolder:
+    Architecture: 0
+    Business: 0
+    Capabilities: 0
+    Modules: 0
+    Metadata: 0
+    Database: 0
+    Rules: 0
+    Workflow: 0
+    APIs: 0
+    UI: 0
+    Reports: 0
+    Security: 0
+    Performance: 0
+    AI: 0
+    Prompts: 0
+    Routes: 0
+    Testing: 0
+    Dependencies: 0
+    Integrations: 0
+    Observability: 0
+    Release: 0
+    Recommendations: 0
+    History: 0
+  parse_errors: 0
+  note: 0 records is expected and correct today -- the LLM-execution step is explicitly out of scope for
+    this task (no OPENAI_API_KEY exists yet, see ai-os/CHATGPT_AUDIT_BLOCKER_2026-07-24.yaml). This catalogue
+    populates automatically (re-run this script) once that blocker clears and real audits are written
+    through scripts/chatgpt_audit_guard.py.
+records: []
+parse_errors: []

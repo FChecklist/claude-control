@@ -1,0 +1,176 @@
+meta:
+  id: CHATGPT-AUDIT-RECORD-SCHEMA
+  version: 1.0.0
+  generated_ts: '2026-07-24T14:23:04Z'
+  created_by_task: task-20260724-141323-chatgpt-audit-workspace-infrastructure
+  instruction: INS-20260724-141101-89d8
+  purpose: >
+    Real schema for one ChatGPT-produced audit record. This defines the
+    contract every audit record file under /opt/veridian/chatgpt-audit/ must
+    satisfy -- it is infrastructure only: the LLM-execution step that would
+    actually populate a record is explicitly out of scope for this task (no
+    OPENAI_API_KEY exists yet). See ai-os/CHATGPT_AUDIT_BLOCKER_2026-07-24.yaml
+    for what's needed to go live.
+  status: schema_defined_zero_records_generated_yet
+  enforced_by:
+    write_scope: scripts/chatgpt_audit_guard.py (guarded_open/guarded_write -- mechanical, not policy-only)
+    id_and_filename_allocation: scripts/chatgpt_audit_versioning.py (unique incrementing audit_id, never overwrites)
+    index_and_catalogue: scripts/generate_chatgpt_audit_index.py
+
+filename_convention: >
+  <Domain-subfolder>/AUDIT-<audit_id>-<timestamp>.yaml
+  e.g. Architecture/AUDIT-000001-20260724T141530Z.yaml -- audit_id and
+  timestamp are both allocated together by scripts/chatgpt_audit_versioning.py
+  allocate(), never hand-typed, and the returned path is re-verified to not
+  already exist before it is used (never overwrite).
+
+domain_subfolders:
+- Architecture
+- Business
+- Capabilities
+- Modules
+- Metadata
+- Database
+- Rules
+- Workflow
+- APIs
+- UI
+- Reports
+- Security
+- Performance
+- AI
+- Prompts
+- Routes
+- Testing
+- Dependencies
+- Integrations
+- Observability
+- Release
+- Recommendations
+- History
+
+fields:
+- name: audit_id
+  type: string
+  required: true
+  format: 'AUDIT-<6-digit zero-padded sequence>'
+  description: Unique, monotonically-incrementing ID allocated by scripts/chatgpt_audit_versioning.py -- never reused, never hand-typed.
+- name: timestamp
+  type: string
+  format: ISO 8601 UTC, compact (YYYYMMDDTHHMMSSZ) in the filename, full ISO 8601 in the record body
+  required: true
+  description: Real wall-clock time the audit record was allocated/written -- same allocation call as audit_id.
+- name: repository_version
+  type: string
+  required: true
+  description: Human-readable repo/release identifier the audit ran against (e.g. branch name or release tag).
+- name: commit_hash
+  type: string
+  required: true
+  format: full 40-character git SHA
+  description: Exact commit the audited files were read at (`git rev-parse HEAD` at analysis time) -- never guessed or abbreviated.
+- name: files_analysed
+  type: list[string]
+  required: true
+  description: Real repo-relative paths ChatGPT was given read access to for this specific audit -- exactly the read_scope it was granted, nothing broader.
+- name: modules_analysed
+  type: list[string]
+  required: true
+  description: Named modules/subsystems the files above belong to.
+- name: standards_used
+  type: list[string]
+  required: true
+  description: Named standards/rulesets the audit was scored against (e.g. RULES_ARTICLES_198, AI_ENGINEERING_POLICY, a named schema doc).
+- name: missing_items
+  type: list[string]
+  required: false
+  description: Things the standards require that were not found in files_analysed.
+- name: duplicate_items
+  type: list[string]
+  required: false
+  description: Redundant/duplicated implementations found across files_analysed.
+- name: incomplete_items
+  type: list[string]
+  required: false
+  description: Partially-implemented items found in files_analysed.
+- name: risk_score
+  type: number
+  range: 0-100
+  required: true
+  description: Overall risk score for this audit's findings.
+- name: priority
+  type: string
+  enum: [critical, high, medium, low]
+  required: true
+- name: recommendation
+  type: string
+  required: true
+  description: What should be done about the findings.
+- name: implementation_suggestion
+  type: string
+  required: false
+  description: Concrete suggested approach for implementing the recommendation. Never a diff/patch against production source -- this workspace is read-only with respect to production code (see scripts/chatgpt_audit_guard.py).
+- name: confidence_pct
+  type: number
+  range: 0-100
+  required: true
+  description: ChatGPT's own stated confidence in this record's findings.
+
+linkage_fields:
+  description: >
+    Every audit record cross-references the VERIDIAN artifact taxonomy it
+    touches, so findings can be joined against knowledge_engine and the
+    capability registry (registries.chatgpt_audit_workspace in
+    ai-os/MASTER_INDEX.yaml) rather than living as unlinked free text. Each
+    is a nullable string or list[string] holding the id/path of the linked
+    artifact -- omitted (never fabricated) when a finding has no real link.
+  fields:
+  - capability
+  - workflow
+  - metadata
+  - business_rule
+  - database
+  - api
+  - ui
+  - report
+  - document
+
+write_scope_enforcement: >
+  Every field above is only ever written to disk via
+  scripts/chatgpt_audit_guard.py's guarded_open()/guarded_write() -- see that
+  script's own header for the mechanical (not policy-only) guarantee that the
+  resulting file can never land outside /opt/veridian/chatgpt-audit/.
+
+example_record:
+  _NOTE: >
+    Illustrative only -- NOT a real generated audit (no OPENAI_API_KEY exists
+    yet, see ai-os/CHATGPT_AUDIT_BLOCKER_2026-07-24.yaml). Shown to make the
+    schema concrete, not to represent real findings.
+  audit_id: AUDIT-000001
+  timestamp: '2026-07-24T14:15:30Z'
+  repository_version: worker/task-20260724-141323-chatgpt-audit-workspace-infrastructure
+  commit_hash: '0000000000000000000000000000000000000000'
+  files_analysed:
+  - repos/compliance-tracker/src/lib/example.ts
+  modules_analysed:
+  - example_module
+  standards_used:
+  - AI_ENGINEERING_POLICY
+  missing_items:
+  - example missing item
+  duplicate_items: []
+  incomplete_items: []
+  risk_score: 35
+  priority: medium
+  recommendation: Example recommendation text.
+  implementation_suggestion: Example implementation suggestion text.
+  confidence_pct: 80
+  capability: null
+  workflow: null
+  metadata: null
+  business_rule: null
+  database: null
+  api: null
+  ui: null
+  report: null
+  document: null

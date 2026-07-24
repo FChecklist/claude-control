@@ -1,0 +1,88 @@
+id: CHATGPT_AUDIT_BLOCKER
+created_ts: '2026-07-24T14:23:04Z'
+created_by_task: task-20260724-141323-chatgpt-audit-workspace-infrastructure
+instruction: INS-20260724-141101-89d8
+status: awaiting_owner_decision
+
+what: >
+  All ChatGPT Audit Workspace infrastructure is built and verified live:
+  /opt/veridian/chatgpt-audit/ (23 domain subfolders), scripts/chatgpt_audit_guard.py
+  (mechanical write-scope enforcement -- --test-path/write both verified live
+  against real production and lookalike-prefix paths), scripts/chatgpt_audit_versioning.py
+  (real incrementing audit_id + never-overwrite filename allocation),
+  ai-os/CHATGPT_AUDIT_RECORD_SCHEMA_2026-07-24.yaml (the audit record schema), and
+  scripts/generate_chatgpt_audit_index.py (machine-generated
+  ai-os/CHATGPT_AUDIT_MASTER_CATALOGUE_2026-07-24.yaml + local searchable index). Full
+  detail: registries.chatgpt_audit_workspace in ai-os/MASTER_INDEX.yaml. The one
+  remaining blocker to actually running an audit is a real OPENAI_API_KEY --
+  confirmed this session: `grep -i openai /opt/veridian/shared/.env` shows no
+  real key, only a placeholder comment ("# OPENAI_API_KEY not provided --
+  add here if/when you have one").
+
+needed_action: >
+  Owner supplies a real OPENAI_API_KEY, added to /opt/veridian/shared/.env
+  (same convention already used there for ANTHROPIC_API_KEY/GROQ_API_KEY/etc),
+  and confirms the exact OpenAI model name to use (see model field below --
+  intentionally left for the Owner to name, not assumed).
+
+why_not_done_automatically: >
+  There is no key to fabricate or silently substitute. The Owner asked
+  specifically for ChatGPT to produce these audits; routing this through
+  Claude, GROQ, or OpenRouter instead without saying so would be exactly the
+  kind of silent model substitution this session's "no lying" rule forbids.
+  This blocker is filed honestly rather than worked around with a different
+  provider.
+
+exact_call_shape_once_key_exists:
+  model: 'OWNER_TO_CONFIRM -- do not assume a specific OpenAI model name without the Owner naming it (CONSTRAINTS: "must use the model the Owner actually named when it runs")'
+  api: 'OpenAI Chat Completions or Responses API -- POST https://api.openai.com/v1/chat/completions (or /v1/responses, whichever the confirmed model requires)'
+  auth: 'Authorization: Bearer $OPENAI_API_KEY, sourced from /opt/veridian/shared/.env'
+  read_scope: >
+    Only the files/modules explicitly listed in a given audit request's
+    files_analysed (ai-os/CHATGPT_AUDIT_RECORD_SCHEMA_2026-07-24.yaml) -- those
+    file contents are read and included in the prompt (or supplied via a
+    retrieval step); ChatGPT is never given broader repository access than
+    that explicit list.
+  prompt_template: |
+    SYSTEM: You are auditing VERIDIAN AI OS source code for gaps,
+    duplication, and incompleteness against the standards listed below. You
+    have READ-ONLY access to the files listed in READ_SCOPE. You do not have
+    write access to any production source -- your output is a single YAML
+    document, nothing else. Output must match
+    ai-os/CHATGPT_AUDIT_RECORD_SCHEMA_2026-07-24.yaml exactly: every required
+    field populated, no fabricated file paths, no fabricated linkage ids
+    (capability/workflow/metadata/business_rule/database/api/ui/report/document
+    -- omit a linkage field rather than invent one).
+
+    STANDARDS_USED: {{standards_used}}
+    READ_SCOPE (files_analysed): {{files_analysed}}
+    MODULES_ANALYSED: {{modules_analysed}}
+    REPOSITORY_VERSION: {{repository_version}}
+    COMMIT_HASH: {{commit_hash}}
+
+    USER: <the real file contents for each path in READ_SCOPE, concatenated
+    with a path header per file>
+  output_write_path: >
+    The ONLY way the resulting YAML may reach disk: allocate the target path
+    via `python3 scripts/chatgpt_audit_versioning.py allocate --subfolder
+    <Domain>`, then write the model's output through `python3
+    scripts/chatgpt_audit_guard.py write --path <allocated path> --stdin`.
+    The calling code must never call open()/write() directly on a
+    ChatGPT-authored path -- routing every write through the guard script is
+    the mechanical guarantee, not a comment in the prompt.
+  post_write: >
+    `python3 scripts/generate_chatgpt_audit_index.py` to refresh the local
+    searchable index and ai-os/CHATGPT_AUDIT_MASTER_CATALOGUE_2026-07-24.yaml.
+
+owner_decision_needed:
+  question: >
+    Supply a real OPENAI_API_KEY and confirm the exact OpenAI model name to
+    use, so the infrastructure built by this task can go live.
+  registered_in: ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml#chatgpt-audit-openai-api-key
+
+scope_note: >
+  This file documents the call shape for a FUTURE task once the key exists.
+  Building or running that call is explicitly out of scope for this task per
+  its own CONSTRAINTS -- this infrastructure task stops at "100% ready,
+  blocked only on the key," and any future task must use the model the Owner
+  actually names, not assume one.
