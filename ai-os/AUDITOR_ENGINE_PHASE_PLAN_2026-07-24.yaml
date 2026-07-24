@@ -650,6 +650,63 @@ phases:
       against existing code/prompts. Numbered after Phase 4/5 only because it is lower-priority (fewer
       standards-compliance stakes than security/api-contract) per the Owner's 'default to Recommended'
       approval, not because anything technically blocks starting it earlier."
+    status: workflow_transition_validator_and_ai_governance_promptfoo_complete_2026-07-24
+    evidence:
+      task: task-20260724-185151-phase6-workflow-transition-validator-ai
+      what_shipped: "workflow domain: ai-os/workflow-transitions/TRANSITION_RULES_2026-07-24.yaml, a
+        hand-authored transition-legality rule file grounded in a live read of compliance-tracker's real
+        status-enum tables and writer functions (9 enums, 20 real writers), paired with
+        ai-os-scripts/audit_pipeline_workflow_transitions.py -- a live static re-verifier (not a replay of
+        the rule file's own prose) that re-locates each writer by function name every run and confirms
+        whether its guard text still actually exists in the current source. ai-governance domain:
+        ai-os-scripts/extract_production_prompts_ai_governance.py extracts the real, currently
+        'production'-labeled system-prompt text for 5 real compliance-tracker LLM call sites directly from
+        drizzle migration SQL (crm_intelligence.score_lead, crm_intelligence.analyze_opportunity,
+        gst.ai_review_report, construction.detect_budget_schedule_risk,
+        construction.generate_progress_summary), and 5 promptfoo test suites
+        (ai-os/promptfoo/<template_key>/promptfooconfig.yaml + assertions.js) assert against those real
+        prompts with fixed, deterministic checks only (contains-json schema, and javascript assertions that
+        mirror compliance-tracker's own stripJsonFence()+JSON.parse production parse path) -- zero
+        llm-rubric/model-graded assertions anywhere, per this plan's own PART5 distinction.
+        ai-os-scripts/audit_pipeline_ai_governance.py runs all 5 suites (via promptfoo 0.121.19 against a
+        real groq llama-3.3-70b-versatile provider) and normalizes failing assertions into the shared
+        finding-record schema."
+      real_run_result: "Live runs against real compliance-tracker source/prompts, 2026-07-24: workflow
+        domain -- 9 real findings (severities {low: 8, medium: 1}), all software_fixable
+        no-transition-guard gaps, headlined by verifyPunchListItemClosed (construction_punch_status) writing
+        status='verified_closed' with no live guard requiring current status='ready_for_review' despite the
+        function's own comment claiming that sequence is enforced. ai-governance domain -- 8 real findings
+        (severities {high: 2, medium: 5, low: 1}) across 5 suites/12 tests/48 assertions: both crm_intelligence
+        prompts' 0-100/winProbability bound was bypassed by a live prompt-injection payload smuggled into the
+        one real user-authored field (lead.name / opportunity name) reaching the model (high severity, 2
+        findings); construction.generate_progress_summary stated 2 numbers not present in its real input
+        JSON and failed to acknowledge omitted attendance data on a second run (medium, 3 findings);
+        crm_intelligence.analyze_opportunity failed to flag an already-passed close date the prompt's own
+        worked example names (low, 1 finding); plus 2 more medium bound-check findings. gst.ai_review_report
+        and construction.detect_budget_schedule_risk suites passed all real assertions (0 findings, a real 0
+        confirmed by live run, not a silent skip). Both pipelines confirmed idempotent (0 new_findings on a
+        second real run against unchanged state)."
+      not_duplicating_phase5: "workflow domain's 9 findings are a structurally different failure mode than
+        Phase 5's WORKFLOW_LOGIC_REVIEW.yaml (WF-AI-001/002 judged atomicity/side-effects of an already-legal
+        transition; this phase's findings are 'no guard restricting which current status may fire at all',
+        zero overlapping code lines -- see the rule file's own not_duplicating_phase5 note).
+        ai-governance domain's 8 findings are the deterministic-testable slice PART5 requires (fixed
+        assertions, no LLM verdict); Phase 5's AI_GOVERNANCE_REVIEW.yaml's 5 findings remain the separate
+        bias/transparency/disclosure judgment slice, zero overlapping claims."
+      cron_wiring: "None added this phase (0 new crontab entries, matching this plan file's own
+        crontab_decisions_this_phase convention for Phase 0-5) -- both pipelines are runnable on demand
+        today; filing a real nightly cron entry is deferred to whichever future phase makes that
+        Owner-approval-citation case."
+      known_gaps_carried_forward: "(1) workflow domain's rule file is compliance-tracker-only (projexa
+        confirmed to have zero locally status-bearing workflow tables -- its own schema.ts header states
+        construction-domain data lives entirely in compliance-tracker), a real, documented scope boundary.
+        (2) ai-governance domain's 5 prompts are a bounded, representative subset (construction's vision-input
+        estimate_progress_from_photo and the chat-style construction.discuss/crm-chat prompts are out of this
+        bounded set), same 'representative sub-tree, not exhaustive' discipline Phase 2 used for its OpenAPI
+        docs. (3) promptfoo's test-under-model is groq llama-3.3-70b-versatile, not each org's actual
+        configured provider/model (VERIDIAN's own multi-provider BYO-model config, llm-client.ts) -- a
+        real, documented proxy-model limitation, not a claim of testing every real production model
+        variant."
 
   - phase: 7
     name: PART6 observability/audit-trail layer

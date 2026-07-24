@@ -1,0 +1,32 @@
+{
+  "crm_intelligence.score_lead": {
+    "prompt_file": "ai-os/promptfoo/prompts/crm_intelligence_score_lead.txt",
+    "source": "compliance-tracker/drizzle/0238_ai_explainability_gap_closure.sql:78",
+    "label": "production",
+    "content_chars": 1014
+  },
+  "crm_intelligence.analyze_opportunity": {
+    "prompt_file": "ai-os/promptfoo/prompts/crm_intelligence_analyze_opportunity.txt",
+    "source": "compliance-tracker/drizzle/0238_ai_explainability_gap_closure.sql:90",
+    "label": "production",
+    "content_chars": 995
+  },
+  "gst.ai_review_report": {
+    "prompt_file": "ai-os/promptfoo/prompts/gst_ai_review_report.txt",
+    "source": "compliance-tracker/drizzle/0100_gst_reconciliation_engine.sql:338",
+    "label": "production",
+    "content_chars": 1657
+  },
+  "construction.generate_progress_summary": {
+    "prompt_file": "ai-os/promptfoo/prompts/construction_generate_progress_summary.txt",
+    "source": "compliance-tracker/drizzle/0105_wave123_construction_ai_prompts.sql:23",
+    "label": "production",
+    "content_chars": 732
+  },
+  "construction.detect_budget_schedule_risk": {
+    "prompt_file": "ai-os/promptfoo/prompts/construction_detect_budget_schedule_risk.txt",
+    "source": "compliance-tracker/drizzle/0105_wave123_construction_ai_prompts.sql:28",
+    "label": "production",
+    "content_chars": 699
+  }
+}

@@ -1,0 +1,775 @@
+{
+  "evalId": "eval-IET-2026-07-24T19:20:31",
+  "results": {
+    "version": 3,
+    "timestamp": "2026-07-24T19:20:31.988Z",
+    "prompts": [
+      {
+        "id": "036b755679bd6331018a8a430571c00a4fb9b9f46bd5a41b560477e4ae69e84e",
+        "raw": "[{\"role\":\"system\",\"content\":\"{{system_prompt}}\"},{\"role\":\"user\",\"content\":\"{{user_message}}\"}]",
+        "label": "[{\"role\":\"system\",\"content\":\"{{system_prompt}}\"},{\"role\":\"user\",\"content\":\"{{user_message}}\"}]",
+        "provider": "groq:llama-3.3-70b-versatile",
+        "metrics": {
+          "score": 2,
+          "testPassCount": 2,
+          "testFailCount": 0,
+          "testErrorCount": 0,
+          "assertPassCount": 9,
+          "assertFailCount": 0,
+          "totalLatencyMs": 1577,
+          "tokenUsage": {
+            "prompt": 0,
+            "completion": 0,
+            "cached": 1352,
+            "total": 1352,
+            "numRequests": 2,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            },
+            "assertions": {
+              "total": 0,
+              "prompt": 0,
+              "completion": 0,
+              "cached": 0,
+              "numRequests": 0,
+              "completionDetails": {
+                "reasoning": 0,
+                "acceptedPrediction": 0,
+                "rejectedPrediction": 0,
+                "cacheReadInputTokens": 0,
+                "cacheCreationInputTokens": 0
+              }
+            }
+          },
+          "namedScores": {},
+          "namedScoresCount": {},
+          "namedScoreWeights": {},
+          "cost": 0
+        }
+      }
+    ],
+    "results": [
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains-json",
+                "value": {
+                  "type": "object",
+                  "required": [
+                    "verdict",
+                    "summary",
+                    "topIssues",
+                    "reportText"
+                  ],
+                  "properties": {
+                    "verdict": {
+                      "type": "string",
+                      "enum": [
+                        "low",
+                        "medium",
+                        "high"
+                      ]
+                    },
+                    "summary": {
+                      "type": "string"
+                    },
+                    "topIssues": {
+                      "type": "array"
+                    },
+                    "reportText": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "parses via production's stripJsonFence()+JSON.parse",
+              "data": {
+                "verdict": "low",
+                "summary": "No material issues found in the return for July 2026",
+                "topIssues": [],
+                "reportText": "# Return Review Report for July 2026\n## Overall Risk Verdict\nThe overall risk verdict for this return is **low** because there are no validation findings or reconciliation issues reported.\n## Top Issues\nThere are no top issues to report, as all invoices matched between GSTR-2B and the purchase register.\n## Blocking Issues\nThere are no blocking issues that would prevent filing of the return.\n## Conclusion\nThe return appears to be in order, with no material discrepancies or issues that require attention. The return can be filed as is."
+              },
+              "assertion": {
+                "type": "javascript",
+                "value": "file://assertions.js:parses"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "verdict is a valid enum value",
+              "assertion": {
+                "type": "javascript",
+                "value": "file://assertions.js:verdictIsValid"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "reportText is 90 words, within a reasonable buffer of the prompt's 400-word ceiling",
+              "assertion": {
+                "type": "javascript",
+                "value": "file://assertions.js:reportUnder400WordsWithBuffer"
+              }
+            }
+          ]
+        },
+        "id": "d4435159-edc8-4976-8de9-e35f63849775",
+        "latencyMs": 629,
+        "namedScores": {},
+        "prompt": {
+          "raw": "[{\"role\":\"system\",\"content\":\"You are a GST compliance reviewer helping a Chartered Accountant sanity-check a return before filing. You will be given, as JSON: the return period, validation findings (from a deterministic rules engine -- GSTIN checksum failures, duplicate invoices, invoice number gaps, unknown HSN/SAC codes, tax calculation mismatches, interstate/intrastate split errors), and reconciliation results (GSTR-2B vs purchase register matches, mismatches, and missing invoices with their amounts).\\n\\nDo not recompute or contradict any number given to you -- treat every figure in the input as ground truth from the deterministic engine. Your job is only to explain, prioritise, and recommend, in plain language a CA can scan quickly:\\n\\n1. Start with a one-line overall risk verdict (low/medium/high) and why.\\n2. List the top issues ranked by materiality (rupee amount at stake or filing-blocking severity), not by the order they appear in the input.\\n3. For each top issue, give a short, concrete suggested action (e.g. \\\"Contact supplier X to reissue invoice with correct GSTIN\\\" not \\\"review the discrepancy\\\").\\n4. Call out anything that would block filing entirely (format errors, missing mandatory fields) separately from ITC-risk items (2B mismatches).\\n5. Keep the whole report under 400 words. No preamble, no disclaimers about being an AI.\\n\\nRespond with ONLY valid JSON: { \\\"verdict\\\": \\\"low\\\"|\\\"medium\\\"|\\\"high\\\", \\\"summary\\\": string, \\\"topIssues\\\": [{ \\\"title\\\": string, \\\"amountAtStake\\\": number|null, \\\"recommendation\\\": string }], \\\"reportText\\\": string }. reportText should be the full formatted report as markdown; the other fields are structured extracts of the same content for the UI.\"},{\"role\":\"user\",\"content\":\"{\\\"returnPeriod\\\":\\\"July 2026\\\",\\\"validationFindings\\\":[],\\\"reconciliationResults\\\":{\\\"matched\\\":40,\\\"mismatched\\\":0,\\\"missingInvoices\\\":[]}}\"}]",
+          "label": "[{\"role\":\"system\",\"content\":\"{{system_prompt}}\"},{\"role\":\"user\",\"content\":\"{{user_message}}\"}]",
+          "config": {}
+        },
+        "promptId": "036b755679bd6331018a8a430571c00a4fb9b9f46bd5a41b560477e4ae69e84e",
+        "promptIdx": 0,
+        "provider": {
+          "id": "groq:llama-3.3-70b-versatile",
+          "label": ""
+        },
+        "response": {
+          "output": "{\"verdict\": \"low\", \"summary\": \"No material issues found in the return for July 2026\", \"topIssues\": [], \"reportText\": \"# Return Review Report for July 2026\\n## Overall Risk Verdict\\nThe overall risk verdict for this return is **low** because there are no validation findings or reconciliation issues reported.\\n## Top Issues\\nThere are no top issues to report, as all invoices matched between GSTR-2B and the purchase register.\\n## Blocking Issues\\nThere are no blocking issues that would prevent filing of the return.\\n## Conclusion\\nThe return appears to be in order, with no material discrepancies or issues that require attention. The return can be filed as is.\"}",
+          "tokenUsage": {
+            "cached": 592,
+            "total": 592
+          },
+          "cached": true,
+          "latencyMs": 629,
+          "finishReason": "stop",
+          "guardrails": {
+            "flagged": false
+          },
+          "metadata": {
+            "http": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                "alt-svc": "h3=\":443\"; ma=86400",
+                "cache-control": "private, max-age=0, no-store, no-cache, must-revalidate",
+                "cf-cache-status": "[REDACTED]",
+                "cf-ray": "[REDACTED]",
+                "connection": "keep-alive",
+                "content-type": "application/json",
+                "date": "Fri, 24 Jul 2026 19:18:27 GMT",
+                "server": "cloudflare",
+                "set-cookie": "[REDACTED]",
+                "strict-transport-security": "max-age=15552000",
+                "transfer-encoding": "chunked",
+                "vary": "Origin",
+                "via": "[REDACTED]",
+                "x-groq-region": "fra",
+                "x-ratelimit-limit-requests": "[REDACTED]",
+                "x-ratelimit-limit-tokens": "[REDACTED]",
+                "x-ratelimit-remaining-requests": "[REDACTED]",
+                "x-ratelimit-remaining-tokens": "[REDACTED]",
+                "x-ratelimit-reset-requests": "[REDACTED]",
+                "x-ratelimit-reset-tokens": "[REDACTED]",
+                "x-request-id": "[REDACTED]"
+              }
+            }
+          }
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "clean return, no findings -- expect a low-risk verdict",
+          "vars": {
+            "system_prompt": "file://../prompts/gst_ai_review_report.txt",
+            "input_numbers": [],
+            "user_message": "{\"returnPeriod\":\"July 2026\",\"validationFindings\":[],\"reconciliationResults\":{\"matched\":40,\"mismatched\":0,\"missingInvoices\":[]}}"
+          },
+          "assert": [
+            {
+              "type": "contains-json",
+              "value": {
+                "type": "object",
+                "required": [
+                  "verdict",
+                  "summary",
+                  "topIssues",
+                  "reportText"
+                ],
+                "properties": {
+                  "verdict": {
+                    "type": "string",
+                    "enum": [
+                      "low",
+                      "medium",
+                      "high"
+                    ]
+                  },
+                  "summary": {
+                    "type": "string"
+                  },
+                  "topIssues": {
+                    "type": "array"
+                  },
+                  "reportText": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            {
+              "type": "javascript",
+              "value": "file://assertions.js:parses"
+            },
+            {
+              "type": "javascript",
+              "value": "file://assertions.js:verdictIsValid"
+            },
+            {
+              "type": "javascript",
+              "value": "file://assertions.js:reportUnder400WordsWithBuffer"
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 0,
+        "tokenUsage": {
+          "prompt": 0,
+          "completion": 0,
+          "cached": 592,
+          "total": 592,
+          "numRequests": 1,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0
+          },
+          "assertions": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            }
+          }
+        },
+        "vars": {
+          "system_prompt": "file://../prompts/gst_ai_review_report.txt",
+          "input_numbers": [],
+          "user_message": "{\"returnPeriod\":\"July 2026\",\"validationFindings\":[],\"reconciliationResults\":{\"matched\":40,\"mismatched\":0,\"missingInvoices\":[]}}"
+        },
+        "metadata": {
+          "http": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+              "alt-svc": "h3=\":443\"; ma=86400",
+              "cache-control": "private, max-age=0, no-store, no-cache, must-revalidate",
+              "cf-cache-status": "[REDACTED]",
+              "cf-ray": "[REDACTED]",
+              "connection": "keep-alive",
+              "content-type": "application/json",
+              "date": "Fri, 24 Jul 2026 19:18:27 GMT",
+              "server": "cloudflare",
+              "set-cookie": "[REDACTED]",
+              "strict-transport-security": "max-age=15552000",
+              "transfer-encoding": "chunked",
+              "vary": "Origin",
+              "via": "[REDACTED]",
+              "x-groq-region": "fra",
+              "x-ratelimit-limit-requests": "[REDACTED]",
+              "x-ratelimit-limit-tokens": "[REDACTED]",
+              "x-ratelimit-remaining-requests": "[REDACTED]",
+              "x-ratelimit-remaining-tokens": "[REDACTED]",
+              "x-ratelimit-reset-requests": "[REDACTED]",
+              "x-ratelimit-reset-tokens": "[REDACTED]",
+              "x-request-id": "[REDACTED]"
+            }
+          },
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains-json",
+                "value": {
+                  "type": "object",
+                  "required": [
+                    "verdict",
+                    "summary",
+                    "topIssues",
+                    "reportText"
+                  ],
+                  "properties": {
+                    "verdict": {
+                      "type": "string",
+                      "enum": [
+                        "low",
+                        "medium",
+                        "high"
+                      ]
+                    },
+                    "summary": {
+                      "type": "string"
+                    },
+                    "topIssues": {
+                      "type": "array"
+                    },
+                    "reportText": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "parses via production's stripJsonFence()+JSON.parse",
+              "data": {
+                "verdict": "medium",
+                "summary": "Medium risk due to GSTIN checksum failures and missing invoices",
+                "topIssues": [
+                  {
+                    "title": "Missing Invoice from Orion Traders",
+                    "amountAtStake": 125000,
+                    "recommendation": "Contact Orion Traders to obtain the missing invoice and verify its details"
+                  }
+                ],
+                "reportText": "# GST Compliance Review Report for July 2026\n## Overall Verdict\nThe overall risk verdict for this return period is medium due to GSTIN checksum failures and a missing invoice from a supplier.\n## Top Issues\n1. **Missing Invoice from Orion Traders**: A missing invoice from Orion Traders with an amount of ₹125,000 is at stake. It is recommended to contact Orion Traders to obtain the missing invoice and verify its details.\n2. **GSTIN Checksum Failures**: Three purchase invoices have failed the GSTIN checksum validation. It is recommended to contact the suppliers to reissue the invoices with the correct GSTIN.\n## Blocking Issues\nThere are no blocking issues that would prevent the filing of the return entirely.\n## ITC-Risk Items\nThe missing invoice from Orion Traders poses a risk to the accuracy of the Input Tax Credit (ITC) claim. It is essential to resolve this issue to ensure the correct ITC claim."
+              },
+              "assertion": {
+                "type": "javascript",
+                "value": "file://assertions.js:parses"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "verdict is a valid enum value",
+              "assertion": {
+                "type": "javascript",
+                "value": "file://assertions.js:verdictIsValid"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "reportText is 152 words, within a reasonable buffer of the prompt's 400-word ceiling",
+              "assertion": {
+                "type": "javascript",
+                "value": "file://assertions.js:reportUnder400WordsWithBuffer"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "every number in the output traces back to the real input",
+              "assertion": {
+                "type": "javascript",
+                "value": "file://assertions.js:noInventedNumbers"
+              }
+            }
+          ]
+        },
+        "id": "6bed48aa-b530-45b9-bb6a-cfe5be51b1a6",
+        "latencyMs": 948,
+        "namedScores": {},
+        "prompt": {
+          "raw": "[{\"role\":\"system\",\"content\":\"You are a GST compliance reviewer helping a Chartered Accountant sanity-check a return before filing. You will be given, as JSON: the return period, validation findings (from a deterministic rules engine -- GSTIN checksum failures, duplicate invoices, invoice number gaps, unknown HSN/SAC codes, tax calculation mismatches, interstate/intrastate split errors), and reconciliation results (GSTR-2B vs purchase register matches, mismatches, and missing invoices with their amounts).\\n\\nDo not recompute or contradict any number given to you -- treat every figure in the input as ground truth from the deterministic engine. Your job is only to explain, prioritise, and recommend, in plain language a CA can scan quickly:\\n\\n1. Start with a one-line overall risk verdict (low/medium/high) and why.\\n2. List the top issues ranked by materiality (rupee amount at stake or filing-blocking severity), not by the order they appear in the input.\\n3. For each top issue, give a short, concrete suggested action (e.g. \\\"Contact supplier X to reissue invoice with correct GSTIN\\\" not \\\"review the discrepancy\\\").\\n4. Call out anything that would block filing entirely (format errors, missing mandatory fields) separately from ITC-risk items (2B mismatches).\\n5. Keep the whole report under 400 words. No preamble, no disclaimers about being an AI.\\n\\nRespond with ONLY valid JSON: { \\\"verdict\\\": \\\"low\\\"|\\\"medium\\\"|\\\"high\\\", \\\"summary\\\": string, \\\"topIssues\\\": [{ \\\"title\\\": string, \\\"amountAtStake\\\": number|null, \\\"recommendation\\\": string }], \\\"reportText\\\": string }. reportText should be the full formatted report as markdown; the other fields are structured extracts of the same content for the UI.\"},{\"role\":\"user\",\"content\":\"{\\\"returnPeriod\\\":\\\"July 2026\\\",\\\"validationFindings\\\":[{\\\"type\\\":\\\"gstin_checksum_failure\\\",\\\"invoiceCount\\\":3,\\\"description\\\":\\\"GSTIN checksum failed on three purchase invoices\\\"}],\\\"reconciliationResults\\\":{\\\"matched\\\":40,\\\"mismatched\\\":1,\\\"missingInvoices\\\":[{\\\"supplier\\\":\\\"Orion Traders\\\",\\\"amount\\\":125000}]}}\"}]",
+          "label": "[{\"role\":\"system\",\"content\":\"{{system_prompt}}\"},{\"role\":\"user\",\"content\":\"{{user_message}}\"}]",
+          "config": {}
+        },
+        "promptId": "036b755679bd6331018a8a430571c00a4fb9b9f46bd5a41b560477e4ae69e84e",
+        "promptIdx": 0,
+        "provider": {
+          "id": "groq:llama-3.3-70b-versatile",
+          "label": ""
+        },
+        "response": {
+          "output": "{\"verdict\": \"medium\", \"summary\": \"Medium risk due to GSTIN checksum failures and missing invoices\", \"topIssues\": [{\"title\": \"Missing Invoice from Orion Traders\", \"amountAtStake\": 125000, \"recommendation\": \"Contact Orion Traders to obtain the missing invoice and verify its details\"}], \"reportText\": \"# GST Compliance Review Report for July 2026\\n## Overall Verdict\\nThe overall risk verdict for this return period is medium due to GSTIN checksum failures and a missing invoice from a supplier.\\n## Top Issues\\n1. **Missing Invoice from Orion Traders**: A missing invoice from Orion Traders with an amount of ₹125,000 is at stake. It is recommended to contact Orion Traders to obtain the missing invoice and verify its details.\\n2. **GSTIN Checksum Failures**: Three purchase invoices have failed the GSTIN checksum validation. It is recommended to contact the suppliers to reissue the invoices with the correct GSTIN.\\n## Blocking Issues\\nThere are no blocking issues that would prevent the filing of the return entirely.\\n## ITC-Risk Items\\nThe missing invoice from Orion Traders poses a risk to the accuracy of the Input Tax Credit (ITC) claim. It is essential to resolve this issue to ensure the correct ITC claim.\"}",
+          "tokenUsage": {
+            "cached": 760,
+            "total": 760
+          },
+          "cached": true,
+          "latencyMs": 948,
+          "finishReason": "stop",
+          "guardrails": {
+            "flagged": false
+          },
+          "metadata": {
+            "http": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                "alt-svc": "h3=\":443\"; ma=86400",
+                "cache-control": "private, max-age=0, no-store, no-cache, must-revalidate",
+                "cf-cache-status": "[REDACTED]",
+                "cf-ray": "[REDACTED]",
+                "connection": "keep-alive",
+                "content-type": "application/json",
+                "date": "Fri, 24 Jul 2026 19:18:27 GMT",
+                "server": "cloudflare",
+                "set-cookie": "[REDACTED]",
+                "strict-transport-security": "max-age=15552000",
+                "transfer-encoding": "chunked",
+                "vary": "Origin",
+                "via": "[REDACTED]",
+                "x-groq-region": "fra",
+                "x-ratelimit-limit-requests": "[REDACTED]",
+                "x-ratelimit-limit-tokens": "[REDACTED]",
+                "x-ratelimit-remaining-requests": "[REDACTED]",
+                "x-ratelimit-remaining-tokens": "[REDACTED]",
+                "x-ratelimit-reset-requests": "[REDACTED]",
+                "x-ratelimit-reset-tokens": "[REDACTED]",
+                "x-request-id": "[REDACTED]"
+              }
+            }
+          }
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "material GSTIN mismatch with a known rupee amount -- no-invented-numbers hallucination check",
+          "vars": {
+            "system_prompt": "file://../prompts/gst_ai_review_report.txt",
+            "input_numbers": [
+              40,
+              125000,
+              3,
+              2026
+            ],
+            "user_message": "{\"returnPeriod\":\"July 2026\",\"validationFindings\":[{\"type\":\"gstin_checksum_failure\",\"invoiceCount\":3,\"description\":\"GSTIN checksum failed on three purchase invoices\"}],\"reconciliationResults\":{\"matched\":40,\"mismatched\":1,\"missingInvoices\":[{\"supplier\":\"Orion Traders\",\"amount\":125000}]}}"
+          },
+          "assert": [
+            {
+              "type": "contains-json",
+              "value": {
+                "type": "object",
+                "required": [
+                  "verdict",
+                  "summary",
+                  "topIssues",
+                  "reportText"
+                ],
+                "properties": {
+                  "verdict": {
+                    "type": "string",
+                    "enum": [
+                      "low",
+                      "medium",
+                      "high"
+                    ]
+                  },
+                  "summary": {
+                    "type": "string"
+                  },
+                  "topIssues": {
+                    "type": "array"
+                  },
+                  "reportText": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            {
+              "type": "javascript",
+              "value": "file://assertions.js:parses"
+            },
+            {
+              "type": "javascript",
+              "value": "file://assertions.js:verdictIsValid"
+            },
+            {
+              "type": "javascript",
+              "value": "file://assertions.js:reportUnder400WordsWithBuffer"
+            },
+            {
+              "type": "javascript",
+              "value": "file://assertions.js:noInventedNumbers"
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 1,
+        "tokenUsage": {
+          "prompt": 0,
+          "completion": 0,
+          "cached": 760,
+          "total": 760,
+          "numRequests": 1,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0
+          },
+          "assertions": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            }
+          }
+        },
+        "vars": {
+          "system_prompt": "file://../prompts/gst_ai_review_report.txt",
+          "input_numbers": [
+            40,
+            125000,
+            3,
+            2026
+          ],
+          "user_message": "{\"returnPeriod\":\"July 2026\",\"validationFindings\":[{\"type\":\"gstin_checksum_failure\",\"invoiceCount\":3,\"description\":\"GSTIN checksum failed on three purchase invoices\"}],\"reconciliationResults\":{\"matched\":40,\"mismatched\":1,\"missingInvoices\":[{\"supplier\":\"Orion Traders\",\"amount\":125000}]}}"
+        },
+        "metadata": {
+          "http": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+              "alt-svc": "h3=\":443\"; ma=86400",
+              "cache-control": "private, max-age=0, no-store, no-cache, must-revalidate",
+              "cf-cache-status": "[REDACTED]",
+              "cf-ray": "[REDACTED]",
+              "connection": "keep-alive",
+              "content-type": "application/json",
+              "date": "Fri, 24 Jul 2026 19:18:27 GMT",
+              "server": "cloudflare",
+              "set-cookie": "[REDACTED]",
+              "strict-transport-security": "max-age=15552000",
+              "transfer-encoding": "chunked",
+              "vary": "Origin",
+              "via": "[REDACTED]",
+              "x-groq-region": "fra",
+              "x-ratelimit-limit-requests": "[REDACTED]",
+              "x-ratelimit-limit-tokens": "[REDACTED]",
+              "x-ratelimit-remaining-requests": "[REDACTED]",
+              "x-ratelimit-remaining-tokens": "[REDACTED]",
+              "x-ratelimit-reset-requests": "[REDACTED]",
+              "x-ratelimit-reset-tokens": "[REDACTED]",
+              "x-request-id": "[REDACTED]"
+            }
+          },
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      }
+    ],
+    "stats": {
+      "successes": 2,
+      "failures": 0,
+      "errors": 0,
+      "tokenUsage": {
+        "prompt": 0,
+        "completion": 0,
+        "cached": 1352,
+        "total": 1352,
+        "numRequests": 2,
+        "completionDetails": {
+          "reasoning": 0,
+          "acceptedPrediction": 0,
+          "rejectedPrediction": 0,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0
+        },
+        "assertions": {
+          "total": 0,
+          "prompt": 0,
+          "completion": 0,
+          "cached": 0,
+          "numRequests": 0,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0
+          }
+        }
+      },
+      "durationMs": 98,
+      "evaluationDurationMs": 98
+    }
+  },
+  "config": {
+    "tags": {},
+    "description": "gst.ai_review_report -- production prompt regression suite (word-count ceiling, no-invented-numbers)",
+    "prompts": [
+      "[{\"role\":\"system\",\"content\":\"{{system_prompt}}\"},{\"role\":\"user\",\"content\":\"{{user_message}}\"}]"
+    ],
+    "providers": [
+      {
+        "id": "groq:llama-3.3-70b-versatile",
+        "config": {
+          "temperature": 0.2,
+          "max_tokens": 1200
+        }
+      }
+    ],
+    "tests": [
+      {
+        "description": "clean return, no findings -- expect a low-risk verdict",
+        "vars": {
+          "input_numbers": [],
+          "user_message": "{\"returnPeriod\":\"July 2026\",\"validationFindings\":[],\"reconciliationResults\":{\"matched\":40,\"mismatched\":0,\"missingInvoices\":[]}}"
+        }
+      },
+      {
+        "description": "material GSTIN mismatch with a known rupee amount -- no-invented-numbers hallucination check",
+        "vars": {
+          "input_numbers": [
+            40,
+            125000,
+            3,
+            2026
+          ],
+          "user_message": "{\"returnPeriod\":\"July 2026\",\"validationFindings\":[{\"type\":\"gstin_checksum_failure\",\"invoiceCount\":3,\"description\":\"GSTIN checksum failed on three purchase invoices\"}],\"reconciliationResults\":{\"matched\":40,\"mismatched\":1,\"missingInvoices\":[{\"supplier\":\"Orion Traders\",\"amount\":125000}]}}"
+        },
+        "assert": [
+          {
+            "type": "javascript",
+            "value": "file://assertions.js:noInventedNumbers"
+          }
+        ]
+      }
+    ],
+    "env": {},
+    "defaultTest": {
+      "vars": {
+        "system_prompt": "file://../prompts/gst_ai_review_report.txt"
+      },
+      "assert": [
+        {
+          "type": "contains-json",
+          "value": {
+            "type": "object",
+            "required": [
+              "verdict",
+              "summary",
+              "topIssues",
+              "reportText"
+            ],
+            "properties": {
+              "verdict": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ]
+              },
+              "summary": {
+                "type": "string"
+              },
+              "topIssues": {
+                "type": "array"
+              },
+              "reportText": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "type": "javascript",
+          "value": "file://assertions.js:parses"
+        },
+        {
+          "type": "javascript",
+          "value": "file://assertions.js:verdictIsValid"
+        },
+        {
+          "type": "javascript",
+          "value": "file://assertions.js:reportUnder400WordsWithBuffer"
+        }
+      ],
+      "options": {},
+      "metadata": {}
+    },
+    "outputPath": [
+      ".last_result.json"
+    ],
+    "extensions": [],
+    "metadata": {},
+    "evaluateOptions": {}
+  },
+  "shareableUrl": null,
+  "metadata": {
+    "promptfooVersion": "0.121.19",
+    "nodeVersion": "v24.18.0",
+    "platform": "linux",
+    "arch": "x64",
+    "exportedAt": "2026-07-24T19:20:32.147Z",
+    "evaluationCreatedAt": "2026-07-24T19:20:31.988Z"
+  },
+  "vars": [
+    "system_prompt",
+    "input_numbers",
+    "user_message"
+  ],
+  "runtimeOptions": {
+    "eventSource": "cli",
+    "showProgressBar": false,
+    "repeat": 1,
+    "maxConcurrency": 4,
+    "cache": true
+  }
+}

@@ -1,0 +1,53 @@
+# VERIDIAN Auditor Engine -- Phase 6, ai-governance domain deterministic
+# test suite for the REAL production prompt template_key
+# 'gst.ai_review_report' (compliance-tracker src/lib/gst/ai-review-report.ts,
+# drizzle/0100_gst_reconciliation_engine.sql -- the same prompt
+# ai-os/AI_GOVERNANCE_REVIEW_2026-07-24.yaml's GOV-AI-002 finding examined
+# for AI-self-disclosure suppression; this suite covers the DIFFERENT,
+# deterministic-testable slice of the same prompt: its own explicit
+# word-count ceiling and its own explicit "never recompute/invent a
+# number" instruction. Zero overlap with GOV-AI-002's disclosure judgment.
+description: "gst.ai_review_report -- production prompt regression suite (word-count ceiling, no-invented-numbers)"
+
+prompts:
+  - '[{"role":"system","content":"{{system_prompt}}"},{"role":"user","content":"{{user_message}}"}]'
+
+providers:
+  - id: groq:llama-3.3-70b-versatile
+    config:
+      temperature: 0.2
+      max_tokens: 1200
+
+defaultTest:
+  vars:
+    system_prompt: file://../prompts/gst_ai_review_report.txt
+  assert:
+    - type: contains-json
+      value:
+        type: object
+        required: [verdict, summary, topIssues, reportText]
+        properties:
+          verdict: { type: string, enum: [low, medium, high] }
+          summary: { type: string }
+          topIssues: { type: array }
+          reportText: { type: string }
+    - type: javascript
+      value: file://assertions.js:parses
+    - type: javascript
+      value: file://assertions.js:verdictIsValid
+    - type: javascript
+      value: file://assertions.js:reportUnder400WordsWithBuffer
+
+tests:
+  - description: "clean return, no findings -- expect a low-risk verdict"
+    vars:
+      input_numbers: []
+      user_message: '{"returnPeriod": "July 2026", "validationFindings": [], "reconciliationResults": {"matched": 40, "mismatched": 0, "missingInvoices": []}}'
+
+  - description: "material GSTIN mismatch with a known rupee amount -- no-invented-numbers hallucination check"
+    vars:
+      input_numbers: [40, 125000, 3, 2026]
+      user_message: '{"returnPeriod": "July 2026", "validationFindings": [{"type": "gstin_checksum_failure", "invoiceCount": 3, "description": "GSTIN checksum failed on three purchase invoices"}], "reconciliationResults": {"matched": 40, "mismatched": 1, "missingInvoices": [{"supplier": "Orion Traders", "amount": 125000}]}}'
+    assert:
+      - type: javascript
+        value: file://assertions.js:noInventedNumbers

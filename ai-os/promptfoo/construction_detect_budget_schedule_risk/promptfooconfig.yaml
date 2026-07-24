@@ -1,0 +1,51 @@
+# VERIDIAN Auditor Engine -- Phase 6, ai-governance domain deterministic
+# test suite for the REAL production prompt template_key
+# 'construction.detect_budget_schedule_risk' (compliance-tracker
+# src/lib/services/construction-ai-service.ts detectBudgetScheduleRisk() --
+# the same feature ai-os/AI_GOVERNANCE_REVIEW_2026-07-24.yaml's GOV-AI-003
+# finding notes has zero verified UI consumer today; this suite tests the
+# prompt's own deterministic-testable output-format and business-rule
+# contract regardless of that separate disclosure/consumer-surface gap).
+description: "construction.detect_budget_schedule_risk -- production prompt regression suite"
+
+prompts:
+  - '[{"role":"system","content":"{{system_prompt}}"},{"role":"user","content":"{{user_message}}"}]'
+
+providers:
+  - id: groq:llama-3.3-70b-versatile
+    config:
+      temperature: 0.2
+      max_tokens: 400
+
+defaultTest:
+  vars:
+    system_prompt: file://../prompts/construction_detect_budget_schedule_risk.txt
+  assert:
+    - type: contains-json
+      value:
+        type: object
+        required: [riskLevel, budgetRiskReasoning, scheduleRiskReasoning, recommendedAction]
+        properties:
+          riskLevel: { type: string, enum: [low, medium, high] }
+          budgetRiskReasoning: { type: string }
+          scheduleRiskReasoning: { type: string }
+          recommendedAction: { type: string }
+    - type: javascript
+      value: file://assertions.js:parses
+    - type: javascript
+      value: file://assertions.js:riskLevelIsValid
+
+tests:
+  - description: "severely over-budget, badly delayed project -- expect riskLevel=high per the prompt's own rule"
+    vars:
+      user_message: '{"budget": 1000000, "actualSpend": 1400000, "variance": 400000, "delayedTaskCount": 24, "totalTaskCount": 40}'
+    assert:
+      - type: javascript
+        value: file://assertions.js:riskLevelIsHigh
+
+  - description: "on-budget, on-schedule project -- expect riskLevel=low"
+    vars:
+      user_message: '{"budget": 1000000, "actualSpend": 950000, "variance": -50000, "delayedTaskCount": 0, "totalTaskCount": 40}'
+    assert:
+      - type: javascript
+        value: file://assertions.js:riskLevelIsLow
