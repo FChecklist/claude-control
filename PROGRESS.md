@@ -70,4 +70,4 @@
       auto-discovery across the ~100 real capability-tree leaves beyond the 5 already-verified rows (Phase 2's
       `false_negative_policy` self-registration mechanism); Phase 2
       (`policy_rule_decision_unification`) itself.
-- [ ] Commit + push + open PR on claude-control (in progress).
+- [x] Commit + push + open PR on claude-control: https://github.com/FChecklist/claude-control/pull/25
