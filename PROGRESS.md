@@ -16,15 +16,22 @@
       itemize per-repo URLs). Ran it: catalog now 53 repos (was 34) + 7 checked_no_repo (was 3).
 - [x] Verified: 53 unique repo_paths (no dupes), 6 high_relevance rows total (4 batch-1 +
       ifixai-ai/iFixAi + composio-community/awesome-codex-skills from batch 2).
+- [x] Wrote `ai-os-scripts/register_xpost_github_catalog_batch2.py` -- updates the EXISTING
+      knowledge_engine row (KE-20260724-062517-e6b1) via add-tag (19 new repo_path tags + 2
+      high_relevance:* tags) + add-relationship (ifixai-ai/iFixAi -> real
+      TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml + real AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml;
+      composio-community/awesome-codex-skills -> real compliance-tracker/src/lib/composio-connectors.ts)
+      + annotate-knowledge (dated correction note summarizing the batch-2 merge). No new KE row
+      inserted -- same artifact_id confirmed before/after.
+- [x] Ran the register script. Verified: `query-knowledge "iFixAi"` -> 1 hit (KE-20260724-062517-e6b1);
+      `query-knowledge "OmniRoute"` -> 1 hit (same artifact_id). Tags now 64 (was 43), entity_relationships
+      now 6 (was 3, +3 new edges).
+- [x] Committed + pushed catalog/merge-script commit (87bbd4c) to
+      `worker/task-20260724-091206-xpost-github-catalog-batch2-2026-07-24`.
 
 ## Remaining
-- [ ] Write `ai-os-scripts/register_xpost_github_catalog_batch2.py` -- update the EXISTING
-      knowledge_engine row (KE-20260724-062517-e6b1) via add-tag (new repo_path + high_relevance
-      tags) + add-relationship (ifixai-ai/iFixAi -> Testing Engine phase plan +
-      Auditor Engine phase plan; composio-community/awesome-codex-skills -> compliance-tracker's
-      real Composio integration, src/lib/composio-connectors.ts) + annotate-knowledge (dated
-      note summarizing the batch-2 merge). No new KE row (avoid duplicate registration).
-- [ ] Run the register script, verify via `query-knowledge` that "iFixAi" and "OmniRoute" both
-      return a hit.
-- [ ] Commit + push, open PR against claude-control master.
-- [ ] Final checkpoint: state total row count before (34) vs after (53).
+- [ ] Commit + push the registration script (register_xpost_github_catalog_batch2.py) and open a
+      PR against claude-control master.
+- [ ] Final checkpoint: total catalog row count before this task = 34 repos / 3 checked_no_repo;
+      after = **53 repos / 7 checked_no_repo** (19 new repo rows + 4 new checked_no_repo rows, 0
+      duplicates -- diegosouzapw/OmniRoute stored once despite being named 3x in the instruction).
