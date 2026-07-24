@@ -31,6 +31,9 @@
 - [x] Committed the live-only phase plan (+ its 3 sibling Phase 0 artifacts: finding-record schema, event
       schema, smoketest evidence) into this repo for the first time, closing the drift the task spec flagged.
 
+## PR
+- https://github.com/FChecklist/claude-control/pull/24 (state: OPEN, verified via `gh pr view`)
+
 ## Remaining
 - [ ] Phase 1's own test-coverage sub-scope (coverage-threshold gate script, @playwright/test for
       veda-advisors) -- explicitly out of this task's CONSTRAINTS, a separate future task.
