@@ -1,50 +1,48 @@
-# PROGRESS -- task-20260724-063403-fix-supervisor-merge-report-bug
+# PROGRESS -- task-20260724-063645-veridian-testing-engine-irvf-phase0
 
 ## Completed
-- [x] Root-caused: `/opt/veridian/scripts/supervisor-entrypoint.sh` tier1 merge block used
-      `gh pr merge "$PR_URL" --merge --delete-branch`'s combined exit code as the sole
-      success/failure signal. The API-side merge could succeed while the local
-      `--delete-branch` git step failed ("'master' is already used by worktree at
-      '/opt/veridian/repos/claude-control'"), and the script wrongly checkpointed the
-      task blocked even though the merge was real (PRs #10, #13, #14, all 3 confirmed
-      via `gh pr view --json state,mergedAt` this session before this task started).
-- [x] Fixed the live script (option (a) from spec): split into a plain
-      `gh pr merge "$PR_URL" --merge` call followed by a separate best-effort
-      `gh api -X DELETE repos/FChecklist/$REPO/git/refs/heads/$BRANCH` branch deletion
-      (pure GitHub API, cannot hit a local worktree conflict). Success/failure is now
-      judged solely by a fresh `gh pr view --json state,mergedAt` call, never by any
-      shell command's exit code. Marked the block with
-      `MERGE-DETECTION-BLOCK-START/END` comments for testability.
-- [x] Added `tests/supervisor_merge_detection_test.sh`: extracts the real merge block
-      out of the live script via the START/END markers (no reimplementation, so it
-      can't drift) and evals it under mocked `gh`/`python3`/`timeout`. 3 scenarios:
-      (1) merge succeeds + branch-delete fails -- the exact PR #10/#13/#14 repro --
-      expects `completed`; (2) merge genuinely fails -- expects `blocked`; (3) `gh pr
-      merge` exits non-zero but `gh pr view` already shows MERGED (idempotent-retry
-      race) -- expects `completed`. All 3 pass against the fixed script. Also verified
-      by reconstructing the pre-fix block and confirming the test correctly FAILS
-      2/3 scenarios against it (proving the test discriminates real bug vs. fix, not
-      a tautology).
-- [x] Retroactive check (step 4, read-only): pulled all 12 merged PRs + 2 open PRs on
-      claude-control via `gh pr list`. Cross-checked every merged PR's task.yaml
-      checkpoint history against its real PR state. Only the 3 already-known cases
-      (#10, #13, #14 -- fixed in prior sessions) showed the false-blocked pattern.
-      The other 9 merged-PR tasks (#1-#9, e2e-test, phase-15, watchdog, phase6,
-      phase3) all show accurate `completed` end-states. The 2 currently open PRs
-      (#11, #12) correctly show `in_progress`, not falsely blocked. No 4th
-      unnoticed instance found.
-- [x] Added `ai-os/patches/supervisor-entrypoint-merge-report-fix-2026-07-24.diff` to
-      the repo's existing patch-archive convention (matches how prior
-      supervisor-entrypoint.sh changes were recorded, e.g.
-      `supervisor-entrypoint-deployment-logging-2026-07-23.diff`), documenting the
-      real diff applied to the live server script.
-
-- [x] Pushed branch and opened PR #15:
-      https://github.com/FChecklist/claude-control/pull/15
+- [x] Read ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml, ai-os/CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml
+  (both real, on master) and ai-os/AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml's observability_layer section
+  (real, but only merged to a not-yet-merged PR branch -- worker/task-20260724-042659-veridian-auditor-engine-phase0-inventory,
+  commit cf906ac -- read via `git cat-file blob cf906ac:<path>` since this task's own branch does not have it yet).
+- [x] Designed + wrote ai-os/ROUTE_REGISTRY_SCHEMA_2026-07-24.yaml: 5 real routes, 1:1 with
+  CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml's 5 populated_capabilities. Every source/destination/expected_path
+  hop live-verified (29/29 paths OK) by ai-os-scripts/generate_route_registry_candidates.py.
+- [x] Designed + wrote ai-os/ROUTE_COVERAGE_METHODOLOGY_2026-07-24.yaml: all 9 coverage percentages
+  (capability/route/integration/dependency/workflow/business-rule/metadata/API/UI), each with a real
+  computation source or an explicit NOT_YET_MEASURABLE gap (4 of 9 not yet measurable: capability, integration,
+  workflow, metadata). Gateway matrix, service matrix, and route completeness score also defined and computed
+  against real current data (dependency_coverage 25%, business_rule_coverage 60%, api_coverage 100%,
+  ui_coverage 60%, route_completeness_score 20%).
+- [x] Designed + wrote ai-os/TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml: Phase 0 (this task) + Phases 1-4
+  (route test auto-generation, distributed trace verification wiring, route replay storage+diff, dependency
+  graph validation), with a real dependency_table including 2 hard external dependencies on
+  20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml (Capability Registry live-wiring) and
+  AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml Phase 7 (PART6 observability layer, not yet built).
+- [x] Wrote ai-os-scripts/generate_route_registry_candidates.py (verification script, mirrors
+  generate_capability_registry_candidates.py's pattern) -- confirmed ALL VERIFIED, 5/5 routes covering 5/5
+  registered capabilities.
+- [x] Registered all 3 new files + the verification script in knowledge_engine (rows show PATH_MISSING as
+  expected pre-merge, same known transient state self_sustaining_system_engine documented for its own
+  Phase 1 rows) with entity_relationships back to CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml,
+  20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml, and AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml.
+- [x] Added registries.testing_engine_irvf to ai-os/MASTER_INDEX.yaml (live file).
+- [x] Committed + pushed, opened PR #16: https://github.com/FChecklist/claude-control/pull/16
+- [x] Merged origin/master (PR #15) into this branch, resolved the PROGRESS.md conflict (each task's
+  PROGRESS.md supersedes the prior, per this repo's established convention).
 
 ## Remaining
-- [ ] Let this task's own tier1 auto-merge (using the now-fixed live script) serve
-      as the real-world regression test requested by the spec's EXPECTED_OUTPUT --
-      confirm via `gh pr view --json state,mergedAt` and the resulting task.yaml
-      checkpoint that it lands as `completed`, not `blocked`.
-- [ ] Final checkpoint summary.
+- [ ] Confirm PR #16 merges cleanly after the master-merge above.
+- [ ] Final checkpoint summary (done vs deferred, one-line reason each).
+
+## Deferred (by this task's own CONSTRAINTS, not an oversight)
+- Live route-test auto-generation, trace wiring, and replay storage: left to
+  TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml's own Phases 1-4 -- this task is schema/methodology/plan design only.
+- Full route_coverage / capability_coverage against the TRUE denominator (~100 real capability-tree leaves):
+  blocked on no script enumerating capability-tree-service.ts's buildCapabilityTree() output -- Phase 1's own
+  prerequisite work per TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml.
+- Distributed trace verification against real spans: hard-blocked on AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml's
+  own Phase 7 (PART6 observability layer), which is designed but not enforced/emitting anywhere yet.
+- Gateway matrix beyond 1 row (Task Gateway): blocked on the Owner confirming the canonical 10-gateway list,
+  per 20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml's own gateway_naming_gap.
+- No new crontab entries this phase (0 filed) -- no route-test/trace/replay mechanism exists yet to schedule.

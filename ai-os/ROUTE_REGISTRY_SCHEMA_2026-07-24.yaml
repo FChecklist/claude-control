@@ -1,0 +1,300 @@
+meta:
+  title: VERIDIAN TESTING ENGINE / IRVF -- Route Registry Schema (Phase 0 deliverable)
+  created: '2026-07-24'
+  produced_by_task: task-20260724-063645-veridian-testing-engine-irvf-phase0
+  instruction: INS-20260724-063539-9dc8
+  precedent: 'Same method as ai-os/CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml (schema design, then a
+    live-verification script over real, grepped paths -- never invented examples) and
+    ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml (engine_inventory rigor). This document is Phase 0
+    only, per this task''s CONSTRAINTS: schema design + real population, not live route-test execution,
+    trace wiring, or replay storage -- those are ai-os/TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml''s phases.'
+  scope_of_this_document: 'One record per real, currently-existing route between a source (usually a UI
+    entry point or API/CLI entrypoint) and a destination (the real engine/module that actually executes the
+    capability), with an expected_path of ordered gateway/engine hops taken from
+    ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml''s engine_inventory (by engine_no + engine_name)
+    and the one confirmed-real gateway (Task Gateway). Every route below is derived 1:1 from a real,
+    already-registered capability in ai-os/CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml''s populated_capabilities
+    -- not invented, and not padded with placeholder future routes.'
+  builds_on_not_replaces: 'Does not duplicate capability-registry-service.ts''s embedding index or
+    capability-tree-service.ts''s CapabilityNode tree (see CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml''s own
+    builds_on_not_replaces for that detail). This schema adds the ROUTE dimension those two mechanisms do not
+    carry: which named engines/gateways a request actually passes through, in what order, and whether that
+    path has been test-exercised, trace-verified, and replay-captured.'
+  honest_limitation: 'ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml''s own gateways.gateway_naming_gap
+    finding applies here unchanged: only Task Gateway (scripts/task-gateway.py) is a confirmed-real gateway
+    today. None of the 5 populated routes below actually pass through it (they are in-app VCEL
+    calculation/dedup dispatch, not server-side AI task dispatch) -- so no expected_path hop below cites
+    "gateway" for any of these 5 routes; every hop is a named ENGINE from engine_inventory. This is the honest
+    state of the real system, not an omission: a route that genuinely passes through Task Gateway will be
+    added the first time one is registered (see TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml phase_1 for where
+    new capabilities/routes get auto-registered going forward).'
+
+# ============================================================================
+# FIELD SCHEMA -- one record per registered route.
+# ============================================================================
+route_record_schema:
+  route_id:
+    type: string
+    required: true
+    description: 'Stable identifier, format RT-<capability_name>-<3-digit-seq>. capability_name reuses the
+      real capability_record_schema.capability_name from CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml verbatim
+      -- never a newly-minted parallel name.'
+  capability_name:
+    type: string
+    required: true
+    description: 'Foreign key into CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml''s populated_capabilities[].
+      capability_name. A route with no matching capability_record is not a valid row.'
+  source:
+    type: string
+    required: true
+    description: 'Real file path (or CLI entrypoint) of the request''s origin -- a UI component, an API
+      route, or a cron-triggered script. Must exist on disk, verified by
+      ai-os-scripts/generate_route_registry_candidates.py.'
+  destination:
+    type: string
+    required: true
+    description: 'Real file path of the terminal engine/module that actually executes the capability''s
+      logic (e.g. a VCEL domain engine file). Must exist on disk, same verification discipline as source.'
+  expected_path:
+    type: array
+    item_schema: '{ hop_no: int, hop_type: gateway|engine, hop_name: string (engine_name or gateway_candidate
+      from ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml), engine_no: int|null, mechanism_path:
+      string, live_or_planned: live|planned }'
+    required: true
+    description: 'Ordered list of real hops between source and destination, named against
+      ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml''s engine_inventory/gateways so route coverage
+      can be rolled up per-engine (see ROUTE_COVERAGE_METHODOLOGY_2026-07-24.yaml''s gateway_matrix /
+      service_matrix). live_or_planned mirrors that file''s own dependency_table status vocabulary -- a hop
+      whose mechanism_path exists and is actually called today is "live"; a hop this route SHOULD eventually
+      pass through once a later 20-Engines phase wires it (e.g. Policy Engine gating) is "planned" and does
+      not count toward test_status readiness.'
+  test_status:
+    type: enum
+    values: [not_yet_tested, passing, failing, flaking, quarantined]
+    required: true
+    description: 'Whether an automated test (Playwright e2e, integration, or unit) currently exercises this
+      exact source->destination path end to end. Honest default is not_yet_tested -- confirmed by this
+      task''s own search (0 route-specific *.spec.ts files found in compliance-tracker referencing any of
+      these 5 capability names by name). Never set to passing/failing without a real, citable test file.'
+  trace_verification_status:
+    type: enum
+    values: [not_instrumented, instrumented_unverified, verified_match, verified_mismatch]
+    required: true
+    description: 'Whether a real distributed trace (trace_id/span_id per
+      ai-os/AUDITOR_ENGINE_EVENT_SCHEMA_2026-07-24.schema.json''s trace object) exists for an execution of
+      this route and its hop sequence has been checked against expected_path. Honest default today is
+      not_instrumented for every route: the Auditor Engine''s PART6 OpenTelemetry layer that would emit these
+      spans is designed (AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml observability_layer) but not yet built --
+      target_phase: Phase 7 of that plan, which this task''s own Phase 2 (trace verification wiring) is
+      sequenced after. See TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml dependency_table.'
+  replay_status:
+    type: enum
+    values: [not_yet_captured, captured, replayed_match, replayed_diff]
+    required: true
+    description: 'Whether a real request/response payload for this route has been captured for later replay,
+      and whether a replay run''s output has been diffed against the captured baseline. Honest default is
+      not_yet_captured -- no replay storage mechanism exists yet (see
+      TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml phase_3_route_replay_storage_and_diff).'
+  confidence:
+    type: number, 0.0-1.0
+    required: true
+    description: 'Same convention as CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml''s confidence field. 1.0 =
+      every source/destination/expected_path mechanism_path in this row was live-verified this session by
+      ai-os-scripts/generate_route_registry_candidates.py.'
+  notes:
+    type: string, nullable
+    required: false
+
+# ============================================================================
+# POPULATED ROUTES -- 5 real routes, one per populated_capabilities row in
+# ai-os/CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml (5/5, meeting this task's
+# SUCCESS_CRITERIA floor of "not fewer than the real capability count found").
+# Every path below verified live by
+# ai-os-scripts/generate_route_registry_candidates.py -- re-run it to
+# reproduce/extend this list.
+# ============================================================================
+populated_routes:
+  - route_id: RT-gratuity_calculator-001
+    capability_name: gratuity_calculator
+    source: repos/compliance-tracker/src/components/veri-chat/ChainSelector.tsx
+    destination: repos/compliance-tracker/src/lib/engines/hr-engine.ts
+    expected_path:
+      - hop_no: 1
+        hop_type: engine
+        hop_name: "UI Composition Engine"
+        engine_no: 17
+        mechanism_path: repos/compliance-tracker/src/components/veri-chat/ChainSelector.tsx
+        live_or_planned: live
+      - hop_no: 2
+        hop_type: engine
+        hop_name: "Capability Registry Engine"
+        engine_no: 3
+        mechanism_path: repos/compliance-tracker/src/lib/services/capability-tree-service.ts
+        live_or_planned: live
+      - hop_no: 3
+        hop_type: engine
+        hop_name: "Workflow Engine"
+        engine_no: 8
+        mechanism_path: repos/compliance-tracker/src/lib/task-execution-engine.ts
+        live_or_planned: live
+      - hop_no: 4
+        hop_type: engine
+        hop_name: "Rule Engine"
+        engine_no: 6
+        mechanism_path: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+        live_or_planned: live
+    test_status: not_yet_tested
+    trace_verification_status: not_instrumented
+    replay_status: not_yet_captured
+    confidence: 1.0
+    notes: "business_rules.registered=true for this capability (guardrail-registrations.ts) -- the Rule
+      Engine hop is real and enforced today, not aspirational."
+
+  - route_id: RT-commission_calculator-001
+    capability_name: commission_calculator
+    source: repos/compliance-tracker/src/components/veri-chat/ChainSelector.tsx
+    destination: repos/compliance-tracker/src/lib/engines/sales-engine.ts
+    expected_path:
+      - hop_no: 1
+        hop_type: engine
+        hop_name: "UI Composition Engine"
+        engine_no: 17
+        mechanism_path: repos/compliance-tracker/src/components/veri-chat/ChainSelector.tsx
+        live_or_planned: live
+      - hop_no: 2
+        hop_type: engine
+        hop_name: "Capability Registry Engine"
+        engine_no: 3
+        mechanism_path: repos/compliance-tracker/src/lib/services/capability-tree-service.ts
+        live_or_planned: live
+      - hop_no: 3
+        hop_type: engine
+        hop_name: "Workflow Engine"
+        engine_no: 8
+        mechanism_path: repos/compliance-tracker/src/lib/task-execution-engine.ts
+        live_or_planned: live
+      - hop_no: 4
+        hop_type: engine
+        hop_name: "Rule Engine"
+        engine_no: 6
+        mechanism_path: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+        live_or_planned: live
+    test_status: not_yet_tested
+    trace_verification_status: not_instrumented
+    replay_status: not_yet_captured
+    confidence: 1.0
+    notes: null
+
+  - route_id: RT-gst_calculation_engine-001
+    capability_name: gst_calculation_engine
+    source: repos/compliance-tracker/src/components/veri-chat/ChainSelector.tsx
+    destination: repos/compliance-tracker/src/lib/engines/in/gst-engine.ts
+    expected_path:
+      - hop_no: 1
+        hop_type: engine
+        hop_name: "UI Composition Engine"
+        engine_no: 17
+        mechanism_path: repos/compliance-tracker/src/components/veri-chat/ChainSelector.tsx
+        live_or_planned: live
+      - hop_no: 2
+        hop_type: engine
+        hop_name: "Capability Registry Engine"
+        engine_no: 3
+        mechanism_path: repos/compliance-tracker/src/lib/services/capability-tree-service.ts
+        live_or_planned: live
+      - hop_no: 3
+        hop_type: engine
+        hop_name: "Workflow Engine"
+        engine_no: 8
+        mechanism_path: repos/compliance-tracker/src/lib/task-execution-engine.ts
+        live_or_planned: live
+      - hop_no: 4
+        hop_type: engine
+        hop_name: "Rule Engine"
+        engine_no: 6
+        mechanism_path: repos/compliance-tracker/src/lib/business-rule-validator.ts
+        live_or_planned: live
+    test_status: not_yet_tested
+    trace_verification_status: not_instrumented
+    replay_status: not_yet_captured
+    confidence: 1.0
+    notes: "This capability's Rule Engine hop uses business-rule-validator.ts, not
+      guardrail-registrations.ts -- a real, distinct mechanism from the other 2 VCEL routes above (both real,
+      both registered=true, not unified -- see 20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml phase 2's
+      own unification objective for engines 5/6/7)."
+
+  - route_id: RT-trend_analysis_engine-001
+    capability_name: trend_analysis_engine
+    source: repos/compliance-tracker/src/components/veri-chat/ChainSelector.tsx
+    destination: repos/compliance-tracker/src/lib/engines/analytics-engine.ts
+    expected_path:
+      - hop_no: 1
+        hop_type: engine
+        hop_name: "UI Composition Engine"
+        engine_no: 17
+        mechanism_path: repos/compliance-tracker/src/components/veri-chat/ChainSelector.tsx
+        live_or_planned: live
+      - hop_no: 2
+        hop_type: engine
+        hop_name: "Capability Registry Engine"
+        engine_no: 3
+        mechanism_path: repos/compliance-tracker/src/lib/services/capability-tree-service.ts
+        live_or_planned: live
+      - hop_no: 3
+        hop_type: engine
+        hop_name: "Workflow Engine"
+        engine_no: 8
+        mechanism_path: repos/compliance-tracker/src/lib/task-execution-engine.ts
+        live_or_planned: live
+      - hop_no: 4
+        hop_type: engine
+        hop_name: "Rule Engine"
+        engine_no: 6
+        mechanism_path: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+        live_or_planned: planned
+    test_status: not_yet_tested
+    trace_verification_status: not_instrumented
+    replay_status: not_yet_captured
+    confidence: 1.0
+    notes: "business_rules.registered=false for this capability -- the Rule Engine hop is listed
+      live_or_planned=planned because guardrail-registrations.ts has no entry for this leaf_key yet
+      (guardrail-engine.ts is opt-in/empty-by-default; this leaf is one of the ~94 unregistered leaves per
+      20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml engine_no=6's gap_description). Route Coverage
+      methodology treats this hop as not-yet-real, distinct from the 3 routes above."
+
+  - route_id: RT-capability_registry_dedup-001
+    capability_name: capability_registry_dedup
+    source: "repos/compliance-tracker/src/app/(app)/capability-registry"
+    destination: repos/compliance-tracker/src/lib/services/capability-registry-service.ts
+    expected_path:
+      - hop_no: 1
+        hop_type: engine
+        hop_name: "UI Composition Engine"
+        engine_no: 17
+        mechanism_path: "repos/compliance-tracker/src/app/(app)/capability-registry"
+        live_or_planned: live
+      - hop_no: 2
+        hop_type: engine
+        hop_name: "Capability Registry Engine"
+        engine_no: 3
+        mechanism_path: repos/compliance-tracker/src/app/api/capability-registry
+        live_or_planned: live
+      - hop_no: 3
+        hop_type: engine
+        hop_name: "Automation Engine"
+        engine_no: 9
+        mechanism_path: repos/compliance-tracker/src/lib/loops/capability-index-freshness-audit.ts
+        live_or_planned: live
+    test_status: not_yet_tested
+    trace_verification_status: not_instrumented
+    replay_status: not_yet_captured
+    confidence: 1.0
+    notes: "This route has no Workflow Engine hop (capability_record_schema.workflow=null for this
+      capability, a real, valid value per that field's own schema definition) -- 2 hops shorter than the 4
+      VCEL-calculation routes above, honestly reflecting that this capability is a direct API+cron path, not
+      a task-execution-engine.ts dispatch."
+
+registration:
+  knowledge_engine_query_command: 'python3 scripts/superboss-register.py query-knowledge "route_registry" --tag domain:testing_engine_irvf'
+  master_index_registry_id: testing_engine_irvf
+  verification_script: ai-os-scripts/generate_route_registry_candidates.py
