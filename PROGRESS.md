@@ -22,13 +22,17 @@
 - [x] Wrote ai-os-scripts/generate_route_registry_candidates.py (verification script, mirrors
   generate_capability_registry_candidates.py's pattern) -- confirmed ALL VERIFIED, 5/5 routes covering 5/5
   registered capabilities.
+- [x] Registered all 3 new files + the verification script in knowledge_engine (rows show PATH_MISSING as
+  expected pre-merge, same known transient state self_sustaining_system_engine documented for its own
+  Phase 1 rows) with entity_relationships back to CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml,
+  20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml, and AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml.
+- [x] Added registries.testing_engine_irvf to ai-os/MASTER_INDEX.yaml (live file).
+- [x] Committed + pushed, opened PR #16: https://github.com/FChecklist/claude-control/pull/16
+- [x] Merged origin/master (PR #15) into this branch, resolved the PROGRESS.md conflict (each task's
+  PROGRESS.md supersedes the prior, per this repo's established convention).
 
 ## Remaining
-- [ ] Register all 3 new files + the verification script in knowledge_engine (scripts/superboss-register.py
-  register-knowledge) with entity_relationships back to CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml,
-  20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml, and AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml.
-- [ ] Add registries.testing_engine_irvf to ai-os/MASTER_INDEX.yaml (live file).
-- [ ] Commit + push, open PR.
+- [ ] Confirm PR #16 merges cleanly after the master-merge above.
 - [ ] Final checkpoint summary (done vs deferred, one-line reason each).
 
 ## Deferred (by this task's own CONSTRAINTS, not an oversight)

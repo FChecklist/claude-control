@@ -1,0 +1,39 @@
+--- a/scripts/supervisor-entrypoint.sh	2026-07-24 06:40:38.675712756 +0000
++++ b/scripts/supervisor-entrypoint.sh	2026-07-24 06:38:25.821210973 +0000
+@@ -200,7 +200,24 @@
+     [ "$STATE" = "BLOCKED" ] || [ "$STATE" = "BEHIND" ] || break
+     sleep 15
+   done
+-  if gh pr merge "$PR_URL" --merge --delete-branch >> "$TASK_DIR/supervisor.log" 2>&1; then
++  # --- MERGE-DETECTION-BLOCK-START (see tests/supervisor_merge_detection_test.sh) ---
++  # Merge and branch-deletion are two independent calls, not one (real
++  # incidents: PR #10, #13, #14, 2026-07-24 -- `gh pr merge --delete-branch`
++  # merged successfully via the API but then exited non-zero because its
++  # local git branch-delete step failed with "'master' is already used by
++  # worktree at '/opt/veridian/repos/claude-control'" (this supervisor runs
++  # from that same clone). The combined exit code made a real merge look
++  # like a failure. Success is now judged solely by a fresh `gh pr view
++  # --json state,mergedAt` call, never by any shell command's exit code.
++  gh pr merge "$PR_URL" --merge >> "$TASK_DIR/supervisor.log" 2>&1
++  PR_STATE=$(gh pr view "$PR_URL" --json state -q .state 2>>"$TASK_DIR/supervisor.log")
++  MERGED_AT=$(gh pr view "$PR_URL" --json mergedAt -q .mergedAt 2>>"$TASK_DIR/supervisor.log")
++  if [ "$PR_STATE" = "MERGED" ] && [ -n "$MERGED_AT" ] && [ "$MERGED_AT" != "null" ]; then
++    # Branch deletion is best-effort and purely cosmetic -- use the GitHub
++    # API directly (no local git object involved) so it can never collide
++    # with a sibling worktree, and its failure must never affect the
++    # already-confirmed merge outcome above.
++    gh api -X DELETE "repos/FChecklist/$REPO/git/refs/heads/$BRANCH" >> "$TASK_DIR/supervisor.log" 2>&1 || true
+     # Deployment logging (governance item 13, 2026-07-23): log the real merge
+     # as an action via the register's existing generic log-action CLI --
+     # deliberately NOT a new log_deployment() function, since log-action
+@@ -216,8 +233,9 @@
+       >> "$TASK_DIR/supervisor.log" 2>&1 || true
+     python3 /opt/veridian/scripts/veridian-task.py checkpoint "$TASK_ID" --status completed --note "tier1, Superboss-approved, merged autonomously: $PR_URL"
+   else
+-    python3 /opt/veridian/scripts/veridian-task.py checkpoint "$TASK_ID" --status blocked --note "tier1, Superboss-approved, but the merge itself FAILED (see supervisor.log) — needs manual attention, NOT actually merged: $PR_URL"
++    python3 /opt/veridian/scripts/veridian-task.py checkpoint "$TASK_ID" --status blocked --note "tier1, Superboss-approved, but the merge itself FAILED (gh pr view confirms state=$PR_STATE, mergedAt=$MERGED_AT; see supervisor.log) — needs manual attention, NOT actually merged: $PR_URL"
+   fi
++  # --- MERGE-DETECTION-BLOCK-END ---
+ elif [ "$VERDICT" = "approve" ] && [ "$TIER" = "tier1" ] && [ "$SCOPE_OK" = "0" ]; then
+   gh pr comment "$PR_URL" --body "Superboss review: APPROVED and tier1, but BLOCKED by scope-check.py -- this diff touches files outside its declared module ownership. See supervisor.log for the exact violation. Not merged." >> "$TASK_DIR/supervisor.log" 2>&1
+   python3 /opt/veridian/scripts/veridian-task.py checkpoint "$TASK_ID" --status blocked --note "tier1, Superboss-approved, but SCOPE VIOLATION (file-ownership) blocked the merge — see supervisor.log: $PR_URL"
