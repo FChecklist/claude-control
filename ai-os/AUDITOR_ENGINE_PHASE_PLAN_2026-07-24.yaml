@@ -1,0 +1,523 @@
+meta:
+  title: VERIDIAN AUDITOR ENGINE -- Phase 0 Inventory + Phased Build Plan
+  created: '2026-07-24'
+  produced_by_task: task-20260724-042659-veridian-auditor-engine-phase0-inventory
+  instruction: INS-20260724-042330-8e4b
+  precedent: ai-os/STRATEGIC_PLAN_2026-07-21_v2.yaml (real investigation before build, not assumption -- same method applied here)
+  distinct_from: 'ai-os/audit198/ (run-audit.mjs) -- a different, already-existing, narrower AI-prompt-based
+    198-rule VERIDIAN-specific audit engine. Not modified, not merged. This plan is for the standards-based
+    (OWASP/WCAG/ISO/TOGAF/etc.) engine the Owner''s directive describes.'
+  scope_of_this_document: 'Phase 0 output only: inventory + plan + schema design + lowest-risk standalone
+    scanner install/smoke-test. Full tool integration, entity-relationship graph population, the 7-repo
+    observability layer, and master report software are Phase 1+ work dispatched separately, per this
+    task''s own CONSTRAINTS.'
+  stack_confirmed_2026-07-24:
+    method: 'Read package.json in each of the 3 named repos directly (not assumed).'
+    compliance-tracker: 'Next.js/TypeScript app (bun package manager, bun.lock), drizzle-orm + @supabase/ssr
+      against Postgres/Supabase, Playwright for e2e. Plus a standalone Python microservice at
+      services/doc-processing/ (requirements.txt, Dockerfile, no requirements-locked vulns found -- see
+      smoketest evidence) and a set of Python ai-os/scripts/*.py automation scripts.'
+    projexa: 'Next.js/TypeScript app, drizzle-orm + @supabase/supabase-js + @supabase/ssr against
+      Postgres/Supabase. No Python component found.'
+    veda-advisors: 'Next.js/TypeScript app, @prisma/client (not drizzle -- different ORM than the other
+      2 repos, real divergence worth flagging for data-model domain) against its own Postgres backend.
+      Also contains a standalone, non-web Python demo (VedaAdvisors_Demo/modules/module_*.py) -- unrelated
+      to the Next.js app, not part of the audited product surface.'
+    conclusion: 'Node/TypeScript + Python + Postgres/Supabase is confirmed real for all 3 repos named in
+      SCOPE item 1, with veda-advisors using Prisma instead of drizzle-orm as a genuine variance.'
+  named_7_repos_for_part6: 'Per MASTER_INDEX.yaml repos: block (already the Owner''s own canonical list,
+    reused here rather than re-litigated): compliance-tracker, projexa, veridian-ui-kit, claude-control,
+    odoo-reverse-engineering, infisuite-reverse-engineering, zoho-reverse-engineering. veda-advisors is
+    explicitly separate (repos.personal_advisory_not_active, "Explicitly NOT currently being worked on")
+    -- included in the domain/tool inventory below because SCOPE item 1 names it directly, but excluded
+    from the PART6 7-repo observability layer unless the Owner later says otherwise.'
+
+domains:
+  - id: business-capability
+    standard_cited: "APQC Process Classification Framework (PCF) + TOGAF 10 Business Architecture (ADM Phase B)"
+    tool_mapping: "none -- no deterministic OSS tool evaluates whether code maps correctly to a named business
+      capability; this is a naming/judgment problem, not a lintable one"
+    tool_installable_compatible: "n/a -- no tool exists to install"
+    custom_work_required: "Author a VERIDIAN Business Capability Map (which modules/routes serve which named
+      capability, cross-referenced against compliance-tracker's own CONSTITUTION.yaml module list) as the
+      artifact the AI Review pass grades against. Zero of this exists today."
+    execution_path: "AI Review pass (PART5-compliant: judgment-only domain, explicitly named in KNOWN_CONTEXT
+      as one of the domains with no deterministic tool)"
+    target_phase: Phase 5
+
+  - id: ddd
+    standard_cited: "Eric Evans, Domain-Driven Design (2003) + Vaughn Vernon, Implementing Domain-Driven Design
+      (2013) -- the canonical DDD reference texts (no ISO body governs DDD)"
+    tool_mapping: "dependency-cruiser (npm, real OSS) -- cannot verify DDD semantics (aggregates, value objects)
+      but CAN deterministically enforce bounded-context module-boundary rules once those boundaries are named"
+    tool_installable_compatible: "Yes -- pure npm package, TypeScript-native, installs into any of the 3 repos'
+      existing devDependencies with zero new runtime. Not installed this phase (needs the bounded-context map
+      as a prerequisite input, see custom_work_required) -- correctly deferred, not a standalone binary per
+      SCOPE item 2's own boundary."
+    custom_work_required: "(1) Author the actual bounded-context map (which folders/modules are which context)
+      -- does not exist today. (2) Hand-write .dependency-cruiser.js rules encoding those boundaries. (3) AI
+      Review for aggregate/entity/value-object semantic correctness, which dependency-cruiser cannot check."
+    execution_path: "software (dependency-cruiser, boundary rules) + AI Review (semantic correctness)"
+    target_phase: Phase 4
+
+  - id: enterprise-architecture
+    standard_cited: "The Open Group TOGAF 10 Standard"
+    tool_mapping: "none deterministic for TOGAF conformance itself; dependency-cruiser reused for layer-boundary
+      enforcement (same tool as clean-architecture below, different ruleset)"
+    tool_installable_compatible: "dependency-cruiser: yes (see ddd row). Structurizr Lite (C4-model-as-code,
+      Docker image) considered for architecture-diagram-as-code but requires a running container + is
+      diagram-authoring, not a scanner -- not a SCOPE item 2 candidate, deferred."
+    custom_work_required: "Author the actual C4-style component diagram / TOGAF ADM artifacts (Phase A-D) for
+      VERIDIAN -- none exist today beyond MASTER_INDEX.yaml's own prose repos: block. AI Review grades
+      real-code-vs-diagram drift until diagram-as-code tooling is in place."
+    execution_path: AI Review pass, dependency-cruiser layer rules as a supporting deterministic signal
+    target_phase: Phase 4
+
+  - id: clean-architecture
+    standard_cited: "Robert C. Martin, Clean Architecture: A Craftsman's Guide to Software Structure and Design
+      (2017) -- The Dependency Rule"
+    tool_mapping: "dependency-cruiser (npm, real OSS) -- can deterministically enforce 'inner layers never import
+      outer layers' once VERIDIAN's own layer names are encoded as a rule set"
+    tool_installable_compatible: "Yes, same package as ddd/enterprise-architecture rows -- one dependency-cruiser
+      install serves all 3 domains via 3 separate rule files. TypeScript-native, zero conflict with Next.js/bun."
+    custom_work_required: "Hand-write .dependency-cruiser.js encoding VERIDIAN's real layer boundaries (e.g.
+      app/ must not import from a would-be infrastructure/ directly) -- none of the 3 repos currently define
+      layers explicitly enough for a rule file to reference; this itself is real prerequisite work."
+    execution_path: software (dependency-cruiser), AI Review for judgment calls dependency-cruiser can't encode
+    target_phase: Phase 4
+
+  - id: product-quality
+    standard_cited: "ISO/IEC 25010:2023 (SQuaRE -- Systems and software Quality Requirements and Evaluation,
+      product quality model)"
+    tool_mapping: "SonarQube Community Edition / sonar-scanner CLI (real OSS) is the named industry tool, but
+      requires a running SonarQube server (not a standalone binary with zero VERIDIAN-specific config) --
+      correctly excluded from this phase's SCOPE item 2 install list. ESLint (already a devDependency in all
+      3 repos) is the lower-risk substitute already present."
+    tool_installable_compatible: "sonar-scanner: technically installable (binary exists) but non-functional
+      without a SonarQube server to talk to -- server stand-up is Phase 1+ infra work, not Phase 0. ESLint:
+      already installed, already compatible, zero new install needed."
+    custom_work_required: "A VERIDIAN-specific SonarQube quality-gate profile (none exists) once a server
+      exists; in the interim, an ESLint ruleset mapped explicitly to ISO 25010 sub-characteristics
+      (maintainability, reliability) rather than generic style rules."
+    execution_path: software (eslint now, sonar-scanner once server exists), no AI-in-the-loop needed
+    target_phase: Phase 3
+
+  - id: data-model
+    standard_cited: "Relational schema design conventions consistent with ISO/IEC 11179 (metadata registries)
+      applied to VERIDIAN's actual Postgres/Supabase schemas (drizzle/*.sql migrations in compliance-tracker
+      and projexa; Prisma schema in veda-advisors)"
+    tool_mapping: "sqlfluff (Python, real OSS, pip-installable, has a native postgres dialect) -- lints the
+      real drizzle/*.sql migration files directly"
+    tool_installable_compatible: "Yes -- pip install works in this Python 3.12 environment (same
+      externally-managed-environment caveat as Checkov: needs its own venv, proven working this session for
+      checkov). Confirmed compatible with the real .sql files found under compliance-tracker/drizzle/ and
+      projexa/drizzle/."
+    custom_work_required: "sqlfluff has no built-in Supabase-RLS-policy-presence check -- VERIDIAN's schemas
+      are RLS-heavy (drizzle/000x_*rls*.sql, *_policies.sql files present in both repos) and that is the
+      single highest-value custom rule to write, not something sqlfluff ships. Also: veda-advisors uses
+      Prisma, not drizzle -- its schema.prisma needs a separate lint path (prisma validate is real and
+      built into @prisma/client's own CLI, already present as a devDependency-adjacent binary)."
+    execution_path: software (sqlfluff + custom RLS-presence script + prisma validate), no AI-in-the-loop
+    target_phase: Phase 3
+
+  - id: workflow
+    standard_cited: "OMG BPMN 2.0 (Business Process Model and Notation)"
+    tool_mapping: "none -- confirmed via package.json read of all 3 repos: no bpmn-js, no camunda, no workflow
+      engine dependency present anywhere in the real stack. VERIDIAN's 'workflows' today are plain status-enum
+      columns in drizzle/Prisma schemas (e.g. status: text with a fixed set of values), not a modeled BPMN
+      process."
+    tool_installable_compatible: "n/a -- no workflow-modeling artifact exists yet for a BPMN validator to check"
+    custom_work_required: "Either (a) formally model VERIDIAN's real workflows in BPMN before any tool can
+      check them (large undertaking, likely out of Phase 0-2 scope), or (b) the pragmatic near-term
+      substitute: a custom script that statically extracts every status-enum + its real transition call
+      sites (grep for .update({status:...)) and asserts transitions only ever move through allowed edges --
+      deterministic, software-only, VERIDIAN-specific, and buildable without waiting on a BPMN authoring
+      project. Recommended per Owner's standing 'default to Recommended' approval."
+    execution_path: software (custom transition-validator script) once built; AI Review for whether the
+      *business logic* of a workflow (not just its transition legality) is correct
+    target_phase: Phase 6
+
+  - id: api-contract
+    standard_cited: "OpenAPI Initiative (OAI) Specification 3.1"
+    tool_mapping: "Spectral (npm, real OSS) -- installed and smoke-tested this phase, see
+      AUDITOR_ENGINE_TOOL_SMOKETEST_EVIDENCE_2026-07-24.yaml"
+    tool_installable_compatible: "Yes, confirmed installed (v6.16.2) and working against a real OpenAPI 3.0.3
+      document via the built-in spectral:oas ruleset (6 real warnings produced -- see evidence file). IMPORTANT
+      real finding: grep across compliance-tracker, projexa, and veda-advisors for `openapi:` / `\"openapi\":`
+      found ZERO existing OpenAPI documents in any of the 3 repos -- confirmed, not assumed."
+    custom_work_required: "The prerequisite work is bigger than Spectral config: VERIDIAN's API routes
+      (Next.js app/api/**/route.ts handlers) have no OpenAPI contract authored at all today. Custom glue =
+      author real OpenAPI 3.1 documents describing the actual existing routes (or generate them from
+      zod/drizzle types via a generator) BEFORE Spectral has anything real to lint against production code."
+    execution_path: software (spectral) once specs exist; zero AI-in-the-loop for the linting itself
+    target_phase: Phase 2
+
+  - id: metadata
+    standard_cited: "Dublin Core Metadata Initiative (DCMI) Metadata Terms, applied in practice via JSON Schema
+      validation of VERIDIAN's own metadata blocks (package.json fields, OpenAPI info objects once authored,
+      drizzle/Prisma schema column comments)"
+    tool_mapping: "ajv-cli (npm, real OSS, JSON Schema validator) -- generic, not metadata-specific, but the
+      correct deterministic engine once VERIDIAN's own metadata schemas exist"
+    tool_installable_compatible: "Yes -- pure npm, zero conflict with the Next.js/bun stack. Not installed this
+      phase because it has nothing to validate against yet (no VERIDIAN metadata JSON Schemas authored) --
+      same standalone-binary-with-no-VERIDIAN-config test as api-contract, and this one fails that test."
+    custom_work_required: "Author the actual metadata JSON Schemas (package.json required-fields schema,
+      OpenAPI info-block schema, drizzle-schema column-comment convention) -- none exist today."
+    execution_path: software (ajv-cli) once schemas exist
+    target_phase: Phase 2
+
+  - id: security
+    standard_cited: "OWASP Top 10 (2021) + OWASP Application Security Verification Standard (ASVS) 4.0"
+    tool_mapping: "Gitleaks (secrets), Trivy (dependency/container vulnerabilities), OWASP Dependency-Check
+      (software composition analysis), Checkov (IaC/Dockerfile misconfiguration) -- all 4 installed and
+      smoke-tested this phase, see evidence file. This is the only domain with 4 distinct real tool
+      mappings rather than 0-1."
+    tool_installable_compatible: "All 4 installed successfully this session with no sudo (user-local
+      ~/.local/bin + ~/.local/share/veridian-tool-venvs/). Gitleaks and Trivy ran clean against real repo
+      content with real findings. Checkov ran clean against the one real Dockerfile in the stack
+      (services/doc-processing/Dockerfile). Dependency-Check installed and started a real scan but its
+      first-run NVD data sync (369,951 CVE records, no API key configured) is impractically slow for this
+      session's budget -- real, documented infra constraint, not a skip. See evidence file for exact status."
+    custom_work_required: "(1) A secret-allowlist for confirmed-safe false positives (Gitleaks flagged
+      .next/ build-manifest artifacts and a Supabase anon key in .env.example -- anon keys are meant to be
+      public but Gitleaks correctly can't know that without VERIDIAN-specific allowlist config). (2) Root-cause
+      why Trivy's fs scanner (v0.72.0) did not detect compliance-tracker's bun.lock despite upstream bun.lock
+      parser support existing (aquasecurity/trivy issues #8839/#8840/#8897/#8998) -- reproduced twice this
+      session (directory scan and direct-file scan both returned num=0 bun findings); needs either a trivy
+      config flag, a version bump, or a bun.lock-to-package-lock.json export step as a workaround. (3) An
+      NVD_API_KEY (free, Owner-requestable) before Dependency-Check is usable on any real cadence. (4) Wiring
+      all 4 tools' native output formats into the one finding-record schema."
+    execution_path: software (all 4 tools), zero AI-in-the-loop for finding generation
+    target_phase: Phase 1
+
+  - id: ux
+    standard_cited: "W3C Web Content Accessibility Guidelines (WCAG) 2.2 Level AA, + Nielsen's 10 Usability
+      Heuristics for subjective judgment"
+    tool_mapping: "axe-core / @axe-core/cli (npm, real OSS) -- deterministic WCAG technical-check automation;
+      Nielsen heuristics and visual/content quality have no deterministic tool"
+    tool_installable_compatible: "axe-core: yes, pure npm, zero conflict, but requires a running instance of
+      each app (Next.js dev/prod server) to point the CLI at -- not a zero-config standalone binary scan of
+      static files, so correctly not in this phase's SCOPE item 2 list. Genuinely installable in Phase 1
+      once a running target exists."
+    custom_work_required: "A page/route manifest to drive axe-core against (which URLs to visit) -- doesn't
+      exist yet. Nielsen-heuristic and content-quality judgment stays AI Review, exactly as PART2's own tree
+      structure already lists 'AI Review' as a named child under UX branches per KNOWN_CONTEXT."
+    execution_path: "software (axe-core) for WCAG technical checks + AI Review (named PART2 leaf) for
+      heuristic/content judgment"
+    target_phase: Phase 1
+
+  - id: ai-governance
+    standard_cited: "NIST AI Risk Management Framework (AI RMF 1.0) + EU AI Act (Regulation (EU) 2024/1689)
+      risk-tiering obligations"
+    tool_mapping: "promptfoo (npm, real OSS, LLM eval/red-team CLI) covers the deterministic slice -- prompt
+      regression tests, jailbreak/injection test suites, output-format assertions. Bias, transparency, and
+      appropriate-use judgment have no deterministic tool."
+    tool_installable_compatible: "Yes -- pure npm, no VERIDIAN-specific config blocker to installing the
+      binary itself, but genuinely needs VERIDIAN's real prompts/model configs as test fixtures before a run
+      means anything -- same 'not a zero-config scan' reasoning as ux/axe-core, correctly deferred out of
+      SCOPE item 2."
+    custom_work_required: "Author VERIDIAN-specific promptfoo test suites against real production prompts
+      (none authored yet). CRITICAL PART5 note: promptfoo test runs ARE software/deterministic (they execute
+      fixed assertions against LLM output), so they satisfy 'zero AI in the audit-run loop' even though the
+      system under test is itself an LLM -- the distinction is: promptfoo doesn't use an LLM to decide the
+      verdict, it uses fixed string/schema assertions."
+    execution_path: "software (promptfoo) for the deterministic slice + AI Review for bias/transparency
+      judgment"
+    target_phase: Phase 6
+
+  - id: integration
+    standard_cited: "OpenAPI-driven contract/property-based testing (no separate named standard body --
+      practice standard is 'test the real API against its own published contract')"
+    tool_mapping: "schemathesis (Python, real OSS, pip-installable) -- generates and executes real HTTP
+      requests against a running API from its OpenAPI document and asserts response-schema conformance.
+      Explicitly named in this task's own KNOWN_CONTEXT `which` check."
+    tool_installable_compatible: "Installable (pip, same venv pattern as checkov/sqlfluff), but hard-blocked
+      on the api-contract domain's OpenAPI documents existing first -- confirmed zero exist today. This is a
+      genuine phase-ordering dependency, not a preference: schemathesis literally has nothing to read."
+    custom_work_required: "Depends entirely on api-contract's Phase 2 output. Additionally needs a running
+      instance of each app (dev server or a staging deploy) to send real requests to."
+    execution_path: software (schemathesis), zero AI-in-the-loop
+    target_phase: Phase 2 (same phase as api-contract -- schemathesis runs immediately after the OpenAPI
+      docs it depends on are authored, within the same phase)
+
+  - id: test-coverage
+    standard_cited: "ISO/IEC/IEEE 29119 (Software Testing) as the reference standard; enforced in practice via
+      coverage-threshold gating"
+    tool_mapping: "Native to the existing stack -- @playwright/test (already a devDependency in
+      compliance-tracker and projexa) + Vitest/Istanbul-style coverage. No new external OSS tool needs
+      installing; the gap is a threshold-gating script, not a missing scanner."
+    tool_installable_compatible: "Already present in all repos that have it as a devDependency; no install
+      action needed this phase."
+    custom_work_required: "A coverage-threshold gate script (e.g. fail if statements/branches coverage drops
+      below a VERIDIAN-set floor) wired into CI -- does not exist today. veda-advisors has no @playwright/test
+      devDependency at all (confirmed via package.json read) -- a real, distinct gap: no e2e test tooling
+      present in that repo."
+    execution_path: software (existing coverage tooling + a new gate script), zero AI-in-the-loop
+    target_phase: Phase 1
+
+  - id: documentation
+    standard_cited: "Diataxis framework (tutorials / how-to guides / reference / explanation) as the structural
+      standard for documentation quality"
+    tool_mapping: "Vale (Go binary, real OSS, prose-style linter, style-guide-as-code) for
+      grammar/tone/terminology consistency + markdownlint-cli (npm, real OSS) for structural Markdown lint"
+    tool_installable_compatible: "Both installable as standalone binaries with no blocking dependency, but
+      genuinely need a VERIDIAN-specific style package (Vale ships zero rules of its own -- it's a rule
+      *engine*, not a ruleset) before a run produces anything meaningful -- same 'needs VERIDIAN config
+      first' reasoning that kept this out of SCOPE item 2's install list this phase."
+    custom_work_required: "Author a VERIDIAN Vale style package (terminology list, voice/tone rules) -- none
+      exists. markdownlint-cli can run with its default ruleset with zero authoring, lower-hanging fruit for
+      an earlier phase than Vale."
+    execution_path: software (markdownlint-cli now-ish, Vale once a style package exists), zero AI-in-the-loop
+      for the linting itself; AI Review only for whether documentation content is *substantively* correct
+      (a judgment call neither tool can make)
+    target_phase: Phase 3
+
+observability_layer:
+  id: part6-observability-audit-trail
+  standard_cited: "OpenTelemetry (CNCF) for distributed tracing of the audit engine's own execution; PostgreSQL
+    pgAudit extension for database-level audit logging; no single external body governs 'one shared
+    event schema across repos' -- that is VERIDIAN's own PART6 requirement, designed this phase as
+    ai-os/AUDITOR_ENGINE_EVENT_SCHEMA_2026-07-24.schema.json"
+  repositories: "The Owner's named 7 (MASTER_INDEX.yaml repos: block, reused verbatim): compliance-tracker,
+    projexa, veridian-ui-kit, claude-control, odoo-reverse-engineering, infisuite-reverse-engineering,
+    zoho-reverse-engineering"
+  event_schema: "ai-os/AUDITOR_ENGINE_EVENT_SCHEMA_2026-07-24.schema.json (designed this phase, JSON Schema
+    2020-12, NOT yet enforced/emitted anywhere -- enforcement mechanism is explicitly later-phase work per
+    this task's CONSTRAINTS)"
+  opentelemetry_wiring: "The audit engine's OWN execution (per-repo, per-domain scan runs) gets instrumented
+    with OTel spans -- trace_id/span_id fields already reserved in the event schema's trace object. This is
+    tracing the AUDIT PIPELINE's own execution, not adding app-level tracing inside veridian-ui-kit or the 3
+    reverse-engineering doc-only repos (which have no running app to instrument) -- an important scope
+    clarification this phase surfaced rather than assumed."
+  pgaudit: "Applies concretely to only 2 of the 7 named repos: compliance-tracker and projexa, the only 2
+    confirmed (via @supabase deps + drizzle/*.sql migrations) to run against a real Postgres/Supabase
+    backend. veridian-ui-kit (0 runtime deps), claude-control (config/YAML only, no application code), and
+    the 3 reverse-engineering repos (docs/screenshots only, re-verified 2026-07-20 per MASTER_INDEX.yaml)
+    have no database to pgAudit -- documented honestly rather than forcing pgAudit onto repos that have
+    nothing for it to log."
+  entity_relationship_knowledge_engine_requirement: "Every domain row above, this plan file itself, and each
+    installed tool must exist as a real row in ai-os/memory/superboss-register.sqlite's knowledge_engine
+    table (via scripts/superboss-register.py register-knowledge), each with real entity_relationships back
+    to the domain(s) it covers and to this plan file -- population done THIS phase for the plan file + the
+    5 installed tools (see knowledge_engine registration evidence); full per-domain custom-glue-artifact rows
+    (e.g. the not-yet-authored OpenAPI docs, dependency-cruiser rule files) are registered as they are
+    actually built in Phase 1+, not pre-created as placeholders now."
+  custom_work_required: "(1) Build the actual per-repo event emitter (a small shared library each repo's
+    audit-run script imports) -- does not exist. (2) Stand up an OTel collector endpoint (or reuse an
+    existing one if the server already runs one -- not confirmed either way this phase, a real open question
+    for Phase 7). (3) Enable the pgAudit extension on the compliance-tracker/projexa Supabase Postgres
+    instance(s) -- requires Supabase project-level config, not yet done, not yet even checked whether the
+    Owner's Supabase plan tier supports custom extensions (real open question, flagged rather than assumed)."
+  target_phase: Phase 7
+
+phases:
+  - phase: 0
+    name: Inventory, planning, schema design, lowest-risk scanner install
+    status: this_task
+    scope:
+      - Domain/standard/tool inventory (all 15 domains + observability layer)
+      - Install + smoke-test Gitleaks, Trivy, Spectral, Checkov, Dependency-Check (partial -- NVD sync slow)
+      - Design (not enforce) the event schema + finding-record schema
+      - Register this plan + installed tools in knowledge_engine + MASTER_INDEX.yaml registries.auditor_engine
+    depends_on: []
+    dependency_mechanism: n/a -- entry phase
+
+  - phase: 1
+    name: Deterministic scanners with no authoring prerequisite
+    scope:
+      - security domain -- wire gitleaks/trivy/checkov/dependency-check into a real repeatable script
+        (not just ad-hoc CLI invocation) with a secret-allowlist config
+      - test-coverage domain -- coverage-threshold gate script; add @playwright/test to veda-advisors
+      - ux domain -- stand up axe-core against each app's real running routes (needs a route manifest,
+        buildable without waiting on any other domain)
+    depends_on: [0]
+    dependency_mechanism: "Phase 0's installed binaries (~/.local/bin/{gitleaks,trivy,checkov,dependency-check})
+      and the finding-record schema this phase's output must emit into are the literal artifacts Phase 1
+      consumes -- a real file/binary dependency, not just sequencing."
+    status: security_domain_complete_2026-07-24_test_coverage_and_ux_subscopes_not_started
+    evidence:
+      task: task-20260724-083724-phase1-auditor-engine-security-scanners
+      what_shipped: "Real, cron-scheduled pipeline (ai-os/scripts/audit_pipeline_security.py, mirrored
+        in the claude-control repo at ai-os-scripts/audit_pipeline_security.py) runs gitleaks + trivy +
+        checkov against the real compliance-tracker repo, normalizes native tool output into
+        AUDITOR_ENGINE_FINDING_RECORD_SCHEMA_2026-07-24.schema.json-conformant records, and upserts them
+        into a new audit_findings table (+ audit_runs run-log table) in the existing knowledge_engine
+        database (ai-os/memory/superboss-register.sqlite) -- zero AI/LLM calls anywhere in the run path.
+        Also ships ai-os/AUDITOR_ENGINE_SECRET_ALLOWLIST_2026-07-24.toml (gitleaks config) resolving Phase
+        0's documented anon-key/.next-build-artifact false positives by matching a literal substring
+        unique to this repo's specific Supabase anon key, not a generic pattern."
+      real_run_result: "2026-07-24T08:48Z live run against /opt/veridian/repos/compliance-tracker: 29 real
+        findings (27 gitleaks generic-api-key leaks in src/lib/composio-connectors.ts and 2 other files,
+        0 trivy vulnerabilities -- see known_gaps, 2 checkov Dockerfile misconfigurations CKV_DOCKER_2/3).
+        Re-run same day confirmed idempotent upsert (0 new_findings on an unchanged repo state)."
+      cron_wiring: "Added to crontab via the existing run-logged.sh wrapper convention (see
+        CRONTAB_APPROVED_SNAPSHOT.txt and OWNER_DECISIONS_NEEDED_2026-07-23.yaml id
+        audit-pipeline-security-crontab-addition for the Owner-approval citation)."
+      known_gaps_carried_forward: "(1) OWASP Dependency-Check still excluded from the cron-run pipeline --
+        first-run NVD sync is impractical without an NVD_API_KEY, unchanged since Phase 0, re-documented
+        in the pipeline script's own _SKIPPED_TOOLS constant rather than silently dropped. (2) Trivy's
+        bun.lock non-detection (aquasecurity/trivy issues #8839/#8840/#8897/#8998) is unfixed -- trivy
+        runs for real every cycle but only ever sees services/doc-processing/requirements.txt, so its
+        finding count for compliance-tracker's own JS/TS dependency tree is a known 0, not a silent skip.
+        (3) test-coverage and ux sub-scopes of this same phase (coverage-threshold gate,
+        @playwright/test for veda-advisors, axe-core against running routes) were explicitly out of
+        scope for this task's own CONSTRAINTS and are not started."
+
+  - phase: 2
+    name: API contract authoring + linting + contract testing
+    scope:
+      - api-contract domain -- author real OpenAPI 3.1 docs for compliance-tracker/projexa/veda-advisors
+        API routes, then wire Spectral
+      - metadata domain -- author VERIDIAN metadata JSON Schemas, then wire ajv-cli
+      - integration domain -- wire schemathesis against the OpenAPI docs this same phase authors
+    depends_on: [1]
+    dependency_mechanism: "Not a hard technical dependency on Phase 1's tools, but shares the same
+      finding-record schema and the same 'stand up a running instance to point tools at' infra Phase 1's
+      ux/axe-core work builds first -- sequenced after Phase 1 to reuse that running-instance
+      infrastructure rather than standing it up twice. integration's schemathesis step has a HARD dependency
+      within this same phase on api-contract's OpenAPI docs existing (schemathesis reads the OpenAPI doc
+      directly as its input -- literal file dependency, zero docs means zero schemathesis runs)."
+
+  - phase: 3
+    name: Data-model and static-quality linting + documentation structure
+    scope:
+      - data-model domain -- sqlfluff + custom RLS-presence rule against drizzle/*.sql; prisma validate for
+        veda-advisors' schema.prisma
+      - product-quality domain -- ESLint ruleset mapped to ISO 25010 sub-characteristics (SonarQube deferred
+        pending a server)
+      - documentation domain -- markdownlint-cli now; Vale once a VERIDIAN style package is authored
+    depends_on: [1]
+    dependency_mechanism: "Reuses Phase 1's finding-record wiring pattern (same schema, same emit-to-knowledge
+      _engine convention) but has no artifact dependency on Phase 2's OpenAPI work -- can run in parallel
+      with Phase 2 in a real multi-task dispatch, listed after it here only for narrative ordering."
+
+  - phase: 4
+    name: Architecture-judgment domains (dependency-cruiser + AI Review)
+    scope:
+      - Author the bounded-context map and layer-boundary map (does not exist today) as the shared
+        prerequisite artifact for all 3 architecture domains
+      - ddd domain -- dependency-cruiser bounded-context rules
+      - clean-architecture domain -- dependency-cruiser dependency-rule enforcement
+      - enterprise-architecture domain -- dependency-cruiser layer rules + AI Review drift-check
+    depends_on: [0]
+    dependency_mechanism: "Hard content dependency on Phase 0's business-capability groundwork being at least
+      scoped (this plan's business-capability row) since a bounded-context map is meaningless without first
+      knowing what the business capabilities are -- Phase 4 cannot start its bounded-context authoring until
+      Phase 5's business-capability AI Review has produced at least a first-pass capability map. NOTE: this
+      creates a real Phase 4 -> Phase 5 -> Phase 4 ordering tension (business-capability is 'AI Review, Phase
+      5' but Phase 4 needs its output first) -- resolved by running business-capability's AI Review pass
+      EARLY within Phase 4's own dispatch rather than waiting for the separately-numbered Phase 5, i.e. Phase
+      4 and Phase 5's business-capability slice are co-scheduled in practice; Phase 5 as numbered below covers
+      the REMAINING AI Review domains only (ddd semantics, ux content, workflow logic, ai-governance judgment)."
+
+  - phase: 5
+    name: Remaining AI Review lane (read-only against Phase 1-4 findings)
+    scope:
+      - ddd domain -- aggregate/entity/value-object semantic correctness (dependency-cruiser cannot check
+        this; business-capability's map itself is co-scheduled into Phase 4, see above)
+      - ux domain -- Nielsen-heuristic and content-quality judgment (axe-core covers only the WCAG technical
+        slice, done in Phase 1)
+      - workflow domain -- business-logic-correctness judgment (the transition-legality slice is software,
+        see Phase 6)
+      - ai-governance domain -- bias/transparency/appropriate-use judgment (promptfoo covers only the
+        deterministic slice, see Phase 6)
+    depends_on: [1, 2, 3, 4]
+    dependency_mechanism: "PART5's mandatory rule made concrete: this phase's AI Review passes read
+      finding-record rows Phases 1-4 already wrote (remediation_type=ai_escalation_required rows
+      specifically) -- the AI never produces a Phase-1-4-covered finding itself, it only reads what software
+      already found and adds judgment on top. Real mechanism: a query against knowledge_engine /
+      finding-record rows filtered by remediation_type, not a fresh scan."
+
+  - phase: 6
+    name: Workflow transition-validator + AI-governance deterministic tests
+    scope:
+      - workflow domain -- build the custom status-enum transition-validator script (software-only slice)
+      - ai-governance domain -- author + wire promptfoo test suites against real production prompts
+        (software-only slice)
+    depends_on: [0]
+    dependency_mechanism: "No artifact dependency on Phases 1-5 -- both scopes are standalone custom scripts
+      against existing code/prompts. Numbered after Phase 4/5 only because it is lower-priority (fewer
+      standards-compliance stakes than security/api-contract) per the Owner's 'default to Recommended'
+      approval, not because anything technically blocks starting it earlier."
+
+  - phase: 7
+    name: PART6 observability/audit-trail layer
+    scope:
+      - Build the shared event-emitter library implementing AUDITOR_ENGINE_EVENT_SCHEMA_2026-07-24.schema.json,
+        imported by every phase's audit-run scripts
+      - OpenTelemetry collector wiring for the audit engine's own spans
+      - Enable pgAudit on compliance-tracker/projexa's Supabase Postgres (pending a real check of Supabase
+        plan-tier support for custom extensions -- open question, not yet resolved)
+      - Populate full entity_relationships in knowledge_engine for every artifact Phases 1-6 actually built
+        (not placeholders) -- this phase is where the ER graph becomes real and complete, vs. Phase 0's
+        partial registration of just the plan file + installed tools
+    depends_on: [1, 2, 3, 4, 5, 6]
+    dependency_mechanism: "Structurally last because the event schema needs real event_type payloads from
+      every other phase's actual finding-emission code to validate against -- an event emitter with nothing
+      real to emit can't be smoke-tested honestly. Concrete mechanism: Phase 7's emitter library is imported
+      by (not imports) every earlier phase's scripts, so it must exist as an interface (already designed,
+      Phase 0) before Phase 1 code is written, but its OWN build/wiring work is sequenced last so it has real
+      traffic to validate against by the time it's built."
+
+  - phase: 8
+    name: Master orchestration, cron wiring, report software
+    scope:
+      - Orchestrate all domains' audit-run scripts under one cron-driven entrypoint (zero AI in the loop,
+        per PART5)
+      - Build the master report software (aggregates finding-record rows across all domains + repos)
+      - File any new crontab entries through the existing Owner-approval-citation pattern
+        (ai-os/OWNER_DECISIONS_NEEDED_*.yaml + CRONTAB_APPROVED_SNAPSHOT.txt) -- NONE filed this phase
+        (Phase 0 adds no cron entries; deferred to whichever of Phase 1-7 first needs one)
+    depends_on: [7]
+    dependency_mechanism: "The master report software queries the observability layer's event stream +
+      finding-record rows as its actual data source -- cannot be built against data that doesn't exist yet,
+      literal read-dependency on Phase 7's emitter having real rows to aggregate."
+
+phase_dependency_table:
+  - from: phase-0
+    to: phase-1
+    mechanism: "File/binary dependency -- Phase 1 scripts invoke the literal binaries Phase 0 installed at
+      ~/.local/bin/{gitleaks,trivy,checkov,dependency-check} and emit into the schema Phase 0 designed."
+  - from: phase-0
+    to: phase-4
+    mechanism: "Content dependency -- Phase 4's bounded-context/layer maps require Phase 0's domain table
+      (this file) as the starting taxonomy of what 'architecture' even means for VERIDIAN."
+  - from: phase-0
+    to: phase-6
+    mechanism: "Content dependency -- Phase 6 scripts are scoped directly from Phase 0's workflow/ai-governance
+      domain rows above; no other phase's output is read."
+  - from: phase-1
+    to: phase-2
+    mechanism: "Infra reuse -- Phase 2's schemathesis + axe-core-adjacent work reuses the running-app
+      infrastructure Phase 1's ux/axe-core step stands up, rather than duplicating it."
+  - from: phase-1
+    to: phase-3
+    mechanism: "Convention reuse only (same finding-record emission pattern) -- no literal artifact dependency,
+      can run in parallel with Phase 2 in real multi-task dispatch."
+  - from: phase-2 (api-contract)
+    to: phase-2 (integration)
+    mechanism: "Hard literal file dependency within the same phase -- schemathesis's CLI invocation takes the
+      OpenAPI document path as a required argument; zero docs authored means zero schemathesis executions
+      possible, confirmed by this tool's own CLI contract, not assumed."
+  - from: phase-4
+    to: phase-5
+    mechanism: "Query dependency -- Phase 5's AI Review passes query knowledge_engine/finding-record rows with
+      remediation_type=ai_escalation_required that Phase 4's dependency-cruiser runs (and Phases 1-3) wrote;
+      Phase 5 cannot run meaningfully before at least one upstream phase has written rows to read."
+  - from: phase-1..phase-6
+    to: phase-7
+    mechanism: "Interface-then-traffic dependency -- Phase 7's event-schema interface is designed in Phase 0
+      and imported by Phases 1-6 as they're built, but Phase 7's OWN emitter-library build + OTel/pgAudit
+      wiring is sequenced last so there is real event traffic to validate the wiring against."
+  - from: phase-7
+    to: phase-8
+    mechanism: "Data dependency -- the master report software's queries are written against Phase 7's actual
+      event-stream + finding-record tables; cannot be authored against tables that don't exist yet."
+
+crontab_decisions_this_phase:
+  new_entries_added: 0
+  reason: "This phase is inventory/planning/schema-design/scanner-smoketest only, per its own CONSTRAINTS --
+    no cron-driven audit-run exists yet for anything to schedule. The first real crontab entry (e.g. a
+    nightly Phase 1 security-scan run) is Phase 1's own responsibility to file through the existing
+    ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml + CRONTAB_APPROVED_SNAPSHOT.txt pattern, citing this
+    directive's blanket approval exactly as KNOWN_CONTEXT describes."
