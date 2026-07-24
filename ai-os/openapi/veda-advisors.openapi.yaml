@@ -1,0 +1,64 @@
+openapi: 3.1.0
+info:
+  title: veda-advisors API
+  version: "1.0.0"
+  description: >-
+    Real, hand-authored OpenAPI 3.1 contract for veda-advisors' full API surface.
+    Unlike compliance-tracker/projexa (bounded representative sub-trees of a much
+    larger app/api tree), this document is complete: veda-advisors' entire
+    src/app/api tree is exactly 2 route.ts files, confirmed via
+    `find src/app/api -name route.ts` -- no scope-boundary honesty note is needed
+    here because there is no larger surface being left out.
+  contact:
+    name: VERIDIAN Platform Team
+    email: raajat.agarwal@gmail.com
+  license:
+    name: Proprietary
+servers:
+  - url: http://localhost:3000/api
+    description: Local dev server
+paths:
+  /:
+    get:
+      operationId: apiRoot
+      summary: API root health/placeholder endpoint
+      description: >-
+        Real handler: src/app/api/route.ts GET. Unauthenticated, no query
+        parameters, returns a static placeholder body verbatim.
+      security: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [message]
+                properties:
+                  message: { type: string, const: "Hello, world!" }
+  /veda:
+    get:
+      operationId: getVedaAdvisorsDemo
+      summary: Serve the VedaAdvisors_Demo static HTML build
+      description: >-
+        Real handler: src/app/api/veda/route.ts GET. Unauthenticated. Reads
+        VedaAdvisors_Demo/index.html from disk (fs.readFileSync, path relative to
+        process.cwd()) and returns it verbatim as text/html -- not a templated
+        response, a direct file passthrough of the non-web Python demo's own
+        generated output (see AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml's own
+        stack_confirmed_2026-07-24.veda-advisors note: this demo is "unrelated to
+        the Next.js app, not part of the audited product surface" for the
+        Python-module content itself -- this route is the one real Next.js seam
+        that touches it).
+      security: []
+      responses:
+        "200":
+          description: OK -- static HTML document
+          content:
+            text/html:
+              schema: { type: string }
+        "500":
+          description: VedaAdvisors_Demo/index.html missing on disk (fs.readFileSync throws, uncaught -- real gap, no try/catch in this handler)
+          content:
+            text/plain:
+              schema: { type: string }
