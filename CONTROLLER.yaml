@@ -4712,3 +4712,13 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260724-072725-fix-auditor-engine-pr12-conflict/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/19'
     last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-074329-fix-worker-noop-pending-review
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''fix-worker-noop-pending-review'' on claude-control
+      reached status=completed. tier1, Superboss-approved, merged autonomously: https://github.com/FChecklist/claude-control/pull/20'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-074329-fix-worker-noop-pending-review/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/20'
+    last_touched: '2026-07-24'
