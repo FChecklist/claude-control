@@ -214,6 +214,8 @@ phases:
 
   - id: phase_3_ci_enforcement_wiring
     name: Wire guardrail into compliance-tracker CI as a coverage-gate job
+    status: done
+    completed_by_task: task-20260724-140446-fix-terminology-phase3-pr552-review-gap
     scope:
       - "Add a 'terminology-guardrail-check' job to compliance-tracker/.github/workflows/ci.yml, structurally
          identical to the existing guardrail-presence / asset-registry-coverage / metadata-index-coverage jobs
@@ -238,6 +240,37 @@ phases:
       build immediately (all pre-existing findings unexempted) or shipping an exemption file with no real
       basis. Also a toolchain dependency: the ported .mjs script needs Phase 1's expanded dictionary coverage
       to keep its false-negative rate down as more directories come online."
+    real_evidence_2026-07-24:
+      real_deliverable_pr: "compliance-tracker#552 (https://github.com/FChecklist/compliance-tracker/pull/552),
+        state MERGED, mergedAt 2026-07-24T14:08:41Z. Contains the 3 real files this phase's scope specifies:
+        .github/workflows/ci.yml (+23 lines, new terminology-guardrail-check job, structurally identical to
+        the existing guardrail-presence/asset-registry-coverage jobs), scripts/check-terminology-guardrail.mjs
+        (new, 284 lines, ported PATTERN_FAMILIES literal-shape scanning, --diff-only merge-base scoping), and
+        ai-os/registry/terminology-guardrail-exemptions.yaml (new, 824 lines, machine-generated from Phase 2's
+        real 199-file/488-finding baseline via ai-os-scripts/generate_terminology_guardrail_exemptions.py, same
+        list-with-a-reason-field shape as ai-os/registry/asset-registry-coverage.yaml)."
+      process_gap_found_and_closed: "PR #552 had genuinely real, correct content from the moment it was opened,
+        but its own compliance-tracker audit-check required status check was left FAILING (BLOCKED) because no
+        structured AUDIT: PASS comment was ever posted on it -- the actual review never happened in the repo
+        that owns the deliverable. Meanwhile claude-control#38 (the earlier attempt to mark this phase done)
+        was correctly AUDIT: FAILed by a separate review because it contained only a plan-tracking YAML diff,
+        not the real CI/script/exemption-file content, which lives in compliance-tracker, not claude-control.
+        claude-control#38 stays open/rejected as-is and is NOT cited as evidence here -- see
+        process_notes.cross_repo_review_gap below for the standing rule this gap produced."
+      real_review_performed: "task-20260724-140446-fix-terminology-phase3-pr552-review-gap read PR #552's full
+        diff, confirmed structural match against check-guardrail-presence.mjs/check-asset-registry-coverage.mjs
+        (same checkout+setup-bun+bun-install+run shape, same header-comment convention) and against
+        asset-registry-coverage.yaml's exemption shape, confirmed the --diff-only merge-base scoping and the
+        fetch-depth:0 checkout override match sentinel.yml's own real precedent, and confirmed via
+        gh api .../check-runs that Terminology Guardrail Check already showed conclusion=success on PR #552's
+        own head commit (the job runs and passes for real, not merely present). No defects found, no
+        corrections needed. Posted the genuine 8-field structured AUDIT: PASS comment
+        (https://github.com/FChecklist/compliance-tracker/pull/552#issuecomment-5070737581), manually re-ran
+        the audit-check job (it only triggers on pull_request open/sync/reopen, not new comments) via
+        gh api actions/runs/.../rerun, confirmed conclusion=success, confirmed all branch-protection-required
+        checks green (Lint, Type Check, Build, audit-check, Guardrail Presence Check, Asset Registry Coverage
+        Check, Unit Tests -- Metadata Index Coverage Check's failure is pre-existing/unrelated and not
+        required), then merged PR #552 (squash) for real."
 
   - id: phase_4_existing_hardcoded_example_migration
     name: Migrate existing hardcoded examples to registered placeholders
@@ -294,19 +327,21 @@ dependency_table:
     mechanism: "Content dependency -- the CI job's exemption file needs Phase 2's real per-directory findings
       baseline as its initial content; wiring CI before that baseline exists means either blocking every build
       on unexempted legacy findings or shipping an exemption file with no real basis."
-    status: planned
+    status: done
   - from: phase_1_dictionary_coverage_expansion
     to: phase_3_ci_enforcement_wiring
     mechanism: "Soft accuracy dependency (not a hard block) -- CI enforcement is meaningful with only the
       top-20 dictionary (this task's real output), but false negatives (findings with no dictionary match)
       drop as Phase 1's coverage tiers land."
-    status: planned
+    status: done
   - from: "compliance-tracker/.github/workflows/ci.yml (external repo)"
     to: phase_3_ci_enforcement_wiring
     mechanism: "Hard external file dependency -- this phase edits a file that lives in the compliance-tracker
       repo, not claude-control (this task's own repo). Must be dispatched as, or coordinated with, a
       compliance-tracker-scoped task."
-    status: external_planned
+    status: done
+    closure_note: "Closed via compliance-tracker#552 (merged 2026-07-24T14:08:41Z), genuinely reviewed in
+      compliance-tracker's own pipeline -- see phase_3_ci_enforcement_wiring's real_evidence_2026-07-24 above."
   - from: phase_3_ci_enforcement_wiring
     to: phase_4_existing_hardcoded_example_migration
     mechanism: "Content dependency -- Phase 4's migration_completion_pct metric is defined relative to Phase
@@ -322,6 +357,15 @@ dependency_table:
     mechanism: "Content dependency -- Phase 5's dictionary-completion scope (all 444 tables) is Phase 1's
       final tier, not new work; Phase 5 just requires that tier to have actually landed."
     status: planned
+
+process_notes:
+  cross_repo_review_gap: "Found and closed by task-20260724-140446-fix-terminology-phase3-pr552-review-gap
+    (instruction INS-20260724-140321-8748): phase_3_ci_enforcement_wiring's real deliverable landed in
+    compliance-tracker#552, not claude-control, and sat un-reviewed there (its audit-check required status
+    check failing for lack of a posted audit comment) while a separate claude-control PR (#38) tried to claim
+    the phase done from a plan-tracking-only diff and was correctly rejected. Standing rule going forward: any
+    future phase whose real deliverable lands in a repo other than claude-control must be reviewed and merged
+    in that repo's own pipeline before the claude-control tracking task is allowed to claim the phase done."
 
 cross_links:
   - path: /opt/veridian/ai-os/DATABASE_CATALOG.json
