@@ -1,0 +1,8 @@
+{
+  "replay_id": "RPL-20260724-120521-1561",
+  "route_id": "RT-gratuity_calculator-001",
+  "event_type": "replay",
+  "baseline_replay_id": "RPL-20260724-120521-1e65",
+  "diff_result": "match",
+  "diff_detail": "response_hash matches captured baseline exactly"
+}

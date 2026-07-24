@@ -1,0 +1,8 @@
+{
+  "replay_id": "RPL-20260724-120522-3820",
+  "route_id": "RT-trend_analysis_engine-001",
+  "event_type": "replay",
+  "baseline_replay_id": "RPL-20260724-120522-8980",
+  "diff_result": "match",
+  "diff_detail": "response_hash matches captured baseline exactly"
+}

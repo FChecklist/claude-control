@@ -1,0 +1,1 @@
+{"cgst":0,"sgst":0,"igst":1800,"totalTax":1800,"totalAmount":11800,"isInterState":true,"breakdown":{"steps":[{"label":"Total GST (inter-state, IGST only)","formula":"10000 x 18%","value":1800},{"label":"IGST","value":1800},{"label":"Total amount","formula":"10000 + 1800","value":11800}]},"taxableAmount":10000}

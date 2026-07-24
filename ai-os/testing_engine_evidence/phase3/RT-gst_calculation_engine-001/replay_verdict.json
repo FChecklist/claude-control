@@ -1,0 +1,8 @@
+{
+  "replay_id": "RPL-20260724-120521-be6d",
+  "route_id": "RT-gst_calculation_engine-001",
+  "event_type": "replay",
+  "baseline_replay_id": "RPL-20260724-120521-60c5",
+  "diff_result": "match",
+  "diff_detail": "response_hash matches captured baseline exactly"
+}

@@ -1,0 +1,1 @@
+{"gratuityAmount":288461.54,"roundedYearsOfService":10,"statutoryCapApplied":false,"breakdown":{"steps":[{"label":"Years of service (Sec 4(2) rounding)","formula":"10 years","value":10},{"label":"Gratuity formula (covered, 15/26)","formula":"50000 x 15 / 26 x 10","value":288461.54}]}}
