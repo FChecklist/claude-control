@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://veridian.internal/schemas/auditor-engine/event-2026-07-24.schema.json",
+  "title": "VERIDIAN Auditor Engine Standard Event",
+  "description": "Phase 0 (task-20260724-042659) design artifact -- PART6's 'one event schema'. Every audit-run lifecycle event across all 7 of the Owner's named repos (plus veda-advisors) emits exactly this shape into the observability/audit-trail layer: OpenTelemetry spans carry event_id as a span attribute, and pgAudit rows (for the 2 repos with a real Postgres/Supabase backend -- compliance-tracker, projexa) are cross-referenced via pgaudit_statement_id. Enforcement/emission code is a later phase; this is the contract.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "event_id",
+    "event_type",
+    "schema_version",
+    "repo",
+    "domain",
+    "timestamp",
+    "producer",
+    "trace"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "pattern": "^evt_[0-9A-Za-z]{16,32}$"
+    },
+    "schema_version": {
+      "type": "string",
+      "const": "2026-07-24.0"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "audit_run_started",
+        "audit_run_completed",
+        "audit_run_failed",
+        "finding_emitted",
+        "finding_status_changed",
+        "ai_review_pass_started",
+        "ai_review_pass_completed",
+        "remediation_applied",
+        "escalation_raised",
+        "owner_decision_recorded"
+      ]
+    },
+    "repo": {
+      "type": "string",
+      "enum": [
+        "compliance-tracker", "projexa", "veridian-ui-kit", "claude-control",
+        "odoo-reverse-engineering", "infisuite-reverse-engineering", "zoho-reverse-engineering",
+        "veda-advisors"
+      ]
+    },
+    "domain": {
+      "type": "string",
+      "description": "One of the 15 audit domains, or 'observability-layer-self-check', or null for repo-wide events (e.g. audit_run_started before per-domain fan-out begins).",
+      "enum": [
+        "business-capability", "ddd", "enterprise-architecture", "clean-architecture",
+        "product-quality", "data-model", "workflow", "api-contract", "metadata",
+        "security", "ux", "ai-governance", "integration", "test-coverage", "documentation",
+        "observability-layer-self-check", null
+      ]
+    },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "name"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["oss_tool", "custom_script", "ai_review_pass", "orchestrator"] },
+        "name": { "type": "string" },
+        "version": { "type": ["string", "null"] }
+      }
+    },
+    "trace": {
+      "type": "object",
+      "description": "OpenTelemetry correlation. W3C Trace Context fields, verbatim field names so no translation layer is needed at the OTel SDK boundary.",
+      "additionalProperties": false,
+      "required": ["trace_id", "span_id"],
+      "properties": {
+        "trace_id": { "type": "string", "pattern": "^[0-9a-f]{32}$" },
+        "span_id": { "type": "string", "pattern": "^[0-9a-f]{16}$" },
+        "parent_span_id": { "type": ["string", "null"], "pattern": "^[0-9a-f]{16}$" }
+      }
+    },
+    "finding_id": {
+      "type": ["string", "null"],
+      "description": "Set on finding_emitted / finding_status_changed events; foreign key into AUDITOR_ENGINE_FINDING_RECORD_SCHEMA_2026-07-24.schema.json's finding_id."
+    },
+    "pgaudit_statement_id": {
+      "type": ["string", "null"],
+      "description": "Cross-reference into the pgAudit log's own statement id, for events where the audited action was itself a DB write (e.g. remediation_applied via a migration). Only populated for repo in {compliance-tracker, projexa} -- the 2 of the 7 named repos confirmed (drizzle/*.sql + @supabase deps) to run against a real Postgres/Supabase backend; null for the other 5, which have no DB to pgAudit (veridian-ui-kit: 0 runtime deps; claude-control: config/YAML only; the 3 reverse-engineering repos: docs/screenshots only, confirmed 2026-07-20)."
+    },
+    "severity": {
+      "type": ["string", "null"],
+      "enum": ["critical", "high", "medium", "low", "info", null]
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Free-form, event_type-specific payload (e.g. audit_run_completed carries duration_ms + finding_count; escalation_raised carries owner_decision_ref).",
+      "additionalProperties": true
+    }
+  }
+}
