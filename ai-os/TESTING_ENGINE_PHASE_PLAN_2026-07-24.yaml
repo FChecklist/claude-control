@@ -162,6 +162,39 @@ phases:
 
   - id: phase_4_dependency_graph_validation
     name: Dependency graph validation
+    status: done
+    status_detail: 'DONE (real, scoped) as of task-20260724-122146-phase4-dependency-graph-validation.
+      Delivered: ai-os-scripts/validate_dependency_graph.py -- a real, runnable validator that (1) for each
+      populated_route''s expected_path hops, re-derives whether the real call site each hop claims actually
+      exists today (Workflow Engine hops: reuses Phase 1''s generate_route_tests.derive_dispatch_target()
+      directly, not duplicated, to grep task-execution-engine.ts''s dispatchEngine() switch for a real `case
+      "<capability_name>":`; Rule Engine hops: parses guardrail-registrations.ts for real registerGuardrail()
+      call sites, resolving the file''s own const-alias/leaves-array-for-loop indirection, e.g.
+      GST_SPLIT_ENGINE_LEAVES, rather than a naive literal-string grep; every other hop_type: real
+      file/dir-exists check on mechanism_path), flagging any mismatch between the hop''s hand-set
+      live_or_planned claim and what is actually found -- never silently reconciled; (2) cross-validates the
+      ordered engine_no sequence each route''s expected_path implies (as consecutive engine-to-engine edges)
+      against 20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml''s own dependency_table, parsed for
+      "<Engine Name> (N)"-shaped from/to entries, flagging both directions honestly. Run for real against all
+      5 populated_routes: all 5 now dependency_validation_status=validated_match (a genuine result, not a
+      rigged pass -- Phase 0/1''s hand-verification of live_or_planned was in fact correct against today''s
+      real source, and this validator will catch it the moment that drifts, e.g. if trend_analysis_engine''s
+      Rule Engine hop, currently and correctly claimed "planned", is ever wired up without this file being
+      updated). Cross-validation honestly surfaced a real, previously-undocumented gap (not fabricated to look
+      clean): the 5 routes'' expected_path hops imply 4 distinct engine-to-engine edges (17->3, 3->8, 8->6,
+      3->9) NONE of which appear in 20_ENGINES_10_GATEWAYS_PHASE_PLAN''s own dependency_table (that table''s 7
+      entries are a curated set of "interesting" planned/live edges from its own PART4/PART5 review, not an
+      exhaustive route-derived graph) -- and conversely that table''s 7 edges are not yet exercised by any of
+      today''s 5 routes. This is a real, first-class finding of this phase, not a defect in the validator: it
+      is the literal "flag any route whose expected_path implies an engine-to-engine dependency not listed in
+      that table, or vice versa" this phase''s own scope calls for, now re-runnable instead of a one-time
+      manual comparison. Evidence: ai-os/testing_engine_evidence/phase4/<route_id>/dependency_validation.json
+      per route + ai-os/testing_engine_evidence/phase4/dependency_graph_cross_validation.json for the combined
+      cross-validation. New field ai-os/ROUTE_REGISTRY_SCHEMA_2026-07-24.yaml route_record_schema
+      dependency_validation_status (not_yet_validated -> validated_match/validated_mismatch) added and
+      populated for all 5 routes, same convention as test_status/replay_status. Registered in knowledge_engine:
+      `python3 scripts/superboss-register.py query-knowledge "phase_4_dependency_graph_validation" --tag
+      domain:veridian-testing-engine-irvf-phased`.'
     scope:
       - "Build a validator that statically parses each populated_route's expected_path hops against the real
          call sites they claim (e.g. does task-execution-engine.ts's dispatchEngine() switch actually contain

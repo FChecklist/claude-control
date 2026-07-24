@@ -1,0 +1,163 @@
+{
+  "route_implied_edges": {
+    "3->8": [
+      "RT-gratuity_calculator-001",
+      "RT-commission_calculator-001",
+      "RT-gst_calculation_engine-001",
+      "RT-trend_analysis_engine-001"
+    ],
+    "3->9": [
+      "RT-capability_registry_dedup-001"
+    ],
+    "8->6": [
+      "RT-gratuity_calculator-001",
+      "RT-commission_calculator-001",
+      "RT-gst_calculation_engine-001",
+      "RT-trend_analysis_engine-001"
+    ],
+    "17->3": [
+      "RT-gratuity_calculator-001",
+      "RT-commission_calculator-001",
+      "RT-gst_calculation_engine-001",
+      "RT-trend_analysis_engine-001",
+      "RT-capability_registry_dedup-001"
+    ]
+  },
+  "documented_table_edges": {
+    "3->5": "planned -- lookupCapability() result's ai_required flag checked by a future shared policy-gate.ts before enforcePolicy()/preflight-guard.py ever run; see CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml lookup_contract.call_site_requirement.",
+    "3->6": "planned -- capability_record_schema.business_rules field populated directly from guardrail-registrations.ts lookups by leaf_key, no new rule-storage mechanism needed.",
+    "3->7": "planned -- ai_required + confidence fields inform risk-tier.py's routing decision (AI vs deterministic path) once Phase 2 wires risk-tier.py to query the registry via the same query-knowledge-style CLI pattern scripts/superboss-register.py already establishes.",
+    "8->9": "live -- scripts/task-gateway.py's close step already triggers/feeds automation-progress-audit.ts's recurring health loop over automation_rule capability rows.",
+    "10->9": "planned -- an inbound webhook receiver (new, does not exist today) would call scripts/task-gateway.py submit for the matching automation_rule capability row; today only outbound webhook-deliver.ts exists, so this edge has no real mechanism yet.",
+    "11->12": "planned -- doc-processing completion (services/doc-processing) should call scripts/notify-owner.py or the in-app app/api/notifications route on failure; no such call site exists today (confirmed absent by grep).",
+    "14->15": "live -- knowledge_engine (ai-os/memory/superboss-register.sqlite) IS the queryable half of the Metadata Engine; MASTER_INDEX.yaml's registries: section is the hand-edited half. Same table, already shared."
+  },
+  "unresolvable_table_rows": [
+    {
+      "from": "Audit Engine (19) / Observability Engine (20)",
+      "to": "all engines above",
+      "mechanism": "external dependency -- ai-os/AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml's own phases (not re-planned here) will eventually instrument every engine above via its PART6 OpenTelemetry/pgAudit layer. Not built by any phase in this document.",
+      "status": "external_planned"
+    }
+  ],
+  "undocumented_route_edges": [
+    {
+      "edge": [
+        3,
+        8
+      ],
+      "route_ids": [
+        "RT-gratuity_calculator-001",
+        "RT-commission_calculator-001",
+        "RT-gst_calculation_engine-001",
+        "RT-trend_analysis_engine-001"
+      ]
+    },
+    {
+      "edge": [
+        3,
+        9
+      ],
+      "route_ids": [
+        "RT-capability_registry_dedup-001"
+      ]
+    },
+    {
+      "edge": [
+        8,
+        6
+      ],
+      "route_ids": [
+        "RT-gratuity_calculator-001",
+        "RT-commission_calculator-001",
+        "RT-gst_calculation_engine-001",
+        "RT-trend_analysis_engine-001"
+      ]
+    },
+    {
+      "edge": [
+        17,
+        3
+      ],
+      "route_ids": [
+        "RT-gratuity_calculator-001",
+        "RT-commission_calculator-001",
+        "RT-gst_calculation_engine-001",
+        "RT-trend_analysis_engine-001",
+        "RT-capability_registry_dedup-001"
+      ]
+    }
+  ],
+  "unexercised_table_edges": [
+    {
+      "edge": [
+        3,
+        5
+      ],
+      "from": "Capability Registry Engine (3)",
+      "to": "Policy Engine (5)",
+      "mechanism": "planned -- lookupCapability() result's ai_required flag checked by a future shared policy-gate.ts before enforcePolicy()/preflight-guard.py ever run; see CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml lookup_contract.call_site_requirement.",
+      "status": "planned"
+    },
+    {
+      "edge": [
+        3,
+        6
+      ],
+      "from": "Capability Registry Engine (3)",
+      "to": "Rule Engine (6)",
+      "mechanism": "planned -- capability_record_schema.business_rules field populated directly from guardrail-registrations.ts lookups by leaf_key, no new rule-storage mechanism needed.",
+      "status": "planned"
+    },
+    {
+      "edge": [
+        3,
+        7
+      ],
+      "from": "Capability Registry Engine (3)",
+      "to": "Decision Engine (7)",
+      "mechanism": "planned -- ai_required + confidence fields inform risk-tier.py's routing decision (AI vs deterministic path) once Phase 2 wires risk-tier.py to query the registry via the same query-knowledge-style CLI pattern scripts/superboss-register.py already establishes.",
+      "status": "planned"
+    },
+    {
+      "edge": [
+        8,
+        9
+      ],
+      "from": "Workflow Engine (8)",
+      "to": "Automation Engine (9)",
+      "mechanism": "live -- scripts/task-gateway.py's close step already triggers/feeds automation-progress-audit.ts's recurring health loop over automation_rule capability rows.",
+      "status": "live"
+    },
+    {
+      "edge": [
+        10,
+        9
+      ],
+      "from": "Integration Engine (10)",
+      "to": "Automation Engine (9)",
+      "mechanism": "planned -- an inbound webhook receiver (new, does not exist today) would call scripts/task-gateway.py submit for the matching automation_rule capability row; today only outbound webhook-deliver.ts exists, so this edge has no real mechanism yet.",
+      "status": "planned"
+    },
+    {
+      "edge": [
+        11,
+        12
+      ],
+      "from": "Document Engine (11)",
+      "to": "Notification Engine (12)",
+      "mechanism": "planned -- doc-processing completion (services/doc-processing) should call scripts/notify-owner.py or the in-app app/api/notifications route on failure; no such call site exists today (confirmed absent by grep).",
+      "status": "planned"
+    },
+    {
+      "edge": [
+        14,
+        15
+      ],
+      "from": "Metadata Engine (14)",
+      "to": "Knowledge Engine (15)",
+      "mechanism": "live -- knowledge_engine (ai-os/memory/superboss-register.sqlite) IS the queryable half of the Metadata Engine; MASTER_INDEX.yaml's registries: section is the hand-edited half. Same table, already shared.",
+      "status": "live"
+    }
+  ]
+}
