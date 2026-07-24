@@ -1,6 +1,6 @@
 meta:
   id: CHATGPT-AUDIT-MASTER-CATALOGUE
-  generated_ts: '2026-07-24T14:23:58Z'
+  generated_ts: '2026-07-24T21:52:04Z'
   generated_by: scripts/generate_chatgpt_audit_index.py (re-run this to refresh -- do not hand-edit)
   purpose: Real, machine-scanned index of every audit record file under /opt/veridian/chatgpt-audit --
     built for INS-20260724-141101-89d8 (task-20260724-141323-chatgpt-audit-workspace-infrastructure).
@@ -9,7 +9,7 @@ meta:
   guard_ref: scripts/chatgpt_audit_guard.py
   local_index_ref: opt/veridian/chatgpt-audit/Metadata/INDEX.yaml
 summary:
-  total_audit_records: 0
+  total_audit_records: 1
   subfolders_scanned: 23
   by_subfolder:
     Architecture: 0
@@ -23,7 +23,7 @@ summary:
     APIs: 0
     UI: 0
     Reports: 0
-    Security: 0
+    Security: 1
     Performance: 0
     AI: 0
     Prompts: 0
@@ -36,9 +36,15 @@ summary:
     Recommendations: 0
     History: 0
   parse_errors: 0
-  note: 0 records is expected and correct today -- the LLM-execution step is explicitly out of scope for
-    this task (no OPENAI_API_KEY exists yet, see ai-os/CHATGPT_AUDIT_BLOCKER_2026-07-24.yaml). This catalogue
-    populates automatically (re-run this script) once that blocker clears and real audits are written
-    through scripts/chatgpt_audit_guard.py.
-records: []
+  note: 1 real audit record(s) scanned from disk -- re-run this script any time to refresh.
+records:
+- path: Security/AUDIT-000008-20260724T215204Z.yaml
+  subfolder: Security
+  audit_id: AUDIT-000008
+  timestamp: '2026-07-24T21:52:04Z'
+  repository_version: docs/cost-control-2026-07-20
+  commit_hash: c4d74e8766cec27c7a349aea627f574650dde241
+  risk_score: 42
+  priority: medium
+  confidence_pct: 75
 parse_errors: []
