@@ -5184,3 +5184,14 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260724-183102-fix-terminology-phase4-gitlink-issue/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-185145-phasex-get-owner-or-original-uncondensed
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''phasex-get-owner-or-original-uncondensed-ins'' on
+      claude-control reached status=completed. tier1, Superboss-approved, merged autonomously:
+      https://github.com/FChecklist/claude-control/pull/51'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-185145-phasex-get-owner-or-original-uncondensed/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/51'
+    last_touched: '2026-07-24'
