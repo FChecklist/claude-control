@@ -446,6 +446,51 @@ phases:
     dependency_mechanism: "Reuses Phase 1's finding-record wiring pattern (same schema, same emit-to-knowledge
       _engine convention) but has no artifact dependency on Phase 2's OpenAPI work -- can run in parallel
       with Phase 2 in a real multi-task dispatch, listed after it here only for narrative ordering."
+    status: data_model_product_quality_documentation_domains_complete_2026-07-24
+    evidence:
+      task: task-20260724-122143-phase3-data-model-static-quality-linting
+      what_shipped: "Authored ai-os/.sqlfluff (postgres dialect, layout/capitalisation rule groups excluded
+        with documented before/after violation counts, large_file_skip_byte_limit raised so no real migration
+        file is silently skipped) and wired sqlfluff + a custom RLS-presence rule (no sqlfluff rule ships this
+        -- confirmed via the phase plan's own custom_work_required note) against compliance-tracker's and
+        projexa's real drizzle/*.sql migration trees, plus prisma validate against veda-advisors' real
+        schema.prisma (ai-os-scripts/audit_pipeline_data_model.py). Authored
+        ai-os/eslint/ISO25010_QUALITY_RULESET_2026-07-24.mjs -- an ESLint ruleset mapped explicitly to ISO
+        25010 maintainability (analysability, modularity, reusability/modifiability) and reliability
+        (maturity/fault-tolerance, recoverability) sub-characteristics, deliberately restoring several core
+        rules all 3 real repos' own eslint.config.mjs turns off -- and wired it against each repo's real
+        src/lib tree using that repo's own installed eslint binary (ai-os-scripts/audit_pipeline_product_quality.py).
+        Wired markdownlint-cli's own default ruleset (zero authoring, per this phase's own explicit
+        instruction -- a deliberate contrast with the curated .sqlfluff config above) against every real .md
+        file across all 3 repos (ai-os-scripts/audit_pipeline_documentation.py)."
+      real_run_result: "Live runs against the real repos this same phase's pipelines target, 2026-07-24:
+        data-model domain -- 1779 real findings ({'compliance-tracker': 1733, 'projexa': 46}; rls_presence_check veridian-custom-rule-1.0: 206, sqlfluff sqlfluff, version 4.2.2: 1573); product-quality domain --
+        351 real findings ({'compliance-tracker': 351}; eslint v9.39.5: 351 -- projexa and veda-advisors confirmed
+        genuinely clean by direct manual eslint run, not a silent skip); documentation domain --
+        14445 real findings ({'compliance-tracker': 13699, 'projexa': 616, 'veda-advisors': 130}; markdownlint-cli 0.49.1: 14445, dominated by MD013 line-length in
+        long-paragraph internal working notes, left unsuppressed per this domain's own no-authoring
+        instruction). Every pipeline re-run confirmed idempotent (0 new_findings on an unchanged target,
+        matching Phase 1/2's own convention). One real bug caught and fixed during this phase's own
+        verification, not left in: markdownlint-cli's MD060 table-column-style rule fires more than once per
+        line with errorContext=None (one violation per misaligned table pipe) -- the initial finding_id
+        scheme collapsed genuinely distinct violations into duplicates; fixed by hashing errorRange+
+        errorDetail as well, and the 12415 stale pre-fix rows were deleted from audit_findings before this
+        evidence was generated."
+      cron_wiring: "None added this phase (0 new crontab entries, matching this plan file's own
+        crontab_decisions_this_phase convention for Phase 0/1/2) -- these 3 pipelines are runnable on demand
+        today; filing a real nightly cron entry for them is deferred to whichever future phase makes that
+        Owner-approval-citation case."
+      known_gaps_carried_forward: "(1) product-quality domain's ESLint ruleset substitutes for sonar-scanner
+        per this phase plan's own tool_mapping -- SonarQube Community Edition itself remains un-stood-up
+        (needs a running server, named as infra work for a later phase, not this one). (2) documentation
+        domain's Vale sub-scope (prose/tone/terminology linting) remains genuinely not done -- Vale ships
+        zero rules of its own and needs a VERIDIAN-specific style package authored first, explicitly deferred
+        by this phase plan's own custom_work_required note to whichever phase takes that on. (3) data-model
+        domain's RLS-presence custom rule only checks drizzle/*.sql-authored tables in compliance-tracker and
+        projexa; veda-advisors' Prisma schema has a structurally different RLS story (Supabase RLS policies
+        are not modeled in schema.prisma the same way) and is out of this rule's scope, covered only by
+        prisma validate's own schema-syntax check instead."
+
 
   - phase: 4
     name: Architecture-judgment domains (dependency-cruiser + AI Review)
