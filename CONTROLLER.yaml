@@ -5148,3 +5148,15 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260724-170010-phase7-evaluate-whether-vericomposer-cha/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-173010-phase7-evaluate-whether-vericomposer-cha
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: Server-worker task 'phase7-evaluate-whether-vericomposer-chainselector-s-dynamic'
+      on claude-control reached status=failed. worker exited with code 1; failure signature
+      recorded for circuit breaker; pushed whatever progress existed; systemd will retry
+      up to the burst limit
+    where: /opt/veridian/ai-os/tasks/task-20260724-173010-phase7-evaluate-whether-vericomposer-cha/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-24'
