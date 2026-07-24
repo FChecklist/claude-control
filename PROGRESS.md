@@ -27,7 +27,13 @@
       full enforcement), 8-row dependency table with concrete mechanisms, cross-links to DATABASE_CATALOG.json
       and CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml.
 
+- [x] Registered all 3 artifacts in knowledge_engine via superboss-register.py register-knowledge
+      (KE-20260724-071822-bbd1/683d/605a), with entity_relationships back to DATABASE_CATALOG.json
+      (auto-resolved to existing KE-20260724-034921-2871) and CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml.
+- [x] Added registries.terminology_standardization to both the git-tracked ai-os/MASTER_INDEX.yaml (this
+      branch) and the live /opt/veridian/ai-os/MASTER_INDEX.yaml -- noted (did not attempt to fix) pre-existing
+      drift between the two files unrelated to this task (auditor_engine present live but not in this
+      branch's repo copy; testing_engine_irvf present in this branch but not yet live).
+
 ## Remaining
-- [ ] Register all 3 artifacts in knowledge_engine (superboss-register.py register-knowledge) and
-      MASTER_INDEX.yaml (registries.terminology_standardization) + live file sync.
 - [ ] Commit + push, open PR, final checkpoint summary.
