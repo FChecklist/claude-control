@@ -239,6 +239,7 @@ def run_depcruise(bin_path, config_path, repo_path, repo_name, domain):
 def upsert_findings(conn, records, run_id):
     now = _now_iso()
     new_count = 0
+    new_finding_ids = set()
     for r in records:
         art = r["artifact"]
         prod = r["producer"]
@@ -246,6 +247,7 @@ def upsert_findings(conn, records, run_id):
         existing = cur.fetchone()
         if existing is None:
             new_count += 1
+            new_finding_ids.add(r["finding_id"])
             status = r["status"]
             first_seen = now
         else:
@@ -271,7 +273,7 @@ def upsert_findings(conn, records, run_id):
             r.get("event_id"), r.get("owner_decision_ref"), json.dumps(r["_raw"], default=str), first_seen, now, run_id,
         ))
     conn.commit()
-    return new_count
+    return new_count, new_finding_ids
 
 
 def main():
@@ -329,11 +331,12 @@ def main():
         with _write_lock():
             conn = _connect()
             ensure_tables(conn)
-            new_count = upsert_findings(conn, all_records, run_id)
+            new_count, new_finding_ids = upsert_findings(conn, all_records, run_id)
             for repo_name, records in per_repo_records.items():
                 repo_status = "ok" if not per_repo_errors[repo_name] else ("partial" if per_repo_tools[repo_name] else "failed")
                 for domain in set(_CONFIGS.values()):
                     domain_records = [r for r in records if r["domain"] == domain]
+                    domain_new = sum(1 for r in domain_records if r["finding_id"] in new_finding_ids)
                     conn.execute("""
                         INSERT INTO audit_runs (run_id, ts, domain, repo, tools_run, tools_skipped,
                                                  total_findings, new_findings, duration_s, status, notes)
@@ -342,7 +345,7 @@ def main():
                         f"{run_id}-{repo_name}-{domain}", _now_iso(), domain, repo_name,
                         json.dumps({domain: per_repo_tools[repo_name].get(domain, {})}),
                         json.dumps({k: v for k, v in per_repo_errors[repo_name].items() if k in (domain, "install")}),
-                        len(domain_records), sum(1 for r in domain_records), duration, repo_status,
+                        len(domain_records), domain_new, duration, repo_status,
                         None if not per_repo_errors[repo_name] else json.dumps(per_repo_errors[repo_name]),
                     ))
             conn.commit()

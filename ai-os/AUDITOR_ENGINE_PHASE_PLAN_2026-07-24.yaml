@@ -532,9 +532,19 @@ phases:
         confirmed via live totalCruised counts of 1639/379/65 modules, not a silent skip); enterprise-architecture
         domain -- 11 real findings ({'compliance-tracker': 9, 'projexa': 1, 'veda-advisors': 1}; claude-sonnet-5-enterprise-architecture-drift-review claude-sonnet-5-2026-07-24: 5, dependency-cruiser 18.1.0: 6), of which 5
         are AI Review findings (producer_kind=ai_review, remediation_type=ai_escalation_required) and the
-        remainder are dependency-cruiser's own deterministic layer-rule findings. Every pipeline re-run
-        confirmed idempotent (0 new_findings on an unchanged target, matching Phase 1/2/3's own convention).
-        One real self-caught modeling bug fixed during this phase's own smoke-testing, not left in: the
+        remainder are dependency-cruiser's own deterministic layer-rule findings. A real reviewer-caught bug
+        was fixed in this same close-out: audit_pipeline_architecture.py's per-repo/per-domain
+        audit_runs.new_findings column was previously written as len(domain_records) (== total_findings
+        always) instead of the true new-vs-existing delta upsert_findings() computes; upsert_findings() now
+        returns the set of finding_ids it actually inserted for the first time, and main() intersects each
+        repo/domain's records against that set. Re-verified with 2 real back-to-back pipeline runs after the
+        fix (run AUD-20260724-143435-521cb then AUD-20260724-143513-528e5, both against the unchanged live
+        repos): every audit_runs row from both runs shows new_findings=0 while total_findings correctly stays
+        at the real per-repo/per-domain counts (e.g. compliance-tracker/ddd: total_findings=4, new_findings=0
+        both times; compliance-tracker/enterprise-architecture: total_findings=6, new_findings=0 both times)
+        -- i.e. total_findings and new_findings are no longer forced equal, and the pipeline is confirmed
+        idempotent against a real unchanged target by direct audit_runs query, not a self-reported narrative
+        claim. One real self-caught modeling bug fixed during this phase's own smoke-testing, not left in: the
         enterprise-architecture layer ordering's first draft put 'technology' as more inner than 'data',
         which flagged src/lib/openapi/generate.ts importing src/lib/schemas/*.ts as a false-positive-feeling
         violation -- corrected to the Clean-Architecture-consistent ordering (data/schemas innermost, freely
