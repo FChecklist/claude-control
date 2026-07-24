@@ -794,9 +794,9 @@ registries:
     registries.auditor_engine (Engines 19/20, Audit/Observability, cross-linked not re-planned) and
     unrelated to compliance-tracker/ai-os/engines/ENGINES.yaml (a namespace collision, confirmed this
     session, not prior art for this registry).'
-  status: phase_0_complete_phase_1_complete_phase_2_plus_not_yet_dispatched
+  status: phase_0_complete_phases_1_through_5_complete_phase_6_plus_not_yet_dispatched
   query_command: python3 scripts/superboss-register.py query-knowledge "engines_gateways_architecture" --tag domain:engines_gateways_architecture
-  next_phase: 'phase_2_policy_rule_decision_unification per ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml
+  next_phase: 'phase_6_intent_context_planning_learning per ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml
     phases[] -- dispatched as a separate task, not part of this registry entry''s own scope.'
   phase_1_capability_registry_live_wiring: 'DONE (task-20260724-083420, 2026-07-24) -- real
     capability_registry table live in ai-os/memory/superboss-register.sqlite (extends the same DB as
@@ -805,6 +805,34 @@ registries:
     scripts/task-gateway.py submit now calls lookup-capability before every task dispatch (Engine 3 is
     now live, not planned-only -- see 20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml phases[0].status_detail
     for full evidence). Query: python3 scripts/superboss-register.py list-capabilities'
+  phases_2_through_4_summary: 'phase_2_policy_rule_decision_unification (task-20260724-115041),
+    phase_3_workflow_automation_integration (task-20260724-122137), and
+    phase_4_document_notification_data (task-20260724-133622) are all DONE, 2026-07-24 -- full
+    status_detail/real_evidence for each lives in
+    ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml phases[] (not duplicated here verbatim, per
+    this same registry entry''s own phase_5 fix below: MASTER_INDEX.yaml''s registries: section states
+    scope/status/pointers, the phase plan file and knowledge_engine hold the durable evidence -- see
+    phase_5_metadata_knowledge_consolidation).'
+  phase_5_metadata_knowledge_consolidation: 'DONE (task-20260724-140008, 2026-07-24, closes_engines:
+    [14, 15]) -- built the enforced sync mechanism this exact registries: section needed:
+    ai-os-scripts/sync_master_index_registries.py + scripts/superboss-register.py''s new
+    upsert-knowledge-fragment/list-knowledge subcommands give every registries: entry (91 of them, this
+    one included) a real, queryable knowledge_engine row keyed at
+    ''ai-os/MASTER_INDEX.yaml#registries.<id>'', idempotent and drift-detecting (HASH_DRIFTED when an
+    entry''s real content changes since the last sync, orphaned_registry_rows when a row''s id no longer
+    exists here) -- one-way MASTER_INDEX.yaml -> knowledge_engine, never the reverse, so this file stays
+    the single place a human/AI edits registries: prose. Wired into scripts/task-gateway.py close so
+    every task that touches this file re-syncs automatically, not a one-off manual run. Also found and
+    fixed a real pre-existing drift this same reconciliation work surfaced: canonical_path_live
+    (/opt/veridian/ai-os/MASTER_INDEX.yaml) was missing the auditor_engine entry and phases 2-4''s status
+    updates present in this repo-tracked copy -- brought back into sync as part of this phase, see
+    ai-os/METADATA_KNOWLEDGE_ENGINE_RECONCILIATION_2026-07-24.yaml for the full contract. Also closed
+    Knowledge Engine''s (15) one known operational gap differently than "get a working token" (that part
+    needs an Owner-supplied Supabase PAT, filed as
+    ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml#supabase-access-token-credential-refresh, not something
+    a script can fabricate): knowledge_registry_multisource.py''s SUPABASE refresh now calls
+    scripts/notification_engine.py send-owner on every 401, so the gap is a real, rate-limited Owner
+    alert instead of a silent degrade.'
 - id: auditor_engine
   type: audit_domain_inventory_and_phase_plan
   path: ai-os/AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml + ai-os/AUDITOR_ENGINE_EVENT_SCHEMA_2026-07-24.schema.json
@@ -853,13 +881,27 @@ registries:
     (1 now VERIFIED_MATCH, 2 intentionally left PATH_MISSING with corrected citing
     text, logged); adds artifact_path to knowledge_engine_fts (fts5_relevance_tuning).
     Full detail: ai-os/STANDING_DIRECTIVE.yaml v2_self_sustaining_system_engine. Known
-    gap: SUPABASE cron refresh degraded pending a working SUPABASE_ACCESS_TOKEN (see
-    ai-os/KNOWLEDGE_ENGINE_PHASE3_CANDIDATES_2026-07-24.yaml).'
+    gap (2026-07-24 update, Phase 5 metadata_knowledge_consolidation, task-20260724-140008):
+    SUPABASE_ACCESS_TOKEN in shared/.env is still invalid (confirmed live 401 on
+    /v1/projects, /v1/organizations, and /v1/profile alike -- the token itself, not a
+    scope/endpoint issue; a fresh PAT can only be issued by the Owner via the Supabase
+    dashboard, not fabricated by any script -- see
+    ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml#supabase-access-token-credential-refresh),
+    but this is no longer a SILENT degrade: knowledge_registry_multisource.py''s do_supabase()
+    now calls scripts/notification_engine.py send-owner on every 401, a real, rate-limited
+    (1/hour, effectively once per 6h cron run while broken) Owner email alert -- the first
+    real Metadata/Knowledge Engine -> Notification Engine cross-call.'
   status: live
   query_command: python3 scripts/superboss-register.py query-knowledge "<search>"
     [--tag source:VERCEL|source:SUPABASE|source:GITHUB|source:LOCAL|source:SERVER]
   refresh_commands: python3 scripts/knowledge_registry_multisource.py (every 6h via
     crontab); python3 scripts/generate_software_catalog.py (daily 04:15 via crontab)
+  registries_sync_mechanism: 'Phase 5 (task-20260724-140008, 2026-07-24): every
+    registries: entry in this file (this one included) also has a real knowledge_engine
+    row, kept in sync by ai-os-scripts/sync_master_index_registries.py -- see
+    registries.engines_gateways_architecture.phase_5_metadata_knowledge_consolidation
+    and ai-os/METADATA_KNOWLEDGE_ENGINE_RECONCILIATION_2026-07-24.yaml for the full
+    contract, not duplicated here.'
 - id: rules_articles_198
   type: guardrail_ruleset
   path: ai-os/RULES_ARTICLES_198.json

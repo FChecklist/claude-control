@@ -36,6 +36,7 @@ VERIDIAN_TASK = f"{SCRIPTS}/veridian-task.py"
 POSTFLIGHT = f"{AI_OS}/scripts/postflight_audit_gate.py"
 TIGHT_VALIDATION = f"{SCRIPTS}/tight_task_validation.py"
 DB_PATH = f"{AI_OS}/memory/superboss-register.sqlite"
+MASTER_INDEX_REGISTRIES_SYNC = f"{AI_OS}/scripts/sync_master_index_registries.py"
 
 REQUIRED_SECTIONS = [
     "OBJECTIVE", "SCOPE", "KNOWN_CONTEXT", "SUCCESS_CRITERIA",
@@ -416,6 +417,44 @@ def reverify_touched_knowledge_engine_rows(task_id):
     return {"status": "REVERIFIED", "changed_files": changed, "touched_knowledge_engine_paths": matched, "reverify_result": result}
 
 
+def sync_master_index_registries_if_touched(task_id):
+    """Phase 5 (metadata_knowledge_consolidation, task-20260724-140008): the
+    enforced half of the sync direction ai-os/METADATA_KNOWLEDGE_ENGINE_RECONCILIATION_2026-07-24.yaml
+    documents -- MASTER_INDEX.yaml's registries: list is the authored source,
+    knowledge_engine is the queryable layer kept current with it. Same
+    changed-file-detection convention reverify_touched_knowledge_engine_rows()
+    already uses: only runs ai-os-scripts/sync_master_index_registries.py
+    (deployed live at MASTER_INDEX_REGISTRIES_SYNC) when the just-closed task's
+    own git diff actually touched ai-os/MASTER_INDEX.yaml -- every close is a
+    real re-sync, not a one-off manual run."""
+    workspace = f"{AI_OS}/tasks/{task_id}/workspace"
+    if not os.path.exists(os.path.join(workspace, ".git")):
+        return {"status": "NO_GIT_ACTIVITY"}
+
+    diff_proc = subprocess.run(
+        ["git", "-C", workspace, "diff", "--name-only", "origin/master...HEAD"],
+        capture_output=True, text=True, timeout=15,
+    )
+    changed = [line.strip() for line in diff_proc.stdout.splitlines() if line.strip()]
+    if "ai-os/MASTER_INDEX.yaml" not in changed:
+        return {"status": "NOT_TOUCHED", "changed_files": changed}
+
+    if not os.path.isfile(MASTER_INDEX_REGISTRIES_SYNC):
+        return {"status": "SYNC_SCRIPT_NOT_DEPLOYED", "changed_files": changed}
+
+    # Deliberately not run_json(): a partial sync failure (e.g. one malformed
+    # registries: entry) is real, reportable information, not a reason to
+    # fail the whole close -- the task's own audit/checkpoint/merge-status
+    # work above this point already succeeded and should not be undone by a
+    # metadata-sync hiccup.
+    proc = run(["python3", MASTER_INDEX_REGISTRIES_SYNC])
+    try:
+        result = json.loads(proc.stdout)
+    except json.JSONDecodeError:
+        result = {"error": "sync script did not return parseable JSON", "stdout": proc.stdout[-1000:], "stderr": proc.stderr[-1000:]}
+    return {"status": "SYNCED" if proc.returncode == 0 else "SYNCED_WITH_FAILURES", "changed_files": changed, "sync_result": result}
+
+
 def cmd_close(args):
     task_dir = f"{AI_OS}/tasks/{args.task_id}"
     prompt_file = f"{task_dir}/prompt.txt"
@@ -491,6 +530,7 @@ def cmd_close(args):
         ])
 
     knowledge_engine_reverify = reverify_touched_knowledge_engine_rows(args.task_id)
+    master_index_registries_sync = sync_master_index_registries_if_touched(args.task_id)
 
     print(json.dumps({
         "workflow_phase": phase_for_task_gateway_subcommand("close"),
@@ -500,6 +540,7 @@ def cmd_close(args):
         "work_item_id": close_result.get("work_item_id"),
         "git_merge_status": git_merge_status,
         "knowledge_engine_reverify": knowledge_engine_reverify,
+        "master_index_registries_sync": master_index_registries_sync,
     }, indent=2, default=str))
 
 
