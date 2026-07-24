@@ -52,6 +52,40 @@ phases:
 
   - id: phase_1_route_test_autogeneration
     name: Route test auto-generation on capability creation
+    status: done
+    status_detail: 'DONE (real, scoped) as of task-20260724-083902-phase1-testing-engine-route-tests.
+      Delivered: ai-os-scripts/generate_route_tests.py -- a real, runnable generator that (1) derives each
+      route''s real dispatch target by grepping+brace-matching compliance-tracker''s live
+      task-execution-engine.ts dispatchEngine() switch for the route''s capability_name (no invented paths,
+      same discipline as generate_route_registry_candidates.py), (2) generates a real bun:test file per route
+      and runs it for real via `bunx bun test` against compliance-tracker''s actual checkout (real module
+      resolution, real decimal.js, zero mocks), (3) writes the generated source + raw run output to
+      ai-os/testing_engine_evidence/phase1/<route_id>/ as committed evidence, (4) updates that route''s
+      test_status/notes fields in ROUTE_REGISTRY_SCHEMA_2026-07-24.yaml in place via targeted text surgery
+      (comments/formatting of every other row untouched). Run for real against all 5 populated_routes:
+      RT-gratuity_calculator-001, RT-commission_calculator-001, RT-gst_calculation_engine-001,
+      RT-trend_analysis_engine-001 all now test_status=passing (real dispatch-target function executed with a
+      curated real-formula fixture, e.g. calculateGratuity() checked against the Payment of Gratuity Act
+      15/26 formula). RT-capability_registry_dedup-001 is honestly test_status=quarantined: real grep evidence
+      shows task-execution-engine.ts''s dispatchEngine() switch has no case for it (matches
+      capability_record_schema.workflow=null for this capability) -- its real destination
+      (capability-registry-service.ts''s auditDuplicateCapabilities()) requires a live Postgres+pgvector
+      connection (this environment''s DATABASE_URL points at a real Supabase project) that this phase does not
+      safely exercise without a dedicated test-fixture org, so it is a documented blocker, not a fabricated
+      pass. Deferred (honestly, not silently): (a) the originally-scoped Playwright browser-level E2E --
+      compliance-tracker''s own playwright.config.ts confirms zero E2E tests exist yet and its e2e/ testDir is
+      empty, a separate, larger-scope build; this phase instead tests the real destination-engine function
+      exactly as dispatchEngine() invokes it, the deepest layer honestly testable without a live authenticated
+      server. (b) the on-create trigger this phase''s scope originally described -- still correctly blocked on
+      the same external_depends_on below (no live Capability Registry table/insert event exists yet); today''s
+      run is the same kind of real one-time backfill Phase 0 did for the registry itself. (c) dispatchEngine()
+      full-switch/buildCapabilityTree() full-leaf exhaustive enumeration (this phase''s scope item 2): a
+      single real data point was captured (186 `case "..."` entries counted in dispatchEngine()''s switch,
+      grep -c against task-execution-engine.ts lines 383-1615) but a true exhaustive leaf-count of
+      capability-tree-service.ts''s buildCapabilityTree() needs runtime tree construction (many nodes are
+      generated in loops, e.g. per-project), not a static grep -- left for Phase 4
+      (phase_4_dependency_graph_validation), which already depends on this phase''s dispatch enumeration as
+      its ground truth.'
     scope:
       - "Build a script (extends ai-os-scripts/generate_route_registry_candidates.py's verification pattern)
          that fires whenever a new row is added to CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml's
@@ -69,7 +103,9 @@ phases:
       - "20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml phase_1_capability_registry_live_wiring -- a real
          table + lookupCapability() implementation to hook an on-create trigger into. Auto-generation against
          5 hand-maintained YAML rows (today's state) does not scale; it needs the live table this external
-         phase builds."
+         phase builds. Still not live -- this task's real route-test generator/runner is dispatched
+         one-time/on-demand against the current 5 rows, same as Phase 0's own registry backfill, per this
+         phase's own status_detail above."
     dependency_mechanism: "Hard content dependency on Phase 0's route_record_schema (this task) as the
       target shape to generate into, plus a hard mechanism dependency on the external Capability Registry
       live-wiring phase producing a real insert/webhook point to trigger generation from -- generating
