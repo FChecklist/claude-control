@@ -1,1 +1,10 @@
 .claude/
+
+# PROGRESS.md is a per-workspace worker scratch file (see scripts/veridian-task.py
+# cmd_create / worker-entrypoint.sh). Every task branch writes its own narrative into
+# it, so tracking it in git guaranteed a merge conflict whenever 2+ task branches
+# diverged from and merged back into master close in time (hit PR12, PR23, PR24, PR27).
+# It is intentionally untracked now -- durable records live in each task's own
+# checkpoint history (task.yaml, read via `veridian-task.py resume-context`), which
+# already parses this file straight off disk and does not depend on git tracking it.
+PROGRESS.md
