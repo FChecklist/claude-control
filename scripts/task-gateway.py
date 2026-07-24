@@ -154,6 +154,17 @@ def cmd_submit(args):
         ["python3", SUPERBOSS, "query-knowledge", keyword_str],
         "query-knowledge",
     )
+    # Phase 1 Capability Registry live wiring (task-20260724-083420,
+    # closes_engines: [3]): lookup_contract's call_site_requirement --
+    # "any code path about to construct an LLM prompt to accomplish a named
+    # task MUST call lookupCapability() first". task-gateway.py submit is
+    # exactly that entrypoint (the first stop before a task is dispatched to
+    # an AI worker), so it belongs alongside check-duplicate/search/
+    # query-knowledge above, not as a separate gate a caller could skip.
+    capability_result = run_json(
+        ["python3", SUPERBOSS, "lookup-capability", "--intent-text", keyword_str],
+        "lookup-capability",
+    )
 
     systemctl_proc = run([
         "systemctl", "--user", "list-units", "veridian-worker@*",
@@ -181,6 +192,10 @@ def cmd_submit(args):
         "duplicate_evidence": dup_result.get("matches", []),
         "prior_search_results": search_result,
         "knowledge_matches": knowledge_result,
+        "capability_matches": capability_result.get("matches", []),
+        "capability_deterministic_path_available": any(
+            (not m.get("ai_required")) and m.get("apis") for m in capability_result.get("matches", [])
+        ),
         "active_collision_task_ids": active_collision_task_ids,
         "keywords_extracted": keywords,
         "keyword_extraction_fallback_used": fallback_used,
