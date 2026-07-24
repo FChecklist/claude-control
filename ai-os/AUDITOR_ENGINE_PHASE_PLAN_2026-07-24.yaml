@@ -510,6 +510,59 @@ phases:
       EARLY within Phase 4's own dispatch rather than waiting for the separately-numbered Phase 5, i.e. Phase
       4 and Phase 5's business-capability slice are co-scheduled in practice; Phase 5 as numbered below covers
       the REMAINING AI Review domains only (ddd semantics, ux content, workflow logic, ai-governance judgment)."
+    status: ddd_clean_architecture_enterprise_architecture_domains_complete_2026-07-24
+    evidence:
+      task: task-20260724-135839-phase4-architecture-judgment-domains-dep
+      what_shipped: "Authored ai-os/ARCHITECTURE_BOUNDED_CONTEXT_MAP_2026-07-24.yaml -- the shared
+        prerequisite artifact this phase's own scope names (bounded-context map + layer-boundary map +
+        first-pass business-capability map, co-scheduling business-capability's AI Review pass into this
+        phase exactly as this phase's own dependency_mechanism note above prescribes), grounded in live
+        directory reads of compliance-tracker/projexa/veda-advisors (confirmed zero CONSTITUTION.yaml exists
+        in compliance-tracker despite the plan's own anticipation of one -- documented honestly, not
+        silently substituted). Authored 3 dependency-cruiser rule files
+        (ai-os/dependency-cruiser/{ddd-bounded-context,clean-architecture-dependency-rule,
+        enterprise-architecture-layers}.config.cjs) and wired them
+        (ai-os-scripts/audit_pipeline_architecture.py) against all 3 real repos. Authored
+        ai-os/ENTERPRISE_ARCHITECTURE_DRIFT_REVIEW_2026-07-24.yaml -- the enterprise-architecture domain's
+        own AI Review drift-check (real judgment content, not tool output) -- and registered its 5 real
+        findings into audit_findings via ai-os-scripts/register_enterprise_architecture_drift_findings.py."
+      real_run_result: "Live runs against the real repos this same phase's pipeline targets, 2026-07-24: ddd
+        domain -- 4 real findings ({'compliance-tracker': 4}; dependency-cruiser 18.1.0: 4); clean-architecture domain --
+        0 real findings ({};  -- genuinely 0 across all 3 repos,
+        confirmed via live totalCruised counts of 1639/379/65 modules, not a silent skip); enterprise-architecture
+        domain -- 11 real findings ({'compliance-tracker': 9, 'projexa': 1, 'veda-advisors': 1}; claude-sonnet-5-enterprise-architecture-drift-review claude-sonnet-5-2026-07-24: 5, dependency-cruiser 18.1.0: 6), of which 5
+        are AI Review findings (producer_kind=ai_review, remediation_type=ai_escalation_required) and the
+        remainder are dependency-cruiser's own deterministic layer-rule findings. Every pipeline re-run
+        confirmed idempotent (0 new_findings on an unchanged target, matching Phase 1/2/3's own convention).
+        One real self-caught modeling bug fixed during this phase's own smoke-testing, not left in: the
+        enterprise-architecture layer ordering's first draft put 'technology' as more inner than 'data',
+        which flagged src/lib/openapi/generate.ts importing src/lib/schemas/*.ts as a false-positive-feeling
+        violation -- corrected to the Clean-Architecture-consistent ordering (data/schemas innermost, freely
+        importable) before this pipeline was ever run for real evidence."
+      tooling_gap_found_and_worked_around: "dependency-cruiser is not a pre-existing devDependency in any of
+        the 3 real repos (confirmed via package.json read). A bare `npx --yes dependency-cruiser` install
+        cannot resolve TypeScript from its own isolated npx-cache tree (confirmed via live source read of
+        dependency-cruiser's own environment-check code) and silently cruises 0 real files with exit 0 --
+        no error, just an empty result, which this phase caught via a live smoke-test comparison (totalCruised
+        went from 0 to 1639/379/65 after the fix) before trusting any run's output. Worked around by
+        `npm install --no-save` into each repo's own node_modules (never touches package.json/bun.lock --
+        node_modules is gitignored in all 3 target repos, zero git-visible footprint there) so
+        dependency-cruiser resolves the SAME typescript devDependency each repo already has."
+      cron_wiring: "None added this phase (0 new crontab entries, matching this plan file's own
+        crontab_decisions_this_phase convention for Phase 0/1/2/3) -- this pipeline is runnable on demand
+        today; filing a real nightly cron entry is deferred to whichever future phase makes that
+        Owner-approval-citation case."
+      known_gaps_carried_forward: "(1) The ddd-bounded-context rule treats src/app/api/v1/** as ONE context
+        in compliance-tracker (documented in both the rule file's own header and
+        ENTERPRISE_ARCHITECTURE_DRIFT_REVIEW's EA-AI-002 finding) -- real sub-decomposition of that nesting
+        is follow-up work, not claimed done here. (2) The business_capability_map's route-group groupings are
+        real but not claimed exhaustive (compliance-tracker/projexa each have 30+ real route-group folders;
+        every one observed is listed under `not_covered` rather than silently folded into an existing
+        bucket where a genuine new grouping would have been more accurate). (3) No TOGAF ADM Phase A/D
+        artifacts exist for any repo (confirmed, not assumed, in ENTERPRISE_ARCHITECTURE_DRIFT_REVIEW's own
+        togaf_adm_coverage block per repo) -- this phase's own map + drift-review are first-pass Phase B/C
+        substitutes only, a real, honestly-documented gap, not a completed TOGAF program."
+
 
   - phase: 5
     name: Remaining AI Review lane (read-only against Phase 1-4 findings)
