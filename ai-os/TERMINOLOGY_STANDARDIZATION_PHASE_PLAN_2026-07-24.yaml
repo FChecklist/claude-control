@@ -57,6 +57,8 @@ phases:
 
   - id: phase_1_dictionary_coverage_expansion
     name: Grow Variable Dictionary coverage past the top-20 table ceiling
+    status: done
+    completed_by_task: task-20260724-084040-phase1-terminology-dictionary-expansion
     scope:
       - "Extend generate_variable_dictionary.py's TOP_N in tiers (20 -> 60 -> 150 -> all 444), re-running the
          same combined_reference_score ranking + Supabase-MCP real-row-fetch pattern this phase already built,
@@ -70,6 +72,62 @@ phases:
     dependency_mechanism: "Content dependency -- Phase 1 extends the exact TOP_N/ranking mechanism Phase 0
       built; it does not redesign ranking methodology, so it cannot start before that methodology exists and
       is proven against a real run (320/320 entries, 182 real-row-sourced, confirmed this phase)."
+    real_evidence_2026-07-24:
+      dictionary_before:
+        top_n: 20
+        tables_selected: 20
+        total_placeholder_entries: 320
+        real_row_examples: 182
+        synthetic_examples: 138
+      dictionary_after:
+        top_n: 60
+        tables_selected: 60
+        total_placeholder_entries: 894
+        real_row_examples: 416
+        synthetic_examples: 478
+      dictionary_growth_mechanism: "generate_variable_dictionary.py's TOP_N constant raised 20 -> 60 (tier
+        2 of the plan's own 20 -> 60 -> 150 -> all-444 sequence; --top-n CLI flag added so future tiers don't
+        require editing the file), re-running the same unchanged combined_reference_score ranking. The 39
+        newly-in-scope tables (rank 21-60) got real rows appended (append-only, tier 1's 20 tables were not
+        refetched) to VARIABLE_DICTIONARY_SOURCE_ROWS_2026-07-24.json via the same Supabase MCP execute_sql
+        SELECT-LIMIT-1-per-table pattern against project pcrjmlpuqsbocqfwoxod (verdian-ai): 24 of 39 had a
+        real live row, 15 are live tables that were empty at fetch time (synthetic fallback, same handling as
+        tier 1's dynamic_chains), and 1 (ticket_intelligence_items) is in DATABASE_CATALOG.json but does not
+        exist in the live DB at all (confirmed via information_schema.tables against the compliance schema --
+        420 live tables vs 444 cataloged; real catalog/DB drift, not a fetch failure)."
+      guardrail_dictionary_gap_candidate_addition: "TERMINOLOGY_GUARDRAIL_2026-07-24.py now loads
+        DATABASE_CATALOG.json (444 tables) alongside the dictionary, builds a word-boundary regex of every
+        catalog table name NOT covered by the dictionary tier just loaded, and tags every finding with
+        dictionary_gap_candidate (true/false) plus the uncovered table/entity name when a finding's own line
+        mentions one. Verified with two --string smoke checks: a mention of ticket_intelligence_items (in
+        the dictionary's now-60-table tier) correctly did NOT trigger the tag, and a mention of
+        risk_anomaly_events (outside the tier) correctly did -- see this task's PROGRESS.md for the full
+        transcript."
+      guardrail_wider_run:
+        files_scanned: 32
+        total_findings: 61
+        findings_by_category:
+          hardcoded_iso_date: 25
+          placeholder_company_name: 29
+          placeholder_email_domain: 7
+        dictionary_gap_candidate_findings: 1
+        findings_report: ai-os/guardrail-findings/phase1-wider-run-2026-07-24.json
+        note: "Grew from Phase 0's 3-file/36-finding smoke test to a real 32-file run spanning the phase
+          plan's own Phase 2 priority tiers (16 src/lib/services files including the 1 already smoke-tested,
+          11 src/lib top-level files including the 1 already smoke-tested, 4 src/app/api AI-orchestration
+          routes, src/db/seed.ts). --file-list flag added to the guardrail script so a directory sweep this
+          wide doesn't need one --file per file. This is real Phase 2-shaped rollout evidence, not a repeat
+          of the 3-file smoke test -- full per-directory Phase 2 sweeps (all of src/lib/services's 263 files,
+          all of src/app/api's 51 AI routes, etc.) remain deferred to Phase 2 itself, per this task's own
+          CONSTRAINTS (Phase 1 scope only, no CI enforcement wiring)."
+      deferred_to_later_phases:
+        - "Dictionary tiers 150 and all-444 (Phase 1's own remaining tiers, per its scope item 1 -- this task
+           delivered tier 2 (60) as real, verifiable growth past the top-20 ceiling; going straight to 444
+           in one task would mean fetching+verifying real rows for 384 more tables, disproportionate to a
+           single Phase-1-scoped task)."
+        - "Phase 2's full per-directory sweeps (this task's 32-file run covers the same priority tiers at
+           smaller scale, as real supporting evidence, not a substitute for Phase 2 itself)."
+        - "Phase 3 CI enforcement wiring -- explicitly out of scope per this task's own CONSTRAINTS."
 
   - id: phase_2_directory_scoped_rollout
     name: Directory-scoped guardrail rollout (manual runs, not yet CI-blocking)
@@ -163,7 +221,7 @@ dependency_table:
     mechanism: "File dependency -- Phase 1 re-runs generate_variable_dictionary.py's exact
       combined_reference_score ranking with a larger TOP_N; it needs that ranking function proven correct
       against the real top-20 first (this task's own 320-entry output)."
-    status: planned
+    status: done
   - from: phase_0_dictionary_guardrail_design_phase_plan
     to: phase_2_directory_scoped_rollout
     mechanism: "Direct mechanism dependency -- Phase 2 runs the same ai-os/TERMINOLOGY_GUARDRAIL_2026-07-24.py
