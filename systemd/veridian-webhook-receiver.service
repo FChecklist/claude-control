@@ -1,0 +1,14 @@
+[Unit]
+Description=VERIDIAN inbound webhook receiver (Integration Engine, phase_3_workflow_automation_integration) -- NOT enabled by this task, see ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml (id: webhook-receiver-network-exposure) for the pending Owner decision this unit is waiting on.
+
+[Service]
+Type=simple
+Environment=VERIDIAN_WEBHOOK_SECRET=
+ExecStart=/usr/bin/python3 /opt/veridian/scripts/webhook_receiver.py --port 8099 --bind 127.0.0.1
+Restart=on-failure
+RestartSec=5
+StandardOutput=append:/opt/veridian/ai-os/logs/webhook-receiver.log
+StandardError=append:/opt/veridian/ai-os/logs/webhook-receiver.log
+
+[Install]
+WantedBy=default.target

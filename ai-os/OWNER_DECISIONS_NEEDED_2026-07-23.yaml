@@ -187,3 +187,13 @@ decisions:
   status: approved
   approved_ts: '2026-07-24T11:55:00+00:00'
   approved_via: "This task's own dispatched SPEC (SCOPE item 3: 'Owner's blanket approval this session covers new cron entries; record in OWNER_DECISIONS_NEEDED_2026-07-23.yaml with status approved and update CRONTAB_APPROVED_SNAPSHOT.txt, do not stop to ask') -- same standing blanket-approval mechanism as self-sustaining-system-engine-crontab-additions, reenable-supervisor-sweep-cron, and audit-pipeline-security-crontab-addition above, not a fresh case-by-case confirmation."
+
+- id: webhook-receiver-network-exposure
+  raised_by_task: task-20260724-122137-phase3-formalize-task-gateway-py-task-ex
+  raised_ts: '2026-07-24T12:35:00+00:00'
+  title: "Enable scripts/webhook_receiver.py (systemd/veridian-webhook-receiver.service) as an always-on inbound webhook listener, and confirm its network-exposure posture"
+  what: "Phase 3 of 20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml (workflow/automation/integration) built a real, tested, standalone stdlib-only inbound webhook receiver (scripts/webhook_receiver.py) that verifies an HMAC-SHA256 signature and fires scripts/automation_rule_engine.py's real trigger/condition/action rules on receipt -- see ai-os/INBOUND_WEBHOOK_RECEIVER_EVALUATION_2026-07-24.yaml for the full n8n-vs-standalone evaluation and this session's own live end-to-end test evidence. The systemd unit (systemd/veridian-webhook-receiver.service) is present in this PR but NOT enabled/started -- it is not currently running anywhere."
+  needed_action: "Owner decision on (1) whether to enable this unit at all, (2) if enabled, confirm loopback-only (127.0.0.1, the default in the provided unit file) vs. any broader network path (a reverse-proxied public endpoint would need its own scoped decision), and (3) provide a real VERIDIAN_WEBHOOK_SECRET value for the unit's Environment= line (currently blank -- webhook_receiver.py refuses to silently accept unsigned traffic without loud warning, but a blank secret must not ship live)."
+  why_not_done_automatically: "This is NOT a crontab entry, so the Owner's existing 95pct-resources/Recommended-default blanket cron approval (crontab_approval_note in 20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml) does not cover it -- it is a new, always-on, INBOUND network listener, a materially different risk/blast-radius category (what can reach the port) than a periodic outbound-only cron job. Per this task's own CONSTRAINTS ('do not install a full iPaaS like n8n without Owner confirmation') and the general 'network-exposure decisions need explicit sign-off' discipline, this is left pending rather than silently started."
+  status: pending
+
