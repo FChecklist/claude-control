@@ -1,68 +1,71 @@
-# PROGRESS -- task-20260724-074329-fix-worker-noop-pending-review
+# PROGRESS -- task-20260724-084040-phase1-terminology-dictionary-expansion
 
 ## Completed
-- [x] Read review.json for task-20260724-041754 (the real rejection of PR #11) and PR #11's diff:
-  confirmed the exact defect -- `worker-entrypoint.sh`'s genuine-no-op branch (`AHEAD_COUNT==0`)
-  still called `checkpoint --status completed` directly, which `veridian-task.py`'s new
-  `cmd_checkpoint` guard (same PR, already live) hard-rejects without a prior `pending_review`
-  checkpoint in the task's own history -- silently, since the shell script never checked that
-  command's exit code, leaving a genuine first-run no-op stuck at in_progress with its systemd
-  service disabled and no automatic recovery.
-- [x] Decided and documented (inline at the fix site + in the commit message) between the review's
-  two suggested alternatives: route through `pending_review` (chosen) vs. invent a distinct
-  terminal status like `completed_no_changes` (rejected -- "terminal" is hardcoded in
-  sync-controller-back.py's TERMINAL/STATUS_MAP, queue-dispatcher.py's TERMINAL_GOOD, and
-  health-check-15min.py; a status those don't recognize reproduces the same stuck-task bug, just
-  moved, and touching those files would violate this task's own scope constraint). Confirmed by
-  reading supervisor-entrypoint.sh that it does not special-case an empty diff, but always reaches
-  a terminal checkpoint regardless (blocked via the AI reviewer declining to review nothing, or via
-  its own failed-merge fallback) -- so routing a no-op through it does not create a new
-  silent-stuck-task class, only one cheap review cycle.
-- [x] Fixed the no-op branch in both places: the live, actually-running
-  `/opt/veridian/scripts/worker-entrypoint.sh`, and the git-tracked copy on PR #11's own branch
-  (`worker/task-20260724-041754-self-sustaining-system-engine-phase2-cle`) via the existing
-  workspace at `/opt/veridian/ai-os/tasks/task-20260724-041754-.../workspace` -- reused/updated PR
-  #11 rather than opening a competing PR, per instructions. Change confined to the no-op branch
-  only (`git diff --stat`: 1 file, 39 insertions/1 deletion) -- did not touch the already-fixed
-  general completion path or the supervisor's tier1/tier2 merge logic.
-- [x] Added `tests/worker_noop_pending_review_test.sh` (same convention as the existing
-  `tests/supervisor_merge_detection_test.sh`): extracts the real `NOOP-COMPLETION-BLOCK` out of the
-  live script by marker and evals it under a real git fixture (real `git init`/`clone`/`commit`, 3
-  scenarios: genuine no-op, self-committed-but-clean, dirty tree) with mocked `python3`/`systemctl`
-  so it exercises the actual shipped logic, not a re-implementation. Verified: fails against the
-  pre-fix code (reproduces the exact reviewer-flagged regression: checkpoints `completed` directly)
-  and passes against the fix (checkpoints `pending_review`, starts the supervisor).
-- [x] Additional real reproduction, independent of the shell-level test: imported the actual
-  `/opt/veridian/scripts/veridian-task.py` module (unmodified) into a sandboxed temp `AI_OS` dir
-  with only the network/controller-sync side effects stubbed, and drove its real `cmd_checkpoint`
-  through a fake task's full lifecycle -- confirmed a direct `completed` checkpoint (the old
-  behavior) is rejected (exit 1, status stays `in_progress`, 0 checkpoints recorded, i.e. exactly
-  the silent-stuck-task bug), while `pending_review` first (the new behavior) succeeds, and a
-  subsequent `completed` (representing the supervisor's own eventual checkpoint) is then accepted.
-  Confirms the full causal chain end to end without touching real production state.
-- [x] Pushed commit 8202a00 + merge commit 556d2e5 (PR #11 had drifted behind master since PRs
-  #12/#18/#19 merged; resolved the one real conflict, PROGRESS.md, same precedent as the earlier
-  PR #12 conflict-resolution task -- kept this branch's own task-scoped log, master's version was
-  an unrelated already-merged task's log) to
-  `worker/task-20260724-041754-self-sustaining-system-engine-phase2-cle`. Re-verified via
-  `gh pr view 11`: `mergeable=MERGEABLE`, `mergeStateStatus=CLEAN`, `state=OPEN`.
+- [x] Read ai-os/TERMINOLOGY_STANDARDIZATION_PHASE_PLAN_2026-07-24.yaml's phase_1_dictionary_coverage_expansion
+      entry in full, plus generate_variable_dictionary.py and TERMINOLOGY_GUARDRAIL_2026-07-24.py (Phase 0
+      outputs: 320-entry/top-20-table dictionary, 36-finding/3-file guardrail smoke test).
+- [x] Confirmed DATABASE_CATALOG.json (444 tables) at /opt/veridian/ai-os/DATABASE_CATALOG.json and computed
+      the real combined_reference_score ranking for ranks 21-60 (tier 2 of the plan's 20 -> 60 -> 150 -> 444
+      sequence).
+- [x] Cross-checked ranks 21-60 against the live verdian-ai DB (project pcrjmlpuqsbocqfwoxod) via
+      information_schema.tables: 39 of 40 exist live (1, ticket_intelligence_items, is in the catalog but not
+      the live DB -- real catalog/DB drift, not a bug).
+- [x] Fetched real rows for the 39 live tables via Supabase MCP execute_sql (SELECT ... LIMIT 1 per table,
+      UNION ALL, same pattern as Phase 0) -- 24 had a real row, 15 are live-but-empty (row: null, synthetic
+      fallback). Appended (not replaced) into VARIABLE_DICTIONARY_SOURCE_ROWS_2026-07-24.json -- tier 1's 20
+      tables were not refetched.
+- [x] Extended ai-os-scripts/generate_variable_dictionary.py: TOP_N 20 -> 60, added a --top-n CLI override so
+      future tiers don't require a code edit. Re-ran it for real:
+      **before**: 20 tables, 320 entries (182 real-row-sourced, 138 synthetic).
+      **after**: 60 tables, 894 entries (416 real-row-sourced, 478 synthetic).
+      Every new entry traces to a real DATABASE_CATALOG.json table.column (verified via the script's own
+      FATAL-if-short-of-TOP_N guard, which passed).
+- [x] Added the plan's "unknown entity" fallback to ai-os/TERMINOLOGY_GUARDRAIL_2026-07-24.py: it now also
+      loads DATABASE_CATALOG.json, builds a word-boundary regex of table names NOT covered by the dictionary
+      tier just loaded, and tags every finding with dictionary_gap_candidate (true/false) +
+      dictionary_gap_candidate_table/_entity. Also added --file-list (one path per line) so wide sweeps don't
+      need one --file flag per file. Smoke-verified via two --string checks (transcript below).
+- [x] Ran the guardrail for real against 32 real compliance-tracker files (exceeds the >=20 requirement),
+      spanning the phase plan's own Phase 2 priority tiers: 16 src/lib/services files, 11 src/lib top-level
+      files, 4 src/app/api AI-orchestration routes, src/db/seed.ts. Findings report committed to
+      ai-os/guardrail-findings/phase1-wider-run-2026-07-24.json.
+      **Result: 61 real findings** (25 hardcoded_iso_date, 29 placeholder_company_name, 7
+      placeholder_email_domain), 1 tagged dictionary_gap_candidate=true (embeddings table).
+- [x] Updated ai-os/TERMINOLOGY_STANDARDIZATION_PHASE_PLAN_2026-07-24.yaml: phase_1_dictionary_coverage_expansion
+      marked status: done with a real_evidence_2026-07-24 block (before/after dictionary counts, guardrail
+      run counts, what's deferred), and its dependency_table edge flipped planned -> done.
+- [x] Committed and pushed all of the above.
+
+## Guardrail dictionary_gap_candidate smoke-check transcript (for the real_evidence block above)
+```
+$ python3 ai-os/TERMINOLOGY_GUARDRAIL_2026-07-24.py --string "... mention of ticket_intelligence_items ..."
+  -> dictionary_gap_candidate: false   (ticket_intelligence_items IS in the now-60-table tier, rank 38)
+
+$ python3 ai-os/TERMINOLOGY_GUARDRAIL_2026-07-24.py --string "See risk_anomaly_events for details, John Doe reported it."
+  -> dictionary_gap_candidate: true, dictionary_gap_candidate_table: risk_anomaly_events
+     (risk_anomaly_events is rank >60, real catalog table, correctly flagged as an uncovered gap candidate)
+```
+
+## What Phase 1 delivered vs what's deferred
+**Delivered (this task, real and verified):**
+- Variable Dictionary coverage tripled: 20 -> 60 tables, 320 -> 894 entries, all traceable to real
+  DATABASE_CATALOG.json table.columns; real-row-sourced examples grew 182 -> 416.
+- Guardrail rollout widened 12x: 3 files/36 findings (Phase 0 smoke test) -> 32 files/61 findings (this task),
+  covering the phase plan's Phase 2 priority-tier structure at real (if not yet exhaustive) scale.
+- New dictionary_gap_candidate mechanism in the guardrail itself, so future dictionary-growth prioritization
+  is driven by observed gap frequency, not guesswork -- this was explicit phase_1 scope, not extra work.
+
+**Explicitly deferred (out of this task's CONSTRAINTS, staying real about it rather than overclaiming):**
+- Dictionary tiers 150 and all-444 (Phase 1's own remaining tiers) -- tier 2 (60) is this task's real,
+  verified increment; jumping straight to 444 would mean fetching+verifying 384 more real tables, beyond one
+  Phase-1-scoped task.
+- Phase 2's full per-directory sweeps (all 263 src/lib/services files, all 51 src/app/api AI routes, etc.) --
+  this task's 32-file run is real supporting evidence at smaller scale, not a substitute for Phase 2 itself.
+- Phase 3 CI enforcement wiring -- explicitly excluded by this task's own CONSTRAINTS ("do not attempt full CI
+  enforcement wiring in this same task").
+- No crontab changes were made or needed this task (no new scheduled mechanism was introduced).
 
 ## Remaining
-- [ ] None outstanding for this task's scope. PR #11 is left open (not merged) for the normal
-      supervisor review pipeline, consistent with how other PRs in this task chain (e.g. #12) are
-      left for human/supervisor merge rather than self-merged.
-
-## Final checkpoint summary
-Fixed the reviewer-confirmed remaining gap: `worker-entrypoint.sh`'s genuine no-op completion path
-now checkpoints `pending_review` (and starts the supervisor) instead of checkpointing `completed`
-directly, which the already-live `veridian-task.py` guard was silently rejecting for first-run
-no-ops. Chose pending_review over a new terminal status because the latter would have needed
-changes to multiple other files' hardcoded terminal-status sets, which is out of this task's scope
-and would reintroduce the same stuck-task bug class under a different name. Fixed both the live
-`/opt/veridian/scripts/worker-entrypoint.sh` and the tracked copy on PR #11
-(https://github.com/FChecklist/claude-control/pull/11, commit 8202a00 + merge 556d2e5, now
-mergeable=MERGEABLE/CLEAN). Verified with two independent real reproductions: a shell-level test
-(`tests/worker_noop_pending_review_test.sh`) that extracts and evals the actual shipped bash block
-under a real git fixture, and a Python-level reproduction that drives the actual unmodified
-`veridian-task.py` `cmd_checkpoint` guard through a fake task's full lifecycle -- both confirm the
-old code silently fails (exit 1, task stuck at in_progress) and the new code succeeds.
+- [ ] None for this task's own scope. Phase 2 (full directory-scoped rollout), Phase 3 (CI enforcement
+      wiring), Phase 4 (migration), and Phase 5 (full 444-table dictionary + full enforcement) remain as
+      separate future tasks per the phase plan.
