@@ -5207,3 +5207,26 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260724-185151-phase6-workflow-transition-validator-ai/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-213801-fix-terminology-phase4-pr553-review-gap
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''fix-terminology-phase4-pr553-review-gap'' on claude-control
+      reached status=blocked. CLARIFIED: real deliverable (compliance-tracker PR553)
+      confirmed MERGED 2026-07-24T21:45:17Z. The claude-control-side branch for this
+      fix task had no commits to offer (phase-plan update never got made by the worker);
+      corrected the citation directly. Terminology Phase4 is genuinely done.'
+    where: /opt/veridian/ai-os/tasks/task-20260724-213801-fix-terminology-phase4-pr553-review-gap/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-214215-chatgpt-manual-bridge-workflow
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''chatgpt-manual-bridge-workflow'' on claude-control
+      reached status=completed. tier1, Superboss-approved, merged autonomously: https://github.com/FChecklist/claude-control/pull/54'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-214215-chatgpt-manual-bridge-workflow/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/54'
+    last_touched: '2026-07-24'
