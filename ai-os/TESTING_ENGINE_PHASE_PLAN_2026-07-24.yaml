@@ -1,0 +1,202 @@
+meta:
+  title: VERIDIAN TESTING ENGINE / IRVF -- Phased Build Plan
+  created: '2026-07-24'
+  produced_by_task: task-20260724-063645-veridian-testing-engine-irvf-phase0
+  instruction: INS-20260724-063539-9dc8
+  precedent: 'Same method as the 3 prior Phase 0 tasks this session: ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml,
+    ai-os/AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml, and the self-sustaining-system-engine work (Knowledge
+    Engine Phase 2) -- real investigation before build, a concrete dependency mechanism per edge, not a
+    conceptual arrow.'
+  scope_of_this_document: 'Phase 0 output only, per this task''s own CONSTRAINTS: this file plans route test
+    auto-generation, distributed trace verification wiring, route replay storage+diff, and dependency graph
+    validation -- it does not implement any of them. ai-os/ROUTE_REGISTRY_SCHEMA_2026-07-24.yaml and
+    ai-os/ROUTE_COVERAGE_METHODOLOGY_2026-07-24.yaml are this same task''s other two Phase 0 deliverables,
+    referenced throughout as the artifacts these phases consume/extend.'
+  ceiling_this_framework_cannot_exceed_yet: 'This testing engine cannot reach 100% route coverage (per
+    ROUTE_COVERAGE_METHODOLOGY_2026-07-24.yaml''s route_coverage metric) until the 20-Engines/10-Gateways
+    architecture itself is live -- today that architecture is Phase 0-planned only
+    (ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml, status
+    phase_0_complete_phase_1_plus_not_yet_dispatched). Concretely: route_coverage''s true denominator
+    (capability-tree-service.ts''s full leaf count) is not yet enumerable, the Capability Registry Engine has
+    only 5 populated rows (of an estimated ~100 real leaves), and only 1 of the eventual 10 gateways is even
+    named. Every phase below is therefore scoped to the routes/capabilities that already exist as REAL
+    software today (the same 5 in ROUTE_REGISTRY_SCHEMA_2026-07-24.yaml''s populated_routes), not placeholder
+    future ones -- and each phase''s scope grows only as fast as the Capability Registry''s own live-wiring
+    phase (20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml phase_1_capability_registry_live_wiring) actually
+    grows the registry.'
+
+# ============================================================================
+# PHASES -- Phase 0 is this task. Phases 1-4 map directly to this task's own
+# SCOPE item 4 (route test auto-generation, trace verification wiring, route
+# replay storage+diff, dependency graph validation).
+# ============================================================================
+phases:
+  - id: phase_0_schema_methodology_phase_plan
+    name: Route registry schema, coverage methodology, phased build plan (this task)
+    status: this_task
+    scope:
+      - "Design ROUTE_REGISTRY_SCHEMA_2026-07-24.yaml and populate it with 5 real routes (1:1 with
+         CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml's 5 populated capabilities), every path live-verified by
+         ai-os-scripts/generate_route_registry_candidates.py."
+      - "Design ROUTE_COVERAGE_METHODOLOGY_2026-07-24.yaml: real formulas for the 9 coverage percentages,
+         gateway matrix, service matrix, and route completeness score -- each with a real computation source
+         or an explicit NOT_YET_MEASURABLE gap."
+      - "Write this phase plan."
+      - "Register all 3 files in knowledge_engine and MASTER_INDEX.yaml registries.testing_engine_irvf."
+    depends_on: []
+    dependency_mechanism: "n/a -- entry phase. Reads (does not modify) ai-os/CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml,
+      ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml, and ai-os/AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml's
+      observability_layer section (that plan's Phase 0, merged to master separately as PR #12/branch
+      worker/task-20260724-042659-veridian-auditor-engine-phase0-inventory -- read via git history since it
+      was not yet merged to master at the time this task ran)."
+
+  - id: phase_1_route_test_autogeneration
+    name: Route test auto-generation on capability creation
+    scope:
+      - "Build a script (extends ai-os-scripts/generate_route_registry_candidates.py's verification pattern)
+         that fires whenever a new row is added to CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml's
+         populated_capabilities (or, once live, the real table 20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml
+         phase_1_capability_registry_live_wiring builds): auto-derive a candidate route_id + expected_path by
+         walking the same capability-tree-service.ts / task-execution-engine.ts / guardrail-registrations.ts
+         call chain this task's own 5 routes were derived from by hand, then auto-generate a Playwright
+         smoke-test stub (source -> destination, asserting a 200/success response) for it."
+      - "Enumerate task-execution-engine.ts's dispatchEngine() switch exhaustively (closes
+         ROUTE_COVERAGE_METHODOLOGY_2026-07-24.yaml's workflow_coverage NOT_YET_MEASURABLE gap) and
+         capability-tree-service.ts's buildCapabilityTree() leaf count exhaustively (closes that same file's
+         capability_coverage / route_coverage true-denominator gap)."
+    depends_on: [phase_0_schema_methodology_phase_plan]
+    external_depends_on:
+      - "20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml phase_1_capability_registry_live_wiring -- a real
+         table + lookupCapability() implementation to hook an on-create trigger into. Auto-generation against
+         5 hand-maintained YAML rows (today's state) does not scale; it needs the live table this external
+         phase builds."
+    dependency_mechanism: "Hard content dependency on Phase 0's route_record_schema (this task) as the
+      target shape to generate into, plus a hard mechanism dependency on the external Capability Registry
+      live-wiring phase producing a real insert/webhook point to trigger generation from -- generating
+      routes against a static YAML file with no creation event is not real auto-generation, only a
+      one-time backfill (which Phase 0 already did by hand for the 5 that exist today)."
+
+  - id: phase_2_distributed_trace_verification_wiring
+    name: Distributed trace verification wiring
+    scope:
+      - "Build the route-side consumer of AUDITOR_ENGINE_EVENT_SCHEMA_2026-07-24.schema.json's trace object
+         (trace_id/span_id): for each route execution, collect the emitted span sequence and diff it against
+         ROUTE_REGISTRY_SCHEMA_2026-07-24.yaml's expected_path, writing the verdict into that route's
+         trace_verification_status field (not_instrumented -> instrumented_unverified ->
+         verified_match/verified_mismatch)."
+      - "Extend ai-os-scripts/generate_route_registry_candidates.py (or a sibling script) to query the
+         OTel collector/event stream Phase 7 (see external dependency below) stands up, rather than inventing
+         a second tracing mechanism."
+    depends_on: [phase_0_schema_methodology_phase_plan]
+    external_depends_on:
+      - "AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml Phase 7 (PART6 observability layer) -- this is the HARD
+         blocking dependency for this phase. That phase's own scope is: build the shared event-emitter
+         library implementing AUDITOR_ENGINE_EVENT_SCHEMA_2026-07-24.schema.json, wire an OpenTelemetry
+         collector, and enable pgAudit on compliance-tracker/projexa. None of that exists yet (status:
+         designed, not enforced, per that plan's own observability_layer.event_schema field) -- there is
+         literally no trace_id/span_id being emitted anywhere today for this phase to verify against.
+         Confirmed by direct read of that plan's phases[] block: Phase 7 is sequenced LAST in its own
+         9-phase plan (phases 0-8), after Phases 1-6 have real finding-emission traffic to validate the
+         emitter against."
+    dependency_mechanism: "Literal data dependency, not just sequencing -- this phase's entire function is to
+      read real trace_id/span_id spans and compare them to expected_path. Building this phase before the
+      Auditor Engine's Phase 7 emitter exists would mean writing a verifier with zero real data to verify,
+      the same 'nothing real to smoke-test' problem that plan's own Phase 7 dependency_mechanism describes
+      for its own emitter. This is the single most consequential external dependency in this whole plan --
+      this phase cannot start in any meaningful form until that plan's Phase 7 ships."
+
+  - id: phase_3_route_replay_storage_and_diff
+    name: Route replay storage + diff
+    scope:
+      - "Design and build a replay store (real request payload + real response payload per route execution,
+         keyed by route_id + timestamp) -- reusing ai-os/memory/superboss-register.sqlite's existing table
+         conventions (Knowledge Engine's own artifact_path/content_hash pattern) rather than a new database,
+         per this session's standing 'extend, don't duplicate' rule."
+      - "Build a replay-and-diff runner: re-execute a stored request against the current code, diff the new
+         response against the captured baseline, write the verdict into replay_status (not_yet_captured ->
+         captured -> replayed_match/replayed_diff)."
+    depends_on: [phase_1_route_test_autogeneration]
+    dependency_mechanism: "Content dependency -- there is nothing to capture-and-replay until Phase 1's
+      auto-generated smoke tests are actually executing real requests against real routes. Phase 3 storage
+      schema also benefits from Phase 2's trace_id (correlating a replay run with the distributed trace of
+      the original captured execution) but does not hard-block on it -- replay capture/diff is meaningful
+      with request/response payloads alone, trace correlation is an enrichment, not a prerequisite."
+
+  - id: phase_4_dependency_graph_validation
+    name: Dependency graph validation
+    scope:
+      - "Build a validator that statically parses each populated_route's expected_path hops against the real
+         call sites they claim (e.g. does task-execution-engine.ts's dispatchEngine() switch actually contain
+         a case for this capability's leaf_key; does guardrail-registrations.ts actually register this
+         leaf_key) -- turning this task's own hand-verified live_or_planned field into a re-runnable,
+         software-driven check instead of a one-time manual grep."
+      - "Cross-validate against 20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml's own dependency_table (the
+         engine-to-engine edges) -- flag any route whose expected_path implies an engine-to-engine dependency
+         not listed in that table, or vice versa."
+    depends_on: [phase_1_route_test_autogeneration]
+    dependency_mechanism: "Content dependency -- Phase 4's validator needs Phase 1's exhaustive
+      dispatchEngine()-switch enumeration and buildCapabilityTree()-leaf enumeration as its ground truth to
+      validate expected_path hops against; validating against the ~5-route hand-verified set alone would
+      just re-confirm what Phase 0 already manually checked, not add new coverage."
+
+# ============================================================================
+# DEPENDENCY TABLE -- concrete mechanism per edge, mirroring
+# 20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml's own dependency_table
+# format (real file/data dependency, not a conceptual arrow). Includes edges
+# into this plan from the 2 external plans it is sequenced against.
+# ============================================================================
+dependency_table:
+  - from: phase_0_schema_methodology_phase_plan
+    to: phase_1_route_test_autogeneration
+    mechanism: "File dependency -- Phase 1's auto-generator targets route_record_schema's exact field shape
+      (this file's own Phase 0 deliverable, ROUTE_REGISTRY_SCHEMA_2026-07-24.yaml) as its output contract."
+    status: planned
+  - from: "20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml phase_1_capability_registry_live_wiring"
+    to: phase_1_route_test_autogeneration
+    mechanism: "Hard external mechanism dependency -- Phase 1 needs a live table with a real insert/webhook
+      event to trigger route generation from; today's static YAML has no such event."
+    status: external_planned
+  - from: "AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml Phase 7 (PART6 observability layer)"
+    to: phase_2_distributed_trace_verification_wiring
+    mechanism: "Hard external data dependency -- Phase 2 verifies real trace_id/span_id spans against
+      expected_path; zero spans are emitted anywhere today, confirmed by that plan's own
+      observability_layer.event_schema field ('designed this phase, JSON Schema 2020-12, NOT yet
+      enforced/emitted anywhere'). This is the single hardest external blocker in this entire plan."
+    status: external_planned
+  - from: phase_1_route_test_autogeneration
+    to: phase_3_route_replay_storage_and_diff
+    mechanism: "Content dependency -- nothing to capture/replay until Phase 1's auto-generated tests are
+      producing real request/response traffic."
+    status: planned
+  - from: phase_2_distributed_trace_verification_wiring
+    to: phase_3_route_replay_storage_and_diff
+    mechanism: "Soft enrichment dependency (not a hard block) -- replay records benefit from a correlated
+      trace_id once Phase 2 exists, but Phase 3 can capture/diff request-response payloads independent of
+      trace correlation."
+    status: planned
+  - from: phase_1_route_test_autogeneration
+    to: phase_4_dependency_graph_validation
+    mechanism: "Content dependency -- Phase 4's validator needs Phase 1's exhaustive
+      dispatchEngine()-switch/buildCapabilityTree()-leaf enumerations as ground truth."
+    status: planned
+  - from: "20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml gateway_definition_and_inventory"
+    to: "ROUTE_COVERAGE_METHODOLOGY_2026-07-24.yaml gateway_matrix"
+    mechanism: "External data dependency, not a build phase of this plan -- the gateway_matrix in this
+      task's own methodology file cannot grow past its 1 confirmed row (Task Gateway) until that external
+      phase names the canonical 10 gateways."
+    status: external_planned
+
+crontab_decisions_this_phase:
+  new_entries_added: 0
+  reason: "This phase is schema/methodology/phase-plan design only, per its own CONSTRAINTS -- no route-test,
+    trace-verification, or replay-capture mechanism exists yet for anything to schedule. Mirrors
+    AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml's own Phase 0 crontab_decisions_this_phase (also 0 entries, same
+    reasoning). The first real crontab entry (e.g. a nightly route-test-autogen sweep once Phase 1 ships)
+    will be filed through the existing ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml +
+    ai-os/CRONTAB_APPROVED_SNAPSHOT.txt pattern, citing the Owner's blanket '95pct-resources /
+    Recommended-default' approval exactly as 20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml's own
+    crontab_approval_note describes -- no fresh confirmation needed when that phase is dispatched."
+
+registration:
+  knowledge_engine_query_command: 'python3 scripts/superboss-register.py query-knowledge "testing_engine_phase_plan" --tag domain:testing_engine_irvf'
+  master_index_registry_id: testing_engine_irvf

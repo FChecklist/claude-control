@@ -1,47 +1,44 @@
-# PROGRESS -- task-20260724-060203-xpost-github-catalog-2026-07-24
+# PROGRESS -- task-20260724-063645-veridian-testing-engine-irvf-phase0
 
 ## Completed
-- [x] Retrieved full instruction INS-20260724-060111-0975 from superboss-register.sqlite's
-      `instructions` table (its `repos_by_source_url` list is not present anywhere as a file --
-      only queryable in the register DB).
-- [x] Searched knowledge_engine table + ai-os/tasks tree for a prior "yesterday" X-post-to-GitHub
-      batch. Found one: `ai-os/tasks/task-20260723-133902-x-post-ai-tool-analysis-2026-07-23-lowpr/workspace/ai-os/X_POST_AI_ANALYSIS_2026-07-23.md`
-      (79 URLs / 80 repos, different narrative-analysis schema). Confirmed via direct query
-      it was never registered into knowledge_engine (0 matching rows) -- not merged in place;
-      the 2 repos whose tweet ID exactly matches a row there (lharries/whatsapp-mcp,
-      themabhiram/WhatsApp-Message-Scheduler) are cross-referenced per-row instead of
-      being re-analyzed.
-- [x] Built `ai-os-scripts/generate_xpost_github_catalog.py` (mechanical transcription of the
-      instruction's raw_text, no hand-authored catalog prose) -> generated
-      `ai-os/XPOST_GITHUB_CATALOG_2026-07-24.yaml`: 34 repo rows + 3 checked_no_repo rows.
-- [x] Built `ai-os-scripts/register_xpost_github_catalog.py` -> registered the catalog file into
-      the live knowledge_engine table via `superboss-register.py register-knowledge`
-      (artifact_id KE-20260724-062517-e6b1), tags cover all 34 repo_paths, entity_relationships
-      added for the 3 real-target subsystems (claudexor+orca -> anthropic_openrouter_proxy_v2.py;
-      code-review-graph -> superboss-register.py; hallmark -> forward reference, no UX Audit
-      Engine artifact exists yet).
-- [x] Verified `query-knowledge "claudexor"` and `query-knowledge "code-review-graph"` each
-      return 1 hit on the catalog row.
-
-## Discrepancy noted (not silently resolved)
-The task SPEC said "34 GitHub repos ... skip the 2 NONE entries ... 32 real repos (34 minus 2
-NONE)". The actual instruction (INS-20260724-060111-0975, read live from the register) contains
-**34 real repos AND 3 NONE entries** (37 total resolved items across 19 tweet URLs, two of which
-are "TEN repos" tweets). Went with the ground-truth instruction data: all 34 real repos are
-catalog rows; all 3 NONE entries are recorded in `checked_no_repo`.
-
-- [x] Committed + pushed, opened PR: https://github.com/FChecklist/claude-control/pull/14
+- [x] Read ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml, ai-os/CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml
+  (both real, on master) and ai-os/AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml's observability_layer section
+  (real, but only merged to a not-yet-merged PR branch -- worker/task-20260724-042659-veridian-auditor-engine-phase0-inventory,
+  commit cf906ac -- read via `git cat-file blob cf906ac:<path>` since this task's own branch does not have it yet).
+- [x] Designed + wrote ai-os/ROUTE_REGISTRY_SCHEMA_2026-07-24.yaml: 5 real routes, 1:1 with
+  CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml's 5 populated_capabilities. Every source/destination/expected_path
+  hop live-verified (29/29 paths OK) by ai-os-scripts/generate_route_registry_candidates.py.
+- [x] Designed + wrote ai-os/ROUTE_COVERAGE_METHODOLOGY_2026-07-24.yaml: all 9 coverage percentages
+  (capability/route/integration/dependency/workflow/business-rule/metadata/API/UI), each with a real
+  computation source or an explicit NOT_YET_MEASURABLE gap (4 of 9 not yet measurable: capability, integration,
+  workflow, metadata). Gateway matrix, service matrix, and route completeness score also defined and computed
+  against real current data (dependency_coverage 25%, business_rule_coverage 60%, api_coverage 100%,
+  ui_coverage 60%, route_completeness_score 20%).
+- [x] Designed + wrote ai-os/TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml: Phase 0 (this task) + Phases 1-4
+  (route test auto-generation, distributed trace verification wiring, route replay storage+diff, dependency
+  graph validation), with a real dependency_table including 2 hard external dependencies on
+  20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml (Capability Registry live-wiring) and
+  AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml Phase 7 (PART6 observability layer, not yet built).
+- [x] Wrote ai-os-scripts/generate_route_registry_candidates.py (verification script, mirrors
+  generate_capability_registry_candidates.py's pattern) -- confirmed ALL VERIFIED, 5/5 routes covering 5/5
+  registered capabilities.
 
 ## Remaining
-- [ ] None. Task complete.
+- [ ] Register all 3 new files + the verification script in knowledge_engine (scripts/superboss-register.py
+  register-knowledge) with entity_relationships back to CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml,
+  20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml, and AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml.
+- [ ] Add registries.testing_engine_irvf to ai-os/MASTER_INDEX.yaml (live file).
+- [ ] Commit + push, open PR.
+- [ ] Final checkpoint summary (done vs deferred, one-line reason each).
 
-## Final checkpoint
-- Row count added: 34 real repos + 3 checked_no_repo records (37 total items from 19 source
-  tweet URLs in INS-20260724-060111-0975).
-- Prior catalog found: yes (`X_POST_AI_ANALYSIS_2026-07-23.md`, 2026-07-23, different schema,
-  never registered in knowledge_engine) -- not merged in place (different schema/never a
-  registered catalog); 2 exact-tweet-ID repeats cross-referenced instead of re-analyzed, so no
-  duplicate catalog was created.
-- knowledge_engine artifact_id: KE-20260724-062517-e6b1. `query-knowledge "claudexor"` and
-  `query-knowledge "code-review-graph"` both return 1 hit.
-- PR: https://github.com/FChecklist/claude-control/pull/14
+## Deferred (by this task's own CONSTRAINTS, not an oversight)
+- Live route-test auto-generation, trace wiring, and replay storage: left to
+  TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml's own Phases 1-4 -- this task is schema/methodology/plan design only.
+- Full route_coverage / capability_coverage against the TRUE denominator (~100 real capability-tree leaves):
+  blocked on no script enumerating capability-tree-service.ts's buildCapabilityTree() output -- Phase 1's own
+  prerequisite work per TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml.
+- Distributed trace verification against real spans: hard-blocked on AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml's
+  own Phase 7 (PART6 observability layer), which is designed but not enforced/emitting anywhere yet.
+- Gateway matrix beyond 1 row (Task Gateway): blocked on the Owner confirming the canonical 10-gateway list,
+  per 20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml's own gateway_naming_gap.
+- No new crontab entries this phase (0 filed) -- no route-test/trace/replay mechanism exists yet to schedule.

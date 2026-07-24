@@ -1,0 +1,212 @@
+meta:
+  title: VERIDIAN TESTING ENGINE / IRVF -- Route Coverage Methodology (Phase 0 deliverable)
+  created: '2026-07-24'
+  produced_by_task: task-20260724-063645-veridian-testing-engine-irvf-phase0
+  instruction: INS-20260724-063539-9dc8
+  scope_of_this_document: 'Defines the real formulas for Route Coverage / Gateway Matrix / Service Matrix /
+    Route Completeness Score, and the 9 coverage percentages from the Owner''s directive (capability, route,
+    integration, dependency, workflow, business-rule, metadata, API, UI). Every formula below names the exact
+    existing script/table it is computed from. Where no real data source exists yet, the metric is marked
+    NOT_YET_MEASURABLE with the concrete gap that blocks it -- per this task''s own CONSTRAINTS, no metric is
+    invented against data that does not exist.'
+  status_vocabulary:
+    MEASURABLE_TODAY: 'Both numerator and denominator come from a real, already-existing script/table --
+      the percentage below is the actual current value, re-derivable by re-running the cited command.'
+    MEASURABLE_TODAY_PARTIAL: 'The numerator is real and script-derived, but the denominator is scoped to
+      what is already registered (e.g. the 5 capabilities in CAPABILITY_REGISTRY_SCHEMA), not the true
+      full-platform count -- the percentage is real but bounded, and will fall once the true denominator
+      (e.g. all ~100 capability-tree leaves) becomes measurable.'
+    NOT_YET_MEASURABLE: 'No script/table produces one or both sides of the ratio today. gap names the
+      concrete missing artifact and which phase (this task''s own TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml,
+      or an external plan) is expected to close it.'
+
+# ============================================================================
+# THE 9 COVERAGE PERCENTAGES
+# ============================================================================
+nine_coverage_percentages:
+  - id: capability_coverage
+    formula: "(# rows in CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml populated_capabilities with confidence >= 0.8) / (total real capability-tree leaves)"
+    numerator_source: "ai-os/CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml populated_capabilities (script: ai-os-scripts/generate_capability_registry_candidates.py counts+verifies rows) = 5"
+    denominator_source: "capability-tree-service.ts's buildCapabilityTree() real leaf count -- no script today enumerates/counts this (it is live TypeScript, not exported to a data file)"
+    status: NOT_YET_MEASURABLE
+    current_numerator: 5
+    gap: "No script parses/calls capability-tree-service.ts's buildCapabilityTree() to produce a total leaf
+      count. Rule Engine's own gap_description (20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml engine_no=6)
+      estimates '~100 real capability-tree leaves' as a rough figure from reading the code, not a counted
+      one -- not precise enough to be a denominator."
+    unblocking_phase: "TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml phase_1 (route/capability auto-generation)
+      -- its own prerequisite work includes a leaf-enumeration script, since auto-generation needs to know
+      the full leaf set to detect which ones lack a registry row."
+
+  - id: route_coverage
+    formula: "(# rows in ROUTE_REGISTRY_SCHEMA_2026-07-24.yaml populated_routes) / (# rows in CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml populated_capabilities)"
+    numerator_source: "ai-os/ROUTE_REGISTRY_SCHEMA_2026-07-24.yaml populated_routes (script: ai-os-scripts/generate_route_registry_candidates.py) = 5"
+    denominator_source: "ai-os/CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml populated_capabilities = 5"
+    status: MEASURABLE_TODAY_PARTIAL
+    current_value: "5/5 = 100% of REGISTERED capabilities have at least one route. This is bounded to the
+      Capability Registry's own current scope (5 real capabilities) -- it is not 100% of the true platform
+      route surface, which tracks capability_coverage's unresolved denominator above."
+    gap: null
+    unblocking_phase: "Rises automatically as capability_coverage's true denominator becomes measurable and
+      the Capability Registry itself grows past 5 rows (20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml
+      phase_1_capability_registry_live_wiring)."
+
+  - id: integration_coverage
+    formula: "(# routes with a passing schemathesis contract-test run against a real OpenAPI document) / (# populated_routes)"
+    numerator_source: "none -- schemathesis is not wired to any route yet"
+    denominator_source: "ai-os/ROUTE_REGISTRY_SCHEMA_2026-07-24.yaml populated_routes = 5"
+    status: NOT_YET_MEASURABLE
+    gap: "Hard-blocked on zero OpenAPI 3.1 documents existing for any of these routes' apis[] entries --
+      confirmed by AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml's own api-contract domain grep ('grep across
+      compliance-tracker, projexa, and veda-advisors for openapi: / \\\"openapi\\\": found ZERO existing
+      OpenAPI documents'). schemathesis literally has no input file to read."
+    unblocking_phase: "AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml Phase 2 (api-contract + integration domains,
+      author real OpenAPI docs then wire schemathesis) -- external dependency, not built by this task's own
+      plan."
+
+  - id: dependency_coverage
+    formula: "(# dependency_table edges with status=live) / (# total dependency_table edges)"
+    numerator_source: "ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml dependency_table, counted by grep -c 'status: live' = 2"
+    denominator_source: "ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml dependency_table, total rows = 8 (2 live + 5 planned + 1 external_planned)"
+    status: MEASURABLE_TODAY
+    current_value: "2/8 = 25%"
+    gap: null
+
+  - id: workflow_coverage
+    formula: "(# distinct task-execution-engine.ts dispatchEngine() case keys with expected_path hop_type=engine, hop_name='Workflow Engine', live_or_planned=live in some populated_routes row) / (# total dispatchEngine() case keys)"
+    numerator_source: "ai-os/ROUTE_REGISTRY_SCHEMA_2026-07-24.yaml populated_routes -- 4 of 5 routes cite task-execution-engine.ts as a live Workflow Engine hop (all but capability_registry_dedup, whose workflow field is null)"
+    denominator_source: "task-execution-engine.ts's dispatchEngine() switch statement -- no script enumerates its full case-key list today, only the 4 found by this session's manual grep are known"
+    status: NOT_YET_MEASURABLE
+    current_numerator: 4
+    gap: "No script parses task-execution-engine.ts's dispatchEngine() switch to produce an exhaustive case
+      list -- the 4 cited here (gratuity/commission/gst/trend_analysis) were found by targeted grep for this
+      task's own 5 capabilities, not an automated enumeration of every case."
+    unblocking_phase: "TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml phase_4_dependency_graph_validation --
+      static-parses dispatchEngine()'s switch as part of validating the dependency graph."
+
+  - id: business_rule_coverage
+    formula: "(# populated_capabilities rows with at least one business_rules[] entry where registered=true) / (# populated_capabilities rows)"
+    numerator_source: "ai-os/CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml populated_capabilities, business_rules[].registered field (script: python3 -c parsing the YAML, see verification note below) = 3 (gratuity_calculator, commission_calculator, gst_calculation_engine)"
+    denominator_source: "ai-os/CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml populated_capabilities = 5"
+    status: MEASURABLE_TODAY
+    current_value: "3/5 = 60%"
+    gap: null
+    verification_note: "Computed this session via: python3 -c \"import yaml; d=yaml.safe_load(open('ai-os/CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml')); print(sum(1 for c in d['populated_capabilities'] if any(r.get('registered') for r in (c.get('business_rules') or []))))\" -- trend_analysis_engine (registered=false) and capability_registry_dedup (business_rules=[]) are the 2 uncovered rows, both real, honest gaps already documented in that schema."
+
+  - id: metadata_coverage
+    formula: "(# populated_capabilities/populated_routes rows passing an ajv-cli validation against a VERIDIAN metadata JSON Schema) / (total rows)"
+    numerator_source: "none -- no VERIDIAN metadata JSON Schema exists"
+    denominator_source: "ai-os/CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml + ai-os/ROUTE_REGISTRY_SCHEMA_2026-07-24.yaml combined rows"
+    status: NOT_YET_MEASURABLE
+    gap: "AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml's own metadata domain confirms: 'ajv-cli ... not installed
+      this phase because it has nothing to validate against yet (no VERIDIAN metadata JSON Schemas authored)'.
+      Same real gap applies here -- no schema, no tool wired, nothing to score against."
+    unblocking_phase: "AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml Phase 2 (metadata domain, author schemas then
+      wire ajv-cli) -- external dependency."
+
+  - id: api_coverage
+    formula: "(# populated_capabilities rows with a non-empty apis[] field) / (# populated_capabilities rows) -- a real proxy metric available today, distinct from the stronger future definition below"
+    numerator_source: "ai-os/CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml populated_capabilities, apis[] field = 5 (all 5 rows have at least one real apis[] entry, verified live by generate_capability_registry_candidates.py)"
+    denominator_source: "ai-os/CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml populated_capabilities = 5"
+    status: MEASURABLE_TODAY
+    current_value: "5/5 = 100% (of registered capabilities -- see route_coverage's same denominator caveat)"
+    gap: null
+    stronger_future_definition: "Once AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml Phase 2 authors real OpenAPI
+      3.1 documents, api_coverage should be redefined as '(# apis[] routes with a Spectral-passing OpenAPI
+      contract) / (# apis[] routes)' -- not measurable today for the same zero-OpenAPI-docs reason as
+      integration_coverage above. Not used as the current formula because it would return 0/5 for every row
+      today, which is a real number but a less useful signal than the proxy above at this early stage."
+
+  - id: ui_coverage
+    formula: "(# populated_capabilities rows with a non-null ui_screens[] field) / (# populated_capabilities rows)"
+    numerator_source: "ai-os/CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml populated_capabilities, ui_screens[] field = 3 (gratuity_calculator, commission_calculator, capability_registry_dedup)"
+    denominator_source: "ai-os/CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml populated_capabilities = 5"
+    status: MEASURABLE_TODAY
+    current_value: "3/5 = 60% -- gst_calculation_engine and trend_analysis_engine both have ui_screens=null,
+      a real, valid value per that schema's own field definition (server-only capability, not a gap)"
+    gap: null
+
+# ============================================================================
+# GATEWAY MATRIX -- rows = the 10 gateways (per 20-Engines plan's naming gap,
+# only 1 is confirmed real today), columns = whether each populated_route
+# passes through that gateway. Honestly sparse until the Owner confirms the
+# canonical 10-gateway list (20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml
+# gateways.gateway_naming_gap).
+# ============================================================================
+gateway_matrix:
+  definition: "For each confirmed-or-candidate gateway, the count of populated_routes whose expected_path
+    includes that gateway as a live hop, computed by grep-counting
+    ROUTE_REGISTRY_SCHEMA_2026-07-24.yaml's expected_path[].hop_type=gateway entries grouped by hop_name."
+  current_state:
+    - gateway: "Task Gateway"
+      exists_as: scripts/task-gateway.py
+      routes_through_it: 0
+      note: "Confirmed real (per 20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml gateways.confirmed_real_today),
+        but none of this task's own 5 populated routes pass through it -- Task Gateway serves server-side AI
+        task dispatch, not the in-app VCEL calculation/dedup paths these 5 routes represent. The matrix cell
+        is honestly 0, not a gap in this task's coverage."
+    - gateway: "(9 remaining candidate gateway slots)"
+      exists_as: "unconfirmed -- see gateway_naming_gap"
+      routes_through_it: "not computable"
+      note: "20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml's own gateways.gateway_naming_gap block is the
+        blocking artifact: no document names the canonical 10 gateways yet, so this matrix cannot have more
+        than 1 real row until the Owner (or the original INS-20260724-053123-0e5a instruction text) confirms
+        the list. Not fabricated here."
+  status: NOT_YET_MEASURABLE_BEYOND_ONE_ROW
+  unblocking_phase: "20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml's own gateway_definition_and_inventory
+    phase (external to this task's plan) -- once that phase names the 10 gateways, this matrix's remaining 9
+    rows become computable by the same grep-and-group method as the Task Gateway row above."
+
+# ============================================================================
+# SERVICE MATRIX -- rows = source surface (UI Composition Engine entry points
+# / API+cron entry points), columns = destination VCEL domain engine / service
+# module. Cell = # populated_routes connecting that (source-type, destination)
+# pair. Fully computable today because it only depends on this task's own
+# ROUTE_REGISTRY_SCHEMA_2026-07-24.yaml.
+# ============================================================================
+service_matrix:
+  definition: "grep ROUTE_REGISTRY_SCHEMA_2026-07-24.yaml's populated_routes[], bucket each row by
+    (expected_path[0].hop_name, destination's containing directory) -- e.g. src/lib/engines/ vs
+    src/lib/services/."
+  status: MEASURABLE_TODAY
+  current_state:
+    - source_type: "UI Composition Engine (ChainSelector.tsx)"
+      destination_bucket: "src/lib/engines/ (VCEL domain engines)"
+      route_count: 4
+      routes: [RT-gratuity_calculator-001, RT-commission_calculator-001, RT-gst_calculation_engine-001, RT-trend_analysis_engine-001]
+    - source_type: "UI Composition Engine (app/(app)/capability-registry) + API route"
+      destination_bucket: "src/lib/services/ (Capability Registry service layer)"
+      route_count: 1
+      routes: [RT-capability_registry_dedup-001]
+  total_routes: 5
+
+# ============================================================================
+# ROUTE COMPLETENESS SCORE -- a single composite number rolling up the
+# per-route field-completeness of ROUTE_REGISTRY_SCHEMA_2026-07-24.yaml
+# itself (distinct from the 9 coverage percentages above, which measure
+# breadth against external denominators; this measures depth/readiness of
+# the routes already registered).
+# ============================================================================
+route_completeness_score:
+  formula: "mean over populated_routes of: (1 point if test_status != not_yet_tested) + (1 point if
+    trace_verification_status in [verified_match, verified_mismatch]) + (1 point if replay_status in
+    [replayed_match, replayed_diff]) + (1 point if every expected_path hop has live_or_planned=live), all
+    divided by 4, expressed as a percentage."
+  numerator_source: "ai-os/ROUTE_REGISTRY_SCHEMA_2026-07-24.yaml populated_routes -- all 4 sub-fields are
+    real columns in this task's own schema, script-computable today"
+  status: MEASURABLE_TODAY
+  current_value: "0% -- every one of the 5 populated_routes scores 0/4 or (for the 4 VCEL routes)
+    3/4-eligible-but-still-0-earned on the hop-liveness point (RT-gratuity_calculator-001,
+    RT-commission_calculator-001, RT-gst_calculation_engine-001, and RT-capability_registry_dedup-001 have
+    ALL hops live_or_planned=live, earning the 4th point; RT-trend_analysis_engine-001 does not, since its
+    Rule Engine hop is planned). Concretely: 4 routes score 1/4 (25%), 1 route scores 0/4 (0%) -- mean =
+    (1+1+1+0+1)/5/4 = 20%. Honest and low by design: test/trace/replay are entirely Phase 1-3 work this
+    task's own TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml has not yet executed."
+  interpretation: "This score is expected to be near-zero at the end of Phase 0 for every real system -- it
+    exists so later phases have a single re-runnable number to watch climb as
+    TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml's phases actually wire test/trace/replay, not as a Phase 0
+    success metric."
+
+registration:
+  knowledge_engine_query_command: 'python3 scripts/superboss-register.py query-knowledge "route_coverage_methodology" --tag domain:testing_engine_irvf'
+  master_index_registry_id: testing_engine_irvf
