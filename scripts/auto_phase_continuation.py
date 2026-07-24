@@ -477,7 +477,9 @@ update, per the Owner's existing blanket approval -- do not add cron entries wit
 ## COMPLEXITY_TIER
 judgment
 """
-    title = f"phase{re.search(r'(\d+)', phase_id).group(1)}-{slugify(name, max_words=6)}"
+    _m = re.search(r'(\d+)', phase_id)
+    _num = _m.group(1) if _m else 'x'
+    title = f"phase{_num}-{slugify(name, max_words=6)}"
     return prompt, title
 
 
