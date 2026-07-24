@@ -48,7 +48,19 @@ Run: python3 ai-os-scripts/generate_variable_dictionary.py
 Writes: ai-os/VARIABLE_DICTIONARY_2026-07-24.yaml
 Exits non-zero if DATABASE_CATALOG.json or the source-rows file is missing,
 or if fewer than TOP_N real tables are found (drift/regression signal).
+PHASE 1 UPDATE (task-20260724-084040-phase1-terminology-dictionary-expansion):
+  TOP_N raised 20 -> 60 (the phase plan's second tier -- 20 -> 60 -> 150 -> all
+  444). VARIABLE_DICTIONARY_SOURCE_ROWS_2026-07-24.json was extended
+  append-only with real Supabase-fetched rows for the 39 newly-in-scope
+  tables (rank 21-60) that exist in the live DB (24 real rows, 15 confirmed
+  live-but-empty at fetch time -- both handled by the existing synthetic
+  fallback below), plus one table (ticket_intelligence_items) present in
+  DATABASE_CATALOG.json but absent from the live DB (real catalog/DB drift,
+  same synthetic-fallback path). Tier 1's original 20 tables were not
+  refetched. --top-n lets a future phase re-run for the next tier without
+  editing this file.
 """
+import argparse
 import json
 import os
 import re
@@ -65,7 +77,7 @@ REPO_AI_OS_DIR = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "ai-os"))
 SOURCE_ROWS_PATH = os.path.join(REPO_AI_OS_DIR, "VARIABLE_DICTIONARY_SOURCE_ROWS_2026-07-24.json")
 OUTPUT_PATH = os.path.join(REPO_AI_OS_DIR, "VARIABLE_DICTIONARY_2026-07-24.yaml")
 
-TOP_N = 20
+TOP_N = 60
 
 SENSITIVE_COLUMN_RE = re.compile(r"password|passcode|secret|credential|_hash$|^hash$|token", re.IGNORECASE)
 
@@ -185,17 +197,17 @@ def resolve_example(entity, table_name, column, source_row):
     return value, source, True
 
 
-def build_dictionary():
+def build_dictionary(top_n=TOP_N):
     catalog = load_catalog()
     source_rows = load_source_rows()
     tables = catalog["tables"]
 
     declared_fk, conv_ref = compute_reference_scores(tables)
     ranked, score_fn = rank_tables(tables, declared_fk, conv_ref)
-    selected = ranked[:TOP_N]
+    selected = ranked[:top_n]
 
-    if len(selected) < TOP_N:
-        print(f"FATAL: only {len(selected)} tables found in catalog, need >= {TOP_N}", file=sys.stderr)
+    if len(selected) < top_n:
+        print(f"FATAL: only {len(selected)} tables found in catalog, need >= {top_n}", file=sys.stderr)
         sys.exit(1)
 
     table_summaries = []
@@ -248,7 +260,7 @@ def build_dictionary():
                                     "in the catalog), sorted desc, tie-broken by column_count desc then table_name. "
                                     "See this script's own module docstring for full rationale (only 7/444 tables "
                                     "have a declared SQL foreign key, so naming-convention is the dominant signal).",
-            "top_n": TOP_N,
+            "top_n": top_n,
             "tables_selected": len(selected),
             "total_placeholder_entries": len(entries),
             "sensitive_column_pattern": SENSITIVE_COLUMN_RE.pattern,
@@ -262,7 +274,12 @@ def build_dictionary():
 
 
 def main():
-    doc = build_dictionary()
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--top-n", type=int, default=TOP_N,
+                         help=f"how many most-referenced tables to include (default {TOP_N}, the current phase tier)")
+    args = parser.parse_args()
+
+    doc = build_dictionary(top_n=args.top_n)
     with open(OUTPUT_PATH, "w") as f:
         yaml.safe_dump(doc, f, sort_keys=False, allow_unicode=True, width=120)
     real_count = sum(1 for e in doc["entries"] if not e["example_is_synthetic"])
