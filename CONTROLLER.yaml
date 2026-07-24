@@ -4647,3 +4647,14 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260724-053213-veridian-20engines-10gateways-phase0-inv/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/13'
     last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-060203-xpost-github-catalog-2026-07-24
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''xpost-github-catalog-2026-07-24'' on claude-control
+      reached status=blocked. tier1, Superboss-approved, but the merge itself FAILED
+      (see supervisor.log) — needs manual attention, NOT actually merged: https://github.com/FChecklist/claude-control/pull/14'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-060203-xpost-github-catalog-2026-07-24/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/14'
+    last_touched: '2026-07-24'
