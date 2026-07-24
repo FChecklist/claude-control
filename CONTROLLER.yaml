@@ -4962,3 +4962,71 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260724-133911-terminology-phase3-ci-enforcement-wiring/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/38'
     last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-135834-phase5-reconcile-master-index-yaml-s-reg
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''phase5-reconcile-master-index-yaml-s-registries''
+      on claude-control reached status=completed. tier1, Superboss-approved, merged
+      autonomously: https://github.com/FChecklist/claude-control/pull/40'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-135834-phase5-reconcile-master-index-yaml-s-reg/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/40'
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-135839-phase4-architecture-judgment-domains-dep
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''phase4-architecture-judgment-domains-dependency-cruiser-ai''
+      on claude-control reached status=blocked. Superboss rejected: https://github.com/FChecklist/claude-control/pull/44
+      — see review.json for issues'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-135839-phase4-architecture-judgment-domains-dep/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/44'
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-140008-phase5-reconcile-master-index-yaml-s-reg
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''phase5-reconcile-master-index-yaml-s-registries''
+      on claude-control reached status=blocked. tier1, Superboss-approved, but the merge
+      itself FAILED (gh pr view confirms state=OPEN, mergedAt=; see supervisor.log)
+      — needs manual attention, NOT actually merged: https://github.com/FChecklist/claude-control/pull/42'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-140008-phase5-reconcile-master-index-yaml-s-reg/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/42'
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-140446-fix-terminology-phase3-pr552-review-gap
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''fix-terminology-phase3-pr552-review-gap'' on claude-control
+      reached status=completed. tier1, Superboss-approved, merged autonomously: https://github.com/FChecklist/claude-control/pull/43'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-140446-fix-terminology-phase3-pr552-review-gap/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/43'
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-141323-chatgpt-audit-workspace-infrastructure
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''chatgpt-audit-workspace-infrastructure'' on claude-control
+      reached status=blocked. tier1, Superboss-approved, but the merge itself FAILED
+      (gh pr view confirms state=OPEN, mergedAt=; see supervisor.log) — needs manual
+      attention, NOT actually merged: https://github.com/FChecklist/claude-control/pull/46'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-141323-chatgpt-audit-workspace-infrastructure/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/46'
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-141538-chatgpt-prompt-library-infrastructure
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''chatgpt-prompt-library-infrastructure'' on claude-control
+      reached status=blocked. tier1, Superboss-approved, but the merge itself FAILED
+      (gh pr view confirms state=OPEN, mergedAt=; see supervisor.log) — needs manual
+      attention, NOT actually merged: https://github.com/FChecklist/claude-control/pull/45'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-141538-chatgpt-prompt-library-infrastructure/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/45'
+    last_touched: '2026-07-24'
