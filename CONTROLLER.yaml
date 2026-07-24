@@ -4896,3 +4896,36 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260724-115924-phase3-route-replay-storage-diff/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/33'
     last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-122137-phase3-formalize-gateway-py-ex
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''phase3-formalize-task-gateway-py-task-execution''
+      on claude-control reached status=completed. tier1, Superboss-approved, merged
+      autonomously: https://github.com/FChecklist/claude-control/pull/36'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-122137-phase3-formalize-task-gateway-py-task-ex/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/36'
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-122146-phase4-dependency-graph-validation
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''phase4-dependency-graph-validation'' on claude-control
+      reached status=completed. tier1, Superboss-approved, merged autonomously: https://github.com/FChecklist/claude-control/pull/35'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-122146-phase4-dependency-graph-validation/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/35'
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-123006-phase3-formalize-gateway-py-ex
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: Server-worker task 'phase3-formalize-task-gateway-py-task-execution' on
+      claude-control reached status=failed. worker exited with code 1; failure signature
+      recorded for circuit breaker; pushed whatever progress existed; systemd will retry
+      up to the burst limit
+    where: /opt/veridian/ai-os/tasks/task-20260724-123006-phase3-formalize-task-gateway-py-task-ex/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-24'
