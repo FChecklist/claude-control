@@ -1,0 +1,136 @@
+meta:
+  title: "Phase 7 Evaluation -- UI Composition Engine (17) and Analytics Engine (18): acceptable-as-is or real gap?"
+  created: '2026-07-24'
+  produced_by_task: task-20260724-144911-phase7-evaluate-whether-vericomposer-cha
+  parent_plan: ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml#phase_7_ui_composition_analytics
+  method: "Same discipline as every prior phase in the parent plan: real investigation (grep + live file
+    reads across all 3 product repos -- compliance-tracker, projexa, veda-advisors -- plus the
+    veridian-ui-kit shared package) before any conclusion, not assumption. This phase's own objective
+    explicitly frames both questions as judgment calls for the Owner, not decisions to assume -- this
+    document's role is to gather and present the real evidence honestly, recommend a position, and file
+    the actual decision to the Owner rather than silently deciding on their behalf."
+
+# ============================================================================
+# ENGINE 17 -- UI Composition Engine
+# ============================================================================
+ui_composition_engine_evaluation:
+  question: "Does VeriComposer/ChainSelector's dynamic composition pattern generalize beyond the chat
+    surface into a real design-system-wide UI Composition Engine, or is that scope intentionally narrow?"
+  investigation_performed:
+    - "Read repos/compliance-tracker/src/components/veri-chat/VeriComposer.tsx (749 lines) and
+      ChainSelector.tsx (393 lines) in full -- confirms engine_inventory row 17's existing finding:
+      mode-pill + cascading chain-path picker, shared between an inline composer and
+      ChainSelectorDialog."
+    - "Found and read /opt/veridian/repos/veridian-ui-kit (package @fchecklist/veridian-ui-kit v0.3.0) in
+      full -- a real, live, separately-versioned shared package NOT previously recorded in this
+      plan's engine_inventory row 17. It literally re-exports VeriComposer.tsx/ChainSelector.tsx
+      (src/composer/) plus AppShell/AppSidebar/AppHeader (src/shell/), the chat panel (src/panel/), and
+      design tokens (src/tokens/) as one shared shell package."
+    - "Confirmed live cross-product consumption: grepped repos/projexa/package.json and
+      repos/projexa/src -- projexa imports veridian-ui-kit directly (layout.tsx, (app)/layout.tsx,
+      AppTopbar.tsx, veri-chat/VeriComposer.tsx, veri-chat/VeriChatPanel.tsx, veri-chat-context.tsx all
+      reference it) rather than maintaining its own fork. veridian-ui-kit's own README states this
+      package was extracted specifically to stop that duplication: 'the exact problem that produced
+      PROJEXA's original independent px-* theme and 2x-smaller port of these components.'"
+    - "Read veridian-ui-kit's own README 'Scope boundary -- read this before extending' section in
+      full: the package explicitly declares it owns only 'colors, fonts, layout mechanics, the
+      composer/chain-selector/panel interaction pattern, and the merged-Home-page behavior' and
+      explicitly does NOT own each product's real business data/capability-tree content, the real
+      task-dispatch backend, or product-specific advanced features -- those are exposed via callback
+      props (onDispatch, onSendMessage) instead of the shell knowing about them."
+    - "Grepped all 3 product repos (compliance-tracker/src, projexa/src, veda-advisors) for
+      'component registry', 'widget registry', 'dynamic component', 'page builder', 'dashboard builder'
+      (case-insensitive): zero real hits anywhere outside this search itself."
+    - "Read repos/compliance-tracker/src/app/(app)/metric-alerts/page.tsx's own header comment (Wave 38,
+      Grafana-inspired scheduled threshold alerting): the page explicitly documents choosing to mirror
+      /automation's simple single-page CRUD-list-plus-create-dialog shape 'rather than a heavier
+      dashboard-builder UI like Grafana's' -- a real, explicit, in-code precedent of deliberately
+      rejecting dynamic/composable widget UI even in a feature area (alerting dashboards) where that
+      pattern would be a natural fit if the product wanted it."
+    - "Confirmed the product's real dashboards (compliance-tracker's (app)/dashboard, work-dashboard,
+      construction-dashboard, firm-practice-dashboard, maintainability-dashboard, projexa's
+      (app)/dashboard) are each a hand-built page.tsx backed by its own bespoke *-dashboard-service.ts,
+      not assembled from a shared component/widget registry."
+  finding: "The dynamic composition pattern already DID generalize beyond compliance-tracker's own chat
+    surface -- but to exactly one other place (a second product's chat/composer shell via
+    veridian-ui-kit), and that package's own maintainers explicitly scoped it to stop there by design,
+    in writing, before this evaluation ever asked the question. There is no real, live evidence anywhere
+    in the 3 product repos of a need for -- or a workaround duplicating the need for -- a general
+    design-system-wide UI Composition Engine that assembles arbitrary product UI (dashboards, forms,
+    alert rules, etc.) from a shared registry of pieces. Every non-chat surface investigated is
+    conventional hand-built React, including at least one explicit in-code decision to stay that way."
+  conclusion: "ACCEPTABLE AS-IS. VERIDIAN's UI is not primarily dynamically-composed outside chat, and
+    unlike the objective's own hedge ('intentionally narrow... not assumed here'), this is not merely
+    plausible but confirmed by direct evidence: the one real generalization opportunity (a second
+    product wanting the same composer) was already taken, the package that took it explicitly declared
+    a boundary against going further, and no other surface shows an unmet need. Recommend: do not build
+    a general-purpose, design-system-wide UI Composition Engine. Engine 17's gap_description in
+    engine_inventory (scoped to VeriComposer's own chat surface) remains an accurate, honest description
+    of a closed, not open, gap."
+  what_this_evaluation_does_not_change: "veridian-ui-kit itself is real, valuable, already-shipped prior
+    art this plan's own engine_inventory row 17 had not yet recorded -- noted here as a factual
+    correction for any future re-run of generate_engines_gateways_inventory.py, not as new work this
+    phase builds."
+
+# ============================================================================
+# ENGINE 18 -- Analytics Engine
+# ============================================================================
+analytics_engine_evaluation:
+  question: "Is analytics-engine.ts's scoped-to-specific-call-sites coverage acceptable as-is, or is
+    there a real, current need for a general-purpose analytics layer over arbitrary datasets?"
+  investigation_performed:
+    - "Read repos/compliance-tracker/src/lib/engines/analytics-engine.ts in full (77 lines): 6 pure,
+      deterministic statistics functions (trend analysis via linear regression, variance analysis,
+      benchmark comparison, forecast baseline, anomaly detection z-score/IQR, correlation) built on
+      simple-statistics/decimal.js, matching this codebase's existing VCEL-engine convention (see
+      accounting-engine.ts's own EngineResult pattern, cited in this file's own header comment)."
+    - "Grepped every real call site: only repos/compliance-tracker/lib/task-execution-engine.ts, which
+      dynamically imports each function from a dedicated case (trend_analysis_engine and 5 sibling
+      cases) in its VCEL capability-tree leaf dispatcher -- i.e. these are individually-invoked,
+      per-leaf deterministic calculators, the same shape as every other of the 22 VCEL domain engines,
+      not a shared analytics service other code reaches into."
+    - "Found and read orchestra-analytics-service.ts (already named in engine_inventory row 18's
+      gap_description) -- confirmed separately scoped to AI-usage KPI dashboards, does not import or
+      call analytics-engine.ts."
+    - "Grepped for other real analytics/reporting/dashboard mechanisms across compliance-tracker and
+      projexa: found 5 additional, independently-built, domain-specific dashboard services --
+      work-dashboard-service.ts, construction-dashboard-service.ts, firm-practice-dashboard-service.ts,
+      maintainability-dashboard-service.ts, orchestra-analytics-service.ts -- each with its own
+      dedicated page.tsx/API route, none of them built on top of analytics-engine.ts or any other
+      shared statistics/analytics layer."
+  finding: "The real, current pattern for 'compute trends/statistics/KPIs over stored data' in this
+    codebase is: build a small, purpose-specific service per domain (construction, firm-practice,
+    maintainability, AI-usage, work) when that domain needs one, plus a shared library of generic
+    stats primitives (analytics-engine.ts, alongside accounting-engine.ts and its 21 VCEL siblings)
+    that individual capability-tree leaves call into deterministically. Five independent
+    dashboard-service implementations already coexist without converging on or needing one shared
+    analytics layer above analytics-engine.ts's primitives -- the strongest available evidence that
+    nothing in the product today is asking for a general-purpose analytics engine that doesn't already
+    exist in primitive form."
+  conclusion: "ACCEPTABLE AS-IS. Building a general-purpose analytics layer now would be exactly the
+    speculative infrastructure this phase's own objective and this whole plan's
+    owner_standing_instruction (no duplication, no building ahead of a real, identified need) warn
+    against -- there are already 5 real, working, independently-evolved dashboard services proving the
+    per-domain-service pattern is sufficient, and the underlying stats primitives
+    (analytics-engine.ts) are themselves real, live, and already reused where genuinely generic
+    (trend/variance/benchmark/forecast/anomaly/correlation). Recommend: do not build a general-purpose
+    analytics layer. Revisit only if a 6th domain need emerges that would clearly benefit from
+    consolidating 2+ of the existing 5 dashboard services' logic -- no such need exists today, per this
+    investigation."
+
+owner_decision_filed:
+  entry_id: ui-composition-analytics-engine-scope-confirmation
+  file: ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+  reason: "Both conclusions above are this evaluation's recommendation, grounded in real evidence -- but
+    the parent phase's own objective text explicitly says this judgment belongs to the Owner, not to be
+    assumed by the task executing it. Filed as a real decision entry (not silently acted on) so the
+    Owner can confirm, override, or ask for a specific extension in either engine if this evaluation
+    missed a real need."
+
+engines_closed_by_finding_not_by_building:
+  - engine_no: 17
+    engine_name: "UI Composition Engine"
+    disposition: "closed_by_finding -- see ui_composition_engine_evaluation above"
+  - engine_no: 18
+    engine_name: "Analytics Engine"
+    disposition: "closed_by_finding -- see analytics_engine_evaluation above"
