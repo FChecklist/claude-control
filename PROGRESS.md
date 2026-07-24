@@ -13,10 +13,15 @@
       ai-os/VARIABLE_DICTIONARY_2026-07-24.yaml -- 320 real column entries across 20 real tables, 182 sourced from
       actual DB rows, 138 clearly-marked synthetic (sensitive columns + 2 empty tables).
 
+- [x] Designed + wrote ai-os/TERMINOLOGY_GUARDRAIL_2026-07-24.py (lint script: flags hardcoded human-example
+      literals -- placeholder company names, person names, fake email domains, ISO dates, PAN/GSTIN shapes --
+      plus any unregistered <Entity.Attribute> token). Not CI-wired yet, by design (this phase = design + smoke-test only).
+- [x] Smoke-tested against 3 real compliance-tracker files (communication-drafting-service.ts,
+      orchestra-mock-data.ts, db/seed.ts): 36 real findings (29 placeholder_company_name "ABC Corp"/"XYZ Ltd",
+      7 placeholder_email_domain "*@acme.com"), exit code 1, saved to
+      ai-os/TERMINOLOGY_GUARDRAIL_SMOKE_TEST_FINDINGS_2026-07-24.json.
+
 ## Remaining
-- [ ] Design + write ai-os/TERMINOLOGY_GUARDRAIL_2026-07-24.py (lint script flagging hardcoded example literals
-      not registered as dictionary placeholders).
-- [ ] Smoke-test guardrail against 3 real compliance-tracker prompt/template files, report real findings.
 - [ ] Write ai-os/TERMINOLOGY_STANDARDIZATION_PHASE_PLAN_2026-07-24.yaml with real dependency table.
 - [ ] Register all 3 artifacts in knowledge_engine (superboss-register.py register-knowledge) and
       MASTER_INDEX.yaml (registries.terminology_standardization) + live file sync.
