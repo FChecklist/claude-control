@@ -6,7 +6,60 @@ meta:
   registered_as: registries.chatgpt_prompt_library (ai-os/MASTER_INDEX.yaml) +
     OWNER_DECISIONS_NEEDED_2026-07-23.yaml id chatgpt-promptlib-openai-api-key
 
-status: infrastructure_100pct_ready_generation_blocked_on_api_key
+status: resolved_via_manual_bridge
+resolved_ts: '2026-07-24T21:50:52Z'
+resolved_by_task: task-20260724-214215-chatgpt-manual-bridge-workflow
+resolved_instruction: INS-20260724-214122-f0ed
+resolution_summary: >
+  The Owner made a real, final decision on this blocker -- no OPENAI_API_KEY
+  will be supplied for this library. Instead, a manual-bridge workflow is now
+  live: scripts/generate_chatgpt_promptbatch_request.py builds a real,
+  ready-to-copy request naming N real currently-uncovered capabilities (from
+  the live capability_registry) plus the schema + placeholder-convention
+  rules; the Owner pastes it into a free ChatGPT web session by hand and
+  saves the reply; scripts/ingest_chatgpt_promptbatch_response.py parses it,
+  rejects any row using a hardcoded company/person name instead of a
+  registered <Entity.Attribute> placeholder, and writes accepted rows into
+  CSV/ via chatgpt_promptlib_guard.py, refreshing Coverage/ and Duplicates/
+  for real. See how_to_run_it below for exact commands. Verified live this
+  task: `--count 10` named all 10 real uncovered capabilities; a synthetic
+  2-row fixture (1 valid placeholder row, 1 hardcoded "John Doe"/"Acme Corp"
+  row) was ingested and correctly accepted 1 row (landed in
+  CSV/PROMPTS_gratuity_calculator_2026-07-24.csv) and rejected the other,
+  with capability_coverage_pct rising from 0.0 to 10.0 afterwards.
+
+how_to_run_it:
+  step_1_generate_request: >
+    python3 scripts/generate_chatgpt_promptbatch_request.py --count <N>
+    [--prompts-per-capability <k>, default 5] -- selects up to N real,
+    currently-uncovered capabilities (never fabricates more than actually
+    exist), writes a ready-to-copy request .txt to
+    /opt/veridian/chatgpt-prompt-library/_pending_requests/ via
+    scripts/chatgpt_promptlib_guard.py's guarded_write.
+  step_2_owner_manual_action: >
+    The Owner copies everything below the "COPY BELOW THIS LINE" marker into
+    a new, free ChatGPT web session, and saves ChatGPT's full CSV (or YAML)
+    reply to a file.
+  step_3_ingest_response: >
+    python3 scripts/ingest_chatgpt_promptbatch_response.py --file
+    <saved-response-file> (or pipe via stdin) -- validates all 15 required
+    ai-os/CHATGPT_PROMPT_SCHEMA_2026-07-24.yaml columns, the Capability
+    column against the live capability_registry, and rejects any row whose
+    Prompt or Variables text contains a hardcoded/placeholder-style company
+    or person name, an unregistered <Entity.Attribute> token, or a duplicate
+    Prompt ID (reusing ai-os/TERMINOLOGY_GUARDRAIL_2026-07-24.py's own
+    pattern families rather than reimplementing detection). Accepted rows are
+    appended (never overwritten) to CSV/PROMPTS_<capability>_<date>.csv, then
+    scripts/generate_prompt_coverage_report.py and
+    scripts/detect_prompt_duplicates.py are re-run for real.
+
+original_awaiting_owner_decision_state_kept_for_history:
+  note: >
+    The exact_generation_call_shape_once_unblocked section below documents the
+    API-key call shape that was designed but never built -- kept for
+    reference only, it is not the path this library uses going forward.
+    SUPERSEDED: the Owner has since decided (task-20260724-214215) to use the
+    manual-bridge workflow above instead of ever supplying a key.
 
 what_is_done:
   - 'Sandbox: /opt/veridian/chatgpt-prompt-library/ with all 15 real subfolders (CSV, Intent, Keywords,
@@ -72,4 +125,5 @@ exact_generation_call_shape_once_unblocked:
     when it runs' -- do not default to a specific gpt-* model name without that explicit instruction."
 
 owner_decision_needed_entry: "Filed in ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml, id
-  chatgpt-promptlib-openai-api-key, status awaiting_owner_decision."
+  chatgpt-promptlib-openai-api-key, status resolved_via_manual_bridge (real decision made:
+  no API key, manual-bridge workflow used instead -- see resolution_summary/how_to_run_it above)."

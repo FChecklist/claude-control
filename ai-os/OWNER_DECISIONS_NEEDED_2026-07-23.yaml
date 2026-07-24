@@ -204,7 +204,18 @@ decisions:
   what: "This task built the complete ChatGPT Audit Workspace infrastructure per INS-20260724-141101-89d8: a real, live sandboxed write directory (/opt/veridian/chatgpt-audit/, 23 domain subfolders), a mechanical write-scope guard (scripts/chatgpt_audit_guard.py -- verified live: rejects a real compliance-tracker path and a lookalike-prefix path, allows a chatgpt-audit path, a real guarded write succeeds in-scope and is refused out-of-scope), a real incrementing/never-overwrite audit-id and filename allocator (scripts/chatgpt_audit_versioning.py), the audit record schema (ai-os/CHATGPT_AUDIT_RECORD_SCHEMA_2026-07-24.yaml), and a machine-generated master catalogue + local searchable index (scripts/generate_chatgpt_audit_index.py -> ai-os/CHATGPT_AUDIT_MASTER_CATALOGUE_2026-07-24.yaml, 0 records today by design). The one remaining piece to actually run an audit is a real OPENAI_API_KEY -- confirmed this session: `grep -i openai /opt/veridian/shared/.env` shows no real key, only a placeholder comment. Full exact call shape (model TBC by Owner, prompt template, read-scope discipline, guard-only output path) is documented in ai-os/CHATGPT_AUDIT_BLOCKER_2026-07-24.yaml."
   needed_action: "Owner supplies a real OPENAI_API_KEY in /opt/veridian/shared/.env (same convention as the other provider keys already there) and confirms the exact OpenAI model name a future task should call -- see ai-os/CHATGPT_AUDIT_BLOCKER_2026-07-24.yaml's exact_call_shape_once_key_exists for what's already fully specified and waiting on just those two inputs."
   why_not_done_automatically: "No key exists to fabricate, and the Owner asked specifically for ChatGPT -- silently substituting Claude/GROQ/OpenRouter instead without saying so would be exactly the kind of silent model substitution this session's 'no lying' rule forbids. The LLM-execution step is explicitly out of scope for this task's own CONSTRAINTS; this decision is filed so a future task can pick it up the moment the key exists."
-  status: awaiting_owner_decision
+  status: resolved_via_manual_bridge
+  resolved_ts: '2026-07-24T21:52:04+00:00'
+  resolved_via: "Owner's real, final decision (task-20260724-214215-chatgpt-manual-bridge-workflow,
+    instruction INS-20260724-214122-f0ed): no OPENAI_API_KEY will be supplied. Instead, a manual-bridge
+    workflow replaces the API-key path -- the Owner copies a script-generated request
+    (scripts/generate_chatgpt_audit_request.py) into a free ChatGPT web session by hand, saves the
+    pasted-back response, and scripts/ingest_chatgpt_audit_response.py validates and writes it
+    version-safe through the existing chatgpt_audit_guard.py/chatgpt_audit_versioning.py
+    infrastructure. Round-trip tested live: a real Security-domain request was generated, a synthetic
+    fixture response was ingested, and the resulting record was confirmed present in
+    ai-os/CHATGPT_AUDIT_MASTER_CATALOGUE_2026-07-24.yaml. See
+    ai-os/CHATGPT_AUDIT_BLOCKER_2026-07-24.yaml's how_to_run_it for the exact commands."
 
 - id: pgaudit-enable-on-production-supabase
   raised_by_task: task-20260724-213832-phase7-part6-observability-audit-trail-l
@@ -238,7 +249,19 @@ decisions:
     instructed (KNOWN_CONTEXT) not to silently substitute a different provider (Claude/GROQ/OpenRouter)
     in ChatGPT's place without saying so -- the Owner named ChatGPT specifically for this library. This
     is a real external-credential dependency, not a judgment call an agent can resolve."
-  status: awaiting_owner_decision
+  status: resolved_via_manual_bridge
+  resolved_ts: '2026-07-24T21:50:52+00:00'
+  resolved_via: "Owner's real, final decision (task-20260724-214215-chatgpt-manual-bridge-workflow,
+    instruction INS-20260724-214122-f0ed): no OPENAI_API_KEY will be supplied. Instead, a manual-bridge
+    workflow replaces the API-key path -- the Owner copies a script-generated request
+    (scripts/generate_chatgpt_promptbatch_request.py) into a free ChatGPT web session by hand, saves
+    the pasted-back CSV/YAML response, and scripts/ingest_chatgpt_promptbatch_response.py validates
+    (real capability names, placeholder-only example data, no hardcoded company/person names) and
+    writes accepted rows version-safe through scripts/chatgpt_promptlib_guard.py. Round-trip tested
+    live: a real 10-capability batch request was generated, a synthetic 2-row fixture was ingested,
+    correctly accepting the valid placeholder row and rejecting the hardcoded-name row, with
+    capability_coverage_pct rising from 0.0 to 10.0 afterwards. See
+    ai-os/CHATGPT_PROMPTLIB_BLOCKER_2026-07-24.yaml's how_to_run_it for the exact commands."
 - id: supabase-management-api-token-refresh
   raised_by_task: task-20260724-135834-phase5-reconcile-master-index-yaml-s-reg
   raised_ts: '2026-07-24T14:00:00+00:00'
