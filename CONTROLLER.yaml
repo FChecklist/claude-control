@@ -4668,3 +4668,26 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260724-063645-veridian-testing-engine-irvf-phase0/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/17'
     last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-042659-veridian-auditor-engine-phase0-inventory
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''veridian-auditor-engine-phase0-inventory-plan'' on
+      claude-control reached status=blocked. tier1, Superboss-approved, but the merge
+      itself FAILED (gh pr view confirms state=OPEN, mergedAt=; see supervisor.log)
+      — needs manual attention, NOT actually merged: https://github.com/FChecklist/claude-control/pull/12'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-042659-veridian-auditor-engine-phase0-inventory/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/12'
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-070131-veridian-terminology-standardization-pha
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''veridian-terminology-standardization-phase0'' on
+      claude-control reached status=completed. tier1, Superboss-approved, merged autonomously:
+      https://github.com/FChecklist/claude-control/pull/18'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-070131-veridian-terminology-standardization-pha/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/18'
+    last_touched: '2026-07-24'
