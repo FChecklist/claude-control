@@ -4722,3 +4722,35 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260724-074329-fix-worker-noop-pending-review/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/20'
     last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-081715-full-session-audit-2026-07-24
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''full-session-audit-2026-07-24'' on claude-control
+      reached status=completed. tier1, Superboss-approved, merged autonomously: https://github.com/FChecklist/claude-control/pull/21'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-081715-full-session-audit-2026-07-24/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/21'
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-083902-phase1-testing-engine-route-tests
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''phase1-testing-engine-route-tests'' on claude-control
+      reached status=completed. tier1, Superboss-approved, merged autonomously: https://github.com/FChecklist/claude-control/pull/22'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-083902-phase1-testing-engine-route-tests/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/22'
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-084040-phase1-terminology-dictionary-expansion
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''phase1-terminology-dictionary-expansion'' on claude-control
+      reached status=blocked. tier1, Superboss-approved, but the merge itself FAILED
+      (gh pr view confirms state=OPEN, mergedAt=; see supervisor.log) — needs manual
+      attention, NOT actually merged: https://github.com/FChecklist/claude-control/pull/23'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-084040-phase1-terminology-dictionary-expansion/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/23'
+    last_touched: '2026-07-24'
