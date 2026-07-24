@@ -57,6 +57,9 @@ import tempfile
 import urllib.request
 import urllib.error
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import auditor_engine_events as _events  # Phase 7 shared event-emitter (AUDITOR_ENGINE_EVENT_SCHEMA)
+
 DB_PATH = os.environ.get("SUPERBOSS_REGISTER_DB", "/opt/veridian/ai-os/memory/superboss-register.sqlite")
 _WRITE_LOCK_PATH = DB_PATH + ".writelock"
 
@@ -344,11 +347,26 @@ def main():
     duration = (datetime.datetime.now(datetime.timezone.utc) - start).total_seconds()
     status = "ok" if not errors else ("partial" if tools_run else "failed")
 
+    # Only repos actually reached this run (present in tools_run) get a real
+    # audit_run event pair -- skipped_repos (no base URL configured / not
+    # reachable) had no real run happen, so emitting a started/completed pair
+    # for them would misrepresent an audit run that never executed.
+    run_traces = {}
+    if not args.dry_run:
+        for repo in tools_run:
+            run_traces[repo] = _events.start_audit_run(
+                domain=DOMAIN, repo=repo, producer_name=os.path.basename(__file__), run_id=run_id,
+            )
+
     new_count = 0
+    new_by_repo = {}
     if not args.dry_run:
         with _write_lock():
             conn = _connect()
             ensure_tables(conn)
+            for repo, rt in run_traces.items():
+                subset = [r for r in all_records if r["repo"] == repo]
+                new_by_repo[repo] = _events.stamp_new_finding_events(conn, subset, rt)
             new_count = upsert_findings(conn, all_records, run_id)
             for repo, info in tools_run.items():
                 repo_records = [r for r in all_records if r["repo"] == repo]
@@ -363,6 +381,10 @@ def main():
                 ))
             conn.commit()
             conn.close()
+        for repo, rt in run_traces.items():
+            subset = [r for r in all_records if r["repo"] == repo]
+            _events.complete_audit_run(rt, status=status, total_findings=len(subset),
+                                        new_findings=new_by_repo.get(repo, 0), duration_s=duration)
 
     summary = {
         "ok": status != "failed", "run_id": run_id, "domain": DOMAIN,

@@ -47,6 +47,9 @@ import subprocess
 import sys
 import tempfile
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import auditor_engine_events as _events  # Phase 7 shared event-emitter (AUDITOR_ENGINE_EVENT_SCHEMA)
+
 try:
     import yaml
 except ImportError:
@@ -416,15 +419,26 @@ def main():
     duration = (datetime.datetime.now(datetime.timezone.utc) - start).total_seconds()
     status = "ok" if not all_errors else ("partial" if checks_run else "failed")
 
+    by_repo = {}
+    for r in all_records:
+        by_repo.setdefault(r["repo"], []).append(r)
+
+    run_traces = {}
+    if not args.dry_run:
+        for repo in by_repo:
+            run_traces[repo] = _events.start_audit_run(
+                domain=DOMAIN, repo=repo, producer_name=os.path.basename(__file__), run_id=run_id,
+            )
+
     new_count = 0
+    new_by_repo = {}
     if not args.dry_run:
         with _write_lock():
             conn = _connect()
             ensure_tables(conn)
+            for repo, rt in run_traces.items():
+                new_by_repo[repo] = _events.stamp_new_finding_events(conn, by_repo[repo], rt)
             new_count = upsert_findings(conn, all_records, run_id)
-            by_repo = {}
-            for r in all_records:
-                by_repo.setdefault(r["repo"], []).append(r)
             for repo, repo_records in by_repo.items():
                 conn.execute("""
                     INSERT INTO audit_runs (run_id, ts, domain, repo, tools_run, tools_skipped,
@@ -437,6 +451,9 @@ def main():
                 ))
             conn.commit()
             conn.close()
+        for repo, rt in run_traces.items():
+            _events.complete_audit_run(rt, status=status, total_findings=len(by_repo[repo]),
+                                        new_findings=new_by_repo.get(repo, 0), duration_s=duration)
 
     summary = {
         "ok": status != "failed", "run_id": run_id, "domain": DOMAIN,
