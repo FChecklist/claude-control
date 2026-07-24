@@ -30,6 +30,18 @@ NONE)". The actual instruction (INS-20260724-060111-0975, read live from the reg
 are "TEN repos" tweets). Went with the ground-truth instruction data: all 34 real repos are
 catalog rows; all 3 NONE entries are recorded in `checked_no_repo`.
 
+- [x] Committed + pushed, opened PR: https://github.com/FChecklist/claude-control/pull/14
+
 ## Remaining
-- [ ] Commit + push `ai-os/XPOST_GITHUB_CATALOG_2026-07-24.yaml` and the two
-      `ai-os-scripts/` generator scripts, open PR on claude-control.
+- [ ] None. Task complete.
+
+## Final checkpoint
+- Row count added: 34 real repos + 3 checked_no_repo records (37 total items from 19 source
+  tweet URLs in INS-20260724-060111-0975).
+- Prior catalog found: yes (`X_POST_AI_ANALYSIS_2026-07-23.md`, 2026-07-23, different schema,
+  never registered in knowledge_engine) -- not merged in place (different schema/never a
+  registered catalog); 2 exact-tweet-ID repeats cross-referenced instead of re-analyzed, so no
+  duplicate catalog was created.
+- knowledge_engine artifact_id: KE-20260724-062517-e6b1. `query-knowledge "claudexor"` and
+  `query-knowledge "code-review-graph"` both return 1 hit.
+- PR: https://github.com/FChecklist/claude-control/pull/14
