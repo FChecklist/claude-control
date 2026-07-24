@@ -1,0 +1,5 @@
+{
+  "route_id": "RT-capability_registry_dedup-001",
+  "verdict": "not_instrumented",
+  "reason": "expected_path has no Workflow Engine hop (task-execution-engine.ts) for this route to trace through"
+}

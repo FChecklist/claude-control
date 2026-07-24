@@ -1,0 +1,83 @@
+{
+  "route_id": "RT-commission_calculator-001",
+  "capability_name": "commission_calculator",
+  "trace_id": "0b552aac1268a09f67809ebd69e05b69",
+  "root_span_id": "98d911016256a1ce",
+  "hop_span_id": "3aa5d48a4549874a",
+  "hop_span_name": "hop:3:Workflow Engine",
+  "observable_hop": {
+    "hop_no": 3,
+    "hop_type": "engine",
+    "hop_name": "Workflow Engine",
+    "engine_no": 8,
+    "mechanism_path": "repos/compliance-tracker/src/lib/task-execution-engine.ts",
+    "live_or_planned": "live"
+  },
+  "expected_path_hop_count": 4,
+  "dispatch_returncode": 0,
+  "otel_status": "exporting_local_jsonl:/opt/veridian/ai-os/logs/otel-spans-auditor-engine.jsonl",
+  "observed_spans": [
+    {
+      "name": "audit_run:test-coverage:compliance-tracker",
+      "trace_id": "0b552aac1268a09f67809ebd69e05b69",
+      "span_id": "98d911016256a1ce",
+      "parent_span_id": null,
+      "start_time": 1784934425008783143,
+      "end_time": 1784934425019348244,
+      "attributes": {
+        "repo": "compliance-tracker",
+        "domain": "test-coverage",
+        "producer.name": "verify_route_trace.py",
+        "run_id": "RT-commission_calculator-001"
+      },
+      "status": "UNSET"
+    },
+    {
+      "name": "hop:3:Workflow Engine",
+      "trace_id": "0b552aac1268a09f67809ebd69e05b69",
+      "span_id": "3aa5d48a4549874a",
+      "parent_span_id": "98d911016256a1ce",
+      "start_time": 1784934425019492161,
+      "end_time": 1784934425139583868,
+      "attributes": {
+        "route_id": "RT-commission_calculator-001",
+        "hop_no": 3,
+        "hop_name": "Workflow Engine",
+        "mechanism_path": "repos/compliance-tracker/src/lib/task-execution-engine.ts"
+      },
+      "status": "UNSET"
+    },
+    {
+      "name": "audit_run_completed:test-coverage:compliance-tracker",
+      "trace_id": "0b552aac1268a09f67809ebd69e05b69",
+      "span_id": "2ba122f3e3289756",
+      "parent_span_id": "98d911016256a1ce",
+      "start_time": 1784934425139760625,
+      "end_time": 1784934425158187563,
+      "attributes": {
+        "repo": "compliance-tracker",
+        "domain": "test-coverage",
+        "status": "ok"
+      },
+      "status": "UNSET"
+    }
+  ],
+  "audit_event_rows": [
+    {
+      "event_type": "audit_run_started",
+      "ts": "2026-07-24T23:07:05Z",
+      "trace_id": "0b552aac1268a09f67809ebd69e05b69",
+      "span_id": "98d911016256a1ce",
+      "parent_span_id": null
+    },
+    {
+      "event_type": "audit_run_completed",
+      "ts": "2026-07-24T23:07:05Z",
+      "trace_id": "0b552aac1268a09f67809ebd69e05b69",
+      "span_id": "2ba122f3e3289756",
+      "parent_span_id": "98d911016256a1ce"
+    }
+  ],
+  "verdict": "instrumented_unverified",
+  "reason": "real trace + hop span captured and re-verified from the event stream for hop 3 (Workflow Engine), but hop(s) [1, 2, 4] of expected_path are not independently observable by this harness yet (no live authenticated Next.js server/browser to exercise the UI/Rule Engine hops -- same honest boundary generate_route_tests.py's own SCOPE NOTE draws) -- not yet a full end-to-end verified path."
+}
