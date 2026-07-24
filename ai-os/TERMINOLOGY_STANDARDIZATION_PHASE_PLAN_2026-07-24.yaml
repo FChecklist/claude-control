@@ -1,0 +1,236 @@
+meta:
+  title: VERIDIAN Terminology Standardization -- Phased Rollout Plan
+  created: '2026-07-24'
+  produced_by_task: task-20260724-070131-veridian-terminology-standardization-pha
+  instruction: INS-20260724-070047-3a2d
+  precedent: 'Same method as the 4 prior Phase 0 tasks this session: ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml,
+    ai-os/AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml, the self-sustaining-system-engine work (Knowledge Engine
+    Phase 2/3), and ai-os/TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml -- real investigation before build, a
+    concrete dependency mechanism per edge, not a conceptual arrow.'
+  scope_of_this_document: 'Phase 0 output only, per this task''s own CONSTRAINTS: this file plans the
+    repo-wide rollout of ai-os/TERMINOLOGY_GUARDRAIL_2026-07-24.py and CI enforcement wiring -- it does not
+    implement any of them. ai-os/VARIABLE_DICTIONARY_2026-07-24.yaml (320 real placeholder entries, top-20
+    most-referenced tables of DATABASE_CATALOG.json''s 444) and ai-os/TERMINOLOGY_GUARDRAIL_2026-07-24.py
+    (designed + smoke-tested against 3 real compliance-tracker files, 36 real findings) are this same task''s
+    other two Phase 0 deliverables, referenced throughout as the artifacts these phases consume/extend.'
+  starting_coverage_ceiling: 'This plan cannot claim repo-wide terminology coverage yet: the Variable
+    Dictionary covers 320 columns across the top 20/444 real tables (ranked by combined_reference_score, see
+    that file''s own ranking_methodology field), and the guardrail has only been run by hand against 3 files
+    out of compliance-tracker''s full source tree. Every phase below grows one of those two ceilings
+    (dictionary coverage or file/directory coverage) by a concrete, re-runnable mechanism -- not a one-time
+    manual pass.'
+  ci_precedent_found: 'compliance-tracker/.github/workflows/ci.yml already runs 3 structurally identical
+    coverage-gate jobs -- guardrail-presence (node scripts/check-guardrail-presence.mjs), asset-registry
+    -coverage (node scripts/check-asset-registry-coverage.mjs, gated by an exemption file,
+    ai-os/registry/asset-registry-coverage.yaml), and metadata-index-coverage (node
+    scripts/check-metadata-index-coverage.mjs, gated by ai-os/OS.yaml). Phase 3 below reuses this exact
+    "coverage job + exemption file, fails only on NEW unexempted gaps" pattern rather than inventing a new CI
+    enforcement mechanism -- confirmed by direct read of ci.yml lines 57-100.'
+
+# ============================================================================
+# PHASES -- Phase 0 is this task. Phases 1-5 map to this task's own SCOPE
+# item 3 (phased rollout: dictionary coverage growth, directory-scoped
+# guardrail rollout, CI enforcement wiring, migration of existing hardcoded
+# examples, full repo-wide enforcement).
+# ============================================================================
+phases:
+  - id: phase_0_dictionary_guardrail_design_phase_plan
+    name: Variable Dictionary, guardrail design + smoke test, this phase plan (this task)
+    status: this_task
+    scope:
+      - "Build ai-os-scripts/generate_variable_dictionary.py and run it against the real
+         ai-os/DATABASE_CATALOG.json (444 tables) to produce ai-os/VARIABLE_DICTIONARY_2026-07-24.yaml --
+         320 real <Entity.Attribute> placeholder entries across the top 20 most-referenced tables, 182 example
+         values sourced from real dev-seed rows (fetched live via Supabase MCP against the verdian-ai project
+         that backs compliance-tracker/src/lib/db/schema.ts), 138 clearly-marked synthetic."
+      - "Design ai-os/TERMINOLOGY_GUARDRAIL_2026-07-24.py: flags hardcoded human-example literals (placeholder
+         company/person names, fake email domains, bare ISO dates, PAN/GSTIN-shaped literals) not expressed as
+         a registered placeholder, plus unregistered-placeholder-token drift. Smoke-tested (not rolled out)
+         against 3 real files -- 36 real findings, saved to
+         ai-os/TERMINOLOGY_GUARDRAIL_SMOKE_TEST_FINDINGS_2026-07-24.json."
+      - "Write this phase plan."
+      - "Register all 3 files in knowledge_engine and MASTER_INDEX.yaml registries.terminology_standardization."
+    depends_on: []
+    dependency_mechanism: "n/a -- entry phase. Reads (does not modify) /opt/veridian/ai-os/DATABASE_CATALOG.json
+      and ai-os/CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml (read for cross-link/registration purposes only,
+      per this task's own KNOWN_CONTEXT scoping note)."
+
+  - id: phase_1_dictionary_coverage_expansion
+    name: Grow Variable Dictionary coverage past the top-20 table ceiling
+    scope:
+      - "Extend generate_variable_dictionary.py's TOP_N in tiers (20 -> 60 -> 150 -> all 444), re-running the
+         same combined_reference_score ranking + Supabase-MCP real-row-fetch pattern this phase already built,
+         rather than a new mechanism. Each tier re-fetches VARIABLE_DICTIONARY_SOURCE_ROWS_2026-07-24.json for
+         the newly-added tables only (append, don't refetch tables already covered)."
+      - "Add an 'unknown entity' fallback path to the guardrail itself: when a finding's surrounding context
+         names a table/entity not yet in the dictionary, the finding is tagged
+         dictionary_gap_candidate=true instead of silently having no suggested placeholder, so Phase 4's
+         migration tooling can prioritize dictionary growth by real observed gap frequency, not guesswork."
+    depends_on: [phase_0_dictionary_guardrail_design_phase_plan]
+    dependency_mechanism: "Content dependency -- Phase 1 extends the exact TOP_N/ranking mechanism Phase 0
+      built; it does not redesign ranking methodology, so it cannot start before that methodology exists and
+      is proven against a real run (320/320 entries, 182 real-row-sourced, confirmed this phase)."
+
+  - id: phase_2_directory_scoped_rollout
+    name: Directory-scoped guardrail rollout (manual runs, not yet CI-blocking)
+    scope:
+      - "Run ai-os/TERMINOLOGY_GUARDRAIL_2026-07-24.py across compliance-tracker directories in priority
+         order, each a separate sub-phase with its own findings report committed to
+         ai-os/guardrail-findings/<directory-slug>-2026-MM-DD.json:
+         1) src/lib/services/*.ts (AI prompt/drafting/report-builder services -- highest signal, confirmed
+            this phase via communication-drafting-service.ts's 1 real finding),
+         2) src/lib/*.ts top-level (orchestration/prompt-adjacent libs -- confirmed this phase via
+            orchestra-mock-data.ts's 29 real findings),
+         3) src/app/api/**/*.ts (AI-orchestration routes, e.g. src/app/api/ai/orchestrate/route.ts),
+         4) src/db/seed.ts + any src/**/*.test.ts fixtures (lowest priority -- these intentionally use
+            example data for local dev/test, so Phase 2 classifies rather than immediately flags: seed/test
+            fixture findings default into the Phase 3 exemption file, not a required fix)."
+      - "For each directory, produce a findings-count baseline (mirrors this task's own 36-finding/3-file
+         smoke test) -- this baseline is Phase 4's 'migration debt' starting number."
+    depends_on: [phase_0_dictionary_guardrail_design_phase_plan]
+    dependency_mechanism: "Direct mechanism dependency -- Phase 2 runs the exact
+      ai-os/TERMINOLOGY_GUARDRAIL_2026-07-24.py script this phase built and smoke-tested, with no new
+      scanning logic, only a wider --file argument list per directory sweep."
+
+  - id: phase_3_ci_enforcement_wiring
+    name: Wire guardrail into compliance-tracker CI as a coverage-gate job
+    scope:
+      - "Add a 'terminology-guardrail-check' job to compliance-tracker/.github/workflows/ci.yml, structurally
+         identical to the existing guardrail-presence / asset-registry-coverage / metadata-index-coverage jobs
+         (ci.yml lines 57-100): checkout, run the check script, fail the build only on findings NOT already
+         listed in a new exemption file (ai-os/registry/terminology-guardrail-exemptions.yaml, same shape as
+         ai-os/registry/asset-registry-coverage.yaml's exemption entries)."
+      - "Scope the CI run to the PR's changed files only (git diff --name-only against the base branch), not a
+         full-repo scan every run -- new/modified lines must be clean; legacy findings from Phase 2's baseline
+         stay exempted until Phase 4 migrates them, so this gate ratchets forward instead of blocking on
+         pre-existing debt."
+      - "Port ai-os/TERMINOLOGY_GUARDRAIL_2026-07-24.py's scanning logic to a Node/TS script
+         (scripts/check-terminology-guardrail.mjs) to match the existing coverage-gate jobs' toolchain
+         (bun/node, not python3) -- the other 3 coverage jobs are all .mjs; introducing a python3 dependency
+         into that CI job would be the only Python step in an otherwise all-JS coverage-gate suite."
+    depends_on: [phase_2_directory_scoped_rollout]
+    external_depends_on:
+      - "compliance-tracker/.github/workflows/ci.yml (repo: compliance-tracker, not claude-control) -- this
+         phase edits a file outside this session's own repo, so it must be dispatched as (or coordinate with)
+         a compliance-tracker-scoped task, not a claude-control-scoped one like this Phase 0 task."
+    dependency_mechanism: "Content + data dependency -- the exemption file's initial contents are Phase 2's
+      per-directory findings baselines; wiring CI before that baseline exists would mean either failing every
+      build immediately (all pre-existing findings unexempted) or shipping an exemption file with no real
+      basis. Also a toolchain dependency: the ported .mjs script needs Phase 1's expanded dictionary coverage
+      to keep its false-negative rate down as more directories come online."
+
+  - id: phase_4_existing_hardcoded_example_migration
+    name: Migrate existing hardcoded examples to registered placeholders
+    scope:
+      - "Add a --suggest-fix mode to the guardrail (or its ported .mjs form) that, for each finding, searches
+         ai-os/VARIABLE_DICTIONARY_2026-07-24.yaml for a placeholder whose entity/attribute name matches the
+         finding's surrounding code context (e.g. a company-name literal inside a Clients-related function
+         maps to <Clients.Name>), and emits a suggested diff -- never auto-applies without human review."
+      - "Work through Phase 2's per-directory findings baselines newest/highest-signal-first (src/lib/services
+         before src/db/seed.ts), converting each into either (a) a merged PR replacing the literal with its
+         suggested placeholder, or (b) a permanent exemption-file entry with a stated reason (e.g. seed.ts
+         local-dev fixtures are explicitly out of scope, per Phase 2's own classification)."
+      - "Track migration_completion_pct = (findings_resolved / findings_total_at_phase_2_baseline) per
+         directory as the real metric, re-run via the same guardrail script -- not a manually-updated number."
+    depends_on: [phase_3_ci_enforcement_wiring]
+    dependency_mechanism: "Content dependency -- migration only makes sense once the exemption file (Phase 3)
+      exists as the record of what's still outstanding; without it there is no ratchet to measure debt paydown
+      against, only a re-run of Phase 2's one-time baseline count."
+
+  - id: phase_5_full_enforcement_and_dictionary_completion
+    name: Full repo-wide enforcement, dictionary completion, exemption retirement
+    scope:
+      - "Expand ai-os/VARIABLE_DICTIONARY_2026-07-24.yaml to all 444 tables (Phase 1's final tier)."
+      - "Expand the CI job's file-type scope past .ts/.tsx prompt/template code to .md documentation and
+         .yaml/.json fixtures, per this task's original human-example pattern list (company names, person
+         names, dates apply equally to prose docs)."
+      - "Retire ai-os/registry/terminology-guardrail-exemptions.yaml once migration_completion_pct reaches
+         100% for every directory Phase 2 enumerated -- at that point the CI job's diff-only scope (Phase 3)
+         can widen to a full-repo scan on every PR, since there is no remaining legacy debt to ratchet around."
+    depends_on: [phase_4_existing_hardcoded_example_migration]
+    dependency_mechanism: "Content dependency -- exemption-file retirement is only correct once Phase 4's
+      migration_completion_pct metric actually reads 100%; retiring it earlier would silently re-introduce a
+      hard block on legacy findings Phase 4 hasn't gotten to yet."
+
+# ============================================================================
+# DEPENDENCY TABLE -- concrete mechanism per edge, mirroring
+# ai-os/TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml's own dependency_table
+# format (real file/data dependency, not a conceptual arrow).
+# ============================================================================
+dependency_table:
+  - from: phase_0_dictionary_guardrail_design_phase_plan
+    to: phase_1_dictionary_coverage_expansion
+    mechanism: "File dependency -- Phase 1 re-runs generate_variable_dictionary.py's exact
+      combined_reference_score ranking with a larger TOP_N; it needs that ranking function proven correct
+      against the real top-20 first (this task's own 320-entry output)."
+    status: planned
+  - from: phase_0_dictionary_guardrail_design_phase_plan
+    to: phase_2_directory_scoped_rollout
+    mechanism: "Direct mechanism dependency -- Phase 2 runs the same ai-os/TERMINOLOGY_GUARDRAIL_2026-07-24.py
+      script this task built and smoke-tested against 3 files, widened to full directories."
+    status: planned
+  - from: phase_2_directory_scoped_rollout
+    to: phase_3_ci_enforcement_wiring
+    mechanism: "Content dependency -- the CI job's exemption file needs Phase 2's real per-directory findings
+      baseline as its initial content; wiring CI before that baseline exists means either blocking every build
+      on unexempted legacy findings or shipping an exemption file with no real basis."
+    status: planned
+  - from: phase_1_dictionary_coverage_expansion
+    to: phase_3_ci_enforcement_wiring
+    mechanism: "Soft accuracy dependency (not a hard block) -- CI enforcement is meaningful with only the
+      top-20 dictionary (this task's real output), but false negatives (findings with no dictionary match)
+      drop as Phase 1's coverage tiers land."
+    status: planned
+  - from: "compliance-tracker/.github/workflows/ci.yml (external repo)"
+    to: phase_3_ci_enforcement_wiring
+    mechanism: "Hard external file dependency -- this phase edits a file that lives in the compliance-tracker
+      repo, not claude-control (this task's own repo). Must be dispatched as, or coordinated with, a
+      compliance-tracker-scoped task."
+    status: external_planned
+  - from: phase_3_ci_enforcement_wiring
+    to: phase_4_existing_hardcoded_example_migration
+    mechanism: "Content dependency -- Phase 4's migration_completion_pct metric is defined relative to Phase
+      3's exemption file; there is nothing to 'pay down' until that file exists as the ledger."
+    status: planned
+  - from: phase_4_existing_hardcoded_example_migration
+    to: phase_5_full_enforcement_and_dictionary_completion
+    mechanism: "Content dependency -- exemption-file retirement and full-repo-scan widening are only correct
+      once Phase 4's real migration_completion_pct metric reads 100% for every Phase-2-enumerated directory."
+    status: planned
+  - from: phase_1_dictionary_coverage_expansion
+    to: phase_5_full_enforcement_and_dictionary_completion
+    mechanism: "Content dependency -- Phase 5's dictionary-completion scope (all 444 tables) is Phase 1's
+      final tier, not new work; Phase 5 just requires that tier to have actually landed."
+    status: planned
+
+cross_links:
+  - path: /opt/veridian/ai-os/DATABASE_CATALOG.json
+    relationship: "authoritative_source_for -- every placeholder entity/attribute in
+      ai-os/VARIABLE_DICTIONARY_2026-07-24.yaml traces to a real table.column in this file (444 tables, 124
+      enums, mechanically generated by extract-db-schema-catalog.mjs, not AI-written)."
+  - path: ai-os/CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml
+    relationship: "shares_registration_pattern_with -- both this plan's artifacts and that schema's
+      populated_capabilities are registered in knowledge_engine + MASTER_INDEX.yaml registries using the same
+      superboss-register.py register-knowledge / index-add convention; no direct data dependency between the
+      two (Capability Registry indexes routes/capabilities, this plan indexes column-level example-value
+      terminology), but both feed the same MASTER_INDEX.yaml registries: section this session is building out."
+  - path: ai-os/TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml
+    relationship: "precedent_for -- phase/dependency_table structure and crontab_decisions_this_phase pattern
+      copied from this file, per this task's own KNOWN_CONTEXT instruction to cross-link prior session
+      initiatives where genuinely relevant."
+
+crontab_decisions_this_phase:
+  new_entries_added: 0
+  reason: "This phase is dictionary-generation/guardrail-design/phase-plan only, per its own CONSTRAINTS -- no
+    directory sweep, CI job, or migration mechanism exists yet for anything to schedule. Mirrors
+    ai-os/TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml's own Phase 0 crontab_decisions_this_phase (also 0
+    entries, same reasoning). The first real crontab entry (e.g. a periodic Phase 2 directory sweep, or a
+    scheduled dictionary-coverage-expansion re-run once Phase 1 ships) will be filed through the existing
+    ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml + ai-os/CRONTAB_APPROVED_SNAPSHOT.txt pattern, citing the
+    Owner's blanket '95pct-resources / Recommended-default' approval exactly as
+    ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml's own crontab_approval_note describes -- no fresh
+    confirmation needed when that phase is dispatched."
+
+registration:
+  knowledge_engine_query_command: 'python3 scripts/superboss-register.py query-knowledge "variable_dictionary" --tag domain:terminology_standardization'
+  master_index_registry_id: terminology_standardization

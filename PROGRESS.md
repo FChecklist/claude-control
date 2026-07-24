@@ -21,8 +21,13 @@
       7 placeholder_email_domain "*@acme.com"), exit code 1, saved to
       ai-os/TERMINOLOGY_GUARDRAIL_SMOKE_TEST_FINDINGS_2026-07-24.json.
 
+- [x] Wrote ai-os/TERMINOLOGY_STANDARDIZATION_PHASE_PLAN_2026-07-24.yaml: 6 phases (this Phase 0 + dictionary
+      coverage expansion + directory-scoped rollout + CI enforcement wiring, modeled on compliance-tracker
+      ci.yml's real guardrail-presence/asset-registry-coverage/metadata-index-coverage jobs + migration +
+      full enforcement), 8-row dependency table with concrete mechanisms, cross-links to DATABASE_CATALOG.json
+      and CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml.
+
 ## Remaining
-- [ ] Write ai-os/TERMINOLOGY_STANDARDIZATION_PHASE_PLAN_2026-07-24.yaml with real dependency table.
 - [ ] Register all 3 artifacts in knowledge_engine (superboss-register.py register-knowledge) and
       MASTER_INDEX.yaml (registries.terminology_standardization) + live file sync.
 - [ ] Commit + push, open PR, final checkpoint summary.
