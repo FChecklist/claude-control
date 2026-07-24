@@ -197,3 +197,29 @@ decisions:
   why_not_done_automatically: "This is NOT a crontab entry, so the Owner's existing 95pct-resources/Recommended-default blanket cron approval (crontab_approval_note in 20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml) does not cover it -- it is a new, always-on, INBOUND network listener, a materially different risk/blast-radius category (what can reach the port) than a periodic outbound-only cron job. Per this task's own CONSTRAINTS ('do not install a full iPaaS like n8n without Owner confirmation') and the general 'network-exposure decisions need explicit sign-off' discipline, this is left pending rather than silently started."
   status: pending
 
+- id: chatgpt-promptlib-openai-api-key
+  raised_by_task: task-20260724-141538-chatgpt-prompt-library-infrastructure
+  raised_ts: '2026-07-24T14:20:00+00:00'
+  title: "Provide a real OPENAI_API_KEY (and confirm the exact ChatGPT model) to unblock real
+    ChatGPT Prompt Library generation"
+  what: "This task built the full ChatGPT Prompt Library Workspace infrastructure: the sandbox
+    (/opt/veridian/chatgpt-prompt-library/, 15 real subfolders), its write-guard
+    (scripts/chatgpt_promptlib_guard.py), the per-prompt CSV schema
+    (ai-os/CHATGPT_PROMPT_SCHEMA_2026-07-24.yaml, reusing VARIABLE_DICTIONARY_2026-07-24.yaml's
+    <Entity.Attribute> convention), a real coverage report (scripts/generate_prompt_coverage_report.py,
+    run against the live 10-row capability_registry -- honest 0pct baseline, every capability listed
+    missing), and a duplicate-detection script (scripts/detect_prompt_duplicates.py, proven against a
+    synthetic fixture with a planted duplicate). The one thing NOT built, by this task's own explicit
+    scope: the actual LLM-execution call that generates the 10,000 real prompts. Confirmed this task:
+    `grep -i openai /opt/veridian/shared/.env` shows only a placeholder comment, no real key. Full
+    detail and the exact generation call shape: ai-os/CHATGPT_PROMPTLIB_BLOCKER_2026-07-24.yaml."
+  needed_action: "(1) Provide a real OPENAI_API_KEY in /opt/veridian/shared/.env (or wherever the Owner
+    directs secrets to live), and (2) name the exact ChatGPT model to call (e.g. gpt-4o, gpt-4.1) for
+    the generation task that will use it -- this infrastructure task's own CONSTRAINTS require the future
+    generation task to use whatever model the Owner actually names, not a default this task assumes."
+  why_not_done_automatically: "No AI agent can fabricate a real API key, and this session was explicitly
+    instructed (KNOWN_CONTEXT) not to silently substitute a different provider (Claude/GROQ/OpenRouter)
+    in ChatGPT's place without saying so -- the Owner named ChatGPT specifically for this library. This
+    is a real external-credential dependency, not a judgment call an agent can resolve."
+  status: awaiting_owner_decision
+

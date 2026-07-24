@@ -1,0 +1,75 @@
+meta:
+  title: VERIDIAN ChatGPT Prompt Library -- go-live blocker
+  task: task-20260724-141538-chatgpt-prompt-library-infrastructure
+  instruction: INS-20260724-141341-5f67
+  generated_at: '2026-07-24'
+  registered_as: registries.chatgpt_prompt_library (ai-os/MASTER_INDEX.yaml) +
+    OWNER_DECISIONS_NEEDED_2026-07-23.yaml id chatgpt-promptlib-openai-api-key
+
+status: infrastructure_100pct_ready_generation_blocked_on_api_key
+
+what_is_done:
+  - 'Sandbox: /opt/veridian/chatgpt-prompt-library/ with all 15 real subfolders (CSV, Intent, Keywords,
+    Variables, Capabilities, Entities, Modules, Domains, Routes, Coverage, Validation, Duplicates,
+    Statistics, Reports, History), created and write-guarded by scripts/chatgpt_promptlib_guard.py.'
+  - 'Schema: ai-os/CHATGPT_PROMPT_SCHEMA_2026-07-24.yaml -- the real 15-column per-prompt CSV schema
+    (Prompt ID, Prompt, Intent, Business Domain, Module, Capability, Business Process, Entity, Action,
+    Variables, Keywords, Expected Software Capability, Expected Output, AI Required Yes/No, Confidence),
+    reusing ai-os/VARIABLE_DICTIONARY_2026-07-24.yaml''s `<Entity.Attribute>` placeholder convention.'
+  - 'Coverage tooling: scripts/generate_prompt_coverage_report.py, run for real against the live
+    capability_registry (10 real capabilities) -- honest 0pct baseline, every real capability listed
+    under missing_capabilities (see /opt/veridian/chatgpt-prompt-library/Coverage/PROMPT_COVERAGE_REPORT.json).'
+  - 'Duplicate-detection tooling: scripts/detect_prompt_duplicates.py, proven correct against a 3-row
+    synthetic fixture (--test-fixture) with a planted exact duplicate -- detector found exactly the
+    planted group and correctly did not flag the distinct row.'
+
+what_is_missing:
+  - id: real_openai_api_key
+    what: "No real OPENAI_API_KEY exists. Confirmed this task: `grep -i openai /opt/veridian/shared/.env`
+      shows only a placeholder comment ('# OPENAI_API_KEY not provided -- add here if/when you have one'),
+      no real key. This task does NOT fabricate one, and does NOT silently substitute Claude/GROQ/OpenRouter
+      in its place without saying so -- the Owner named ChatGPT specifically for this library, so the
+      generation call must actually go to that provider once a key exists, or the Owner must explicitly
+      redirect it to a different named model."
+    blocks: "The one remaining step: an LLM-execution call that turns each real capability_registry row
+      into N real prompt rows conforming to ai-os/CHATGPT_PROMPT_SCHEMA_2026-07-24.yaml, written into
+      /opt/veridian/chatgpt-prompt-library/CSV/."
+
+exact_generation_call_shape_once_unblocked:
+  summary: "One real capability -> N real prompts, for every row in the live capability_registry table."
+  precondition: "A real OPENAI_API_KEY set in /opt/veridian/shared/.env (or wherever the Owner directs
+    secrets to live), and the Owner naming the exact ChatGPT model to call (e.g. gpt-4o, gpt-4.1 -- not
+    assumed by this task; use whatever the Owner names when this runs, per this task's own CONSTRAINTS)."
+  inputs:
+    - "Real capability rows: python3 scripts/superboss-register.py list-capabilities (10 real rows as of
+      this task -- capability_name, inputs, business_rules, workflow, owner, ai_required, confidence,
+      etc. per CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml's capability_record_schema)."
+    - "The schema contract: ai-os/CHATGPT_PROMPT_SCHEMA_2026-07-24.yaml's csv_schema.columns (exact 15
+      column names/types/descriptions) and placeholder_variable_convention (only registered
+      `<Entity.Attribute>` tokens from ai-os/VARIABLE_DICTIONARY_2026-07-24.yaml may appear in a
+      generated Prompt's example data)."
+  call_shape: |
+    for capability in list_capabilities():           # real, live capability_registry rows
+        prompt_rows = call_chatgpt(
+            model=OWNER_NAMED_MODEL,                  # never assumed -- Owner names it at run time
+            system_prompt=render_schema_instructions(CHATGPT_PROMPT_SCHEMA_2026-07-24.yaml),
+            user_prompt=render_capability_context(capability),  # capability_name, inputs, business_rules,
+                                                                  # workflow, owner, ai_required, confidence
+            n=N,                                       # target prompt count per capability, Owner-set
+        )
+        for row in prompt_rows:
+            validate_against_schema(row)               # 15 required columns present + typed correctly
+            validate_placeholders_registered(row["Variables"])  # every token in VARIABLE_DICTIONARY
+        write_via_guard(                                # scripts/chatgpt_promptlib_guard.py -- the ONLY
+            "CSV/PROMPTS_<capability_name>_<YYYY-MM-DD>.csv",  # sanctioned write path, no bare open()
+            prompt_rows,
+        )
+  post_generation: "Re-run scripts/generate_prompt_coverage_report.py and scripts/detect_prompt_duplicates.py
+    (real mode, no --test-fixture) against the newly written CSV/ files -- both already work against real
+    data, they were only run against the honest zero-prompt baseline this task because no prompts exist yet."
+  owner_naming_note: "This task's own CONSTRAINTS explicitly require: 'the actual prompt-generation call
+    belongs to a future task once the real key exists, and must use the model the Owner actually named
+    when it runs' -- do not default to a specific gpt-* model name without that explicit instruction."
+
+owner_decision_needed_entry: "Filed in ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml, id
+  chatgpt-promptlib-openai-api-key, status awaiting_owner_decision."
