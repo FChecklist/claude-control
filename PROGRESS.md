@@ -39,10 +39,12 @@
       `supervisor-entrypoint-deployment-logging-2026-07-23.diff`), documenting the
       real diff applied to the live server script.
 
+- [x] Pushed branch and opened PR #15:
+      https://github.com/FChecklist/claude-control/pull/15
+
 ## Remaining
-- [ ] Push this branch and open the PR; let this task's own tier1 auto-merge (using
-      the now-fixed live script) serve as the real-world regression test requested
-      by the spec's EXPECTED_OUTPUT -- confirm via `gh pr view --json state,mergedAt`
-      and the resulting task.yaml checkpoint that it lands as `completed`, not
-      `blocked`.
+- [ ] Let this task's own tier1 auto-merge (using the now-fixed live script) serve
+      as the real-world regression test requested by the spec's EXPECTED_OUTPUT --
+      confirm via `gh pr view --json state,mergedAt` and the resulting task.yaml
+      checkpoint that it lands as `completed`, not `blocked`.
 - [ ] Final checkpoint summary.
