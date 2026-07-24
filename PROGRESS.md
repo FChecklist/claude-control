@@ -41,5 +41,5 @@
   source -- compliance-tracker's copy is present but hundreds of lines stale).
 
 ## Remaining
-- [ ] Commit + push + PR (separate from #10)
+- [x] Commit + push + PR (#11: https://github.com/FChecklist/claude-control/pull/11, separate from #10)
 - [ ] Final checkpoint summary to Owner
