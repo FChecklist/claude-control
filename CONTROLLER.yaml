@@ -4691,3 +4691,24 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260724-070131-veridian-terminology-standardization-pha/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/18'
     last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-041754-self-sustaining-system-engine-phase2-cle
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''self-sustaining-system-engine-phase2-cleanup'' on
+      claude-control reached status=blocked. Superboss rejected: https://github.com/FChecklist/claude-control/pull/11
+      — see review.json for issues'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-041754-self-sustaining-system-engine-phase2-cle/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/11'
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-072725-fix-auditor-engine-pr12-conflict
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''fix-auditor-engine-pr12-conflict'' on claude-control
+      reached status=completed. tier1, Superboss-approved, merged autonomously: https://github.com/FChecklist/claude-control/pull/19'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-072725-fix-auditor-engine-pr12-conflict/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/19'
+    last_touched: '2026-07-24'
