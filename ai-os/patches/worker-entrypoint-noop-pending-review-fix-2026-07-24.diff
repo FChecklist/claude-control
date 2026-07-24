@@ -1,0 +1,59 @@
+diff --git a/scripts/worker-entrypoint.sh b/scripts/worker-entrypoint.sh
+index 4a33173..e1a8394 100755
+--- a/scripts/worker-entrypoint.sh
++++ b/scripts/worker-entrypoint.sh
+@@ -344,15 +344,53 @@ fi
+ # ahead of the default branch (a genuine no-op) -- otherwise fall through to
+ # the same quality-gate + pending_review + supervisor path every other real
+ # change takes.
++#
++# 2026-07-24 (task-20260724-074329 gap-close, against task-20260724-041754's
++# own review.json rejection of PR #11): the AHEAD_COUNT==0 branch below used
++# to call `checkpoint --status completed` directly. That is now rejected by
++# veridian-task.py's cmd_checkpoint guard above (it hard-requires a prior
++# 'pending_review' checkpoint before allowing 'completed'), and this script
++# never checked that command's exit code -- so a genuine first-run no-op
++# silently failed to checkpoint at all, leaving the task stuck at in_progress
++# with its systemd service disabled and no automatic recovery. Exactly the
++# stuck-task bug class this whole area exists to close, reintroduced for a
++# different trigger.
++#
++# Considered routing a genuine no-op through the full quality-gate +
++# pending_review + supervisor path unconditionally (i.e. deleting this
++# whole branch and always falling through). Rejected: a genuine no-op has
++# zero commits ahead of $DEFAULT_BRANCH, so supervisor-entrypoint.sh's own
++# `gh pr create` has nothing to open a PR for -- read that script and
++# confirmed it does not special-case an empty diff. It still always reaches
++# a terminal checkpoint though (blocked, if the AI reviewer -- correctly --
++# rejects reviewing an empty diff, or blocked via its own failed-merge
++# fallback if it doesn't), so sending a no-op there does not reintroduce a
++# silent-stuck-task bug, it is just wasted review spend for known-zero
++# benefit. A brand-new terminal status (e.g. completed_no_changes) was also
++# considered and rejected: "terminal" is hardcoded in several other places
++# this fix must not touch (sync-controller-back.py's TERMINAL/STATUS_MAP,
++# queue-dispatcher.py's TERMINAL_GOOD, health-check-15min.py) -- inventing a
++# status those don't recognize would make a no-op task look permanently
++# non-terminal to them, the same stuck-task bug class again, just moved.
++#
++# Fix: checkpoint pending_review first (satisfies the state-machine
++# invariant, same status the non-no-op path already uses) with a note that
++# makes the no-op nature explicit for whoever/whatever reads it next, then
++# still start the supervisor -- cheap defense in depth, and it is the
++# component with the actual authority to decide a status this task never
++# self-reports directly.
++# --- NOOP-COMPLETION-BLOCK-START (see tests/worker_noop_pending_review_test.sh) ---
+ if git -C "$WORKSPACE" diff --quiet && git -C "$WORKSPACE" diff --cached --quiet && [ -z "$(git -C "$WORKSPACE" status --porcelain)" ]; then
+   AHEAD_COUNT=$(git -C "$WORKSPACE" rev-list --count "origin/${DEFAULT_BRANCH}..HEAD" 2>/dev/null || echo 0)
+   if [ "$AHEAD_COUNT" -eq 0 ]; then
+-    python3 /opt/veridian/scripts/veridian-task.py checkpoint "$TASK_ID" --status completed --note "worker finished, no changes to commit and zero commits ahead of $DEFAULT_BRANCH -- genuine no-op"
++    python3 /opt/veridian/scripts/veridian-task.py checkpoint "$TASK_ID" --status pending_review --note "worker finished, no changes to commit and zero commits ahead of $DEFAULT_BRANCH -- genuine no-op, routing through pending_review (not completed directly) so the state-machine invariant holds and the supervisor gets the final say"
+     systemctl --user disable "veridian-worker@${TASK_ID}.service" >> "$TASK_DIR/worker.log" 2>&1 || true
++    systemctl --user start "veridian-supervisor@${TASK_ID}.service" >> "$TASK_DIR/worker.log" 2>&1 || true
+     exit 0
+   fi
+   echo "clean working tree but $AHEAD_COUNT commit(s) ahead of $DEFAULT_BRANCH (worker self-committed) -- routing through quality gates + pending_review instead of a direct completed shortcut" >> "$TASK_DIR/worker.log"
+ fi
++# --- NOOP-COMPLETION-BLOCK-END ---
+ 
+ # Quality gates: up to 2 auto-fix attempts (same conversation via --continue)
+ # before giving up and marking blocked for human review.
