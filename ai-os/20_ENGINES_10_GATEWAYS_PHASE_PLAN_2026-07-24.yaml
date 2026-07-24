@@ -502,6 +502,100 @@ phases:
       zero iPaaS deps in any of the 3 repos -- do not install a full iPaaS like n8n without Owner
       confirmation, per that plan's own tool_installable_compatible discipline)."
     depends_on: [phase_1_capability_registry_live_wiring]
+    status: done
+    status_detail:
+      produced_by_task: task-20260724-122137-phase3-formalize-task-gateway-py-task-ex
+      completed_on: '2026-07-24'
+      prior_art_finding_not_previously_recorded: "repos/compliance-tracker/src/lib/services/automation-rule-service.ts
+        (Wave 30) is ALREADY a real, live trigger->condition->action automation rule builder
+        ('n8n-inspired', per its own header) -- triggerType/triggerConditions/actionType/actionConfig,
+        backed by automationRules/automationRuleRuns tables, and it already calls
+        indexCapability('automation_rule', rule.id, ...), i.e. it already sits on the Capability Registry's
+        automation_rule entity type this phase's own objective names. Not found by Phase 0's inventory or
+        Phase 1/2 -- recorded here for the first time, per the Owner's standing no-duplication rule. Its
+        real gap: scoped entirely to 2 in-app/product call sites (notice-service.ts, pms-issue-service.ts)
+        and 2 action types (notify_user, create_task) -- no path to the AI-OS operational layer, and out of
+        this task's repo boundary anyway (EXPECTED_OUTPUT requires a claude-control PR only). This phase
+        does not rebuild it -- see what_shipped below for the real, non-duplicate gap this phase closes
+        instead."
+      what_shipped:
+        - "ai-os/WORKFLOW_CONTRACT_SCHEMA_2026-07-24.yaml + scripts/workflow_contract.py: one named
+          workflow_contract_schema (phases_enum: submitted/planned/dispatched/logged/closed) grounded in
+          the real, read shapes of both scripts/task-gateway.py's submit/start/log/close lifecycle and
+          compliance-tracker's task-execution-engine.ts executeTask/classification/markTaskOutcome
+          lifecycle -- a field_equivalence_table maps task_id/instruction_id/work_item_id/audit_verdict
+          against their real TS-side counterparts, honestly documenting where they diverge (e.g.
+          audit_verdict's postflight re-verification has no TS-side equivalent) rather than fabricating
+          parity. scripts/task-gateway.py's submit/start/log/close JSON outputs now all carry a real
+          workflow_phase field sourced from this module (additive only, same non-breaking discipline Phase
+          2 used on preflight-guard.py/risk-tier.py) -- live-verified: `task-gateway.py submit --text
+          ... --source ai_agent --session-id ...` returns workflow_phase=submitted against the real
+          instruction ledger."
+        - "scripts/automation_rule_engine.py: the real trigger/condition/action automation rule engine for
+          the AI-OS operational layer (the actual, non-duplicate gap -- see prior_art_finding above).
+          TriggerCondition shape (field/operator/value, operator constrained to equals) is a field-for-field
+          port of automation-rule-service.ts's own type, not a competing rule language. Rules are keyed to
+          Phase 1's live capability_registry.capability_name. New automation_rules/automation_rule_runs
+          tables (same idempotent-create convention as capability_registry). register-rule/list-rules/
+          evaluate-rules CLI, live-tested end to end: registered a real rule tied to the live
+          capability_registry_dedup capability row, evaluate-rules against a matching payload really
+          dispatched a log_action (real action_id returned), a non-matching payload correctly fired zero
+          rules. 3 real action types (task_gateway_submit/notify_owner/log_action), deliberately no
+          AI-in-the-loop or code-execution action type, same 'much smaller than n8n itself' discipline
+          automation-rule-service.ts's own header documents."
+        - "scripts/webhook_receiver.py: standalone, stdlib-only (zero new pip dependency) inbound webhook
+          receiver -- the first real implementation of dependency_table's 'Integration Engine (10) ->
+          Automation Engine (9)' edge (previously status: planned, now status: live via this receiver
+          calling automation_rule_engine.py's evaluate-rules on every verified request).
+          HMAC-SHA256-signed (X-Veridian-Signature: sha256=<hex>), the exact convention
+          webhook-deliver.ts's own outbound delivery already uses, reused not reinvented. Live end-to-end
+          tested this session on loopback (127.0.0.1, temporary, not left running): an unsigned POST to
+          /webhook/invoice_created correctly returned 401; a correctly-signed POST fired a real registered
+          automation rule and returned its real automation_rule_runs id and dispatched action_id in the
+          response body -- the full inbound-webhook-to-real-action chain proven live, not simulated."
+        - "ai-os/INBOUND_WEBHOOK_RECEIVER_EVALUATION_2026-07-24.yaml: the OSS-pattern evaluation this
+          phase's own objective text asks for -- n8n (and comparable full iPaaS options) explicitly
+          considered and rejected without Owner confirmation, reasoned against the real duplication risk
+          (a 3rd automation-rule mechanism on top of automation-rule-service.ts and this phase's own new
+          automation_rule_engine.py) and the new Node.js-service/credential-storage surface it would add;
+          the standalone stdlib receiver chosen instead, consistent with every other script this whole plan
+          has added (task-gateway.py, decision-service.py, policy_decision.py -- none introduce a new pip
+          dependency)."
+        - "systemd/veridian-webhook-receiver.service: unit file present, NOT enabled/started. A new inbound
+          network listener is a real infra/security decision (what can reach the port) categorically
+          different from the periodic, outbound-only cron entries the Owner's existing blanket approval
+          covers -- filed as a new, separate ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml entry
+          (id: webhook-receiver-network-exposure, status: pending) rather than silently started. No
+          crontab change was made by this phase (an HTTP listener is not cron-shaped), so
+          CRONTAB_APPROVED_SNAPSHOT.txt is correctly untouched."
+      real_evidence:
+        - "python3 scripts/task-gateway.py submit --text 'phase 3 workflow contract verification test'
+          --source ai_agent --session-id 'phase3-verify-session': workflow_phase=submitted,
+          instruction_id real (INS-20260724-*)."
+        - "python3 scripts/automation_rule_engine.py register-rule --rule-name
+          capability-registry-dedup-webhook-log --capability-name capability_registry_dedup
+          --trigger-type webhook.capability_proposed --action-type log_action ...: {\"registered\": true},
+          real capability_registry FK-by-convention check enforced (an unknown --capability-name is
+          rejected, live-tested during development)."
+        - "python3 scripts/automation_rule_engine.py evaluate-rules --trigger-type webhook.invoice_created
+          --payload '{\"event\":\"invoice.created\"}' with a matching + non-matching rule registered:
+          matching payload -> rules_fired=1 with a real dispatched action_id; non-matching payload ->
+          rules_fired=0 -- conditionsMatch() port confirmed correct both ways."
+        - "webhook_receiver.py live loopback test: unsigned POST /webhook/invoice_created -> 401
+          {\"error\": \"invalid or missing signature\"}; correctly HMAC-signed POST -> 200 with a real
+          evaluation body (rules_evaluated=2, rules_fired=2, each with a real automation_rule_runs id);
+          GET /healthz -> 200 {\"ok\": true}."
+        - "python3 scripts/superboss-register.py query-knowledge \"phase_3_workflow_automation_integration\"
+          --tag domain:veridian-20-engine-10-gateway: found=1 (this phase's own SUCCESS_CRITERIA check)."
+      what_remains_for_later_phases:
+        - "Owner decision on webhook-receiver-network-exposure (OWNER_DECISIONS_NEEDED_2026-07-23.yaml) --
+          the receiver is real and tested but not running anywhere until that's resolved."
+        - "A TypeScript-side workflow_phase equivalent in task-execution-engine.ts (so it emits the shared
+          contract itself, not just has it documented against its real shape) is compliance-tracker's own
+          PR to make -- same deferral posture Phase 1/2 used for their own TS-side gaps. The schema's
+          field_equivalence_table is designed so that port is a direct translation, not a redesign."
+        - "phase_4_document_notification_data and phase_5_metadata_knowledge_consolidation (both
+          depends_on: [], already satisfiable) remain open in this plan -- not attempted in this task."
 
   - id: phase_4_document_notification_data
     closes_engines: [11, 12, 13]
