@@ -1,0 +1,167 @@
+meta:
+  title: "Phase 6 -- Intent/Context/Planning/Learning Engine extensions"
+  created: '2026-07-24'
+  produced_by_task: task-20260724-143010-phase6-extend-intent-engine-beyond-mode
+  phase_id: phase_6_intent_context_planning_learning
+  plan_file: ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml
+  precedent: "Same method as phases 1-5's own status_detail blocks: real file reads first
+    (repos/compliance-tracker checked out read-only at /opt/veridian/repos/compliance-tracker),
+    then a claude-control-only deliverable, honestly stating the repo boundary rather than
+    editing a separate repo this task's own EXPECTED_OUTPUT does not cover."
+  repo_boundary_honestly_stated: "context.ts, task-tightening.ts, dynamic-chain-directory-service.ts,
+    task-reflection.ts, and browser-intent-cache.ts all live in the separate FChecklist/compliance-tracker
+    repo. Per phases 1-5's own established boundary (EXPECTED_OUTPUT requires a claude-control PR
+    only), this task reads those files' real shapes to ground the 4 mechanisms below but does not
+    edit or commit to that repo. Every TS-side wiring gap is named explicitly in each section's own
+    what_remains_for_compliance_tracker field, same deferral posture every earlier phase used."
+
+intent_engine:
+  closes_engine: 1
+  gap_being_closed: "Recall-based coverage (browser-intent-cache.ts's IndexedDB recency/frequency
+    proxy, chain-usage-ranking.ts's server-side sibling) is real but is recall-of-past-choice, not
+    general free-text NLU classification for a never-seen request."
+  objective_constraint: "Phase 6's own objective text: extend toward general free-text
+    classification ONLY once a real product need is identified; do not build a generic NLU layer
+    speculatively -- today's recall coverage may already be sufficient."
+  what_shipped: "scripts/intent_engine.py: check-intent wraps Phase 1's lookup-capability CLI
+    (the real, live free-text-to-capability resolution path that already exists) and logs every
+    MISS (found=false) to a new intent_unmatched_log table (same DB, same idempotent-create
+    convention as automation_rules). gap-report aggregates: a normalized query repeated
+    MIN_REPEAT_FOR_PATTERN=3+ times across >=2 distinct sessions is reported as a real candidate
+    pattern (verdict=real_pattern_detected); otherwise verdict=insufficient_data -- honest, not
+    fabricated, same discipline as task-reflection.ts's own insufficient_data band. This is the
+    detector that would surface a real product need for general NLU if/when one exists -- it does
+    not build the NLU itself, per this phase's own CONSTRAINTS."
+  real_evidence: "Live-tested against the real DB: a genuinely out-of-domain query ('what is the
+    weather forecast for tomorrow') correctly misses lookup-capability (found=false, confirmed
+    before wrapping) and is logged; repeating it across 3 distinct session_ids + one more distinct
+    miss produces gap-report -> verdict=real_pattern_detected, candidate_patterns=[{normalized_query:
+    'what is the weather forecast for tomorrow', repeat_count: 3, distinct_sessions: 3}]. Before
+    those test rows, gap-report honestly returned verdict=insufficient_data, total_unmatched_logged=0
+    -- the correct real-world state today (this session's own test traffic is the only unmatched
+    signal that exists yet)."
+  finding: "No real product need for general free-text NLU classification has been identified in
+    live usage yet (zero real unmatched-intent history existed before this task's own test rows).
+    Per the objective's own instruction, general NLU is NOT built. What IS built is the mechanism
+    that will honestly detect that need the moment it becomes real, rather than guessing today."
+  what_remains_for_compliance_tracker: "IntentCommandPalette.tsx / ChainSelector.tsx (or any future
+    free-text chat entry point) could call check-intent (via a thin backend proxy) whenever a
+    user's free-text submission doesn't match an existing mode-pill/chain-path selection, so real
+    product-usage misses accumulate here instead of only this task's own synthetic test data. Not
+    built here -- cross-repo call, same deferral posture as every earlier phase's own TS-side gaps."
+
+context_engine:
+  closes_engine: 2
+  gap_being_closed: "ServiceContext ({orgId, actor, request?}, context.ts) is real, enforced,
+    request-scoped tenant/actor context -- it carries nothing across turns of a conversation, no
+    session concept at all."
+  objective_constraint: "Extend toward real cross-turn conversational memory, reusing Knowledge
+    Engine's entity_relationships, not a new store."
+  what_shipped: "scripts/context_engine.py: remember-turn / recall-context / list-sessions. New
+    conversation_memory table (same DB file as Knowledge Engine's knowledge_engine table, same
+    write-lock/idempotent-create convention as capability_registry/automation_rules -- not a new
+    store/DB) whose entity_relationships column reuses the EXACT edge shape Knowledge Engine's own
+    entity_relationships column uses ({related_entity_type, related_entity_id, relationship_type,
+    evidence}), just renamed related_artifact_* -> related_entity_* since a conversational mention
+    is not a file artifact. knowledge_engine's own table was not reused directly because its schema
+    is genuinely file-shaped (register-knowledge's --path is sha256-hashed against a real on-disk
+    file, artifact_type constrained to canonical/derived) -- forcing a conversation session into
+    that shape would have meant a permanent, dishonest PATH_MISSING verification_status for
+    something that was never a file, the same kind of schema misuse this whole plan's own
+    discipline (never fabricate a row to fit a schema) forbids."
+  real_evidence: "Live-tested end to end against the real DB: remember-turn for session
+    conv-phase6-test-1 across 2 turns (capability gst_calculation_engine 'mentioned', then
+    dynamic_chain commission-chain-1 'resolved_to') accumulates both edges in order; recall-context
+    returns turn_count=2, both entity_relationships edges, and the running summary set on turn 1;
+    list-sessions --org-id org-demo correctly returns exactly that 1 session."
+  what_remains_for_compliance_tracker: "context.ts's own ServiceContext could carry an optional
+    conversationSessionId, with a service call that has one call recall-context (via a thin
+    backend proxy into this DB, or a TypeScript-side port of the same table/logic if
+    compliance-tracker's own Postgres is preferred) before it acts, and remember-turn after --
+    the exact same pattern createChainVersion()'s own entity_relationships write already
+    demonstrates for a different edge type. Not built here -- cross-repo wiring, same deferral
+    posture as every earlier phase."
+
+planning_engine:
+  closes_engine: 4
+  gap_being_closed: "task-tightening.ts validates that a SINGLE task's objective/scope/
+    successCriteria/complexityTier envelope is complete -- no multi-step concept.
+    dynamic-chain-directory-service.ts's searchChains()/detectMissingChain() recommend from an
+    already-known, finite set of dynamic_chains rows -- neither generates a novel multi-step
+    plan/DAG from a goal."
+  objective_constraint: "Extend task-tightening.ts + dynamic-chain-directory-service.ts toward
+    real multi-step plan/DAG generation."
+  what_shipped: "scripts/plan_generator.py: generate-plan / get-plan / list-plans. Deterministic-only
+    split of a free-text objective into ordered steps (on ';' / 'then' / 'after that' -- same
+    'no LLM call' discipline every gate in this codebase already follows); each step is resolved
+    against Phase 1's live capability_registry via lookup-capability (a step with a real
+    deterministic capability match is marked resolved_capability_name + ai_required, not
+    hypothetical); steps are sequenced via real entity_relationships-shaped 'depends_on' edges
+    (plan_step -> depends_on -> previous plan_step), stored in new plans/plan_steps tables (same
+    DB, same conventions). Each step's objective/scope/success_criteria/complexity_tier fields are
+    the same SHAPE as TightTask (task-tightening.ts) -- reused field names, not a competing
+    envelope -- so a generated step is immediately dispatchable through that real TS-side gate
+    without translation."
+  real_evidence: "Live-tested against the real DB: generate-plan --objective 'calculate gst rate
+    split for an interstate invoice; then calculate sales commission percent rate; then send a
+    customer notification' --complexity-tier integrative produced a real 3-step DAG: step 1 ->
+    gst_calculation_engine (ai_required=false), step 2 -> commission_calculator
+    (ai_required=false, depends_on step 1), step 3 -> no deterministic match (ai_required=null,
+    depends_on step 2) -- 2 of 3 steps genuinely resolved to a deterministic path, the third
+    honestly left unresolved rather than guessed. get-plan/list-plans confirmed the full DAG
+    (including entity_relationships depends_on edges) persists and round-trips correctly."
+  what_remains_for_compliance_tracker: "dynamic-chain-directory-service.ts's own
+    proposeDynamicChain() could consume an unresolved plan step (no capability match) as its
+    `description` input, turning a generated plan's gap directly into a real Dynamic Chain
+    proposal instead of a dead end. Not built here -- cross-repo, same deferral posture as
+    every earlier phase."
+
+learning_engine:
+  closes_engine: 16
+  gap_being_closed: "task-reflection.ts's runTaskReflection() computes real speedVerdict/
+    costVerdict but its differentAiTierFlag/reusablePatternFlag are ALWAYS written with
+    verdict: null, needsJudgment: true -- confirmed by reading the whole file: nothing in this
+    codebase ever sets them to a real value. Structured verdict/proxy scoring is recorded, never
+    consumed."
+  objective_constraint: "Extend task-reflection.ts verdicts toward decisions that actually feed
+    back into engine behavior."
+  what_shipped: "scripts/learning_engine.py: reflect / reflect-all / list-reflections. Ports
+    task-reflection.ts's verdictFor() algorithm (MIN_COMPARABLE_SAMPLE=3, honest
+    insufficient_data below that bar) onto this repo's own real outcome history --
+    automation_rule_engine.py's automation_rule_runs.status over each rule's last 20 runs -- and,
+    unlike task-reflection.ts's write-only flags, this module's verdict is REAL CONSUMED
+    FEEDBACK: a rule whose success rate falls below 50% (verdict=degraded) has its
+    automation_rules.is_active flipped to 0. evaluate-rules (automation_rule_engine.py's
+    cmd_evaluate_rules, already-shipped Phase 3 code, unmodified) already filters
+    `WHERE trigger_type = ? AND is_active = 1` -- so a degraded rule genuinely stops firing on
+    the very next evaluate-rules call, zero change needed to that file. A recovered rule
+    (verdict=reliable while previously disabled by this same mechanism) is symmetrically
+    re-enabled -- consumed behavior in both directions, not a one-way kill switch."
+  real_evidence: "Live end-to-end test against the real DB: registered rule
+    phase6-learning-engine-test-rule (AR-b3ac3e967571); 2 real successful evaluate-rules fires,
+    then 4 simulated failed automation_rule_runs rows inserted. reflect --rule-id AR-b3ac3e967571
+    -> sample_size=6, success_rate=0.333, verdict=degraded, action_taken=disabled_by_learning_verdict
+    -- confirmed automation_rules.is_active flipped 1 -> 0 in the live DB. Next evaluate-rules call
+    against the same trigger_type -> rules_fired=0 (the rule genuinely stopped firing, not a
+    simulated claim). 5 simulated successful runs then inserted; reflect again ->
+    sample_size=11, success_rate=0.636, verdict=reliable, action_taken=reenabled_by_learning_verdict
+    -- is_active flipped back 0 -> 1, and the next evaluate-rules call -> rules_fired=1 again.
+    reflect-all confirmed it runs safely across all 3 real rules in the live capability_registry
+    including 2 with genuinely insufficient_data (0 and 1 real prior runs) -- honestly reported,
+    no action taken, matching task-reflection.ts's own insufficient_data discipline."
+  what_remains_for_compliance_tracker: "task-reflection.ts's own differentAiTierFlag/
+    reusablePatternFlag could be consumed the same way once compliance-tracker has an analogous
+    read-then-act call site (e.g. a periodic job that reads taskReflections and disables an
+    ai_team_dispatch roleKey whose recent verdicts are chronically degraded) -- this module is the
+    reference implementation for that exact pattern; the algorithm is a direct port, not a redesign
+    a future compliance-tracker PR would need to invent from scratch. Not built here -- cross-repo,
+    same deferral posture as every earlier phase."
+
+new_tables_added:
+  - "intent_unmatched_log (scripts/intent_engine.py) -- same superboss-register.sqlite file"
+  - "conversation_memory (scripts/context_engine.py) -- same superboss-register.sqlite file"
+  - "plans, plan_steps (scripts/plan_generator.py) -- same superboss-register.sqlite file"
+  - "learning_reflections (scripts/learning_engine.py) -- same superboss-register.sqlite file"
+
+registration:
+  knowledge_engine_query_command: 'python3 scripts/superboss-register.py query-knowledge "phase_6_intent_context_planning_learning" --tag domain:veridian-20-engine-10-gateway'

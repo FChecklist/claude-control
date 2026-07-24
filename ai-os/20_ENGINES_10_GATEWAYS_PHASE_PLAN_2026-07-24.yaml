@@ -781,6 +781,112 @@ phases:
       plan/DAG generation. Extend Learning Engine's task-reflection.ts verdicts toward decisions that
       actually feed back into engine behavior (today they are recorded, not yet consumed)."
     depends_on: [phase_1_capability_registry_live_wiring, phase_5_metadata_knowledge_consolidation]
+    status: done
+    status_detail:
+      produced_by_task: task-20260724-143010-phase6-extend-intent-engine-beyond-mode
+      completed_on: '2026-07-24'
+      repo_boundary_honestly_stated: "context.ts, task-tightening.ts, dynamic-chain-directory-service.ts,
+        task-reflection.ts, and browser-intent-cache.ts all live in the separate FChecklist/compliance-tracker
+        repo, read-only checked out at /opt/veridian/repos/compliance-tracker. Per phases 1-5's own
+        established boundary (EXPECTED_OUTPUT requires a claude-control PR only), this task reads
+        those files' real shapes to ground all 4 mechanisms below but does not edit or commit to that
+        repo. See ai-os/PHASE6_INTENT_CONTEXT_PLANNING_LEARNING_2026-07-24.yaml's own
+        repo_boundary_honestly_stated and per-engine what_remains_for_compliance_tracker fields for
+        the full reasoning."
+      what_shipped:
+        - "scripts/intent_engine.py (Intent Engine, engine 1): NOT a generic NLU layer -- this
+          phase's own objective forbids building one speculatively. check-intent wraps Phase 1's
+          live lookup-capability CLI and logs every genuine miss (found=false) to a new
+          intent_unmatched_log table; gap-report honestly reports insufficient_data unless a
+          normalized query repeats 3+ times across >=2 distinct sessions. Live-tested: a real
+          out-of-domain miss ('what is the weather forecast for tomorrow') logs correctly and,
+          repeated across 3 sessions, flips gap-report's verdict to real_pattern_detected --
+          before that test data, the live DB correctly showed insufficient_data (zero real
+          historical misses existed). Closes the engine by building the honest detector for a
+          real future need, not by guessing one exists today."
+        - "scripts/context_engine.py (Context Engine, engine 2): remember-turn/recall-context over
+          a new conversation_memory table (same DB file as Knowledge Engine, same
+          write-lock/idempotent-create convention as capability_registry/automation_rules -- not a
+          new store) whose entity_relationships column reuses Knowledge Engine's own edge shape
+          field-for-field ({related_entity_type, related_entity_id, relationship_type, evidence}).
+          knowledge_engine's own table was not reused directly -- its schema is genuinely
+          file-shaped (sha256-hashed against a real on-disk path) and forcing a conversation
+          session into it would mean a permanently dishonest PATH_MISSING status. Live-tested:
+          a 2-turn session accumulates both entity_relationships edges in order; recall-context
+          returns the full accumulated edge list + running summary, the real cross-turn memory
+          this engine's gap named."
+        - "scripts/plan_generator.py (Planning Engine, engine 4): generate-plan deterministically
+          splits a free-text objective into ordered steps (';' / 'then' / 'after that', no LLM
+          call, same discipline as every other gate in this codebase), resolves each step against
+          Phase 1's live capability_registry via lookup-capability, and sequences steps via real
+          entity_relationships-shaped depends_on edges into new plans/plan_steps tables. Each
+          step's field shape mirrors TightTask's own envelope (objective/scope/successCriteria/
+          complexityTier) without duplicating its TS-side validation logic. Live-tested: a 3-step
+          objective ('gst rate split...; then commission rate...; then send a customer
+          notification') produced a real DAG with 2/3 steps genuinely resolved to a deterministic
+          capability (gst_calculation_engine, commission_calculator) and the third honestly left
+          unresolved rather than guessed -- the first real multi-step plan/DAG this engine has
+          ever generated from a goal, closing the named 'neither generates a novel multi-step
+          plan/DAG' gap."
+        - "scripts/learning_engine.py (Learning Engine, engine 16): reflect/reflect-all port
+          task-reflection.ts's own verdictFor() algorithm (MIN_COMPARABLE_SAMPLE=3, honest
+          insufficient_data) onto automation_rule_runs history, and -- unlike that file's
+          always-null differentAiTierFlag/reusablePatternFlag, confirmed by reading the whole
+          file to be write-only today -- this verdict is REAL CONSUMED FEEDBACK: a degraded rule
+          (success rate <50% over >=3 runs) has automation_rules.is_active flipped to 0, and
+          automation_rule_engine.py's evaluate-rules (Phase 3 code, unmodified) already filters
+          `WHERE is_active = 1`, so the rule genuinely stops firing on the next call. A recovered
+          rule is symmetrically re-enabled. Live end-to-end tested against the real DB: registered
+          rule AR-b3ac3e967571, simulated 4 failed runs, reflect -> verdict=degraded,
+          action_taken=disabled_by_learning_verdict, confirmed is_active 1->0 and the next
+          evaluate-rules call -> rules_fired=0; then simulated 5 recovery successes, reflect ->
+          verdict=reliable, action_taken=reenabled_by_learning_verdict, confirmed is_active 0->1
+          and evaluate-rules -> rules_fired=1 again. This is the literal 'verdicts that actually
+          feed back into engine behavior' the objective asked for, not a second recorded-only
+          flag."
+        - "ai-os/PHASE6_INTENT_CONTEXT_PLANNING_LEARNING_2026-07-24.yaml: the grounding contract
+          for all 4 engines above, documenting the real read shapes of every named compliance-tracker
+          file and, per engine, what remains as that repo's own future PR (same deferral posture
+          phases 1-5 used for their own TS-side gaps)."
+      real_evidence:
+        - "python3 scripts/intent_engine.py check-intent --intent-text 'what is the weather forecast
+          for tomorrow' (x3 distinct session_ids) then gap-report: {\"verdict\":
+          \"real_pattern_detected\", \"candidate_patterns\": [{\"normalized_query\": \"what is the
+          weather forecast for tomorrow\", \"repeat_count\": 3, \"distinct_sessions\": 3}]} --
+          insufficient_data confirmed as the correct prior state (0 real historical misses)."
+        - "python3 scripts/context_engine.py remember-turn (x2 turns, session
+          conv-phase6-test-1) then recall-context: {\"turn_count\": 2, \"entity_relationships\":
+          [2 real edges in order], \"summary\": \"User is asking about GST calculation for an
+          interstate invoice.\"}."
+        - "python3 scripts/plan_generator.py generate-plan --plan-name phase6-demo-onboard-invoice
+          --objective 'calculate gst rate split for an interstate invoice; then calculate sales
+          commission percent rate; then send a customer notification' --complexity-tier
+          integrative: 3 steps, deterministic_steps=2 (gst_calculation_engine,
+          commission_calculator, both ai_required=false), step 3 honestly unresolved; get-plan
+          confirmed the full DAG incl. depends_on entity_relationships edges round-trips."
+        - "python3 scripts/learning_engine.py reflect --rule-id AR-b3ac3e967571 (after 4 simulated
+          failures): {\"sample_size\": 6, \"success_rate\": 0.333, \"verdict\": \"degraded\",
+          \"action_taken\": \"disabled_by_learning_verdict\"} -- automation_rules.is_active
+          confirmed 1->0 in the live DB; next evaluate-rules call -> rules_fired=0. After 5
+          simulated recoveries: {\"verdict\": \"reliable\", \"action_taken\":
+          \"reenabled_by_learning_verdict\"} -- is_active confirmed 0->1; evaluate-rules ->
+          rules_fired=1 again."
+        - "python3 scripts/superboss-register.py query-knowledge
+          \"phase_6_intent_context_planning_learning\" --tag domain:veridian-20-engine-10-gateway:
+          found=1 (this phase's own SUCCESS_CRITERIA check)."
+      what_remains_for_later_phases:
+        - "compliance-tracker's own PRs (4, one per engine): wiring IntentCommandPalette.tsx's
+          free-text misses into check-intent; adding an optional conversationSessionId to
+          ServiceContext calling remember-turn/recall-context; consuming an unresolved
+          plan_generator.py step through proposeDynamicChain(); and applying
+          learning_engine.py's exact verdict-to-behavior pattern to
+          task-reflection.ts's own differentAiTierFlag/reusablePatternFlag. All 4 are named
+          explicitly in ai-os/PHASE6_INTENT_CONTEXT_PLANNING_LEARNING_2026-07-24.yaml's own
+          what_remains_for_compliance_tracker fields -- out of this task's repo boundary, same
+          deferral posture phases 1-5 used for their own TS-side gaps."
+        - "phase_7_ui_composition_analytics (depends_on: []) and gateway_definition_and_inventory
+          (depends_on: [], blocked on the Owner naming the canonical 10-gateway list) remain open
+          in this plan -- not attempted in this task."
 
   - id: phase_7_ui_composition_analytics
     closes_engines: [17, 18]
