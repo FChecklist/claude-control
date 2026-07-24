@@ -1,0 +1,339 @@
+meta:
+  title: VERIDIAN Workflow Status-Enum Transition-Legality Rules
+  created: '2026-07-24'
+  produced_by_task: task-20260724-185151-phase6-workflow-transition-validator-ai
+  precedent: "AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml phases[6].scope: 'workflow domain -- build the custom
+    status-enum transition-validator script (software-only slice)'. Same hand-authored-rule-file +
+    static-re-verification pattern as ai-os/dependency-cruiser/*.config.cjs (Phase 4) -- this file encodes
+    WHAT the legal transition graph is (business-rule judgment, authored once from a live read of the real
+    code), ai-os-scripts/audit_pipeline_workflow_transitions.py re-verifies live, every run, whether each
+    writer's own current guard code actually enforces it (deterministic, zero AI in the run loop)."
+  method: "Every enum/table/writer/line-number/guard-quote below was gathered via a live, read-only source
+    read of compliance-tracker's src/lib/db/schema.ts + the 4 real workflow service files (not guessed,
+    not copied from WORKFLOW_LOGIC_REVIEW_2026-07-24.yaml's own prose, which covers a DIFFERENT slice of
+    the same functions -- side-effect/atomicity judgment, not transition legality; see
+    not_duplicating_phase5 below). projexa has zero local status-bearing tables (confirmed: its own
+    src/lib/db/schema.ts header comment states construction-domain data lives entirely in
+    compliance-tracker; projexa's punch-list/submittal/RFI routes are thin callVeridian() proxies with no
+    local write) -- this file is compliance-tracker-only, a real, honestly-documented scope boundary, not
+    an oversight."
+  not_duplicating_phase5: "ai-os/WORKFLOW_LOGIC_REVIEW_2026-07-24.yaml (Phase 5 AI Review) already judged
+    WF-AI-001 (approval quorum counter race) and WF-AI-002 (auction bid/leader non-atomicity) -- both are
+    'right side effects / atomicity of a LEGAL transition' judgment calls a transition-legality validator
+    structurally cannot make. This file's findings are the opposite failure mode: a status write with NO
+    static guard restricting which CURRENT status it may fire from at all, independent of atomicity. Zero
+    overlap in the underlying code lines: WF-AI-001/002 are about approval-workflow-service.ts's counter
+    write and erp-procurement-workflow-service.ts's un-transacted bid/leader write, neither of which this
+    file's writers list includes (this file's approval_workflow_instance_status writers are
+    decideApprovalStep's *status* write and advanceWorkflow, not the approvalsReceived counter or the bid
+    insert)."
+  guard_styles:
+    require_from: "Guard throws unless current status IS one of required_from -- the strict, correct
+      pattern (e.g. 'if (step.status !== \"pending\") throw')."
+    exclude: "Guard throws only if current status IS a specific named value (usually the write's own
+      target, an idempotency/re-entrancy guard) -- weaker than require_from (does not positively confirm
+      the transition's real origin state, only blocks re-firing into the same terminal state), but real
+      protection, not absent. Treated as a PASS by the validator (not flagged) -- same reasoning
+      closeReverseAuction and gst import batch's cancel/confirm guards already apply consistently."
+    none: "No live guard text found in the function body preceding the write -- flagged as a real
+      software_fixable finding: the write is reachable from ANY current status, not just the declared
+      allowed_edges' real from-state(s)."
+  error_path_exemption: "A writer inside a catch block transitioning to a genuine terminal error state
+    (e.g. gst_import_batch_status -> 'failed') is marked error_path: true and exempted from the
+    guard-required check -- a catch handler firing regardless of which partial state preceded the error is
+    the correct, standard pattern, not a legality bug."
+
+enums:
+  - id: approval_workflow_step_status
+    table: approvalWorkflowStepInstances
+    column: status
+    file: src/lib/services/approval-workflow-service.ts
+    declared_values: [pending, approved, rejected, skipped]
+    unreachable_declared_values:
+      - value: skipped
+        note: "Declared (schema.ts:6538) but never written -- non-applicable steps are filtered out of
+          applicableSteps before any step-instance row is even inserted (lines 176-192), not marked
+          skipped after the fact."
+    allowed_edges:
+      - [pending, approved]
+      - [pending, rejected]
+    writers:
+      - function: decideApprovalStep
+        to: rejected
+        write_line: 364
+        required_from: [pending]
+        guard_style: require_from
+        guard_quote: 'if (step.status !== "pending") throw new ServiceError("This step has already been decided", 409)'
+        guard_line: 332
+      - function: decideApprovalStep
+        to: approved
+        write_line: 370
+        required_from: [pending]
+        guard_style: require_from
+        guard_quote: 'if (step.status !== "pending") throw new ServiceError("This step has already been decided", 409)'
+        guard_line: 332
+
+  - id: approval_workflow_instance_status
+    table: approvalWorkflowInstances
+    column: status
+    file: src/lib/services/approval-workflow-service.ts
+    declared_values: [pending, approved, rejected, cancelled]
+    unreachable_declared_values:
+      - value: cancelled
+        note: "Declared (schema.ts:6537) but never written anywhere in src/."
+    allowed_edges:
+      - [pending, approved]
+      - [pending, rejected]
+    writers:
+      - function: decideApprovalStep
+        to: rejected
+        write_line: 365
+        required_from: [pending]
+        guard_style: require_from
+        guard_quote: 'if (step.status !== "pending") throw new ServiceError("This step has already been decided", 409)'
+        guard_line: 332
+        note: "Guard is on the STEP's own status, not this instance row's status directly -- accepted as
+          equivalent because decideApprovalStep only ever reaches this write while its own step is still
+          pending, and a step belongs to exactly one instance. Real, but a narrower protection than a
+          direct instance.status check would be -- documented, not silently treated as identical."
+      - function: advanceWorkflow
+        to: approved
+        write_line: 291
+        required_from: [pending]
+        guard_style: none
+        note: "No status precondition of any kind found on the instance row before this write -- correctness
+          depends entirely on the caller (decideApprovalStep) only invoking advanceWorkflow when it has
+          just determined no pending step remains. A second, independent code path calling advanceWorkflow
+          in the future would have no structural protection against re-approving an already-rejected or
+          already-approved instance."
+
+  - id: erp_requisition_status
+    table: erpPurchaseRequisitions
+    column: status
+    file: src/lib/services/erp-procurement-workflow-service.ts
+    declared_values: [draft, submitted, approved, rejected, converted]
+    unreachable_declared_values:
+      - value: rejected
+        note: "Declared (schema.ts:7026) but never written anywhere in src/."
+      - value: converted
+        note: "Declared (schema.ts:7026) but never written anywhere in src/."
+    allowed_edges:
+      - [draft, approved]
+      - [draft, submitted]
+      - [submitted, approved]
+    writers:
+      - function: submitPurchaseRequisition
+        to: approved
+        write_line: 120
+        required_from: [draft]
+        guard_style: require_from
+        guard_quote: 'if (req.status !== "draft") throw new ServiceError("Only draft requisitions can be submitted", 409)'
+        guard_line: 108
+      - function: submitPurchaseRequisition
+        to: submitted
+        write_line: 127
+        required_from: [draft]
+        guard_style: require_from
+        guard_quote: 'if (req.status !== "draft") throw new ServiceError("Only draft requisitions can be submitted", 409)'
+        guard_line: 108
+      - function: markPurchaseRequisitionApprovedFromApproval
+        to: approved
+        write_line: 137
+        required_from: [submitted]
+        guard_style: none
+        note: "No status precondition found -- this is the approval-workflow completion callback (fired once
+          an approval_workflow_instance reaches 'approved'), so in the current single-call-site reality it
+          is only ever invoked from that one path, but the requisition row itself carries no structural
+          proof it was actually 'submitted' first."
+
+  - id: erp_rfq_status
+    table: erpRfqs
+    column: status
+    file: src/lib/services/erp-procurement-workflow-service.ts
+    declared_values: [draft, sent, closed]
+    unreachable_declared_values:
+      - value: closed
+        note: "Declared (schema.ts:7027) but never written anywhere in src/."
+    allowed_edges:
+      - [draft, sent]
+    writers:
+      - function: sendRfq
+        to: sent
+        write_line: 196
+        required_from: [draft]
+        guard_style: require_from
+        guard_quote: 'if (rfq.status !== "draft") throw new ServiceError("Only draft RFQs can be sent", 409)'
+        guard_line: 195
+
+  - id: erp_rfq_reverse_auction_status
+    table: erpRfqReverseAuctions
+    column: status
+    file: src/lib/services/erp-procurement-workflow-service.ts
+    declared_values: [scheduled, active, closed]
+    not_a_pg_enum: "Plain text column (schema.ts:7149), no pgEnum/CHECK constraint -- value set is
+      comment-documented only. Included here because it is a real status-driven workflow regardless of the
+      column's own declared-type looseness."
+    allowed_edges:
+      - [scheduled, active]
+      - [active, closed]
+    writers:
+      - function: createReverseAuction
+        to: active
+        write_line: 367
+        required_from: null
+        guard_style: none
+        is_create: true
+        note: "INSERT, not UPDATE -- deliberately bypasses the column's own 'scheduled' default to create
+          auctions already-active. Not a transition (no prior row), so not flagged even though guard_style
+          is none -- exempted the same way error_path writers are."
+      - function: closeReverseAuction
+        to: closed
+        write_line: 391
+        required_from: [active]
+        guard_style: exclude
+        guard_quote: 'if (auction.status === "closed") throw new ServiceError("Auction is already closed", 409)'
+        guard_line: 388
+        note: "Exclude-style guard only blocks re-closing an already-closed auction -- it does not
+          positively require current status be 'active' (a hypothetical 'scheduled' auction, unreachable
+          today since createReverseAuction always inserts 'active' directly, could still be closed
+          directly if that ever changed). Treated as a PASS per guard_styles.exclude above, same as the gst
+          cancel/confirm guards."
+
+  - id: construction_rfi_status
+    table: constructionRfis
+    column: status
+    file: src/lib/services/construction-field-workflow-service.ts
+    declared_values: [open, answered, closed]
+    allowed_edges:
+      - [open, answered]
+      - [answered, closed]
+    writers:
+      - function: answerRfi
+        to: answered
+        write_line: 50
+        required_from: [open]
+        guard_style: none
+        note: "No precondition found -- an already-'closed' RFI can be re-answered (also resets
+          ballInCourt to 'contractor'), silently reopening a closed item with no status change back to
+          'open' recorded."
+      - function: closeRfi
+        to: closed
+        write_line: 59
+        required_from: [answered]
+        guard_style: none
+        note: "No precondition found -- an RFI still 'open' (never answered) can be closed directly,
+          skipping the answered state the ball-in-court model assumes."
+
+  - id: construction_submittal_status
+    table: constructionSubmittals
+    column: status
+    file: src/lib/services/construction-field-workflow-service.ts
+    declared_values: [pending, approved, approved_as_noted, revise_resubmit, rejected]
+    allowed_edges:
+      - [pending, approved]
+      - [pending, approved_as_noted]
+      - [pending, revise_resubmit]
+      - [pending, rejected]
+    writers:
+      - function: reviewSubmittal
+        to: "(caller-supplied, constrained to the VALID array)"
+        write_line: 104
+        required_from: [pending]
+        guard_style: none
+        note: "The write's TARGET value is guarded (must be one of the 4 non-pending values, lines 93-94),
+          but current status is never checked -- an already-'approved' or already-'rejected' submittal can
+          be re-reviewed and flipped to any other value, with no record that it was overriding a prior
+          decision rather than making the first one."
+
+  - id: construction_punch_status
+    table: constructionPunchListItems
+    column: status
+    file: src/lib/services/construction-field-workflow-service.ts
+    declared_values: [open, ready_for_review, verified_closed]
+    allowed_edges:
+      - [open, ready_for_review]
+      - [ready_for_review, verified_closed]
+    writers:
+      - function: markPunchListItemReadyForReview
+        to: ready_for_review
+        write_line: 145
+        required_from: [open]
+        guard_style: none
+        note: "No precondition found -- an item already 'ready_for_review' or 'verified_closed' can be
+          marked ready_for_review again."
+      - function: verifyPunchListItemClosed
+        to: verified_closed
+        write_line: 164
+        required_from: [ready_for_review]
+        guard_style: none
+        note: "HIGHEST-VALUE finding in this file: the function's own preceding comment (lines 139-142/
+          156-158) describes a field-crew-marks-done-then-separate-person-verifies sequence, and the
+          self-approval guard (isSelfApproval, lines 159-161) enforces WHO can verify -- but nothing
+          enforces WHEN: an item still 'open' (never marked ready_for_review) can be verified-closed
+          directly by any non-assignee, skipping the review step the code's own comment claims exists."
+
+  - id: gst_import_batch_status
+    table: gstImportBatches
+    column: status
+    file: src/lib/services/gst-reconciliation-service.ts
+    declared_values: [processing, staged, confirmed, failed, cancelled]
+    allowed_edges:
+      - [processing, staged]
+      - [processing, failed]
+      - [staged, failed]
+      - [staged, confirmed]
+      - [staged, cancelled]
+      - [processing, cancelled]
+    writers:
+      - function: importFile
+        to: staged
+        write_line: 74
+        required_from: [processing]
+        guard_style: none
+        note: "No live guard, but this write immediately follows the batch's own insert-as-'processing'
+          within the same function call -- low real risk (no other code path can interleave before this
+          synchronous continuation), documented as a real gap rather than silently exempted."
+      - function: importFile
+        to: failed
+        write_line: 82
+        required_from: [processing, staged]
+        guard_style: none
+        error_path: true
+        note: "Catch-block terminal error write -- exempted from the guard-required check per this file's
+          own error_path_exemption above."
+      - function: cancelBatch
+        to: cancelled
+        write_line: 137
+        required_from: [processing, staged]
+        guard_style: exclude
+        guard_quote: 'if (batch.status === "confirmed") throw new ServiceError("Cannot cancel a confirmed batch", 409)'
+        guard_line: 136
+      - function: confirmBatchCore
+        to: confirmed
+        write_line: 193
+        required_from: [staged]
+        guard_style: exclude
+        guard_quote: 'if (batch.status === "confirmed") throw new ServiceError("Batch already confirmed", 409)'
+        guard_line: 150
+
+  - id: gst_return_status
+    table: gstReturnPeriods
+    column: status
+    file: src/lib/services/gst-reconciliation-service.ts
+    declared_values: [draft, generated, filed]
+    unreachable_declared_values:
+      - value: filed
+        note: "Declared (schema.ts:9022) but never written anywhere in src/ -- no filing step exists in
+          code today."
+    allowed_edges:
+      - [draft, generated]
+      - [generated, generated]
+    writers:
+      - function: generateReturnCore
+        to: generated
+        write_line: 303
+        required_from: [draft, generated]
+        guard_style: none
+        note: "No precondition on the update branch -- since 'filed' is unreachable today the practical
+          blast radius is low (nothing to accidentally overwrite past 'generated'), documented for
+          completeness rather than omitted, same discipline as gst_import_batch_status.importFile above."

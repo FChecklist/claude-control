@@ -1,0 +1,50 @@
+# VERIDIAN Auditor Engine -- Phase 6, ai-governance domain deterministic
+# test suite for the REAL production prompt template_key
+# 'construction.generate_progress_summary' (compliance-tracker
+# src/lib/services/construction-ai-service.ts generateProgressSummary()).
+description: "construction.generate_progress_summary -- production prompt regression suite (no-invented-numbers, missing-data acknowledgement)"
+
+prompts:
+  - '[{"role":"system","content":"{{system_prompt}}"},{"role":"user","content":"{{user_message}}"}]'
+
+providers:
+  - id: groq:llama-3.3-70b-versatile
+    config:
+      temperature: 0.2
+      max_tokens: 500
+
+defaultTest:
+  vars:
+    system_prompt: file://../prompts/construction_generate_progress_summary.txt
+  assert:
+    - type: contains-json
+      value:
+        type: object
+        required: [summary, highlights, concerns]
+        properties:
+          summary: { type: string }
+          highlights: { type: array }
+          concerns: { type: array }
+    - type: javascript
+      value: file://assertions.js:parses
+    - type: javascript
+      value: file://assertions.js:shapeIsValid
+
+tests:
+  - description: "complete real numbers -- no-invented-numbers hallucination check"
+    vars:
+      input_numbers: [850000, 620000, 65, 3]
+      user_message: '{"budget": 850000, "expenses": 620000, "completionPercentage": 65, "delayedTaskCount": 3}'
+    assert:
+      - type: javascript
+        value: file://assertions.js:noInventedNumbers
+
+  - description: "attendance/labour data omitted from input -- prompt's own explicit missing-data instruction"
+    vars:
+      input_numbers: [500000, 300000, 40]
+      user_message: '{"budget": 500000, "expenses": 300000, "completionPercentage": 40}'
+    assert:
+      - type: javascript
+        value: file://assertions.js:noInventedNumbers
+      - type: javascript
+        value: file://assertions.js:acknowledgesMissingData
