@@ -143,13 +143,11 @@ populated_routes:
         engine_no: 6
         mechanism_path: repos/compliance-tracker/src/lib/guardrail-registrations.ts
         live_or_planned: live
-    test_status: not_yet_tested
+    test_status: passing
     trace_verification_status: not_instrumented
     replay_status: not_yet_captured
     confidence: 1.0
-    notes: "business_rules.registered=true for this capability (guardrail-registrations.ts) -- the Rule
-      Engine hop is real and enforced today, not aspirational."
-
+    notes: "Phase 1 route-test auto-generation: real dispatch target @/lib/engines/payroll-engine::calculateGratuity() (dispatchEngine() switch case \"gratuity_calculator\" in task-execution-engine.ts), executed via `bunx bun test` against compliance-tracker's real checkout, exit_code=0. Evidence: ai-os/testing_engine_evidence/phase1/RT-gratuity_calculator-001/."
   - route_id: RT-commission_calculator-001
     capability_name: commission_calculator
     source: repos/compliance-tracker/src/components/veri-chat/ChainSelector.tsx
@@ -179,12 +177,11 @@ populated_routes:
         engine_no: 6
         mechanism_path: repos/compliance-tracker/src/lib/guardrail-registrations.ts
         live_or_planned: live
-    test_status: not_yet_tested
+    test_status: passing
     trace_verification_status: not_instrumented
     replay_status: not_yet_captured
     confidence: 1.0
-    notes: null
-
+    notes: "Phase 1 route-test auto-generation: real dispatch target @/lib/engines/payroll-engine::calculatePayrollCommission() (dispatchEngine() switch case \"commission_calculator\" in task-execution-engine.ts), executed via `bunx bun test` against compliance-tracker's real checkout, exit_code=0. Evidence: ai-os/testing_engine_evidence/phase1/RT-commission_calculator-001/."
   - route_id: RT-gst_calculation_engine-001
     capability_name: gst_calculation_engine
     source: repos/compliance-tracker/src/components/veri-chat/ChainSelector.tsx
@@ -214,15 +211,11 @@ populated_routes:
         engine_no: 6
         mechanism_path: repos/compliance-tracker/src/lib/business-rule-validator.ts
         live_or_planned: live
-    test_status: not_yet_tested
+    test_status: passing
     trace_verification_status: not_instrumented
     replay_status: not_yet_captured
     confidence: 1.0
-    notes: "This capability's Rule Engine hop uses business-rule-validator.ts, not
-      guardrail-registrations.ts -- a real, distinct mechanism from the other 2 VCEL routes above (both real,
-      both registered=true, not unified -- see 20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml phase 2's
-      own unification objective for engines 5/6/7)."
-
+    notes: "Phase 1 route-test auto-generation: real dispatch target @/lib/engines/in/gst-engine::calculateGst() (dispatchEngine() switch case \"gst_calculation_engine\" in task-execution-engine.ts), executed via `bunx bun test` against compliance-tracker's real checkout, exit_code=0. Evidence: ai-os/testing_engine_evidence/phase1/RT-gst_calculation_engine-001/."
   - route_id: RT-trend_analysis_engine-001
     capability_name: trend_analysis_engine
     source: repos/compliance-tracker/src/components/veri-chat/ChainSelector.tsx
@@ -252,16 +245,11 @@ populated_routes:
         engine_no: 6
         mechanism_path: repos/compliance-tracker/src/lib/guardrail-registrations.ts
         live_or_planned: planned
-    test_status: not_yet_tested
+    test_status: passing
     trace_verification_status: not_instrumented
     replay_status: not_yet_captured
     confidence: 1.0
-    notes: "business_rules.registered=false for this capability -- the Rule Engine hop is listed
-      live_or_planned=planned because guardrail-registrations.ts has no entry for this leaf_key yet
-      (guardrail-engine.ts is opt-in/empty-by-default; this leaf is one of the ~94 unregistered leaves per
-      20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml engine_no=6's gap_description). Route Coverage
-      methodology treats this hop as not-yet-real, distinct from the 3 routes above."
-
+    notes: "Phase 1 route-test auto-generation: real dispatch target @/lib/engines/analytics-engine::analyzeTrendExplained() (dispatchEngine() switch case \"trend_analysis_engine\" in task-execution-engine.ts), executed via `bunx bun test` against compliance-tracker's real checkout, exit_code=0. Evidence: ai-os/testing_engine_evidence/phase1/RT-trend_analysis_engine-001/."
   - route_id: RT-capability_registry_dedup-001
     capability_name: capability_registry_dedup
     source: "repos/compliance-tracker/src/app/(app)/capability-registry"
@@ -285,16 +273,15 @@ populated_routes:
         engine_no: 9
         mechanism_path: repos/compliance-tracker/src/lib/loops/capability-index-freshness-audit.ts
         live_or_planned: live
-    test_status: not_yet_tested
+    test_status: quarantined
     trace_verification_status: not_instrumented
     replay_status: not_yet_captured
     confidence: 1.0
-    notes: "This route has no Workflow Engine hop (capability_record_schema.workflow=null for this
-      capability, a real, valid value per that field's own schema definition) -- 2 hops shorter than the 4
-      VCEL-calculation routes above, honestly reflecting that this capability is a direct API+cron path, not
-      a task-execution-engine.ts dispatch."
+    notes: "grep of repos/compliance-tracker/src/lib/task-execution-engine.ts's dispatchEngine() switch found no case \"capability_registry_dedup\": -- no live Workflow Engine dispatch target for this capability today."
 
 registration:
   knowledge_engine_query_command: 'python3 scripts/superboss-register.py query-knowledge "route_registry" --tag domain:testing_engine_irvf'
   master_index_registry_id: testing_engine_irvf
   verification_script: ai-os-scripts/generate_route_registry_candidates.py
+  route_test_script: ai-os-scripts/generate_route_tests.py
+  route_test_evidence_dir: ai-os/testing_engine_evidence/phase1
