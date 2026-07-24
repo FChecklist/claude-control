@@ -29,6 +29,16 @@
   /opt/veridian/ai-os/MASTER_INDEX.yaml and this repo's ai-os/MASTER_INDEX.yaml (both re-validated as
   parseable YAML after edit).
 
+- [x] Committed + pushed (worker/task-20260724-053213-veridian-20engines-10gateways-phase0-inv, commit
+  b02d23e), PR opened: https://github.com/FChecklist/claude-control/pull/13
+
 ## Remaining
-- [ ] Commit + push, open PR.
-- [ ] Final checkpoint summary: all 20 engines with one-word coverage verdict.
+- [ ] None -- task complete. Final checkpoint summary delivered to Owner in-conversation.
+
+## Final checkpoint: 20-engine coverage verdicts
+1. Intent -- partial | 2. Context -- partial | 3. CapabilityRegistry -- partial | 4. Planning -- partial |
+5. Policy -- partial | 6. Rule -- partial | 7. Decision -- partial | 8. Workflow -- partial |
+9. Automation -- partial | 10. Integration -- partial | 11. Document -- partial | 12. Notification -- partial |
+13. Data -- partial | 14. Metadata -- partial | 15. Knowledge -- full | 16. Learning -- partial |
+17. UIComposition -- partial | 18. Analytics -- partial | 19. Audit -- partial (see AUDITOR_ENGINE_PHASE_PLAN) |
+20. Observability -- partial (see AUDITOR_ENGINE_PHASE_PLAN)
