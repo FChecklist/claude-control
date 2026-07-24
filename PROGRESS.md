@@ -1,44 +1,35 @@
-# PROGRESS -- task-20260724-053213-veridian-20engines-10gateways-phase0-inv
+# PROGRESS -- task-20260724-060203-xpost-github-catalog-2026-07-24
 
 ## Completed
-- [x] Real grep-based investigation of compliance-tracker/projexa/veda-advisors src/ + ai-os/+scripts for
-  all 20 engine concepts (Intent, Context, CapabilityRegistry, Planning, Policy, Rule, Decision, Workflow,
-  Automation, Integration, Document, Notification, Data, Metadata, Knowledge, Learning, UIComposition,
-  Analytics, Audit, Observability). Real prior art found for all 20 (19 partial, 1 full -- Knowledge Engine).
-- [x] ai-os/scripts/generate_engines_gateways_inventory.py -- generator script, live-verifies every
-  exists_as path with os.path.exists(), writes ai-os/generated/engine_inventory_2026-07-24.yaml (20/20
-  verified true).
-- [x] ai-os/CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml -- PART4 field schema (capability_name/inputs/
-  business_rules/workflow/automation/documents/reports/apis/ui_screens/permissions/ai_required/
-  confidence/version/owner) + lookup_contract, populated with 5 real capabilities (gratuity_calculator,
-  commission_calculator, gst_calculation_engine, trend_analysis_engine, capability_registry_dedup).
-- [x] ai-os/scripts/generate_capability_registry_candidates.py -- verification script for the 5 populated
-  capabilities' cited paths (17/17 verified).
-- [x] ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml -- embeds the 20-row engine_inventory
-  verbatim, dependency_table (8 concrete-mechanism edges), 9-phase build plan (7 theme phases + gateway
-  naming gap + audit/observability external link), honest gateway section (only Task Gateway
-  (scripts/task-gateway.py) confirmed real; no canonical 10-gateway name list found anywhere on this
-  server -- flagged as a real gap, not fabricated).
+- [x] Retrieved full instruction INS-20260724-060111-0975 from superboss-register.sqlite's
+      `instructions` table (its `repos_by_source_url` list is not present anywhere as a file --
+      only queryable in the register DB).
+- [x] Searched knowledge_engine table + ai-os/tasks tree for a prior "yesterday" X-post-to-GitHub
+      batch. Found one: `ai-os/tasks/task-20260723-133902-x-post-ai-tool-analysis-2026-07-23-lowpr/workspace/ai-os/X_POST_AI_ANALYSIS_2026-07-23.md`
+      (79 URLs / 80 repos, different narrative-analysis schema). Confirmed via direct query
+      it was never registered into knowledge_engine (0 matching rows) -- not merged in place;
+      the 2 repos whose tweet ID exactly matches a row there (lharries/whatsapp-mcp,
+      themabhiram/WhatsApp-Message-Scheduler) are cross-referenced per-row instead of
+      being re-analyzed.
+- [x] Built `ai-os-scripts/generate_xpost_github_catalog.py` (mechanical transcription of the
+      instruction's raw_text, no hand-authored catalog prose) -> generated
+      `ai-os/XPOST_GITHUB_CATALOG_2026-07-24.yaml`: 34 repo rows + 3 checked_no_repo rows.
+- [x] Built `ai-os-scripts/register_xpost_github_catalog.py` -> registered the catalog file into
+      the live knowledge_engine table via `superboss-register.py register-knowledge`
+      (artifact_id KE-20260724-062517-e6b1), tags cover all 34 repo_paths, entity_relationships
+      added for the 3 real-target subsystems (claudexor+orca -> anthropic_openrouter_proxy_v2.py;
+      code-review-graph -> superboss-register.py; hallmark -> forward reference, no UX Audit
+      Engine artifact exists yet).
+- [x] Verified `query-knowledge "claudexor"` and `query-knowledge "code-review-graph"` each
+      return 1 hit on the catalog row.
 
-- [x] Registered both new files in knowledge_engine (KE-20260724-054607-76d5,
-  KE-20260724-054611-89fb), both VERIFIED_MATCH, cross-linked entity_relationships to
-  capability-registry-service.ts/capability-tree-service.ts/AUDITOR_ENGINE_PHASE_PLAN/task-gateway.py.
-  Confirmed queryable via `query-knowledge "engines_gateways_architecture" --tag
-  domain:engines_gateways_architecture` (2 matches).
-- [x] Added registries.engines_gateways_architecture entry to both the live
-  /opt/veridian/ai-os/MASTER_INDEX.yaml and this repo's ai-os/MASTER_INDEX.yaml (both re-validated as
-  parseable YAML after edit).
-
-- [x] Committed + pushed (worker/task-20260724-053213-veridian-20engines-10gateways-phase0-inv, commit
-  b02d23e), PR opened: https://github.com/FChecklist/claude-control/pull/13
+## Discrepancy noted (not silently resolved)
+The task SPEC said "34 GitHub repos ... skip the 2 NONE entries ... 32 real repos (34 minus 2
+NONE)". The actual instruction (INS-20260724-060111-0975, read live from the register) contains
+**34 real repos AND 3 NONE entries** (37 total resolved items across 19 tweet URLs, two of which
+are "TEN repos" tweets). Went with the ground-truth instruction data: all 34 real repos are
+catalog rows; all 3 NONE entries are recorded in `checked_no_repo`.
 
 ## Remaining
-- [ ] None -- task complete. Final checkpoint summary delivered to Owner in-conversation.
-
-## Final checkpoint: 20-engine coverage verdicts
-1. Intent -- partial | 2. Context -- partial | 3. CapabilityRegistry -- partial | 4. Planning -- partial |
-5. Policy -- partial | 6. Rule -- partial | 7. Decision -- partial | 8. Workflow -- partial |
-9. Automation -- partial | 10. Integration -- partial | 11. Document -- partial | 12. Notification -- partial |
-13. Data -- partial | 14. Metadata -- partial | 15. Knowledge -- full | 16. Learning -- partial |
-17. UIComposition -- partial | 18. Analytics -- partial | 19. Audit -- partial (see AUDITOR_ENGINE_PHASE_PLAN) |
-20. Observability -- partial (see AUDITOR_ENGINE_PHASE_PLAN)
+- [ ] Commit + push `ai-os/XPOST_GITHUB_CATALOG_2026-07-24.yaml` and the two
+      `ai-os-scripts/` generator scripts, open PR on claude-control.
