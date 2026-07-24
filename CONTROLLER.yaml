@@ -4819,3 +4819,14 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260724-095857-xpost-github-catalog-batch3-2026-07-24/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/29'
     last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-063403-fix-supervisor-merge-report-bug
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''fix-supervisor-merge-report-bug'' on claude-control
+      reached status=completed. CORRECTED: PR15 confirmed MERGED 2026-07-24T06:47:41Z,
+      stale pending_review bookkeeping fixed.'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-063403-fix-supervisor-merge-report-bug/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/15'
+    last_touched: '2026-07-24'
