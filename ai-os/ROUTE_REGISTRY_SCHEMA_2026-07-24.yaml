@@ -145,7 +145,7 @@ populated_routes:
         live_or_planned: live
     test_status: passing
     trace_verification_status: not_instrumented
-    replay_status: not_yet_captured
+    replay_status: replayed_match
     confidence: 1.0
     notes: "Phase 1 route-test auto-generation: real dispatch target @/lib/engines/payroll-engine::calculateGratuity() (dispatchEngine() switch case \"gratuity_calculator\" in task-execution-engine.ts), executed via `bunx bun test` against compliance-tracker's real checkout, exit_code=0. Evidence: ai-os/testing_engine_evidence/phase1/RT-gratuity_calculator-001/."
   - route_id: RT-commission_calculator-001
@@ -179,7 +179,7 @@ populated_routes:
         live_or_planned: live
     test_status: passing
     trace_verification_status: not_instrumented
-    replay_status: not_yet_captured
+    replay_status: replayed_match
     confidence: 1.0
     notes: "Phase 1 route-test auto-generation: real dispatch target @/lib/engines/payroll-engine::calculatePayrollCommission() (dispatchEngine() switch case \"commission_calculator\" in task-execution-engine.ts), executed via `bunx bun test` against compliance-tracker's real checkout, exit_code=0. Evidence: ai-os/testing_engine_evidence/phase1/RT-commission_calculator-001/."
   - route_id: RT-gst_calculation_engine-001
@@ -213,7 +213,7 @@ populated_routes:
         live_or_planned: live
     test_status: passing
     trace_verification_status: not_instrumented
-    replay_status: not_yet_captured
+    replay_status: replayed_match
     confidence: 1.0
     notes: "Phase 1 route-test auto-generation: real dispatch target @/lib/engines/in/gst-engine::calculateGst() (dispatchEngine() switch case \"gst_calculation_engine\" in task-execution-engine.ts), executed via `bunx bun test` against compliance-tracker's real checkout, exit_code=0. Evidence: ai-os/testing_engine_evidence/phase1/RT-gst_calculation_engine-001/."
   - route_id: RT-trend_analysis_engine-001
@@ -247,7 +247,7 @@ populated_routes:
         live_or_planned: planned
     test_status: passing
     trace_verification_status: not_instrumented
-    replay_status: not_yet_captured
+    replay_status: replayed_match
     confidence: 1.0
     notes: "Phase 1 route-test auto-generation: real dispatch target @/lib/engines/analytics-engine::analyzeTrendExplained() (dispatchEngine() switch case \"trend_analysis_engine\" in task-execution-engine.ts), executed via `bunx bun test` against compliance-tracker's real checkout, exit_code=0. Evidence: ai-os/testing_engine_evidence/phase1/RT-trend_analysis_engine-001/."
   - route_id: RT-capability_registry_dedup-001
@@ -285,3 +285,7 @@ registration:
   verification_script: ai-os-scripts/generate_route_registry_candidates.py
   route_test_script: ai-os-scripts/generate_route_tests.py
   route_test_evidence_dir: ai-os/testing_engine_evidence/phase1
+  route_replay_script: ai-os-scripts/generate_route_replays.py
+  route_replay_evidence_dir: ai-os/testing_engine_evidence/phase3
+  route_replay_storage: 'scripts/superboss-register.py route_replay table (ai-os/memory/superboss-register.sqlite)
+    via its capture-replay / run-replay / list-replays CLI subcommands'

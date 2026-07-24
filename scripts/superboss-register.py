@@ -398,6 +398,51 @@ def init_db():
     END;
     CREATE UNIQUE INDEX IF NOT EXISTS idx_capability_registry_name ON capability_registry(capability_name);
     CREATE INDEX IF NOT EXISTS idx_capability_registry_ai_required ON capability_registry(ai_required);
+
+    -- 9th tree (2026-07-24, Testing Engine / IRVF Phase 3, task-20260724-115924,
+    -- TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml phase_3_route_replay_storage_and_diff).
+    -- Reuses knowledge_engine's own artifact_path/content_hash pattern above --
+    -- per this session's 'extend, don't duplicate' rule -- rather than a new
+    -- database: one row per real captured/replayed route execution, insert-only
+    -- (a route accumulates a capture row and, later, one replay row per replay
+    -- run -- never UPDATEd in place, so the full replay history for a route_id
+    -- is queryable, not just its latest state). request_payload/response_payload
+    -- are the real JSON call args / return value for the route's dispatch-target
+    -- function (see ai-os-scripts/generate_route_tests.py's REGISTERED_FIXTURES
+    -- for where request_payload's values come from); *_hash are sha256 over the
+    -- same bytes, same drift-detection convention as knowledge_engine.content_hash.
+    -- The per-route replay_status STATE (not_yet_captured -> captured ->
+    -- replayed_match/replayed_diff) itself lives on
+    -- ROUTE_REGISTRY_SCHEMA_2026-07-24.yaml's populated_routes[].replay_status
+    -- field (this table is the evidence backing that field, same relationship
+    -- test_status already has to ai-os/testing_engine_evidence/phase1/).
+    CREATE TABLE IF NOT EXISTS route_replay (
+        replay_id TEXT PRIMARY KEY,
+        ts TEXT NOT NULL,
+        route_id TEXT NOT NULL,
+        capability_name TEXT NOT NULL,
+        event_type TEXT NOT NULL CHECK(event_type IN ('capture','replay')),
+        request_payload TEXT NOT NULL,
+        request_hash TEXT NOT NULL,
+        response_payload TEXT NOT NULL,
+        response_hash TEXT NOT NULL,
+        baseline_replay_id TEXT,
+        diff_result TEXT CHECK(diff_result IN ('match','diff')),
+        diff_detail TEXT,
+        artifact_path TEXT NOT NULL,
+        metadata_json TEXT NOT NULL DEFAULT '{}',
+        FOREIGN KEY (baseline_replay_id) REFERENCES route_replay(replay_id)
+    );
+    CREATE VIRTUAL TABLE IF NOT EXISTS route_replay_fts USING fts5(
+        route_id, capability_name, diff_detail,
+        content='route_replay', content_rowid='rowid'
+    );
+    CREATE TRIGGER IF NOT EXISTS route_replay_ai AFTER INSERT ON route_replay BEGIN
+        INSERT INTO route_replay_fts(rowid, route_id, capability_name, diff_detail)
+        VALUES (new.rowid, new.route_id, new.capability_name, new.diff_detail);
+    END;
+    CREATE INDEX IF NOT EXISTS idx_route_replay_route_id ON route_replay(route_id);
+    CREATE INDEX IF NOT EXISTS idx_route_replay_event_type ON route_replay(event_type);
     """)
     conn.commit()
     _migrate_schema(conn)
@@ -1149,6 +1194,156 @@ def _ensure_capability_registry_table(conn):
     conn.commit()
 
 
+def _ensure_route_replay_table(conn):
+    """Standalone idempotent create, same defensiveness convention as
+    _ensure_knowledge_engine_table/_ensure_capability_registry_table -- works
+    even if init_db() was never run against this DB."""
+    conn.execute("""CREATE TABLE IF NOT EXISTS route_replay (
+        replay_id TEXT PRIMARY KEY,
+        ts TEXT NOT NULL,
+        route_id TEXT NOT NULL,
+        capability_name TEXT NOT NULL,
+        event_type TEXT NOT NULL CHECK(event_type IN ('capture','replay')),
+        request_payload TEXT NOT NULL,
+        request_hash TEXT NOT NULL,
+        response_payload TEXT NOT NULL,
+        response_hash TEXT NOT NULL,
+        baseline_replay_id TEXT,
+        diff_result TEXT CHECK(diff_result IN ('match','diff')),
+        diff_detail TEXT,
+        artifact_path TEXT NOT NULL,
+        metadata_json TEXT NOT NULL DEFAULT '{}',
+        FOREIGN KEY (baseline_replay_id) REFERENCES route_replay(replay_id)
+    )""")
+    conn.execute("""CREATE VIRTUAL TABLE IF NOT EXISTS route_replay_fts USING fts5(
+        route_id, capability_name, diff_detail,
+        content='route_replay', content_rowid='rowid'
+    )""")
+    conn.execute("""CREATE TRIGGER IF NOT EXISTS route_replay_ai AFTER INSERT ON route_replay BEGIN
+        INSERT INTO route_replay_fts(rowid, route_id, capability_name, diff_detail)
+        VALUES (new.rowid, new.route_id, new.capability_name, new.diff_detail);
+    END""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_route_replay_route_id ON route_replay(route_id)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_route_replay_event_type ON route_replay(event_type)")
+    conn.commit()
+
+
+def _latest_capture_for_route(conn, route_id):
+    return conn.execute(
+        "SELECT * FROM route_replay WHERE route_id = ? AND event_type = 'capture' ORDER BY ts DESC LIMIT 1",
+        (route_id,),
+    ).fetchone()
+
+
+def capture_replay(args):
+    """Insert one route_replay capture row: the real request payload (call
+    args) + real response payload (return value) for one live execution of
+    route_id's dispatch-target function, exactly as it was actually called --
+    never a synthesized example. request_hash/response_hash are sha256 over
+    the payload bytes, same drift-detection convention as knowledge_engine's
+    content_hash. Insert-only (mirrors instructions/actions, not
+    capability_registry's upsert-in-place) so a route's full capture/replay
+    history stays queryable, not just its latest state. Sets this route's
+    ai-os/ROUTE_REGISTRY_SCHEMA_2026-07-24.yaml replay_status to 'captured'
+    is the caller's job (targeted yaml surgery, same as generate_route_tests.py
+    does for test_status) -- this command only owns the sqlite side."""
+    init_db_silent()
+    conn = _connect()
+    _ensure_route_replay_table(conn)
+
+    rid = _new_id("RPL")
+    now = _now_iso()
+    request_hash = hashlib.sha256(args.request_payload.encode("utf-8")).hexdigest()
+    response_hash = hashlib.sha256(args.response_payload.encode("utf-8")).hexdigest()
+
+    conn.execute(
+        "INSERT INTO route_replay (replay_id, ts, route_id, capability_name, event_type, request_payload, "
+        "request_hash, response_payload, response_hash, baseline_replay_id, diff_result, diff_detail, "
+        "artifact_path, metadata_json) VALUES (?,?,?,?,'capture',?,?,?,?,NULL,NULL,NULL,?,?)",
+        (rid, now, args.route_id, args.capability_name, args.request_payload, request_hash,
+         args.response_payload, response_hash, args.artifact_path,
+         json.dumps(json.loads(args.metadata) if args.metadata else {})),
+    )
+    conn.commit()
+    conn.close()
+    print(json.dumps({
+        "replay_id": rid, "route_id": args.route_id, "event_type": "capture",
+        "request_hash": request_hash, "response_hash": response_hash,
+    }, indent=2, default=str))
+
+
+def run_replay(args):
+    """Re-executes a route: --response-payload is the REAL freshly re-computed
+    response (the caller already re-ran the dispatch-target function against
+    current code -- this command does not execute any TypeScript itself, it
+    only records + diffs). Diffs it against the latest 'capture' row's
+    response_payload for this route_id (byte-for-byte, via response_hash --
+    two independently-serialized-but-identical JSON payloads would still hash
+    equal since json.dumps(..., sort_keys=True) is used on both ends, see
+    generate_route_replays.py), inserts a 'replay' event row recording the
+    verdict, and never mutates the original capture row (insert-only,
+    auditable history). Errors if no capture row exists yet for this
+    route_id -- there is nothing to diff against without one."""
+    init_db_silent()
+    conn = _connect()
+    _ensure_route_replay_table(conn)
+
+    baseline = _latest_capture_for_route(conn, args.route_id)
+    if baseline is None:
+        print(json.dumps({"error": f"no capture row found for route_id={args.route_id} -- run capture-replay first"}))
+        conn.close()
+        sys.exit(1)
+
+    rid = _new_id("RPL")
+    now = _now_iso()
+    request_hash = hashlib.sha256(args.request_payload.encode("utf-8")).hexdigest()
+    response_hash = hashlib.sha256(args.response_payload.encode("utf-8")).hexdigest()
+    diff_result = "match" if response_hash == baseline["response_hash"] else "diff"
+    diff_detail = args.diff_detail if args.diff_detail else (
+        "response_hash matches captured baseline exactly" if diff_result == "match"
+        else f"response_hash differs from captured baseline (baseline={baseline['response_hash']}, replay={response_hash})"
+    )
+
+    conn.execute(
+        "INSERT INTO route_replay (replay_id, ts, route_id, capability_name, event_type, request_payload, "
+        "request_hash, response_payload, response_hash, baseline_replay_id, diff_result, diff_detail, "
+        "artifact_path, metadata_json) VALUES (?,?,?,?,'replay',?,?,?,?,?,?,?,?,?)",
+        (rid, now, args.route_id, args.capability_name, args.request_payload, request_hash,
+         args.response_payload, response_hash, baseline["replay_id"], diff_result, diff_detail,
+         args.artifact_path, json.dumps(json.loads(args.metadata) if args.metadata else {})),
+    )
+    conn.commit()
+    conn.close()
+    print(json.dumps({
+        "replay_id": rid, "route_id": args.route_id, "event_type": "replay",
+        "baseline_replay_id": baseline["replay_id"], "diff_result": diff_result, "diff_detail": diff_detail,
+    }, indent=2, default=str))
+
+
+def _route_replay_row_to_dict(row):
+    d = dict(row)
+    d["metadata_json"] = json.loads(d["metadata_json"]) if d.get("metadata_json") else {}
+    return d
+
+
+def list_replays(args):
+    """Lists route_replay rows, optionally filtered to one --route-id, newest
+    first -- used for evidence/row-count verification, same role
+    list_capabilities plays for capability_registry."""
+    init_db_silent()
+    conn = _connect()
+    _ensure_route_replay_table(conn)
+    if getattr(args, "route_id", None):
+        rows = conn.execute(
+            "SELECT * FROM route_replay WHERE route_id = ? ORDER BY ts DESC", (args.route_id,)
+        ).fetchall()
+    else:
+        rows = conn.execute("SELECT * FROM route_replay ORDER BY ts DESC").fetchall()
+    conn.close()
+    matches = [_route_replay_row_to_dict(r) for r in rows]
+    print(json.dumps({"count": len(matches), "replays": matches}, indent=2, default=str))
+
+
 REQUIRED_CAPABILITY_FIELDS = {
     "capability_name", "inputs", "business_rules", "apis", "permissions",
     "ai_required", "confidence", "version", "owner",
@@ -1435,6 +1630,31 @@ if __name__ == "__main__":
 
     p_listc = sub.add_parser("list-capabilities")
 
+    p_capr = sub.add_parser("capture-replay")
+    p_capr.add_argument("--route-id", dest="route_id", required=True)
+    p_capr.add_argument("--capability-name", dest="capability_name", required=True)
+    p_capr.add_argument("--request-payload", dest="request_payload", required=True,
+                         help="real JSON call args for this route's dispatch-target function")
+    p_capr.add_argument("--response-payload", dest="response_payload", required=True,
+                         help="real JSON return value from actually executing that function")
+    p_capr.add_argument("--artifact-path", dest="artifact_path", required=True,
+                         help="evidence directory this capture's raw payloads/output were written to")
+    p_capr.add_argument("--metadata", default=None)
+
+    p_runr = sub.add_parser("run-replay")
+    p_runr.add_argument("--route-id", dest="route_id", required=True)
+    p_runr.add_argument("--capability-name", dest="capability_name", required=True)
+    p_runr.add_argument("--request-payload", dest="request_payload", required=True)
+    p_runr.add_argument("--response-payload", dest="response_payload", required=True,
+                         help="real JSON return value from re-executing the function against current code")
+    p_runr.add_argument("--artifact-path", dest="artifact_path", required=True)
+    p_runr.add_argument("--diff-detail", dest="diff_detail", default=None,
+                         help="override the auto-generated diff_detail message")
+    p_runr.add_argument("--metadata", default=None)
+
+    p_listr = sub.add_parser("list-replays")
+    p_listr.add_argument("--route-id", dest="route_id", default=None)
+
     args = p.parse_args()
     if args.cmd == "init":
         with _write_lock():
@@ -1492,3 +1712,11 @@ if __name__ == "__main__":
         lookup_capability(args)
     elif args.cmd == "list-capabilities":
         list_capabilities(args)
+    elif args.cmd == "capture-replay":
+        with _write_lock():
+            capture_replay(args)
+    elif args.cmd == "run-replay":
+        with _write_lock():
+            run_replay(args)
+    elif args.cmd == "list-replays":
+        list_replays(args)

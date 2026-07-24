@@ -1,0 +1,8 @@
+{
+  "replay_id": "RPL-20260724-120521-8976",
+  "route_id": "RT-commission_calculator-001",
+  "event_type": "replay",
+  "baseline_replay_id": "RPL-20260724-120521-8f9e",
+  "diff_result": "match",
+  "diff_detail": "response_hash matches captured baseline exactly"
+}
