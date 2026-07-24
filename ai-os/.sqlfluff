@@ -1,0 +1,20 @@
+[sqlfluff]
+# VERIDIAN Auditor Engine -- Phase 3 data-model domain config.
+# Real observation from a live run against compliance-tracker/drizzle/*.sql with
+# sqlfluff's out-of-the-box defaults (2026-07-24): 9648 violations, 83% of which
+# (LT02 indent, LT05 long_lines, LT01 spacing, CP* capitalisation) are pure
+# formatting/style noise from drizzle-kit's own auto-generated SQL formatting
+# conventions -- not a data-model correctness signal per this domain's cited
+# standard (ISO/IEC 11179 metadata-registry conventions), and would drown the
+# structural findings (excessive-lock risk, unquoted/reserved-word identifiers,
+# implicit aliasing, ambiguous joins) that ARE real signal. Excluded here by
+# rule group, not by silently lowering severity -- a documented curation
+# decision, not a suppression of anything this domain's standard covers.
+exclude_rules = layout, capitalisation
+# drizzle-kit emits some real migration files >20KB (up to 58KB observed in
+# compliance-tracker/drizzle/0183_sales_report_definitions.sql) -- sqlfluff's
+# default 20000-byte parser-lock guard was silently skipping 9 of
+# compliance-tracker's real migration files. Raised so every real file is
+# actually linted, not skipped.
+large_file_skip_byte_limit = 200000
+dialect = postgres
