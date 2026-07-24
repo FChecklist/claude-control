@@ -1,39 +1,43 @@
-# PROGRESS -- task-20260724-081715-full-session-audit-2026-07-24
+# PROGRESS -- task-20260724-083902-phase1-testing-engine-route-tests
 
 ## Completed
-- [x] task-20260724-033446: all 7 SUCCESS_CRITERIA independently re-verified TRUE against real state
-      (knowledge_engine 5-source rows, entity_relationships, SOFTWARE_CATALOG.yaml, 3 PATH_MISSING
-      rows documented, crontab -l entries live). Known gap (a) MASTER_INDEX.yaml
-      registries.self_sustaining_system_engine: already present in live file (`python3 -c "import
-      yaml; ..."` -> True) -- no fix needed. Known gap (b): ran a REAL
-      `task-gateway.py close --task-id task-20260724-033446... --audit-cmd "crontab -l"` for the
-      first time ever (task.yaml's own remaining_steps admitted this was never run) -- got
-      audit_verdict=DONE, git_merge_status=MERGED, and knowledge_engine_reverify.status=REVERIFIED
-      with a real hash re-check (3 rows: MASTER_INDEX.yaml HASH_DRIFTED->rehashed,
-      SOFTWARE_CATALOG.yaml/STANDING_DIRECTIVE.yaml VERIFIED_MATCH).
-- [x] Real gap found + fixed: task-20260724-074329's actual code fix (scripts/worker-entrypoint.sh
-      no-op branch + tests/worker_noop_pending_review_test.sh, commit 8202a00) was pushed only to
-      PR #11's branch (CLOSED, never merged) -- PR #20 (the one that got merged) touched only
-      PROGRESS.md, so master never gained the test file or a patch record of the live fix. Live
-      production script (/opt/veridian/scripts/worker-entrypoint.sh) does have the fix (verified via
-      grep for NOOP-COMPLETION-BLOCK). Fixed by recovering the real commit's content: added
-      tests/worker_noop_pending_review_test.sh (ran it live against the real
-      /opt/veridian/scripts/worker-entrypoint.sh -- all 3 scenarios PASS) and
-      ai-os/patches/worker-entrypoint-noop-pending-review-fix-2026-07-24.diff (same convention as
-      the other ai-os/patches/*.diff files for live-only, non-git-tracked scripts).
-
-- [x] task-20260724-042659 (PR #12, closed): Auditor Engine's 4 phase-0 files existed live +
-      in knowledge_engine but were never committed to master (PR #12 closed unmerged, PR #19
-      only had PROGRESS.md). Recovered all 4 files from the task's own workspace and committed.
-- [x] task-20260724-063645 (PR #17, merged): 3 deliverable files were on master but never
-      deployed live (real PATH_MISSING knowledge_engine rows) -- deployed live, re-verified
-      VERIFIED_MATCH. Live MASTER_INDEX.yaml was also missing registries.testing_engine_irvf
-      (git copy already had it) -- added via a new idempotent script.
-- [x] Verified remaining tasks (053213, 060203, 063403, 070131, 072725) against real state --
-      all criteria TRUE except PR #12's own mergeable status (now moot/stale, content recovered
-      separately).
-- [x] Wrote ai-os/SESSION_AUDIT_2026-07-24.yaml: 10/10 tasks accounted for, 8 DONE + 2 PARTIAL
-      (both PARTIALs' underlying real gaps already fixed this task).
+- [x] Read TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml phase_1_route_test_autogeneration and
+      ROUTE_REGISTRY_SCHEMA_2026-07-24.yaml's 5 populated_routes in full.
+- [x] Confirmed real environment facts before building: compliance-tracker has zero E2E tests / empty
+      `e2e/` testDir (playwright.config.ts's own comment), no `bun` binary but `bunx bun test` works and
+      resolves the real tsconfig `@/` alias; DATABASE_URL is a real remote Supabase project (not locally
+      reachable, and not safe to write-test against without a fixture org).
+- [x] Built `ai-os-scripts/generate_route_tests.py`: derives each route's real dispatch target by
+      grepping+brace-matching compliance-tracker's live `task-execution-engine.ts` `dispatchEngine()` switch
+      for the route's `capability_name` (no invented paths), generates a real `bun:test` file, runs it for
+      real via `bunx bun test` against compliance-tracker's actual checkout, writes generated source + raw
+      run output to `ai-os/testing_engine_evidence/phase1/<route_id>/`, and updates
+      `ROUTE_REGISTRY_SCHEMA_2026-07-24.yaml`'s `test_status`/`notes` fields in place (regex-scoped, existing
+      comments/formatting untouched). Cleans up its transient test file from compliance-tracker's own working
+      tree after each run (that repo is not part of this task's PR).
+- [x] Fixed a tuple-order bug in `derive_dispatch_target()`'s no-match branch (reason landed in the wrong
+      return slot) caught by a dry-run before the full batch -- one fix, verified, moved on (no repeat
+      failures).
+- [x] Ran the generator for real against all 5 registry routes:
+      - RT-gratuity_calculator-001 -> **passing** (real `calculateGratuity()` checked against the Payment of
+        Gratuity Act 15/26 formula)
+      - RT-commission_calculator-001 -> **passing** (real `calculatePayrollCommission()`)
+      - RT-gst_calculation_engine-001 -> **passing** (real `calculateGst()`, inter-state IGST split)
+      - RT-trend_analysis_engine-001 -> **passing** (real `analyzeTrendExplained()`, matches this engine's
+        own pre-existing production test file's expectations)
+      - RT-capability_registry_dedup-001 -> **quarantined**, honest documented blocker: no
+        `dispatchEngine()` case exists for it (matches `capability_record_schema.workflow=null`); its real
+        destination (`auditDuplicateCapabilities()`) needs a live Postgres+pgvector connection this task does
+        not safely exercise against a real remote DB with no test-fixture org. Not a fabricated pass.
+- [x] Verified `ROUTE_REGISTRY_SCHEMA_2026-07-24.yaml` still parses as valid YAML after the script's writes,
+      and that compliance-tracker's own git working tree is unmodified/clean after the run.
+- [x] Marked `phase_1_route_test_autogeneration` `status: done` in `TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml`
+      with a full `status_detail` covering what shipped vs what's honestly deferred (Playwright browser E2E,
+      the on-create trigger, full dispatchEngine/buildCapabilityTree exhaustive enumeration -- captured one
+      real data point, 186 `case` entries in `dispatchEngine()`, left the rest for Phase 4).
 
 ## Remaining
-- [ ] Final push + PR + summary to Owner
+- [ ] None for Phase 1's own scope. Deferred to later phases per this task's own CONSTRAINTS (do not attempt
+      in this task): Phase 2 trace verification wiring, Phase 3 route replay storage+diff, Phase 4 dependency
+      graph validation / exhaustive dispatchEngine+buildCapabilityTree enumeration.
+- [ ] Commit + push + open PR on claude-control (in progress).
