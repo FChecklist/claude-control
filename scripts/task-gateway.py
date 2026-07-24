@@ -334,12 +334,46 @@ def _map_repo_path_to_live(repo_relative_path):
     return None
 
 
-def reverify_touched_knowledge_engine_rows(task_id):
+def _changed_files_for_task(task_id, workspace, git_merge_status):
+    """Real fix (2026-07-24, task-20260724-041754 gap-close): a local `git diff
+    --name-only origin/master...HEAD` goes silently empty once this branch is fully
+    merged AND any worktree of this same repo -- worktrees share refs/remotes/origin/*,
+    confirmed live: /opt/veridian/repos/claude-control and every task workspace under
+    ai-os/tasks/ are worktrees of the one shared .git -- has fetched that merge, since
+    HEAD then becomes an ancestor of the local origin/master ref, making the three-dot
+    range empty by definition. That is exactly the state close is normally called in
+    (git_merge_status is computed immediately before this), so the bug was not a rare
+    edge case: reproduced live against task-20260724-033446's own close call, which
+    returned NO_TOUCHED_ROWS despite 11 real changed files in its merged PR.
+    Fix: when the branch is confirmed MERGED, ask GitHub for the PR's own real file
+    list (`gh pr view --json files`), which is immune to local ref state. Local git
+    diff remains the fallback for NOT_MERGED / no-PR tasks, where no PR file list
+    exists to ask for."""
+    pr_number = (git_merge_status or {}).get("pr_number")
+    if git_merge_status and git_merge_status.get("status") == "MERGED" and pr_number:
+        gh_proc = subprocess.run(
+            ["gh", "pr", "view", str(pr_number), "--repo", "FChecklist/claude-control",
+             "--json", "files", "--jq", ".files[].path"],
+            capture_output=True, text=True, timeout=30,
+        )
+        if gh_proc.returncode == 0:
+            files = [line.strip() for line in gh_proc.stdout.splitlines() if line.strip()]
+            if files:
+                return files, "gh_pr_files"
+
+    diff_proc = subprocess.run(
+        ["git", "-C", workspace, "diff", "--name-only", "origin/master...HEAD"],
+        capture_output=True, text=True, timeout=15,
+    )
+    return [line.strip() for line in diff_proc.stdout.splitlines() if line.strip()], "git_diff_local"
+
+
+def reverify_touched_knowledge_engine_rows(task_id, git_merge_status=None):
     """Real fix for Phase2 candidate auto_update_on_task_completion: knowledge_engine
     rows were only ever written by an explicit register-knowledge call -- nothing
     re-checked content_hash when a governed artifact actually changed, so
     verification_status could silently go stale. This computes the just-closed
-    task's own real changed-file set (git diff against its branch point), maps
+    task's own real changed-file set (see _changed_files_for_task), maps
     each to a live absolute path, and calls verify-knowledge (in-place UPDATE,
     never a duplicate INSERT) for every knowledge_engine row whose artifact_path
     matches -- so every close is a real re-verify, not a one-off manual run."""
@@ -347,15 +381,11 @@ def reverify_touched_knowledge_engine_rows(task_id):
     if not os.path.exists(os.path.join(workspace, ".git")):
         return {"status": "NO_GIT_ACTIVITY", "touched_knowledge_engine_paths": [], "reverify_result": None}
 
-    diff_proc = subprocess.run(
-        ["git", "-C", workspace, "diff", "--name-only", "origin/master...HEAD"],
-        capture_output=True, text=True, timeout=15,
-    )
-    changed = [line.strip() for line in diff_proc.stdout.splitlines() if line.strip()]
+    changed, changed_files_source = _changed_files_for_task(task_id, workspace, git_merge_status)
     live_paths = sorted({p for p in (_map_repo_path_to_live(c) for c in changed) if p})
 
     if not os.path.isfile(DB_PATH) or not live_paths:
-        return {"status": "NO_TOUCHED_ROWS", "changed_files": changed, "touched_knowledge_engine_paths": [], "reverify_result": None}
+        return {"status": "NO_TOUCHED_ROWS", "changed_files": changed, "changed_files_source": changed_files_source, "touched_knowledge_engine_paths": [], "reverify_result": None}
 
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
@@ -364,13 +394,13 @@ def reverify_touched_knowledge_engine_rows(task_id):
     matched = [p for p in live_paths if p in known_paths]
 
     if not matched:
-        return {"status": "NO_TOUCHED_ROWS", "changed_files": changed, "touched_knowledge_engine_paths": [], "reverify_result": None}
+        return {"status": "NO_TOUCHED_ROWS", "changed_files": changed, "changed_files_source": changed_files_source, "touched_knowledge_engine_paths": [], "reverify_result": None}
 
     cmd = ["python3", SUPERBOSS, "verify-knowledge"]
     for p in matched:
         cmd += ["--path", p]
     result = run_json(cmd, "verify-knowledge")
-    return {"status": "REVERIFIED", "changed_files": changed, "touched_knowledge_engine_paths": matched, "reverify_result": result}
+    return {"status": "REVERIFIED", "changed_files": changed, "changed_files_source": changed_files_source, "touched_knowledge_engine_paths": matched, "reverify_result": result}
 
 
 def cmd_close(args):
@@ -446,7 +476,7 @@ def cmd_close(args):
             f":{git_merge_status['commits_ahead_of_master']}_commits_ahead",
         ])
 
-    knowledge_engine_reverify = reverify_touched_knowledge_engine_rows(args.task_id)
+    knowledge_engine_reverify = reverify_touched_knowledge_engine_rows(args.task_id, git_merge_status)
 
     print(json.dumps({
         "audit_verdict": verdict,
