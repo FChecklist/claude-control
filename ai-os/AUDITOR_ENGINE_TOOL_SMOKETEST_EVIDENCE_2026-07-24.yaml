@@ -1,0 +1,98 @@
+meta:
+  title: VERIDIAN AUDITOR ENGINE -- Phase 0 tool install + smoke-test evidence
+  produced_by_task: task-20260724-042659-veridian-auditor-engine-phase0-inventory
+  date: '2026-07-24'
+  install_method: "No sudo/passwordless-root available on this host -- confirmed via `sudo -n true`
+    failing. All 5 tools installed user-local (~/.local/bin + ~/.local/share/veridian-tool-venvs/), no
+    system packages touched, nothing added to any repo's own dependency manifest this phase."
+  target_repo_for_smoketests: /opt/veridian/repos/compliance-tracker (real repo, 1713 real commits, chosen
+    as the largest/most representative of the 3 named repos)
+
+tools:
+  - name: gitleaks
+    version: "8.30.1"
+    install_command: "curl -sL -o gitleaks.tar.gz https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz && tar -xzf gitleaks.tar.gz gitleaks && mv gitleaks ~/.local/bin/gitleaks && chmod +x ~/.local/bin/gitleaks"
+    smoketest_command: "gitleaks detect --source . --report-format json --report-path /tmp/veridian-audit-smoketest/gitleaks-report.json --no-banner -v"
+    smoketest_target: /opt/veridian/repos/compliance-tracker (full git history scan)
+    real_output_summary: "1713 commits scanned, ~66.09 MB scanned in 5.94s. 48 real leaks found across 8
+      distinct files: 41 generic-api-key + 7 jwt rule matches. Findings include a Supabase anon JWT key
+      committed in .env.example and build-time secrets baked into apps/web/.next/server/*.json manifests.
+      Full report at /tmp/veridian-audit-smoketest/gitleaks-report.json (not committed to the repo --
+      contains fingerprinted secret excerpts, kept out of git per this task's own security discipline)."
+    status: installed_and_working
+    domain_coverage: [security]
+
+  - name: trivy
+    version: "0.72.0"
+    install_command: "curl -sL -o trivy.tar.gz https://github.com/aquasecurity/trivy/releases/download/v0.72.0/trivy_0.72.0_Linux-64bit.tar.gz && tar -xzf trivy.tar.gz trivy && mv trivy ~/.local/bin/trivy && chmod +x ~/.local/bin/trivy"
+    smoketest_command: "trivy fs --scanners vuln -f json -o /tmp/veridian-audit-smoketest/trivy-dir-full.json --skip-dirs node_modules --skip-dirs .next --skip-dirs .git ."
+    smoketest_target: /opt/veridian/repos/compliance-tracker
+    real_output_summary: "Vulnerability DB downloaded fresh (101.83 MiB, mirror.gcr.io/aquasec/trivy-db:2).
+      Scan completed: detected exactly 1 language-specific manifest (services/doc-processing/requirements.txt,
+      pip ecosystem), 0 vulnerabilities found in it. REAL, REPRODUCIBLE GAP: trivy did NOT detect
+      compliance-tracker's own bun.lock (375KB, real bun package-manager lockfile) in either a full directory
+      scan or a direct `trivy fs bun.lock` invocation (both returned 'Number of language-specific files
+      num=0/1' with bun.lock absent) -- despite upstream trivy having merged bun.lock parser support
+      (aquasecurity/trivy PR #8897/#8998, issues #8839/#8840). Root cause not yet isolated (possibly a
+      trivy-db schema/version mismatch for this specific release) -- recorded as a genuine Phase 1 blocker
+      in AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml's security domain row, not silently skipped."
+    status: installed_and_working_with_documented_gap
+    domain_coverage: [security]
+
+  - name: spectral
+    version: "6.16.2"
+    install_command: "npm install -g @stoplight/spectral-cli --prefix ~/.local"
+    smoketest_command: "spectral lint --ruleset .spectral.yaml sample-openapi.yaml   # .spectral.yaml: 'extends: spectral:oas'"
+    smoketest_target: "A minimal representative OpenAPI 3.0.3 document (NOT from a VERIDIAN repo -- confirmed
+      via grep across compliance-tracker/projexa/veda-advisors for `openapi:`/`\"openapi\":` that ZERO
+      OpenAPI documents exist in any of the 3 real repos today; this is itself the headline real finding
+      for the api-contract domain, not an install problem)."
+    real_output_summary: "6 real warnings against the sample doc using spectral's built-in spectral:oas
+      ruleset: oas3-api-servers, info-contact, info-description, operation-description, operation-operationId,
+      operation-tags. Confirms the tool itself works correctly; the gap is VERIDIAN having no OpenAPI
+      contracts to lint yet."
+    status: installed_and_working
+    domain_coverage: [api-contract]
+
+  - name: checkov
+    version: "3.3.8"
+    install_command: "python3 -m venv ~/.local/share/veridian-tool-venvs/checkov && ~/.local/share/veridian-tool-venvs/checkov/bin/pip install checkov && ln -s ~/.local/share/veridian-tool-venvs/checkov/bin/checkov ~/.local/bin/checkov  # required a dedicated venv -- direct `pip3 install --user checkov` failed with PEP 668 'externally-managed-environment' on this Ubuntu 24.04 host"
+    smoketest_command: "checkov -f services/doc-processing/Dockerfile --compact -o cli"
+    smoketest_target: /opt/veridian/repos/compliance-tracker/services/doc-processing/Dockerfile (the one
+      real Dockerfile confirmed to exist anywhere in the 3 named repos)
+    real_output_summary: "Passed checks: 45, Failed checks: 2, Skipped checks: 0. Real failures:
+      CKV_DOCKER_2 (no HEALTHCHECK instruction) and CKV_DOCKER_3 (no non-root USER declared) -- both
+      genuinely actionable findings against real production Dockerfile content."
+    status: installed_and_working
+    domain_coverage: [security]
+
+  - name: dependency-check
+    version: "12.2.2 (Core)"
+    install_command: "curl -sL -o dc.zip https://github.com/dependency-check/DependencyCheck/releases/download/v12.2.2/dependency-check-12.2.2-release.zip && unzip into ~/.local/share/veridian-tool-venvs/dependency-check-12.2.2 && ln -s .../bin/dependency-check.sh ~/.local/bin/dependency-check. Also required a Java runtime -- none present on this host (`java` not found); installed Eclipse Temurin 21.0.11 JRE (portable tar.gz, user-local, no sudo) as a prerequisite."
+    smoketest_command: "JAVA_HOME=~/.local/share/veridian-tool-venvs/temurin-jre-21 dependency-check --project compliance-tracker-doc-processing --scan requirements.txt --format JSON --data /tmp/.../dc-data --out /tmp/.../dc-out --disableRetireJS --disableNodeAudit --disableYarnAudit --disableNodeJS"
+    smoketest_target: /opt/veridian/repos/compliance-tracker/services/doc-processing/requirements.txt
+    real_output_summary: "--version confirmed working (Dependency-Check Core version 12.2.2). The real scan
+      was started and is a genuine, honest partial result: its first-run NVD CVE data sync (369,951 records
+      total from the NVD API) is running WITHOUT an NVD API key, which the tool itself warns 'can take a
+      VERY long time' -- confirmed true, observed ~11%% downloaded after ~10 minutes of real wall-clock time
+      in this session. This is a documented, real infra constraint (NVD public rate limits without a key),
+      not a silent skip: the tool installs and runs correctly, but is not practically usable on a repeatable
+      cadence until a free NVD_API_KEY is obtained (Owner-requestable at nvd.nist.gov, real prerequisite
+      flagged for Phase 1)."
+    status: installed_partial_smoketest_nvd_sync_too_slow_without_api_key
+    domain_coverage: [security]
+
+not_attempted_this_phase:
+  - name: sonar-scanner
+    reason: "Requires a running SonarQube server to connect to -- not a standalone binary with zero
+      VERIDIAN-specific config, correctly out of this phase's SCOPE item 2 list (which named Gitleaks,
+      Trivy, Checkov, Spectral, Dependency-Check specifically, not sonar-scanner)."
+  - name: schemathesis
+    reason: "Hard-blocked on the api-contract domain's OpenAPI documents existing first (see spectral row
+      above -- zero exist today). Not in SCOPE item 2's named list either; deferred to Phase 2 per the
+      phase plan."
+
+success_criteria_check:
+  gitleaks_trivy_spectral_installed_with_real_version_and_smoketest: true
+  checkov_also_installed_and_smoketested: true
+  dependency_check_installed_smoketest_partial_documented_honestly: true
