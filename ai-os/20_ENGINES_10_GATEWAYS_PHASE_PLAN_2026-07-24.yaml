@@ -1,0 +1,420 @@
+meta:
+  title: VERIDIAN 20-ENGINE / 10-GATEWAY ARCHITECTURE -- Phase 0 Inventory + Phased Build Plan
+  created: '2026-07-24'
+  produced_by_task: task-20260724-053213-veridian-20engines-10gateways-phase0-inv
+  instruction: INS-20260724-053123-0e5a
+  precedent: 'ai-os/AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml and ai-os/KNOWLEDGE_ENGINE_INVENTORY_2026-07-23.yaml
+    -- same method applied here: real investigation (grep + live path verification) before any build plan,
+    not assumption.'
+  scope_of_this_document: 'Phase 0 output only, per this task''s own CONSTRAINTS: inventory (engine_inventory
+    below, produced by ai-os/scripts/generate_engines_gateways_inventory.py) + the Capability Registry Engine
+    schema design (ai-os/CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml, produced/verified by
+    ai-os/scripts/generate_capability_registry_candidates.py) + this phased build plan. Live gateway wiring,
+    pipeline enforcement, and OSS tool installation (OPA/Camunda/n8n/Kong/etc) are explicitly left to the
+    phases this document defines, not built in this task.'
+  owner_standing_instruction: 'Repeated, explicit this session: no duplication -- most of the 20 engines
+    already exist under a different name. "Engine not found by this exact name" is a signal to search
+    harder, never license to build a parallel implementation. Confirmed true by this inventory: all 20
+    engines have real, verified prior art (see engine_inventory below) -- 19/20 partial, 1/20 (Knowledge
+    Engine) full. Zero engines are NONE.'
+  namespace_collision_excluded: 'compliance-tracker/ai-os/engines/ENGINES.yaml and veda-advisors'' copy of
+    the same file are NOT related to this architecture -- confirmed this session to be an unrelated
+    2026-06-28 AI-agent-authorization config that merely reuses the word "engines". Not read, not cited,
+    not treated as prior art anywhere in this document.'
+  audit_observability_deferred_to: 'ai-os/AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml is authoritative for
+    Engine 19 (Audit) and most of Engine 20 (Observability), per this task''s CONSTRAINTS. Not re-planned
+    here -- see engine_inventory rows 19/20 below, which only link to that file, and dependency_table below,
+    which cites it as an external dependency where relevant.'
+  crontab_approval_note: 'Any crontab change any phase below requires needs an entry in
+    ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml with status approved. The Owner''s blanket "95pct-resources
+    / Recommended-default" approval given this session counts as that approval for any phase task below that
+    only adds a cron entry consistent with that default -- record the specific entry at dispatch time and
+    update ai-os/CRONTAB_APPROVED_SNAPSHOT.txt to match, per the existing pattern (see
+    scripts/knowledge_registry_multisource.py''s own 6h cron and generate_software_catalog.py''s daily cron
+    for precedent). No phase in this plan needs a fresh chat confirmation beyond citing that standing
+    approval.'
+
+# ============================================================================
+# ENGINE INVENTORY -- verbatim output of
+# ai-os/scripts/generate_engines_gateways_inventory.py (also written
+# standalone to ai-os/generated/engine_inventory_2026-07-24.yaml). DO NOT
+# HAND-EDIT this block -- re-run the script and re-splice if any cited path
+# changes. Every exists_as path was live-verified (verified_on_disk) against
+# the real filesystem at generation time.
+# ============================================================================
+engine_inventory:
+  - engine_no: 1
+    engine_name: "Intent Engine"
+    purpose: "Classify what the user/system wants to do before routing to a capability."
+    exists_as:
+      - repos/compliance-tracker/src/components/veri-chat/IntentCommandPalette.tsx
+      - repos/compliance-tracker/src/lib/browser-intent-cache.ts
+      - repos/compliance-tracker/src/components/veri-chat/ChainSelector.tsx
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "Recalls/restores a user's own past mode-pill+chain-path selections (recency/frequency ranked, IndexedDB + server-side chain-usage-ranking.ts) -- this IS real intent capture for VeriComposer, but it is recall-of-past-choice, not general free-text NLU intent classification for a new, never-seen request."
+  - engine_no: 2
+    engine_name: "Context Engine"
+    purpose: "Carry request/session/org context through a call chain so downstream engines don't re-derive it."
+    exists_as:
+      - repos/compliance-tracker/src/lib/services/context.ts
+      - repos/compliance-tracker/src/lib/ai-team/roster.ts
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "ServiceContext/ReadContext (orgId + actor) is real, enforced, typed context-threading for every service call -- but it is request-scoped tenant/actor context, not conversational/session memory across turns (that half is closer to Knowledge Engine's artifact relationships, see Engine 15)."
+  - engine_no: 3
+    engine_name: "Capability Registry Engine"
+    purpose: "Single lookup a caller checks before ever considering an AI call: does a capability already exist, what are its inputs/rules/workflow/apis/permissions/confidence."
+    exists_as:
+      - repos/compliance-tracker/src/lib/services/capability-registry-service.ts
+      - repos/compliance-tracker/src/app/api/capability-registry
+      - repos/compliance-tracker/src/app/(app)/capability-registry
+      - repos/compliance-tracker/src/lib/loops/capability-index-freshness-audit.ts
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "Real, live, embedding-based duplicate/similarity index (Wave 43) over 5 entity types (worker_agent, automation_rule, module, prompt_pattern, dynamic_chain) with a recurring freshness-audit loop -- this answers 'does something similar already exist' via vector search. It does NOT carry the PART4 field set (business_rules/workflow/automation/documents/reports/apis/ui_screens/permissions/ai_required/confidence/version/owner) as structured columns -- that richer schema is this task's own deliverable (CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml), designed to sit ON TOP of indexCapability()/findSimilar() as the embedding layer underneath, not replace it. This is the single most important finding of this inventory: the 'most important missing piece' PART4 warned about is 60% already built under a different name, and the real gap is schema richness, not existence."
+  - engine_no: 4
+    engine_name: "Planning Engine"
+    purpose: "Turn an objective into a bounded, sequenced, validated plan before execution."
+    exists_as:
+      - repos/compliance-tracker/src/lib/task-tightening.ts
+      - repos/compliance-tracker/src/lib/services/dynamic-chain-directory-service.ts
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "task-tightening.ts enforces a mandatory objective/scope/success-criteria envelope before any AI Workforce dispatch (rejects a loose free-text brief); dynamic-chain-directory-service.ts does keyword-ranked chain-path recommendation. Neither generates a novel multi-step plan/DAG from a goal -- both validate or recommend from an already-known, finite set of paths."
+  - engine_no: 5
+    engine_name: "Policy Engine"
+    purpose: "Gate actions against standing policy before they execute."
+    exists_as:
+      - scripts/preflight-guard.py
+      - ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      - repos/compliance-tracker/src/lib/policy-enforcement-engine.ts
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "preflight-guard.py gates server-side task dispatch (resource/crontab/scope checks); policy-enforcement-engine.ts is a deterministic pre-LLM-call gate (personal-use/prompt-injection/out-of-domain categories) in compliance-tracker. Both are real, enforced gates -- but two separate policy engines with no shared schema or single point of truth, and neither covers the other's domain (server ops vs in-app LLM calls)."
+  - engine_no: 6
+    engine_name: "Rule Engine"
+    purpose: "Evaluate named business rules against inputs/outputs deterministically."
+    exists_as:
+      - repos/compliance-tracker/src/lib/guardrail-engine.ts
+      - repos/compliance-tracker/src/lib/guardrail-registrations.ts
+      - repos/compliance-tracker/src/lib/business-rule-validator.ts
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "Wave 157 guardrail-engine.ts is a real, generic, opt-in rule framework (input/process/output/logic phases per capability-tree leaf) wired as a genuine pre-execution gate via assertBusinessRulesBeforeExecution(). Starts EMPTY by design -- only a handful of leaves are actually registered today (GST rate bounds, EMI/loan bounds, gratuity/commission bounds), so the engine exists and is real, but coverage across the ~100 real capability-tree leaves is shallow."
+  - engine_no: 7
+    engine_name: "Decision Engine"
+    purpose: "Score/route a request by risk or confidence to decide how it should be handled."
+    exists_as:
+      - scripts/risk-tier.py
+      - repos/compliance-tracker/src/lib/explainability/ai-decision-explanation.ts
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "risk-tier.py assigns a risk tier for server task dispatch; ai-decision-explanation.ts renders structured AI-decision explanations in-app. Neither is a general decision-table/rules-based router that other engines could call generically."
+  - engine_no: 8
+    engine_name: "Workflow Engine"
+    purpose: "Model and execute a named multi-step business process end to end."
+    exists_as:
+      - scripts/task-gateway.py
+      - repos/compliance-tracker/src/lib/task-execution-engine.ts
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "task-gateway.py's submit/start/log/close lifecycle is real, enforced process orchestration for server-side AI tasks. task-execution-engine.ts dispatches VCEL engine calculations through named chains. Neither is BPMN-modeled (confirmed zero bpmn-js/camunda dependency in any of the 3 repos' package.json, per AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml's own workflow-domain finding) -- VERIDIAN's 'workflows' today are status-enum transitions and task-gateway phases, not a modeled process definition a workflow engine would normally execute against."
+  - engine_no: 9
+    engine_name: "Automation Engine"
+    purpose: "Execute a rule-triggered action without human intervention once conditions are met."
+    exists_as:
+      - scripts/task-gateway.py
+      - repos/compliance-tracker/src/lib/loops/automation-progress-audit.ts
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "task-gateway.py's cron-dispatched lifecycle IS real unattended automation for server tasks. automation_rule is one of the 5 real entity types the Capability Registry (Engine 3) already indexes, and automation-progress-audit.ts is a recurring health loop over it. No general trigger-condition-action rule builder exists outside these two call sites."
+  - engine_no: 10
+    engine_name: "Integration Engine"
+    purpose: "Connect to and exchange data with external systems/APIs."
+    exists_as:
+      - repos/compliance-tracker/src/lib/webhook-deliver.ts
+      - repos/compliance-tracker/src/lib/webhooks
+      - repos/compliance-tracker/src/lib/monitors/webhook-delivery-outcome-monitor.ts
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "Real outbound webhook delivery + a recurring delivery-outcome monitor exist. No inbound connector/iPaaS framework -- confirmed zero n8n/Kong/similar dependency in any of the 3 repos (same package.json read AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml already did for its own tool inventory, reused here rather than re-run)."
+  - engine_no: 11
+    engine_name: "Document Engine"
+    purpose: "Generate, extract, and process documents (PDF/OCR/templates)."
+    exists_as:
+      - repos/compliance-tracker/src/lib/engines/document-processing-engine.ts
+      - repos/compliance-tracker/src/lib/pdf-generator.ts
+      - repos/compliance-tracker/services/doc-processing
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "Real PDF generation, a standalone Python doc-processing microservice, and an LLM-Vision-based OCR/extraction service (document-extraction-service.ts) all exist and are live. document-processing-engine.ts itself is thin (barcode-decode contract + exact-hash dedup only) -- most of the real work lives in the two files it explicitly defers to."
+  - engine_no: 12
+    engine_name: "Notification Engine"
+    purpose: "Deliver an alert/message to the right recipient through the right channel."
+    exists_as:
+      - repos/compliance-tracker/src/app/api/notifications
+      - scripts/notify-owner.py
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "In-app notifications API route (compliance-tracker) and a separate, unrelated server-side Owner-notification script (notify-owner.py) are both real but not the same system -- no single notification engine serves both the product and the AI-OS operational layer."
+  - engine_no: 13
+    engine_name: "Data Engine"
+    purpose: "Move, transform, and validate data across storage/pipelines."
+    exists_as:
+      - repos/compliance-tracker/src/lib/engines/data-quality-engine.ts
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "Real data-quality validation checks exist as one of the 22 VCEL domain engines. No ETL/pipeline orchestration layer -- data movement today is direct drizzle-orm/Prisma queries per route, not a distinct Data Engine."
+  - engine_no: 14
+    engine_name: "Metadata Engine"
+    purpose: "Track what artifacts exist, their type/location/relationships, kept fresh."
+    exists_as:
+      - ai-os/MASTER_INDEX.yaml
+      - ai-os/memory/superboss-register.sqlite
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "MASTER_INDEX.yaml's registries: section plus knowledge_engine's multi-source rows (SERVER/VERCEL/SUPABASE/GITHUB/LOCAL, see self_sustaining_system_engine registry entry) together are real, live metadata tracking with drift detection (verification_status). Split across two documents/mechanisms with overlapping but not identical scope (MASTER_INDEX is hand-edited prose+structure, knowledge_engine is queryable rows) rather than one authoritative metadata store."
+  - engine_no: 15
+    engine_name: "Knowledge Engine"
+    purpose: "Store and query artifacts, their purpose, and their relationships to each other."
+    exists_as:
+      - ai-os/memory/superboss-register.sqlite
+      - scripts/superboss-register.py
+    verified_on_disk: true
+    coverage: full
+    gap_description: "Purpose-built and live: knowledge_engine table (artifact_path/content_hash/verification_status/entity_relationships) + FTS5 search + register-knowledge/query-knowledge/verify-knowledge/add-relationship CLI, covering SERVER/VERCEL/SUPABASE/GITHUB/LOCAL sources with a recurring 6h refresh cron. Known operational gap (not a design gap): SUPABASE cron refresh degrades gracefully when SUPABASE_ACCESS_TOKEN is invalid (401), per KNOWLEDGE_ENGINE_PHASE3_CANDIDATES_2026-07-24.yaml."
+  - engine_no: 16
+    engine_name: "Learning Engine"
+    purpose: "Learn from outcomes/feedback to improve future behavior."
+    exists_as:
+      - repos/compliance-tracker/src/lib/loops/task-reflection.ts
+      - repos/compliance-tracker/src/lib/loops/loop-engineering-audit.ts
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "A real 'Loop Engineering' meta-loop taxonomy exists (loop_definitions/loop_executions, a fixed set of platform-improvement loops) plus a universal task-reflection mechanism (outcome/speed/cost verdicts) firing on every terminal task-status write, feeding the CLEE pipeline (loop-improvement-proposer.ts). This is real reflective learning infrastructure, but it is structured verdict/proxy scoring, not a model-training or feedback-weight-adjustment learning system."
+  - engine_no: 17
+    engine_name: "UI Composition Engine"
+    purpose: "Assemble UI dynamically from reusable pieces based on context/selection."
+    exists_as:
+      - repos/compliance-tracker/src/components/veri-chat/VeriComposer.tsx
+      - repos/compliance-tracker/src/components/veri-chat/ChainSelector.tsx
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "Real dynamic composition of the chat composer (mode pill + cascading chain-path picker, shared between an inline composer and a pre-conversation dialog, ChainSelectorDialog) -- but scoped entirely to VeriComposer's own chat surface, not a general design-system/component-registry-driven UI composition engine for the rest of the product."
+  - engine_no: 18
+    engine_name: "Analytics Engine"
+    purpose: "Compute trends/statistics/KPIs over stored data."
+    exists_as:
+      - repos/compliance-tracker/src/lib/engines/analytics-engine.ts
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "Real trend-analysis (linear regression via simple-statistics, with an explainable variant) exists as one of the 22 VCEL domain engines, plus orchestra-analytics-service.ts for AI-usage KPIs. Scoped to specific call sites (task-execution-engine.ts's trend_analysis_engine case, AI-usage dashboards), not a general-purpose analytics layer over arbitrary datasets."
+  - engine_no: 19
+    engine_name: "Audit Engine"
+    purpose: "Verify system/code/process conformance against named standards."
+    exists_as:
+      - ai-os/AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "Out of scope for this task per CONSTRAINTS -- the VERIDIAN Auditor Engine (a separate, already-in-progress Phase 0, task-20260724-042659) is authoritative for this engine. Do not re-plan; see that file's own domains: block (15 audit domains) and phases: block for real status."
+  - engine_no: 20
+    engine_name: "Observability Engine"
+    purpose: "Surface real-time system health/alerts/traces across the estate."
+    exists_as:
+      - ai-os/AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml
+      - scripts/health-check-15min.py
+      - ai-os/logs/ATTENTION.md
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "health-check-15min.py + ATTENTION.md are real, live server-side health monitoring (systemd/DB/disk/mem, 15-minute cron). The Auditor Engine's PART6 (7-repo OpenTelemetry + pgAudit observability layer) is designed but not yet enforced (Phase 7 per that plan) -- authoritative for the product-code half of this engine, per this task's own CONSTRAINTS not re-planned here."
+
+# ============================================================================
+# GATEWAYS -- honest limitation of this Phase 0: the condensed SCOPE this
+# task was given names and defines all 20 ENGINES explicitly (with a Purpose
+# column), but does NOT name the 10 GATEWAYS anywhere in this task's own
+# SCOPE/KNOWN_CONTEXT text -- only the task title references "10 Gateways".
+# Rather than fabricate 10 plausible-sounding gateway names not grounded in
+# the Owner's actual instruction, this section records what IS real and
+# confirmed today, and defers full gateway naming/inventory to the Owner
+# confirming the canonical list (see gateway_naming_gap below).
+# ============================================================================
+gateways:
+  confirmed_real_today:
+    - gateway_candidate: "Task Gateway"
+      exists_as: scripts/task-gateway.py
+      verified_on_disk: true
+      evidence: "Already named 'gateway' literally in this codebase -- submit/start/log/close lifecycle for
+        every AI task dispatched server-side, cron-invoked, referenced throughout this session's own
+        KNOWN_CONTEXT as partial Workflow Engine (8) + Automation Engine (9). The one gateway this task can
+        confirm with full confidence rather than infer."
+  gateway_naming_gap:
+    finding: "Grepped ai-os/, mother-router-task-prompt.txt, and all *.yaml/*.txt/*.md under ai-os/ for
+      'gateway' -- the only real hits are scripts/task-gateway.py and its own citations. No document on this
+      server enumerates '10 gateways' by name."
+    recommendation: "Before any phase below spends build effort on gateway work beyond Task Gateway, the
+      Owner (or the original INS-20260724-053123-0e5a instruction text, if it names them and that detail
+      was lost in this task's condensed SPEC) should confirm the canonical 10-gateway list. Once named, the
+      exact same method this document already used for the 20 engines (grep compliance-tracker/projexa/
+      veda-advisors + ai-os/+scripts for each gateway concept, live-verify every exists_as path) applies
+      unchanged -- see phases[] gateway_definition_and_inventory below, which is the phase that does this."
+    plausible_candidates_not_yet_confirmed: "Standard API-gateway-layer patterns this codebase's own
+      structure suggests (Auth/API/Data/AI-Model/Notification/Document/Integration/Admin gateways sitting in
+      front of the engines above) -- listed here only as a starting hypothesis for the Owner to confirm or
+      correct, NOT written into engine_inventory-style rows because none of them have been grep-verified
+      against a real name in this codebase the way every engine row above was."
+
+# ============================================================================
+# DEPENDENCY TABLE -- concrete mechanism per edge (real file/cron/CLI call,
+# not a conceptual arrow). "planned" edges name the exact mechanism a later
+# phase will build; "live" edges already run today.
+# ============================================================================
+dependency_table:
+  - from: Capability Registry Engine (3)
+    to: Policy Engine (5)
+    mechanism: "planned -- lookupCapability() result's ai_required flag checked by a future shared
+      policy-gate.ts before enforcePolicy()/preflight-guard.py ever run; see
+      CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml lookup_contract.call_site_requirement."
+    status: planned
+  - from: Capability Registry Engine (3)
+    to: Rule Engine (6)
+    mechanism: "planned -- capability_record_schema.business_rules field populated directly from
+      guardrail-registrations.ts lookups by leaf_key, no new rule-storage mechanism needed."
+    status: planned
+  - from: Capability Registry Engine (3)
+    to: Decision Engine (7)
+    mechanism: "planned -- ai_required + confidence fields inform risk-tier.py's routing decision (AI vs
+      deterministic path) once Phase 2 wires risk-tier.py to query the registry via the same
+      query-knowledge-style CLI pattern scripts/superboss-register.py already establishes."
+    status: planned
+  - from: Workflow Engine (8)
+    to: Automation Engine (9)
+    mechanism: "live -- scripts/task-gateway.py's close step already triggers/feeds
+      automation-progress-audit.ts's recurring health loop over automation_rule capability rows."
+    status: live
+  - from: Metadata Engine (14)
+    to: Knowledge Engine (15)
+    mechanism: "live -- knowledge_engine (ai-os/memory/superboss-register.sqlite) IS the queryable half of
+      the Metadata Engine; MASTER_INDEX.yaml's registries: section is the hand-edited half. Same table,
+      already shared."
+    status: live
+  - from: Document Engine (11)
+    to: Notification Engine (12)
+    mechanism: "planned -- doc-processing completion (services/doc-processing) should call
+      scripts/notify-owner.py or the in-app app/api/notifications route on failure; no such call site
+      exists today (confirmed absent by grep)."
+    status: planned
+  - from: Integration Engine (10)
+    to: Automation Engine (9)
+    mechanism: "planned -- an inbound webhook receiver (new, does not exist today) would call
+      scripts/task-gateway.py submit for the matching automation_rule capability row; today only outbound
+      webhook-deliver.ts exists, so this edge has no real mechanism yet."
+    status: planned
+  - from: Audit Engine (19) / Observability Engine (20)
+    to: all engines above
+    mechanism: "external dependency -- ai-os/AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml's own phases (not
+      re-planned here) will eventually instrument every engine above via its PART6 OpenTelemetry/pgAudit
+      layer. Not built by any phase in this document."
+    status: external_planned
+
+# ============================================================================
+# PHASES -- one phase per closed theme, not one phase per engine (all 20 are
+# partial-with-real-prior-art, so the efficient unit of work is "unify /
+# extend the real thing that exists", not "build from zero").
+# ============================================================================
+phases:
+  - id: phase_1_capability_registry_live_wiring
+    closes_engines: [3]
+    closes_capability_registry_gap: true
+    objective: "Wire CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml live: a real table (extends
+      ai-os/memory/superboss-register.sqlite alongside knowledge_engine, or a new Postgres table in
+      compliance-tracker reusing embeddings/capability-registry-service.ts's existing indexCapability()),
+      a populate script seeded from capability-tree-service.ts's real CapabilityNode tree, and
+      lookupCapability() implemented per the lookup_contract -- then wire task-gateway.py (or whichever
+      caller is about to construct an LLM prompt) to call it first."
+    depends_on: []
+    real_mechanism_reused: "capability-registry-service.ts's indexCapability()/findSimilar(),
+      capability-tree-service.ts's CapabilityNode tree, scripts/superboss-register.py's
+      register-knowledge/query-knowledge CLI pattern."
+
+  - id: phase_2_policy_rule_decision_unification
+    closes_engines: [5, 6, 7]
+    objective: "Give Policy Engine (preflight-guard.py + policy-enforcement-engine.ts) one shared decision
+      schema instead of two disconnected gates. Expand guardrail-registrations.ts coverage from ~6 leaves
+      toward the ~100 real capability-tree leaves, prioritized by Capability Registry ai_required=false +
+      no business_rules registered (from Phase 1's live table). Generalize risk-tier.py +
+      ai-decision-explanation.ts into one callable decision service."
+    depends_on: [phase_1_capability_registry_live_wiring]
+
+  - id: phase_3_workflow_automation_integration
+    closes_engines: [8, 9, 10]
+    objective: "Formalize task-gateway.py + task-execution-engine.ts dispatch as one named workflow
+      contract. Build a real trigger-condition-action automation rule builder on top of the Capability
+      Registry's automation_rule entity type. Stand up an inbound integration/connector path (evaluate a
+      standalone OSS webhook-receiver pattern consistent with AUDITOR_ENGINE_PHASE_PLAN's own finding of
+      zero iPaaS deps in any of the 3 repos -- do not install a full iPaaS like n8n without Owner
+      confirmation, per that plan's own tool_installable_compatible discipline)."
+    depends_on: [phase_1_capability_registry_live_wiring]
+
+  - id: phase_4_document_notification_data
+    closes_engines: [11, 12, 13]
+    objective: "Unify document pipeline (pdf-generator.ts + services/doc-processing +
+      document-extraction-service.ts) under one Document Engine facade. Merge in-app
+      app/api/notifications with server-side notify-owner.py under one Notification Engine contract (or
+      at minimum a shared schema + cross-call). Extend data-quality-engine.ts toward a real ETL/pipeline
+      layer, scoped only once a real multi-step data-movement need is identified (do not build
+      speculative ETL infrastructure)."
+    depends_on: []
+
+  - id: phase_5_metadata_knowledge_consolidation
+    closes_engines: [14, 15]
+    objective: "Reconcile MASTER_INDEX.yaml's registries: section and knowledge_engine's rows into one
+      authoritative metadata store (or a documented, enforced sync direction between the two, if full
+      merge is too disruptive). Close the Knowledge Engine's one known operational gap: a working
+      SUPABASE_ACCESS_TOKEN so the SUPABASE-source cron refresh stops degrading (see
+      KNOWLEDGE_ENGINE_PHASE3_CANDIDATES_2026-07-24.yaml for the exact blocker)."
+    depends_on: []
+
+  - id: phase_6_intent_context_planning_learning
+    closes_engines: [1, 2, 4, 16]
+    objective: "Extend Intent Engine beyond mode-pill recall toward general free-text intent
+      classification for never-seen requests (only once a real product need for this is identified --
+      today's recall-based coverage may already be sufficient; do not build a generic NLU layer
+      speculatively). Extend Context Engine's request-scoped ServiceContext toward real cross-turn
+      conversational memory (reusing Knowledge Engine's entity_relationships, not a new store). Extend
+      Planning Engine (task-tightening.ts + dynamic-chain-directory-service.ts) toward real multi-step
+      plan/DAG generation. Extend Learning Engine's task-reflection.ts verdicts toward decisions that
+      actually feed back into engine behavior (today they are recorded, not yet consumed)."
+    depends_on: [phase_1_capability_registry_live_wiring, phase_5_metadata_knowledge_consolidation]
+
+  - id: phase_7_ui_composition_analytics
+    closes_engines: [17, 18]
+    objective: "Evaluate whether VeriComposer/ChainSelector's dynamic composition pattern generalizes
+      beyond the chat surface into a real design-system-wide UI Composition Engine, or whether that scope
+      is intentionally narrow (VERIDIAN's UI is not primarily dynamically-composed outside chat) and this
+      engine's 'gap' is actually acceptable as-is -- a judgment call for the Owner, not assumed here.
+      Evaluate the same acceptable-as-is question for Analytics Engine (analytics-engine.ts) before
+      building a general-purpose analytics layer nothing currently asks for."
+    depends_on: []
+
+  - id: gateway_definition_and_inventory
+    closes_engines: []
+    objective: "Get the Owner (or the original, uncondensed INS-20260724-053123-0e5a instruction text) to
+      confirm the canonical 10-gateway list -- see gateways.gateway_naming_gap above. Once named, apply
+      ai-os/scripts/generate_engines_gateways_inventory.py's exact method (add a GATEWAY_DISCOVERY list,
+      same live-verification) to produce a real, verified 10-row gateway inventory with the same rigor as
+      engine_inventory above. Do not build any gateway beyond scripts/task-gateway.py (already confirmed
+      real) before this naming gap is closed."
+    depends_on: []
+
+  - id: audit_observability_external
+    closes_engines: [19, 20]
+    objective: "Not a phase of this plan -- tracked entirely in ai-os/AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml's
+      own phases[] block. Listed here only so this document's phase list is a complete map of all 20
+      engines' disposition, per this task's own SUCCESS_CRITERIA."
+    depends_on: []
+    external_plan: ai-os/AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml
+
+registration:
+  knowledge_engine_query_command: 'python3 scripts/superboss-register.py query-knowledge "engines_gateways_architecture" --tag domain:engines_gateways_architecture'
+  master_index_registry_id: engines_gateways_architecture
