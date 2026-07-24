@@ -1,0 +1,652 @@
+meta:
+  title: VERIDIAN Guardrail Coverage Candidates (Phase 2 deliverable)
+  created: '2026-07-24'
+  produced_by_task: task-20260724-115041-phase2-give-policy-engine-preflight-guar
+  produced_by_script: ai-os-scripts/generate_guardrail_coverage_candidates.py
+  scope: 'Prioritized list of real capability-tree leaves (from
+    repos/compliance-tracker/src/lib/services/capability-tree-service.ts, live grep, not invented)
+    that have explicit typed input fields but zero registerGuardrail() registration in
+    repos/compliance-tracker/src/lib/guardrail-registrations.ts (live grep, not invented) -- the
+    literal "ai_required=false + no business_rules registered" prioritization this phase''s
+    objective asks for. Consumed by compliance-tracker''s own next PR (out of this task''s repo
+    boundary -- see ai-os/POLICY_DECISION_SCHEMA_2026-07-24.yaml''s repo_boundary_honestly_stated).'
+  tree_leaves_with_input_fields_count: 111
+  already_registered_count: 5
+  uncovered_candidate_count: 106
+candidates:
+  - leaf_key: access_control_evaluation_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: address_standardization_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: advance_tax_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: amt_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: analytics_variance_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: arrear_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: asset_disposal_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: asset_transfer_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: attendance_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: attrition_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: bank_account_validation_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: banking_interest_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: basic_arithmetic_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: batch_costing_engine_2
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: benchmark_comparison_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: bonus_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: cac_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: capital_gains_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: capitalization_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: churn_probability_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: closing_balance_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: compliance_interest_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: compliance_risk_scoring
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: container_utilization_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: cost_variance_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: credit_limit_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: customer_health_score
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: customer_lifetime_value_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: cycle_counting_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: delivery_eta_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: deposit_maturity_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: earned_value_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: email_validation_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: eoq_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: eps_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: experience_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: financial_mathematics_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: fraction_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: freight_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: full_final_settlement_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: fund_flow_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: gstin_validation_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: hash_generation_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: ifsc_validation_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: impairment_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: income_tax_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: income_tax_interest_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: income_tax_penalty_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: increment_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: indexation_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: job_costing_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: journal_risk_analyzer
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: labour_welfare_fund_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: landed_cost_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: leave_balance_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: leave_encashment_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: margin_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: marginal_costing_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: marketing_roi_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: markup_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: mat_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: materiality_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: moq_optimizer
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: moving_average_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: notice_period_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: opening_balance_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: opportunity_score_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: overtime_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: pan_validation_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: pan_validation_engine_dq
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: percentage_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: phone_validation_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: pricing_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: probability_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: probation_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: purchase_cost_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: purchase_price_variance_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: quote_optimizer
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: ratio_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: regression_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: reorder_level_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: revaluation_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: roas_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: safety_stock_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: schedule_variance_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: scientific_calculator_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: self_assessment_tax_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: service_costing_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: shift_allowance_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: shipment_cost_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: standard_cost_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: standard_costing_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: statement_changes_equity_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: statistical_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: straight_line_depreciation_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: superannuation_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: suspense_account_detection_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: tcs_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: tds_interest_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: tds_section_validation_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: tds_threshold_checker
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: time_series_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: useful_life_calculator
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: variance_analysis_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: vehicle_utilization_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts
+  - leaf_key: wdv_depreciation_engine
+    in_capability_registry: false
+    ai_required: false
+    ai_required_source: "inferred: WIRED_ENGINE_INPUT_FIELDS leaf, same VCEL-deterministic pattern as every other registered leaf in this file"
+    business_rules_registered: false
+    mechanism_path_if_registered: repos/compliance-tracker/src/lib/guardrail-registrations.ts

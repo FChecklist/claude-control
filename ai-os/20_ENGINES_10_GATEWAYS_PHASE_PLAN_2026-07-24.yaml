@@ -404,6 +404,94 @@ phases:
       no business_rules registered (from Phase 1's live table). Generalize risk-tier.py +
       ai-decision-explanation.ts into one callable decision service."
     depends_on: [phase_1_capability_registry_live_wiring]
+    real_mechanism_reused: "capability_registry table + lookup-capability CLI (Phase 1), guardrail-engine.ts's
+      registerGuardrail()/evaluateGuardrails() registry pattern (read, not duplicated), scripts/
+      superboss-register.py's register-knowledge/query-knowledge CLI convention for this phase's own
+      registration."
+    status: done
+    status_detail:
+      produced_by_task: task-20260724-115041-phase2-give-policy-engine-preflight-guar
+      completed_on: '2026-07-24'
+      repo_boundary_honestly_stated: "preflight-guard.py and risk-tier.py are real, live, verified-on-disk
+        (engine_inventory rows 5/7) but were never committed to claude-control git before this task -- one
+        of 26 live /opt/veridian/scripts/*.py files in that same untracked state, a pre-existing gap this
+        task does not fix wholesale, only for the 2 files this phase names. policy-enforcement-engine.ts
+        and ai-decision-explanation.ts live in the separate FChecklist/compliance-tracker repo, whose live
+        checkout was found already dirty with unrelated in-flight changes from other processes at
+        investigation time -- per Phase 1's own precedent (reused compliance-tracker's mechanisms, never
+        edited its source) this task reads those 2 files' real shapes to ground the shared schema but does
+        not edit or commit to that repo. See ai-os/POLICY_DECISION_SCHEMA_2026-07-24.yaml's own
+        repo_boundary_honestly_stated for the full reasoning."
+      what_shipped:
+        - "ai-os/POLICY_DECISION_SCHEMA_2026-07-24.yaml: the shared decision schema (Policy/Rule/Decision
+          Engine unification), grounded in the real, read shapes of all 4 named files, not invented --
+          documents the exact current shape of preflight-guard.py's {proceed,reason,detail},
+          policy-enforcement-engine.ts's PolicyDecision {allowed,category,reason}, risk-tier.py's
+          tier1/tier2 classification, and ai-decision-explanation.ts's AiDecisionExplanation envelope, then
+          designs one policy_decision_schema envelope (source_gate/decision/reason_code/detail/risk_tier/
+          capability_match/explanation/evidence/schema_version) generalizing all 4."
+        - "scripts/policy_decision.py (new): the shared Python reference implementation -- PolicyDecision
+          dataclass, emit_allow/emit_deny/emit_review helpers, classify_risk_tier() (risk-tier.py's real
+          heuristics, extracted so both risk-tier.py and decision-service.py classify from one copy, not
+          two), make_explanation() (builds an AiDecisionExplanation-shaped dict field-for-field)."
+        - "scripts/preflight-guard.py and scripts/risk-tier.py added to claude-control git for the first
+          time (real, live files copied from /opt/veridian/scripts/), refactored to use
+          scripts/policy_decision.py. Both changes are ADDITIVE, not breaking: risk-tier.py's stdout
+          contract (bare tier1/tier2 string, reasons on stderr) is byte-identical to before, since
+          supervisor-entrypoint.sh's `TIER=$(...)` capture depends on it; preflight-guard.py's fail()/ok()
+          still print the original {proceed,reason,detail} keys verbatim (worker-entrypoint.sh's
+          `json.load(sys.stdin).get('reason', ...)` parsing depends on them) with the new schema fields
+          (source_gate/decision/reason_code/schema_version/evidence) added alongside, not replacing them.
+          Both live-tested after the refactor: `preflight-guard.py <task> <ws> --no-proxy` still exits 0
+          with proceed:true; `risk-tier.py . origin/master` still prints a bare tier1/tier2 line."
+        - "scripts/decision-service.py (new): the 'one callable decision service' this phase's objective
+          asks for, generalizing risk-tier.py + ai-decision-explanation.ts. 2 subcommands, both live-tested
+          against the real, live capability_registry DB: `risk-tier <workspace> <base_ref>` (richer,
+          additive sibling of risk-tier.py's own CLI, returns a full policy_decision_schema envelope with
+          an auto-generated explanation instead of a bare tier string) and `capability-check <intent_text>`
+          (wires Phase 1's lookup-capability CLI into a decision -- the first real implementation of
+          dependency_table's 'Capability Registry Engine (3) -> Decision Engine (7)' edge, previously
+          status: planned). Live-verified: `capability-check \"gst rate split for interstate invoice\"`
+          returns decision=deny, reason_code=deterministic_capability_available,
+          capability_match={capability_name: gst_calculation_engine, ai_required: false,
+          business_rules_registered: true} -- the literal mechanism making 'don't duplicate with AI'
+          structurally enforced for the Decision Engine, same as Phase 1 did for task-gateway.py's submit
+          path."
+        - "ai-os-scripts/generate_guardrail_coverage_candidates.py (new): greps
+          repos/compliance-tracker/src/lib/services/capability-tree-service.ts's 22 real
+          *_WIRED_ENGINE_INPUT_FIELDS Record blocks (111 real leaf keys with explicit typed input fields)
+          and repos/compliance-tracker/src/lib/guardrail-registrations.ts's real registerGuardrail() calls
+          (resolving both literal-string and named-constant/array call forms -- GRATUITY_CALCULATOR_LEAF,
+          GST_SPLIT_ENGINE_LEAVES, etc. -- not just literal strings), cross-references Phase 1's live
+          capability_registry table, and writes ai-os/GUARDRAIL_COVERAGE_CANDIDATES_2026-07-24.yaml: 106
+          real, prioritized candidate leaves (of 111 total, 5 already covered) for compliance-tracker's own
+          next PR to register via guardrail-registrations.ts -- this phase's objective's own
+          'ai_required=false + no business_rules registered' prioritization, produced by a script per Owner
+          directive, not hand-authored."
+      real_evidence:
+        - "python3 scripts/decision-service.py capability-check 'gst rate split for interstate invoice':
+          {\"decision\": \"deny\", \"reason_code\": \"deterministic_capability_available\",
+          \"capability_match\": {\"capability_name\": \"gst_calculation_engine\", \"ai_required\": false,
+          \"business_rules_registered\": true}}."
+        - "python3 scripts/decision-service.py risk-tier . origin/master: {\"decision\": \"allow\",
+          \"risk_tier\": \"tier1\", \"reason_code\": \"tier1_autonomous\"} with a real
+          AiDecisionExplanation-shaped explanation envelope."
+        - "python3 ai-os-scripts/generate_guardrail_coverage_candidates.py: {\"tree_leaves_with_input_fields_count\":
+          111, \"already_registered_count\": 5, \"uncovered_candidate_count\": 106}."
+        - "python3 scripts/superboss-register.py query-knowledge \"phase_2_policy_rule_decision_unification\"
+          --tag domain:veridian-20-engine-10-gateway: found=1 (this phase's own SUCCESS_CRITERIA check)."
+      what_remains_for_later_phases:
+        - "Actually registering the 106 candidate leaves in compliance-tracker's guardrail-registrations.ts
+          is that repo's own PR to make -- out of this task's repo boundary (see
+          repo_boundary_honestly_stated above), same deferral posture Phase 1 used for the
+          embedding-similarity fallback stage."
+        - "A TypeScript-side decision-service equivalent (so policy-enforcement-engine.ts and
+          ai-decision-explanation.ts themselves emit policy_decision_schema, not just have it documented
+          against their real shape) is also compliance-tracker's own PR to make -- the schema is designed
+          so that port is a direct field-for-field translation, not a redesign."
+        - "phase_3_workflow_automation_integration and phase_4_document_notification_data (both depends_on
+          only phase_1, already satisfiable) and phase_5_metadata_knowledge_consolidation (depends_on: [])
+          remain open in this plan -- not attempted in this task."
 
   - id: phase_3_workflow_automation_integration
     closes_engines: [8, 9, 10]

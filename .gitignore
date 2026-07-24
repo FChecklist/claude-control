@@ -1,4 +1,6 @@
 .claude/
+__pycache__/
+*.pyc
 
 # PROGRESS.md is a per-workspace worker scratch file (see scripts/veridian-task.py
 # cmd_create / worker-entrypoint.sh). Every task branch writes its own narrative into
