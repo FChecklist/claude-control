@@ -275,7 +275,7 @@ phases:
   - id: phase_4_existing_hardcoded_example_migration
     name: Migrate existing hardcoded examples to registered placeholders
     status: done
-    completed_by_task: task-20260724-143013-phase4-migrate-existing-hardcoded-exampl
+    completed_by_task: task-20260724-143013-phase4-migrate-existing-hardcoded-exampl (real deliverable landed via compliance-tracker PR #553, merged 2026-07-24T21:45:17Z)
     scope:
       - "Add a --suggest-fix mode to the guardrail (or its ported .mjs form) that, for each finding, searches
          ai-os/VARIABLE_DICTIONARY_2026-07-24.yaml for a placeholder whose entity/attribute name matches the
