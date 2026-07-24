@@ -239,3 +239,36 @@ decisions:
   why_not_done_automatically: "Minting a Supabase Management API PAT requires interactive authentication against the Supabase dashboard (or an already-valid token to call the token-creation endpoint with) -- no AI agent on this server holds Owner-level Supabase account credentials, and this session's own available Supabase MCP connector authenticates via a separate OAuth session that does not expose or allow creating an api.supabase.com Management API PAT. This is a genuine external-credential dependency, not a code gap, per the original candidate's own real_blocker_if_any."
   status: awaiting_owner_decision
 
+- id: ui-composition-analytics-engine-scope-confirmation
+  raised_by_task: task-20260724-144911-phase7-evaluate-whether-vericomposer-cha
+  raised_ts: '2026-07-24T15:10:00+00:00'
+  title: "Confirm (or override) the recommendation that UI Composition Engine (17) and Analytics Engine (18) gaps are acceptable as-is -- do not build either general-purpose engine"
+  what: "Phase 7 of 20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml was dispatched to answer a judgment
+    question the plan's own objective explicitly said belongs to the Owner, not to be assumed: does
+    VeriComposer/ChainSelector's dynamic composition pattern need to generalize into a real
+    design-system-wide UI Composition Engine, and does analytics-engine.ts need to grow into a
+    general-purpose analytics layer? Full investigation and evidence in
+    ai-os/UI_COMPOSITION_ANALYTICS_ENGINE_EVALUATION_2026-07-24.yaml. Summary of what was found: (1) the
+    composition pattern already DID generalize once, for real -- into the separately-versioned, live
+    @fchecklist/veridian-ui-kit package (v0.3.0), which compliance-tracker AND projexa both now consume
+    directly (replacing projexa's prior independent px-* fork) -- but that package's own README
+    explicitly scopes itself to the shell/composer/panel pattern and declares it will not grow into
+    product business UI; a Grafana-inspired alerting page (metric-alerts) in compliance-tracker
+    explicitly documents choosing a plain CRUD-list UI over a heavier dashboard-builder pattern; and no
+    component/widget-registry or page/dashboard-builder mechanism exists anywhere across
+    compliance-tracker, projexa, or veda-advisors. (2) analytics-engine.ts's 6 generic stats primitives
+    are real and reused where genuinely generic (VCEL leaf dispatch via task-execution-engine.ts), while
+    5 independent, real, already-shipped dashboard services (work/construction/firm-practice/
+    maintainability/orchestra-analytics) each solve their own domain's analytics need without
+    converging on or needing a shared general-purpose analytics layer. This task's recommendation for
+    both: acceptable as-is, do not build either general-purpose engine."
+  needed_action: "Owner reviews ai-os/UI_COMPOSITION_ANALYTICS_ENGINE_EVALUATION_2026-07-24.yaml and
+    either confirms both engines' current scope is acceptable as-is (no further action needed), or
+    identifies a specific real need this investigation missed that would justify building a
+    design-system-wide UI Composition Engine and/or a general-purpose Analytics Engine."
+  why_not_done_automatically: "The parent phase's own objective text states this is 'a judgment call for
+    the Owner, not assumed here' -- this task gathered real evidence and made a recommendation but does
+    not have standing to make the final call on the Owner's behalf, same posture as every other
+    judgment-tier decision in this file."
+  status: awaiting_owner_decision
+
