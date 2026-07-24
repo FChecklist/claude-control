@@ -4929,3 +4929,36 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260724-123006-phase3-formalize-task-gateway-py-task-ex/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-122143-phase3-data-model-static-quality-linting
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''phase3-data-model-static-quality-linting-documentation''
+      on claude-control reached status=completed. tier1, Superboss-approved, merged
+      autonomously: https://github.com/FChecklist/claude-control/pull/37'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-122143-phase3-data-model-static-quality-linting/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/37'
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-133622-phase4-unify-document-pipeline-pdf-gener
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''phase4-unify-document-pipeline-pdf-generator-ts''
+      on claude-control reached status=completed. tier1, Superboss-approved, merged
+      autonomously: https://github.com/FChecklist/claude-control/pull/39'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-133622-phase4-unify-document-pipeline-pdf-gener/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/39'
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-133911-terminology-phase3-ci-enforcement-wiring
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''terminology-phase3-ci-enforcement-wiring'' on claude-control
+      reached status=blocked. Superboss rejected: https://github.com/FChecklist/claude-control/pull/38
+      — see review.json for issues'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-133911-terminology-phase3-ci-enforcement-wiring/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/38'
+    last_touched: '2026-07-24'
