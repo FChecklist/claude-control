@@ -1,0 +1,1 @@
+grep of repos/compliance-tracker/src/lib/task-execution-engine.ts's dispatchEngine() switch found no case "capability_registry_dedup": -- no live Workflow Engine dispatch target for this capability today.

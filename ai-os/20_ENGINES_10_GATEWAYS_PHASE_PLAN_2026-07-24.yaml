@@ -336,6 +336,65 @@ phases:
     real_mechanism_reused: "capability-registry-service.ts's indexCapability()/findSimilar(),
       capability-tree-service.ts's CapabilityNode tree, scripts/superboss-register.py's
       register-knowledge/query-knowledge CLI pattern."
+    status: done
+    status_detail:
+      produced_by_task: task-20260724-083420-phase1-capability-registry-live-wiring
+      completed_on: '2026-07-24'
+      what_shipped:
+        - "Real 8th table `capability_registry` added to scripts/superboss-register.py's init_db() (same
+          FTS5 + AFTER INSERT/UPDATE/DELETE sync-trigger + write-lock convention as the existing
+          knowledge_engine table, not a new pattern) -- columns match
+          capability_record_schema field-for-field (inputs/business_rules/workflow/automation/documents/
+          reports/apis/ui_screens/permissions/ai_required/confidence/version/owner)."
+        - "register-capability / lookup-capability / list-capabilities CLI subcommands added.
+          register-capability upserts ON CONFLICT(capability_name), same living-catalog convention as
+          index_add. lookup-capability implements lookup_contract.function_signature's first two
+          resolution_order stages (exact capability_name match, then domain-scoped FTS keyword match) --
+          the third stage (embedding similarity via capability-registry-service.ts's findSimilar()) is
+          honestly reported as embedding_fallback_available=false, not faked, since that function lives in
+          compliance-tracker's own TypeScript runtime and is not reachable from this Python CLI; a caller
+          needing that stage calls findSimilar() directly, composing with this table rather than being
+          replaced by it."
+        - "ai-os-scripts/populate_capability_registry.py: reads CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml's
+          5 real, already-verified populated_capabilities rows (verified once already by
+          generate_capability_registry_candidates.py against the live filesystem) and registers each via
+          register-capability. Run for real against the live DB
+          (/opt/veridian/ai-os/memory/superboss-register.sqlite): 5/5 registered, 0 failed."
+        - "scripts/task-gateway.py's cmd_submit (the real entrypoint every task hits before AI-worker
+          dispatch) now calls lookup-capability alongside its existing check-duplicate/search/
+          query-knowledge calls, and surfaces capability_matches +
+          capability_deterministic_path_available in its output -- the literal mechanism the Owner's
+          'most engines already exist, don't duplicate with AI' instruction needed to become structurally
+          enforced rather than merely documented. Live-verified: `task-gateway.py submit --text
+          'need to calculate GST rate split for an interstate invoice'` on the real live DB returns
+          capability_deterministic_path_available=true, capability_matches=[gst_calculation_engine]."
+      real_evidence:
+        - "python3 scripts/superboss-register.py init against the live DB: {\"ok\": true, \"db\":
+          \"/opt/veridian/ai-os/memory/superboss-register.sqlite\"} (additive only -- pre-existing tables'
+          row counts unchanged: instructions=269, work_items=80, actions=1482, knowledge_engine=46)."
+        - "python3 ai-os-scripts/populate_capability_registry.py: {\"schema_rows_found\": 5,
+          \"registered_count\": 5, \"failed_count\": 0, \"live_row_count_after_run\": 5}."
+        - "python3 scripts/superboss-register.py list-capabilities: 5 rows -- capability_registry_dedup,
+          commission_calculator, gratuity_calculator, gst_calculation_engine, trend_analysis_engine --
+          every row ai_required=false, confidence=1.0 (hand-verified provenance, per schema's own
+          confidence field description)."
+        - "python3 scripts/superboss-register.py lookup-capability --capability-name
+          gst_calculation_engine: found=true, resolution_stage_used=exact_capability_name_match."
+        - "python3 scripts/superboss-register.py lookup-capability --intent-text 'sales commission percent
+          rate': found=true, resolution_stage_used=domain_scoped_keyword_match, matched
+          commission_calculator."
+      what_remains_for_later_phases:
+        - "Embedding-similarity fallback stage (lookup_contract's 3rd resolution step) is not called from
+          this Python CLI -- a future phase could add a thin HTTP/CLI bridge into
+          capability-registry-service.ts's findSimilar() if a caller needs it, or that call can be made
+          directly in TypeScript call sites in compliance-tracker itself."
+        - "Only the 5 already-verified populated_capabilities rows are live -- broader auto-discovery
+          across the ~100 real capability-tree leaves (via capability-tree-service.ts's CapabilityNode
+          tree directly, not just the 5 schema-file rows) is Phase 2's
+          false_negative_policy self-sustaining-registration mechanism, not built here per this task's own
+          CONSTRAINTS (Phase 1 only)."
+        - "Phase 2 (policy_rule_decision_unification) is the next phase per this document's own
+          depends_on graph -- not attempted in this task."
 
   - id: phase_2_policy_rule_decision_unification
     closes_engines: [5, 6, 7]

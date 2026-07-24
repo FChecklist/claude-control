@@ -347,6 +347,57 @@ def init_db():
     END;
     CREATE INDEX IF NOT EXISTS idx_knowledge_engine_type ON knowledge_engine(artifact_type);
     CREATE INDEX IF NOT EXISTS idx_knowledge_engine_path ON knowledge_engine(artifact_path);
+
+    -- 8th tree (2026-07-24, VERIDIAN 20-ENGINE/10-GATEWAY architecture Phase 1,
+    -- task-20260724-083420, closes_engines: [3]). Wires
+    -- ai-os/CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml's capability_record_schema
+    -- live -- one row per real VERIDIAN capability, the PART4 field set
+    -- (business_rules/workflow/automation/documents/reports/apis/ui_screens/
+    -- permissions/ai_required/confidence/version/owner) that
+    -- capability-registry-service.ts's embedding index and
+    -- capability-tree-service.ts's CapabilityNode tree do not carry as
+    -- structured columns. Same table/FTS5/upsert-on-conflict convention as
+    -- knowledge_engine above, not a new pattern.
+    CREATE TABLE IF NOT EXISTS capability_registry (
+        capability_id TEXT PRIMARY KEY,
+        ts TEXT NOT NULL,
+        capability_name TEXT NOT NULL,
+        inputs TEXT NOT NULL DEFAULT '[]',
+        business_rules TEXT NOT NULL DEFAULT '[]',
+        workflow TEXT,
+        automation TEXT,
+        documents TEXT,
+        reports TEXT,
+        apis TEXT NOT NULL DEFAULT '[]',
+        ui_screens TEXT,
+        permissions TEXT NOT NULL,
+        ai_required INTEGER NOT NULL DEFAULT 0,
+        confidence REAL NOT NULL DEFAULT 0.0,
+        version TEXT NOT NULL DEFAULT 'unversioned',
+        owner TEXT NOT NULL,
+        last_verified_ts TEXT,
+        metadata_json TEXT NOT NULL DEFAULT '{}'
+    );
+    CREATE VIRTUAL TABLE IF NOT EXISTS capability_registry_fts USING fts5(
+        capability_name, owner, apis, ui_screens, workflow,
+        content='capability_registry', content_rowid='rowid'
+    );
+    CREATE TRIGGER IF NOT EXISTS capability_registry_ai AFTER INSERT ON capability_registry BEGIN
+        INSERT INTO capability_registry_fts(rowid, capability_name, owner, apis, ui_screens, workflow)
+        VALUES (new.rowid, new.capability_name, new.owner, new.apis, new.ui_screens, new.workflow);
+    END;
+    CREATE TRIGGER IF NOT EXISTS capability_registry_au AFTER UPDATE ON capability_registry BEGIN
+        INSERT INTO capability_registry_fts(capability_registry_fts, rowid, capability_name, owner, apis, ui_screens, workflow)
+        VALUES ('delete', old.rowid, old.capability_name, old.owner, old.apis, old.ui_screens, old.workflow);
+        INSERT INTO capability_registry_fts(rowid, capability_name, owner, apis, ui_screens, workflow)
+        VALUES (new.rowid, new.capability_name, new.owner, new.apis, new.ui_screens, new.workflow);
+    END;
+    CREATE TRIGGER IF NOT EXISTS capability_registry_ad AFTER DELETE ON capability_registry BEGIN
+        INSERT INTO capability_registry_fts(capability_registry_fts, rowid, capability_name, owner, apis, ui_screens, workflow)
+        VALUES ('delete', old.rowid, old.capability_name, old.owner, old.apis, old.ui_screens, old.workflow);
+    END;
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_capability_registry_name ON capability_registry(capability_name);
+    CREATE INDEX IF NOT EXISTS idx_capability_registry_ai_required ON capability_registry(ai_required);
     """)
     conn.commit()
     _migrate_schema(conn)
@@ -1051,6 +1102,197 @@ def add_tag(args):
     print(json.dumps({"artifact_id": row["artifact_id"], "path": args.path, "tags": tags}, indent=2, default=str))
 
 
+def _ensure_capability_registry_table(conn):
+    """Standalone idempotent create, same defensiveness convention as
+    _ensure_knowledge_engine_table -- works even if init_db() was never run
+    against this DB."""
+    conn.execute("""CREATE TABLE IF NOT EXISTS capability_registry (
+        capability_id TEXT PRIMARY KEY,
+        ts TEXT NOT NULL,
+        capability_name TEXT NOT NULL,
+        inputs TEXT NOT NULL DEFAULT '[]',
+        business_rules TEXT NOT NULL DEFAULT '[]',
+        workflow TEXT,
+        automation TEXT,
+        documents TEXT,
+        reports TEXT,
+        apis TEXT NOT NULL DEFAULT '[]',
+        ui_screens TEXT,
+        permissions TEXT NOT NULL,
+        ai_required INTEGER NOT NULL DEFAULT 0,
+        confidence REAL NOT NULL DEFAULT 0.0,
+        version TEXT NOT NULL DEFAULT 'unversioned',
+        owner TEXT NOT NULL,
+        last_verified_ts TEXT,
+        metadata_json TEXT NOT NULL DEFAULT '{}'
+    )""")
+    conn.execute("""CREATE VIRTUAL TABLE IF NOT EXISTS capability_registry_fts USING fts5(
+        capability_name, owner, apis, ui_screens, workflow,
+        content='capability_registry', content_rowid='rowid'
+    )""")
+    conn.execute("""CREATE TRIGGER IF NOT EXISTS capability_registry_ai AFTER INSERT ON capability_registry BEGIN
+        INSERT INTO capability_registry_fts(rowid, capability_name, owner, apis, ui_screens, workflow)
+        VALUES (new.rowid, new.capability_name, new.owner, new.apis, new.ui_screens, new.workflow);
+    END""")
+    conn.execute("""CREATE TRIGGER IF NOT EXISTS capability_registry_au AFTER UPDATE ON capability_registry BEGIN
+        INSERT INTO capability_registry_fts(capability_registry_fts, rowid, capability_name, owner, apis, ui_screens, workflow)
+        VALUES ('delete', old.rowid, old.capability_name, old.owner, old.apis, old.ui_screens, old.workflow);
+        INSERT INTO capability_registry_fts(rowid, capability_name, owner, apis, ui_screens, workflow)
+        VALUES (new.rowid, new.capability_name, new.owner, new.apis, new.ui_screens, new.workflow);
+    END""")
+    conn.execute("""CREATE TRIGGER IF NOT EXISTS capability_registry_ad AFTER DELETE ON capability_registry BEGIN
+        INSERT INTO capability_registry_fts(capability_registry_fts, rowid, capability_name, owner, apis, ui_screens, workflow)
+        VALUES ('delete', old.rowid, old.capability_name, old.owner, old.apis, old.ui_screens, old.workflow);
+    END""")
+    conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_capability_registry_name ON capability_registry(capability_name)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_capability_registry_ai_required ON capability_registry(ai_required)")
+    conn.commit()
+
+
+REQUIRED_CAPABILITY_FIELDS = {
+    "capability_name", "inputs", "business_rules", "apis", "permissions",
+    "ai_required", "confidence", "version", "owner",
+}
+NULLABLE_JSON_LIST_CAPABILITY_FIELDS = ("documents", "reports", "ui_screens")
+
+
+def register_capability(args):
+    """Insert or re-register one capability_registry row from --record-file (a
+    JSON object following ai-os/CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml's
+    capability_record_schema field-for-field -- not a redesigned shape).
+    capability_name is UNIQUE -- re-running this for an already-registered name
+    UPDATEs it in place (refreshes ts/last_verified_ts/every field), same
+    living-catalog convention as index_add's ON CONFLICT(path) DO UPDATE,
+    since a capability's real business_rules/apis/confidence can legitimately
+    change between registrations and this must stay current, not write-once."""
+    init_db_silent()
+    conn = _connect()
+    _ensure_capability_registry_table(conn)
+
+    with open(args.record_file, encoding="utf-8") as f:
+        record = json.load(f)
+
+    missing = sorted(REQUIRED_CAPABILITY_FIELDS - set(record))
+    if missing:
+        print(json.dumps({"error": "record-file missing required capability_record_schema field(s)", "missing": missing}))
+        sys.exit(1)
+
+    cid = _new_id("CAP")
+    now = _now_iso()
+    conn.execute(
+        "INSERT INTO capability_registry (capability_id, ts, capability_name, inputs, business_rules, "
+        "workflow, automation, documents, reports, apis, ui_screens, permissions, ai_required, confidence, "
+        "version, owner, last_verified_ts, metadata_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) "
+        "ON CONFLICT(capability_name) DO UPDATE SET ts=excluded.ts, inputs=excluded.inputs, "
+        "business_rules=excluded.business_rules, workflow=excluded.workflow, automation=excluded.automation, "
+        "documents=excluded.documents, reports=excluded.reports, apis=excluded.apis, "
+        "ui_screens=excluded.ui_screens, permissions=excluded.permissions, ai_required=excluded.ai_required, "
+        "confidence=excluded.confidence, version=excluded.version, owner=excluded.owner, "
+        "last_verified_ts=excluded.last_verified_ts, metadata_json=excluded.metadata_json",
+        (
+            cid, now, record["capability_name"], json.dumps(record["inputs"]), json.dumps(record["business_rules"]),
+            record.get("workflow"), record.get("automation"),
+            json.dumps(record["documents"]) if record.get("documents") is not None else None,
+            json.dumps(record["reports"]) if record.get("reports") is not None else None,
+            json.dumps(record["apis"]),
+            json.dumps(record["ui_screens"]) if record.get("ui_screens") is not None else None,
+            record["permissions"], 1 if record["ai_required"] else 0, float(record["confidence"]),
+            record["version"], record["owner"], now,
+            json.dumps(record.get("metadata", {})),
+        ),
+    )
+    conn.commit()
+    row = conn.execute(
+        "SELECT capability_id FROM capability_registry WHERE capability_name = ?",
+        (record["capability_name"],),
+    ).fetchone()
+    conn.close()
+    print(json.dumps({"capability_id": row["capability_id"], "capability_name": record["capability_name"]}))
+
+
+def _capability_row_to_dict(row):
+    d = dict(row)
+    for field in ("inputs", "business_rules", "apis"):
+        d[field] = json.loads(d[field]) if d.get(field) else []
+    for field in NULLABLE_JSON_LIST_CAPABILITY_FIELDS:
+        d[field] = json.loads(d[field]) if d.get(field) else None
+    d["ai_required"] = bool(d["ai_required"])
+    d["metadata_json"] = json.loads(d["metadata_json"]) if d.get("metadata_json") else {}
+    return d
+
+
+def lookup_capability(args):
+    """Implements ai-os/CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml's
+    lookup_contract.function_signature: lookupCapability(query) -> {found,
+    matches, best_match_confidence}. resolution_order as designed:
+      1. exact capability_name match (O(1) lookup)
+      2. domain-scoped/keyword FTS match (capability_name/owner/apis/ui_screens/
+         workflow), same _fts_query OR-of-terms convention query_knowledge uses
+      3. embedding similarity fallback via capability-registry-service.ts's
+         findSimilar() -- that function lives in compliance-tracker's own
+         TypeScript runtime (a live pgvector cosine-similarity index), not
+         reachable from this Python CLI. Honestly reported as
+         embedding_fallback_available=False rather than faking a score --
+         a caller that needs it calls findSimilar() directly, per the
+         lookup_contract's own non_goals_this_phase note that this Python
+         wiring composes with, not replaces, that existing mechanism."""
+    init_db_silent()
+    conn = _connect()
+    _ensure_capability_registry_table(conn)
+
+    matches = []
+    stage = "none"
+    if args.capability_name:
+        rows = conn.execute(
+            "SELECT * FROM capability_registry WHERE capability_name = ?",
+            (args.capability_name,),
+        ).fetchall()
+        if rows:
+            matches = [_capability_row_to_dict(r) for r in rows]
+            stage = "exact_capability_name_match"
+
+    if not matches:
+        raw_query = " ".join(t for t in (args.intent_text, args.domain) if t)
+        if raw_query.strip():
+            q = _fts_query(raw_query)
+            try:
+                rows = conn.execute(
+                    "SELECT t.* FROM capability_registry_fts f JOIN capability_registry t ON t.rowid = f.rowid "
+                    "WHERE capability_registry_fts MATCH ? ORDER BY rank",
+                    (q,),
+                ).fetchall()
+            except sqlite3.OperationalError:
+                rows = []
+            if rows:
+                matches = [_capability_row_to_dict(r) for r in rows]
+                stage = "domain_scoped_keyword_match"
+
+    conn.close()
+    best_match_confidence = max((m["confidence"] for m in matches), default=0.0)
+    print(json.dumps({
+        "found": bool(matches),
+        "matches": matches,
+        "best_match_confidence": best_match_confidence,
+        "resolution_stage_used": stage,
+        "embedding_fallback_available": False,
+        "embedding_fallback_note": "not reachable from this CLI -- call capability-registry-service.ts's "
+                                    "findSimilar() directly in compliance-tracker for the embedding-similarity stage.",
+    }, indent=2, default=str))
+
+
+def list_capabilities(args):
+    """Lists every capability_registry row -- used for evidence/row-count
+    verification (e.g. by populate_capability_registry.py after a batch
+    registration), not part of the lookup_contract itself."""
+    init_db_silent()
+    conn = _connect()
+    _ensure_capability_registry_table(conn)
+    rows = conn.execute("SELECT * FROM capability_registry ORDER BY capability_name").fetchall()
+    conn.close()
+    matches = [_capability_row_to_dict(r) for r in rows]
+    print(json.dumps({"count": len(matches), "capabilities": matches}, indent=2, default=str))
+
+
 def init_db_silent():
     if not os.path.exists(DB_PATH):
         conn = _connect()
@@ -1182,6 +1424,17 @@ if __name__ == "__main__":
     p_tagk.add_argument("--path", required=True)
     p_tagk.add_argument("--tag", required=True)
 
+    p_regc = sub.add_parser("register-capability")
+    p_regc.add_argument("--record-file", dest="record_file", required=True,
+                         help="path to a JSON file matching CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml's capability_record_schema")
+
+    p_lookc = sub.add_parser("lookup-capability")
+    p_lookc.add_argument("--capability-name", dest="capability_name", default=None)
+    p_lookc.add_argument("--intent-text", dest="intent_text", default=None)
+    p_lookc.add_argument("--domain", default=None)
+
+    p_listc = sub.add_parser("list-capabilities")
+
     args = p.parse_args()
     if args.cmd == "init":
         with _write_lock():
@@ -1232,3 +1485,10 @@ if __name__ == "__main__":
     elif args.cmd == "add-tag":
         with _write_lock():
             add_tag(args)
+    elif args.cmd == "register-capability":
+        with _write_lock():
+            register_capability(args)
+    elif args.cmd == "lookup-capability":
+        lookup_capability(args)
+    elif args.cmd == "list-capabilities":
+        list_capabilities(args)
