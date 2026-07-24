@@ -1,0 +1,75 @@
+id: METADATA-ENGINE-RECONCILIATION
+version: '1.0'
+built_ts: '2026-07-24'
+produced_by_task: task-20260724-135834-phase5-reconcile-master-index-yaml-s-reg
+phase: phase_5_metadata_knowledge_consolidation
+instruction: this task's own SPEC (INS-20260724-113032-8032, auto-dispatched by
+  scripts/auto_phase_continuation.py per ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml
+  phases[].id=phase_5_metadata_knowledge_consolidation)
+
+decision: >
+  Full merge of MASTER_INDEX.yaml's registries: section (91 entries, hand-edited prose+structure,
+  3052 lines, actively cited across this entire session and every other phase file via
+  "registries.<id>" and "per MASTER_INDEX.yaml" references) into knowledge_engine (26+ machine-written
+  sqlite rows, FTS5-queryable, hash-drift-detected) is judged TOO DISRUPTIVE: registries: entries carry
+  heterogeneous path shapes no single schema column captures cleanly (bare relative paths, absolute
+  paths, sqlite `#table` fragments, "+"-joined multi-file groups, comma-joined multi-repo groups,
+  `*.yaml` globs, directory references, and several entries with no `path` field at all because their
+  content is a state/procedure, not a single file -- see reconciliation_run's own path_extraction_report
+  below for the real counts). Rewriting all 91 into structured rows would break every existing
+  "registries.<id>" citation convention this session's own STANDING_DIRECTIVE.yaml/CONSTITUTION.yaml/every
+  phase-plan file already depends on, for a net-zero readability gain.
+  Per this phase's own OBJECTIVE text ("...or a documented, enforced sync direction between the two, if
+  full merge is too disruptive"), this file documents and ENFORCES (via a real, re-runnable script, not
+  prose alone) the sync direction below instead.
+
+sync_direction:
+  authoritative_for_human_citation_and_scope_narrative: "MASTER_INDEX.yaml's registries: section --
+    the Owner and every AI agent on this system already cites entries by id (registries.<id>) for WHY a
+    mechanism exists and WHAT it covers. Not replaced."
+  authoritative_for_machine_drift_detection: "knowledge_engine table
+    (ai-os/memory/superboss-register.sqlite) -- artifact_path + content_hash + verification_status is the
+    only mechanism on this server that can answer 'has this real file changed / gone missing since it was
+    last checked' without a human re-reading prose. Not replaced."
+  enforced_rule: "Every registries[] entry's real, on-disk, single-file path(s) MUST have a corresponding
+    knowledge_engine row, tagged registry:<id> (in addition to whatever source:/project: tags that row
+    already carries) -- this is the queryable back-reference from the machine-drift-detectable half back
+    to the human-citable half. Enforced by scripts/metadata_reconciliation.py, not by hand-maintained
+    cross-references (which is exactly the kind of drift this whole phase exists to close)."
+  mechanism: "scripts/metadata_reconciliation.py reconcile (idempotent, safe to re-run, safe to cron
+    later if the Owner approves per CRONTAB_APPROVED_SNAPSHOT.txt convention -- NOT added to crontab by
+    this task, since this phase's own CONSTRAINTS require an approved OWNER_DECISIONS_NEEDED entry before
+    any crontab change and no such entry exists yet for this specific job):
+      1. Parses MASTER_INDEX.yaml's registries: list (yaml.safe_load, not regex-over-raw-text).
+      2. Extracts every real, path-shaped token from each entry's `path` field via a conservative regex
+         (ai-os/..., scripts/..., repos/..., /opt/veridian/... prefixes) -- multi-path '+'/','-joined
+         fields yield multiple tokens, `#table` sqlite fragments are split (file part checked on disk,
+         table part kept as an annotation only), `*` globs are expanded against the real filesystem.
+      3. For every resolved token that is a REAL FILE on disk (os.path.isfile -- directories are
+         deliberately excluded from this pass, see known_limitations below, not silently merged into a
+         PATH_MISSING row): registers a new knowledge_engine row if none exists yet for that exact path,
+         or tags the existing row with registry:<id> if one already does (idempotent -- re-running never
+         creates a duplicate row for the same path, matching knowledge_registry_multisource.py's own
+         register-or-verify convention, reused not reinvented).
+      4. Reports (not silently drops) every registries[] entry that named a path with NO real-file token
+         found (directory-only, sqlite-table-only, or path: None) and every knowledge_engine row that
+         exists but is NOT tagged registry:<anything> (a real orphan -- a tracked artifact no registries[]
+         entry currently cites) -- both printed as an explicit, machine-readable JSON report, not swept
+         under a partial success message."
+  known_limitations:
+    - "Directory-shaped registry paths (e.g. ai-os/scripts/audit198/, ai-os/queues/*.yaml's own containing
+      dir) are not registered as a single knowledge_engine row by this pass -- register_knowledge's own
+      isfile() check (superboss-register.py:900) would otherwise record a real, existing directory as a
+      false PATH_MISSING row, which is worse than not registering it at all. A future pass could register
+      one representative/manifest file per directory if a real need for that granularity appears -- not
+      invented speculatively here."
+    - "registries[] entries with no `path` field (auto_conversation_log, worker_fleet_rca_fix_2026_07_20,
+      ops_task_sync_bridge, app_layer_failure_visibility, ai_router_migration_inventory_2026_07_20,
+      other_repos_classified -- 6 of 91) describe a state/incident/procedure, not a single citable file;
+      correctly excluded, not a gap this mechanism should paper over."
+  query_command: 'python3 scripts/metadata_reconciliation.py report  # re-runnable drift/coverage check,
+    prints the same JSON shape as the original reconcile run'
+
+registration:
+  knowledge_engine_query_command: 'python3 scripts/superboss-register.py query-knowledge "phase_5_metadata_knowledge_consolidation" --tag domain:veridian-20-engine-10-gateway'
+  master_index_registry_id: engines_gateways_architecture
