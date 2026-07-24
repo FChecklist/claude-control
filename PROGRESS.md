@@ -42,9 +42,19 @@
 - [x] Pushed branch and opened PR #15:
       https://github.com/FChecklist/claude-control/pull/15
 
+- [x] Real-world regression test: this task's own PR #15 went through the live,
+      now-fixed `veridian-supervisor@` service (systemd unit, real Superboss AI
+      review, real tier1 auto-merge). Confirmed via a fresh
+      `gh pr view 15 --json state,mergedAt,mergeCommit`:
+      `state=MERGED`, `mergedAt=2026-07-24T06:47:41Z`,
+      `mergeCommit.oid=6f35919075862b5bad31e374f94eba15e2dba8c8`. The task's own
+      task.yaml checkpoint history now reads
+      `completed -- "tier1, Superboss-approved, merged autonomously:
+      https://github.com/FChecklist/claude-control/pull/15"` -- accurate, not a
+      false blocked. Remote branch was also confirmed deleted
+      (`gh api .../branches/...` -> 404) via the new independent best-effort
+      `gh api -X DELETE` step.
+
 ## Remaining
-- [ ] Let this task's own tier1 auto-merge (using the now-fixed live script) serve
-      as the real-world regression test requested by the spec's EXPECTED_OUTPUT --
-      confirm via `gh pr view --json state,mergedAt` and the resulting task.yaml
-      checkpoint that it lands as `completed`, not `blocked`.
-- [ ] Final checkpoint summary.
+- [x] None. Task complete -- fix committed, merged, and proven against a real
+      tier1 auto-merge through the fixed pipeline.
