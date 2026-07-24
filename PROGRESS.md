@@ -1,62 +1,60 @@
-# PROGRESS -- task-20260724-063645-veridian-testing-engine-irvf-phase0
+# PROGRESS -- task-20260724-070131-veridian-terminology-standardization-pha
 
 ## Completed
-- [x] Read ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml, ai-os/CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml
-  (both real, on master) and ai-os/AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml's observability_layer section
-  (real, but only merged to a not-yet-merged PR branch -- worker/task-20260724-042659-veridian-auditor-engine-phase0-inventory,
-  commit cf906ac -- read via `git cat-file blob cf906ac:<path>` since this task's own branch does not have it yet).
-- [x] Designed + wrote ai-os/ROUTE_REGISTRY_SCHEMA_2026-07-24.yaml: 5 real routes, 1:1 with
-  CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml's 5 populated_capabilities. Every source/destination/expected_path
-  hop live-verified (29/29 paths OK) by ai-os-scripts/generate_route_registry_candidates.py.
-- [x] Designed + wrote ai-os/ROUTE_COVERAGE_METHODOLOGY_2026-07-24.yaml: all 9 coverage percentages
-  (capability/route/integration/dependency/workflow/business-rule/metadata/API/UI), each with a real
-  computation source or an explicit NOT_YET_MEASURABLE gap (4 of 9 not yet measurable: capability, integration,
-  workflow, metadata). Gateway matrix, service matrix, and route completeness score also defined and computed
-  against real current data (dependency_coverage 25%, business_rule_coverage 60%, api_coverage 100%,
-  ui_coverage 60%, route_completeness_score 20%).
-- [x] Designed + wrote ai-os/TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml: Phase 0 (this task) + Phases 1-4
-  (route test auto-generation, distributed trace verification wiring, route replay storage+diff, dependency
-  graph validation), with a real dependency_table including 2 hard external dependencies on
-  20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml (Capability Registry live-wiring) and
-  AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml Phase 7 (PART6 observability layer, not yet built).
-- [x] Wrote ai-os-scripts/generate_route_registry_candidates.py (verification script, mirrors
-  generate_capability_registry_candidates.py's pattern) -- confirmed ALL VERIFIED, 5/5 routes covering 5/5
-  registered capabilities.
-- [x] Registered all 3 new files + the verification script in knowledge_engine (rows show PATH_MISSING as
-  expected pre-merge, same known transient state self_sustaining_system_engine documented for its own
-  Phase 1 rows) with entity_relationships back to CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml,
-  20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml, and AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml.
-- [x] Added registries.testing_engine_irvf to ai-os/MASTER_INDEX.yaml (live file).
-- [x] Committed + pushed, opened PR #16: https://github.com/FChecklist/claude-control/pull/16
-- [x] Merged origin/master (PR #15) into this branch, resolved the PROGRESS.md conflict (each task's
-  PROGRESS.md supersedes the prior, per this repo's established convention).
+- [x] Investigated real DATABASE_CATALOG.json (444 tables, /opt/veridian/ai-os/DATABASE_CATALOG.json) and its
+      column/foreign_keys shape.
+- [x] Confirmed live Supabase project pcrjmlpuqsbocqfwoxod (verdian-ai) backs the same schema (abac_policies,
+      organisations, users all present) and holds dev/seed data (org_001="Acme Corp", demo_org), not production PII.
+- [x] Derived a real "most-referenced" ranking methodology (declared FK count + naming-convention `_id` column
+      count, since only 7/444 tables have a declared SQL FK) and computed the real top-20 tables.
+- [x] Fetched one real row (LIMIT 1) per top-20 table via Supabase MCP, redacted sensitive columns
+      (password/passcode/*_hash/token), saved as ai-os/VARIABLE_DICTIONARY_SOURCE_ROWS_2026-07-24.json.
+- [x] Wrote ai-os-scripts/generate_variable_dictionary.py and ran it: produced
+      ai-os/VARIABLE_DICTIONARY_2026-07-24.yaml -- 320 real column entries across 20 real tables, 182 sourced from
+      actual DB rows, 138 clearly-marked synthetic (sensitive columns + 2 empty tables).
+
+- [x] Designed + wrote ai-os/TERMINOLOGY_GUARDRAIL_2026-07-24.py (lint script: flags hardcoded human-example
+      literals -- placeholder company names, person names, fake email domains, ISO dates, PAN/GSTIN shapes --
+      plus any unregistered <Entity.Attribute> token). Not CI-wired yet, by design (this phase = design + smoke-test only).
+- [x] Smoke-tested against 3 real compliance-tracker files (communication-drafting-service.ts,
+      orchestra-mock-data.ts, db/seed.ts): 36 real findings (29 placeholder_company_name "ABC Corp"/"XYZ Ltd",
+      7 placeholder_email_domain "*@acme.com"), exit code 1, saved to
+      ai-os/TERMINOLOGY_GUARDRAIL_SMOKE_TEST_FINDINGS_2026-07-24.json.
+
+- [x] Wrote ai-os/TERMINOLOGY_STANDARDIZATION_PHASE_PLAN_2026-07-24.yaml: 6 phases (this Phase 0 + dictionary
+      coverage expansion + directory-scoped rollout + CI enforcement wiring, modeled on compliance-tracker
+      ci.yml's real guardrail-presence/asset-registry-coverage/metadata-index-coverage jobs + migration +
+      full enforcement), 8-row dependency table with concrete mechanisms, cross-links to DATABASE_CATALOG.json
+      and CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml.
+
+- [x] Registered all 3 artifacts in knowledge_engine via superboss-register.py register-knowledge
+      (KE-20260724-071822-bbd1/683d/605a), with entity_relationships back to DATABASE_CATALOG.json
+      (auto-resolved to existing KE-20260724-034921-2871) and CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml.
+- [x] Added registries.terminology_standardization to both the git-tracked ai-os/MASTER_INDEX.yaml (this
+      branch) and the live /opt/veridian/ai-os/MASTER_INDEX.yaml -- noted (did not attempt to fix) pre-existing
+      drift between the two files unrelated to this task (auditor_engine present live but not in this
+      branch's repo copy; testing_engine_irvf present in this branch but not yet live).
+
+- [x] Committed + pushed 4 units of work, opened PR #18
+      (https://github.com/FChecklist/claude-control/pull/18), verified via `gh pr view` real state:
+      OPEN, mergeable=MERGEABLE, mergeStateStatus=CLEAN.
 
 ## Remaining
-- [x] Confirm PR #16 merges cleanly after the master-merge above -- confirmed MERGED at 2026-07-24T06:53:37Z
-  via `gh pr view --json state,mergedAt` (not just the merge command's own exit code, per this session's
-  known supervisor-entrypoint.sh false-negative pattern, now fixed by PR #15).
-- [x] Final checkpoint summary below.
+- [ ] None -- this task's own SCOPE (dictionary generation, guardrail design+smoke-test, phase planning) is
+      complete. Repo-wide rollout, CI enforcement wiring, and dictionary expansion past the top-20 tables are
+      explicitly deferred to the phases ai-os/TERMINOLOGY_STANDARDIZATION_PHASE_PLAN_2026-07-24.yaml defines,
+      per this task's own CONSTRAINTS.
 
-## Final checkpoint
-DONE: ROUTE_REGISTRY_SCHEMA_2026-07-24.yaml (5/5 real routes, 29/29 paths live-verified), ROUTE_COVERAGE_METHODOLOGY_2026-07-24.yaml
-(9/9 coverage types defined, 5 measurable today with real values, 4 explicitly NOT_YET_MEASURABLE with named gaps),
-TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml (Phase 0 + 4 phases, real dependency_table), the verification script,
-and knowledge_engine/MASTER_INDEX.yaml registration -- all merged to master via PR #16.
-DEFERRED: live route-test auto-generation/trace wiring/replay storage (Phases 1-4, out of this task's own
-CONSTRAINTS); full route/capability coverage against the true ~100-leaf denominator (needs a capability-tree
-leaf enumerator script, Phase 1's own prerequisite); trace verification against real spans (hard-blocked on
-Auditor Engine's own not-yet-built Phase 7); gateway matrix beyond Task Gateway (blocked on Owner confirming
-the canonical 10-gateway list); any new crontab entries (0 needed this phase, no mechanism exists yet to
-schedule).
-
-## Deferred (by this task's own CONSTRAINTS, not an oversight)
-- Live route-test auto-generation, trace wiring, and replay storage: left to
-  TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml's own Phases 1-4 -- this task is schema/methodology/plan design only.
-- Full route_coverage / capability_coverage against the TRUE denominator (~100 real capability-tree leaves):
-  blocked on no script enumerating capability-tree-service.ts's buildCapabilityTree() output -- Phase 1's own
-  prerequisite work per TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml.
-- Distributed trace verification against real spans: hard-blocked on AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml's
-  own Phase 7 (PART6 observability layer), which is designed but not enforced/emitting anywhere yet.
-- Gateway matrix beyond 1 row (Task Gateway): blocked on the Owner confirming the canonical 10-gateway list,
-  per 20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml's own gateway_naming_gap.
-- No new crontab entries this phase (0 filed) -- no route-test/trace/replay mechanism exists yet to schedule.
+## Final checkpoint summary
+Phase 0 of VERIDIAN Terminology Standardization is complete. Delivered, all real and script-generated (none
+hand-typed): (1) `ai-os-scripts/generate_variable_dictionary.py` + its real output
+`ai-os/VARIABLE_DICTIONARY_2026-07-24.yaml` -- 320 `<Entity.Attribute>` placeholders, one per real column of
+the top-20 most-referenced tables (of 444) in `DATABASE_CATALOG.json`, ranked by a combined declared-FK +
+naming-convention reference-count score (only 7/444 tables carry a declared SQL FK), 182 example values
+sourced from real dev-seed rows fetched live via Supabase MCP, 138 clearly-marked synthetic; (2)
+`ai-os/TERMINOLOGY_GUARDRAIL_2026-07-24.py`, designed (not CI-wired) and smoke-tested against 3 real
+compliance-tracker files with 36 real, inspectable findings; (3)
+`ai-os/TERMINOLOGY_STANDARDIZATION_PHASE_PLAN_2026-07-24.yaml`, a 6-phase rollout plan with an 8-edge real
+dependency table. All 3 registered in knowledge_engine and in `registries.terminology_standardization` in
+both the git-tracked and live `MASTER_INDEX.yaml`. PR #18 open, clean, mergeable. No crontab entries added
+this phase (design-only, per CONSTRAINTS).
