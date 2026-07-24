@@ -4798,3 +4798,14 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260724-091206-xpost-github-catalog-batch2-2026-07-24/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/27'
     last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-093519-fix-progressmd-merge-conflicts
+    project: veridian
+    type: worker-task
+    status: in-progress
+    summary: 'Server-worker task ''fix-progressmd-merge-conflicts'' on claude-control
+      reached status=awaiting_human_approval. tier2, Superboss-approved, held for human
+      merge: https://github.com/FChecklist/claude-control/pull/28'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-093519-fix-progressmd-merge-conflicts/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/28'
+    last_touched: '2026-07-24'
