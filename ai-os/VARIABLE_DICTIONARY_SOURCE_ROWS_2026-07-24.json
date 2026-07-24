@@ -7,7 +7,8 @@
     "project_ref_confirmed_matches_database_catalog": "yes -- table_name/schema cross-checked against /opt/veridian/ai-os/DATABASE_CATALOG.json (abac_policies, organisations, users all present in both)",
     "environment_note": "Dev/seed/demo data (org_001='Acme Corp', demo_org, org_firstrun_test rows observed) -- not live customer production PII. Confirmed by inspecting compliance.organisations sample rows before running this extraction.",
     "redaction_rule": "Any column name matching /password|passcode|secret|credential|_hash$|^hash$|token/i is redacted to a fixed marker string and MUST NOT be used as a dictionary example value -- generate_variable_dictionary.py falls back to a synthetic example for those columns regardless of this file's content.",
-    "sales_partners_and_training_paths_note": "row: null -- LIMIT 1 SELECT returned zero rows (tables exist but were empty at fetch time). generate_variable_dictionary.py falls back to synthetic examples for these two tables' columns."
+    "sales_partners_and_training_paths_note": "row: null -- LIMIT 1 SELECT returned zero rows (tables exist but were empty at fetch time). generate_variable_dictionary.py falls back to synthetic examples for these two tables' columns.",
+    "tier2_2026-07-24_note": "Phase 1 dictionary-coverage-expansion tier (TOP_N 20->60): appended real rows for the 39 newly-in-scope tables (rank 21-60 by combined_reference_score) that exist in the live verdian-ai DB, fetched via the same Supabase MCP execute_sql SELECT-LIMIT-1-per-table UNION ALL pattern as tier 1. Did NOT refetch any of tier 1's 20 tables (append-only, per the phase plan's own instruction). 24 of the 39 had a real row; 15 exist as live tables but were empty at fetch time (row: null, same synthetic-fallback handling as tier 1's dynamic_chains/sales_partners/training_paths). One rank-21-60 table from DATABASE_CATALOG.json, ticket_intelligence_items, does not exist in the live verdian-ai DB at all (confirmed via information_schema.tables query against the compliance schema, 420 live tables vs 444 in the catalog) -- this is real catalog/DB drift, not a fetch failure; generate_variable_dictionary.py falls back to a synthetic example for it exactly as it does for any table absent from this source-rows file."
   },
   "rows": [
     {
@@ -77,7 +78,7 @@
         "user_id": "ninezxq8f86ei9ji7x5vj7h0",
         "assistant_id": null,
         "title": "Current budget variance report (edited by load-test validation)",
-        "description": "Show cost vs. budget for all trades up to 15‑Sep‑2026.",
+        "description": "Show cost vs. budget for all trades up to 15\u2011Sep\u20112026.",
         "status": "completed",
         "created_at": "2026-07-10T11:02:42.916261+00:00",
         "updated_at": "2026-07-10T11:11:25.221+00:00",
@@ -422,6 +423,509 @@
         "include_in_pf_wage": true,
         "created_at": "2026-07-06T11:21:09.618766"
       }
+    },
+    {
+      "table_name": "prompt_templates",
+      "row": {
+        "id": "dd3ae062-3548-4dc8-a0ef-fd068d6a6f3f",
+        "created_at": "2026-07-03T16:36:26.735981",
+        "updated_at": "2026-07-03T16:36:26.735981",
+        "description": "The pinned VERIDIAN AI conversation thread's system prompt (chat-service.ts)",
+        "display_name": "Chat: AI Thread System Prompt",
+        "template_key": "chat.ai_thread_system"
+      }
+    },
+    {
+      "table_name": "compliance_costs",
+      "row": {
+        "id": "demo_cc_1",
+        "amount": 8000,
+        "org_id": "demo_org",
+        "paid_to": "ABC & Associates",
+        "due_date": null,
+        "client_id": null,
+        "cost_type": "consultant_fee",
+        "notice_id": null,
+        "created_at": "2026-07-06T11:25:06.613801",
+        "updated_at": "2026-07-06T11:25:06.613801",
+        "amount_paid": 8000,
+        "description": "TDS return filing fee - ABC & Associates",
+        "payment_status": "paid",
+        "recorded_by_id": "demo_user_finance_hod",
+        "compliance_item_id": "demo_ci_2",
+        "receipt_document_id": null
+      }
+    },
+    {
+      "table_name": "sales_referrals",
+      "row": null
+    },
+    {
+      "table_name": "voice_memos",
+      "row": null
+    },
+    {
+      "table_name": "board_meetings",
+      "row": null
+    },
+    {
+      "table_name": "approval_requests",
+      "row": {
+        "id": "nn3nefbu5jtxh73arhqf6wyb",
+        "org_id": "org_001",
+        "status": "pending",
+        "client_id": null,
+        "entity_id": "bgi7fmimlxgq6m3eoij366v1",
+        "created_at": "2026-07-04T15:34:17.535322",
+        "description": "Propose customer-tier worker agent \"Vendor Invoice Translator\"",
+        "entity_type": "worker_agents",
+        "resolved_at": null,
+        "request_type": "worker_agent_proposal",
+        "approved_by_id": null,
+        "requested_by_id": "user_admin",
+        "dynamic_chain_id": null,
+        "rejection_reason": null
+      }
+    },
+    {
+      "table_name": "leave_requests",
+      "row": {
+        "id": "demo_lr_1",
+        "org_id": "demo_org",
+        "reason": "Family function",
+        "status": "pending",
+        "user_id": "demo_user_sales_exec",
+        "end_date": "2026-07-15",
+        "num_days": 3,
+        "company_id": null,
+        "created_at": "2026-07-06T11:23:06.498056",
+        "leave_type": "Earned Leave",
+        "start_date": "2026-07-13",
+        "updated_at": "2026-07-06T11:23:06.498056",
+        "approved_at": null,
+        "approver_id": "demo_user_sales_hod"
+      }
+    },
+    {
+      "table_name": "email_intelligence_items",
+      "row": null
+    },
+    {
+      "table_name": "sales_commission_plans",
+      "row": {
+        "id": "ff44018c-4628-4408-b73b-25afd17724d7",
+        "rate": 10,
+        "currency": "INR",
+        "valid_to": null,
+        "is_active": true,
+        "created_at": "2026-07-07T04:45:55.274964",
+        "valid_from": "2026-07-07T04:45:55.274964",
+        "flat_amount": null,
+        "product_key": "grc",
+        "partner_type": null,
+        "created_by_id": null,
+        "commission_type": "percentage"
+      }
+    },
+    {
+      "table_name": "support_sessions",
+      "row": null
+    },
+    {
+      "table_name": "customer_model_config",
+      "row": null
+    },
+    {
+      "table_name": "job_openings",
+      "row": {
+        "id": "j5mr1t4pdx5knkpfzaucqvyp",
+        "title": "Site Safety Officer - Priority 16 Verification",
+        "org_id": "projexa_demo_org",
+        "status": "open",
+        "closed_at": null,
+        "created_at": "2026-07-14T18:35:55.144647",
+        "posted_by_id": "projexa_demo_key",
+        "department_id": null,
+        "num_positions": 1,
+        "employment_type": "full_time",
+        "job_description": null
+      }
+    },
+    {
+      "table_name": "vendor_risk_profiles",
+      "row": {
+        "id": "ah3ppoc5mxr6pxuatoe2wys6",
+        "name": "E2E Batch C Vendor 1784447289482",
+        "org_id": "4ecc472f-4152-4310-ae8d-cf8b7c52ab6d",
+        "client_id": null,
+        "risk_tier": "medium",
+        "created_at": "2026-07-19T07:48:13.257845",
+        "risk_score": null,
+        "updated_at": "2026-07-19T07:48:13.257845",
+        "risk_factors": null,
+        "certifications": [],
+        "last_assessed_date": null
+      }
+    },
+    {
+      "table_name": "webhooks",
+      "row": null
+    },
+    {
+      "table_name": "erp_customers",
+      "row": {
+        "id": "g3ielyvn2bptvcjt26rpg4ov",
+        "gstin": null,
+        "org_id": "4ecc472f-4152-4310-ae8d-cf8b7c52ab6d",
+        "client_id": null,
+        "is_active": true,
+        "created_at": "2026-07-19T07:38:25.93877",
+        "pan_number": null,
+        "credit_limit": null,
+        "customer_name": "Test Customer Recon",
+        "default_payment_terms_days": null
+      }
+    },
+    {
+      "table_name": "esignature_requests",
+      "row": null
+    },
+    {
+      "table_name": "installed_products",
+      "row": null
+    },
+    {
+      "table_name": "audit_engagements",
+      "row": {
+        "id": "jw7b18t5yc68keu8zgygxxjw",
+        "name": "Q3 Site Safety & Quality Audit - Cedar Heights",
+        "org_id": "projexa_demo_org",
+        "status": "planned",
+        "client_id": null,
+        "audit_type": "internal",
+        "created_at": "2026-07-14T16:23:18.600908",
+        "updated_at": "2026-07-14T16:23:18.600908",
+        "covers_risk_ids": []
+      }
+    },
+    {
+      "table_name": "erp_payslips",
+      "row": {
+        "id": "demo_ps_ceo",
+        "org_id": "demo_org",
+        "status": "paid",
+        "net_pay": 218000,
+        "created_at": "2026-07-06T11:21:09.618766",
+        "employee_id": "demo_emp_ceo",
+        "gross_earnings": 250000,
+        "payroll_run_id": "demo_payroll_jun2026",
+        "total_deductions": 32000
+      }
+    },
+    {
+      "table_name": "erp_payroll_runs",
+      "row": {
+        "id": "demo_payroll_jun2026",
+        "year": 2026,
+        "month": 6,
+        "org_id": "demo_org",
+        "status": "paid",
+        "created_at": "2026-07-06T11:21:09.618766",
+        "processed_at": "2026-06-30T18:00:00",
+        "created_by_id": "demo_user_finance_hod"
+      }
+    },
+    {
+      "table_name": "erp_salary_structures",
+      "row": {
+        "id": "demo_ss_ceo",
+        "state": "Maharashtra",
+        "org_id": "demo_org",
+        "created_at": "2026-07-06T11:21:09.618766",
+        "ctc_annual": 3000000,
+        "employee_id": "demo_emp_ceo",
+        "created_by_id": "demo_user_finance_hod",
+        "effective_from": "2026-04-01"
+      }
+    },
+    {
+      "table_name": "products",
+      "row": {
+        "id": "prod_test_wave19",
+        "name": "GRC",
+        "slug": "grc",
+        "org_id": "org_001",
+        "is_active": true,
+        "created_at": "2026-07-03T14:33:45.739067",
+        "updated_at": "2026-07-03T14:33:45.739067",
+        "description": null
+      }
+    },
+    {
+      "table_name": "prompt_versions",
+      "row": {
+        "id": "4fd501c7-7991-4b4a-b4b5-6d77cc42d453",
+        "label": "production",
+        "content": "You are the Task Orchestra Agent for a compliance management platform. {{PURPOSE_CLAUSE}} Given a task and a list of real worker agents available to this organisation, produce a short execution plan (2-4 steps). Each step should reference the single most relevant agent by its exact name from the list, or null if none fit. Respond with ONLY JSON matching: { \"summary\": string, \"steps\": [{ \"agentName\": string | null, \"description\": string }] }",
+        "version": 1,
+        "is_active": true,
+        "created_at": "2026-07-03T16:36:26.735981",
+        "created_by_id": null,
+        "prompt_template_id": "7879e2d7-f819-45bc-9680-672179da56c5"
+      }
+    },
+    {
+      "table_name": "sales_referral_links",
+      "row": null
+    },
+    {
+      "table_name": "subscription_plans",
+      "row": {
+        "id": "4afd269e-3569-41a7-8d84-e7a6aa13f929",
+        "name": "Trial",
+        "features": {
+          "trial_days": 14
+        },
+        "is_active": true,
+        "created_at": "2026-07-01T13:59:11.693563+00:00",
+        "price_monthly": 0,
+        "user_pack_size": 1,
+        "assistants_per_user": 5
+      }
+    },
+    {
+      "table_name": "candidates",
+      "row": {
+        "id": "demo_cand_1",
+        "name": "Meera Joshi",
+        "email": "meera.joshi.candidate@gmail.com",
+        "phone": "+91 90123 45671",
+        "org_id": "demo_org",
+        "source": "linkedin",
+        "created_at": "2026-07-06T11:23:06.498056"
+      }
+    },
+    {
+      "table_name": "erp_warehouses",
+      "row": {
+        "id": "demo_wh_main",
+        "org_id": "demo_org",
+        "address": "Plot 14, MIDC Industrial Area, Pune, Maharashtra 411019",
+        "is_group": false,
+        "created_at": "2026-07-06T11:19:57.825813",
+        "warehouse_name": "Main Warehouse - Pune",
+        "parent_warehouse_id": null
+      }
+    },
+    {
+      "table_name": "task_execution_plan",
+      "row": {
+        "id": "gdyjxukx7s3ev1aea2hjt4c9",
+        "status": "completed",
+        "task_id": "y45mx25jvy60kovowhl6osnw",
+        "created_at": "2026-07-10T11:41:43.645743+00:00",
+        "description": "Retrieve all existing labor law compliance items for Q2 to identify what needs to be included in the quarterly report.",
+        "step_number": 1,
+        "worker_agent_id": null
+      }
+    },
+    {
+      "table_name": "organisations",
+      "row": {
+        "id": "org_001",
+        "logo": null,
+        "name": "Acme Corp",
+        "plan": "pro",
+        "slug": "acme-corp",
+        "gstin": null,
+        "address": null,
+        "country": "IN",
+        "is_active": true,
+        "cin_number": null,
+        "created_at": "2026-06-28T20:35:33.622714+00:00",
+        "pan_number": null,
+        "updated_at": "2026-07-06T05:16:11.160019+00:00",
+        "entity_type": null,
+        "favicon_url": null,
+        "account_type": "company",
+        "is_read_only": false,
+        "custom_domain": null,
+        "trial_ends_at": null,
+        "licensed_seats": null,
+        "trial_starts_at": null,
+        "email_sender_name": null,
+        "brand_accent_color": null,
+        "brand_primary_color": null,
+        "internal_use_exempt": false,
+        "monthly_cost_cap_usd": null,
+        "subscription_plan_id": null,
+        "regulatory_entity_type": "general",
+        "max_concurrent_sessions": 2,
+        "seat_enforcement_enabled": false,
+        "primary_product_branch_id": null,
+        "cost_cap_enforcement_enabled": false,
+        "session_limit_enforcement_enabled": false
+      }
+    },
+    {
+      "table_name": "activity_log",
+      "row": null
+    },
+    {
+      "table_name": "crm_accounts",
+      "row": null
+    },
+    {
+      "table_name": "agent_review_records",
+      "row": null
+    },
+    {
+      "table_name": "crm_leads",
+      "row": {
+        "id": "demo_co_1_sharma_lead0",
+        "name": "Rohit Iyer Enterprises",
+        "org_id": "demo_co_1_sharma",
+        "source": "referral",
+        "status": "new",
+        "ai_score": null,
+        "owner_id": "demo_co_1_sharma_u1",
+        "account_id": null,
+        "company_id": null,
+        "created_at": "2026-07-07T09:01:01.606392",
+        "updated_at": "2026-07-07T09:01:01.606392",
+        "ai_scored_at": null,
+        "ai_confidence": null,
+        "contact_email": "rohit.iyer.0@customer.veridiandemo.internal",
+        "contact_phone": "+91-9800000000",
+        "created_by_id": "demo_co_1_sharma_u1",
+        "ai_assumptions": [],
+        "next_action_date": null,
+        "next_action_note": null,
+        "ai_score_reasoning": null,
+        "converted_client_id": null,
+        "ai_recommended_action": null,
+        "ai_rejected_alternatives": []
+      }
+    },
+    {
+      "table_name": "crm_opportunities",
+      "row": {
+        "id": "demo_opp_2",
+        "name": "Coastal Pharma - AMC Renewal",
+        "stage": "negotiation",
+        "org_id": "demo_org",
+        "lead_id": "demo_lead_4",
+        "owner_id": "demo_user_sales_hod",
+        "client_id": null,
+        "account_id": null,
+        "created_at": "2026-07-06T11:22:07.21933",
+        "updated_at": "2026-07-06T11:22:07.21933",
+        "ai_confidence": null,
+        "created_by_id": "demo_user_sales_hod",
+        "ai_analyzed_at": null,
+        "ai_assumptions": [],
+        "ai_risk_factors": [],
+        "erp_customer_id": null,
+        "estimated_value": 180000,
+        "next_action_date": null,
+        "next_action_note": null,
+        "ai_win_probability": null,
+        "expected_close_date": "2026-07-30",
+        "ai_recommended_action": null,
+        "ai_rejected_alternatives": []
+      }
+    },
+    {
+      "table_name": "erp_sales_invoices",
+      "row": {
+        "id": "1687fe13-53ad-4905-b380-44a3df3f09a0",
+        "irn": null,
+        "org_id": "4ecc472f-4152-4310-ae8d-cf8b7c52ab6d",
+        "status": "draft",
+        "due_date": "2026-04-24",
+        "subtotal": 2157845,
+        "client_id": null,
+        "company_id": null,
+        "created_at": "2026-07-19T06:37:25.373219",
+        "project_id": "43b11bc8-59a9-4f0e-b91e-758de05db50a",
+        "tax_amount": 388412,
+        "updated_at": "2026-07-19T06:37:25.373219",
+        "currency_id": null,
+        "customer_id": "a7347ed4-ac0c-42db-8592-d587fc2c744b",
+        "grand_total": 2546257,
+        "posting_date": "2026-03-25",
+        "created_by_id": "d8fbf5aa-a273-4100-9f74-0891f1f26b8c",
+        "exchange_rate": 1,
+        "invoice_number": 12,
+        "sales_order_id": "0539de32-d5b7-413f-9803-dbd3de3e7762",
+        "e_invoice_status": null,
+        "journal_entry_id": null,
+        "outstanding_amount": 2546257
+      }
+    },
+    {
+      "table_name": "platform_assets",
+      "row": {
+        "id": "8db65add-2957-4148-957e-6c24ea2e6902",
+        "name": "List Compliance Items",
+        "tags": [],
+        "module": "Cross-Cutting > Data Access",
+        "org_id": null,
+        "status": "active",
+        "purpose": "List compliance items for the organisation with optional filters.",
+        "version": "1",
+        "asset_id": "AST-002311",
+        "owner_id": null,
+        "source_id": "c6703fea-7077-49b3-bdce-002f3fcbd076",
+        "ai_enabled": true,
+        "asset_type": "ai_agent",
+        "created_at": "2026-07-12T14:17:24.995142",
+        "created_by": null,
+        "department": null,
+        "updated_at": "2026-07-12T14:17:24.995142",
+        "permissions": null,
+        "dependencies": null,
+        "source_table": "worker_agents",
+        "ai_capabilities": null,
+        "parent_asset_id": null,
+        "search_keywords": "Cross-Cutting > Data Access"
+      }
+    },
+    {
+      "table_name": "pms_issues",
+      "row": {
+        "id": "demo_iss_web1",
+        "title": "Design new homepage hero section",
+        "number": 1,
+        "org_id": "demo_org",
+        "type_id": "demo_it_story",
+        "due_date": "2026-05-20",
+        "position": 0,
+        "priority": "high",
+        "client_id": null,
+        "status_id": "demo_ws_done",
+        "created_at": "2026-07-06T11:26:33.46713",
+        "project_id": "demo_project_website",
+        "start_date": "2026-05-05",
+        "updated_at": "2026-07-06T11:26:33.46713",
+        "assignee_id": "demo_user_projects_hod",
+        "description": "New hero section with product-led messaging",
+        "is_archived": false,
+        "milestone_id": null,
+        "created_by_id": "demo_user_projects_hod",
+        "assigned_by_id": null,
+        "parent_issue_id": null,
+        "estimate_point_id": null,
+        "completion_percentage": 0
+      }
+    },
+    {
+      "table_name": "erp_payment_entries",
+      "row": null
+    },
+    {
+      "table_name": "fm_assets",
+      "row": null
     }
   ]
 }
