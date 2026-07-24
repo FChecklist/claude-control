@@ -32,8 +32,22 @@
   PROGRESS.md supersedes the prior, per this repo's established convention).
 
 ## Remaining
-- [ ] Confirm PR #16 merges cleanly after the master-merge above.
-- [ ] Final checkpoint summary (done vs deferred, one-line reason each).
+- [x] Confirm PR #16 merges cleanly after the master-merge above -- confirmed MERGED at 2026-07-24T06:53:37Z
+  via `gh pr view --json state,mergedAt` (not just the merge command's own exit code, per this session's
+  known supervisor-entrypoint.sh false-negative pattern, now fixed by PR #15).
+- [x] Final checkpoint summary below.
+
+## Final checkpoint
+DONE: ROUTE_REGISTRY_SCHEMA_2026-07-24.yaml (5/5 real routes, 29/29 paths live-verified), ROUTE_COVERAGE_METHODOLOGY_2026-07-24.yaml
+(9/9 coverage types defined, 5 measurable today with real values, 4 explicitly NOT_YET_MEASURABLE with named gaps),
+TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml (Phase 0 + 4 phases, real dependency_table), the verification script,
+and knowledge_engine/MASTER_INDEX.yaml registration -- all merged to master via PR #16.
+DEFERRED: live route-test auto-generation/trace wiring/replay storage (Phases 1-4, out of this task's own
+CONSTRAINTS); full route/capability coverage against the true ~100-leaf denominator (needs a capability-tree
+leaf enumerator script, Phase 1's own prerequisite); trace verification against real spans (hard-blocked on
+Auditor Engine's own not-yet-built Phase 7); gateway matrix beyond Task Gateway (blocked on Owner confirming
+the canonical 10-gateway list); any new crontab entries (0 needed this phase, no mechanism exists yet to
+schedule).
 
 ## Deferred (by this task's own CONSTRAINTS, not an oversight)
 - Live route-test auto-generation, trace wiring, and replay storage: left to
