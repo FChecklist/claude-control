@@ -205,6 +205,15 @@ decisions:
   needed_action: "Owner supplies a real OPENAI_API_KEY in /opt/veridian/shared/.env (same convention as the other provider keys already there) and confirms the exact OpenAI model name a future task should call -- see ai-os/CHATGPT_AUDIT_BLOCKER_2026-07-24.yaml's exact_call_shape_once_key_exists for what's already fully specified and waiting on just those two inputs."
   why_not_done_automatically: "No key exists to fabricate, and the Owner asked specifically for ChatGPT -- silently substituting Claude/GROQ/OpenRouter instead without saying so would be exactly the kind of silent model substitution this session's 'no lying' rule forbids. The LLM-execution step is explicitly out of scope for this task's own CONSTRAINTS; this decision is filed so a future task can pick it up the moment the key exists."
   status: awaiting_owner_decision
+
+- id: pgaudit-enable-on-production-supabase
+  raised_by_task: task-20260724-213832-phase7-part6-observability-audit-trail-l
+  raised_ts: '2026-07-24T22:00:00+00:00'
+  title: "Authorize running ai-os/pgaudit/ENABLE_PGAUDIT_2026-07-24.sql against the 2 real, live, ACTIVE_HEALTHY Supabase Postgres projects backing compliance-tracker and projexa"
+  what: "AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml's Phase 7 scope left this as an open question ('pending a real check of Supabase plan-tier support for custom extensions -- not yet resolved'). This task resolved it for real via the Supabase MCP connector: org 'MeetTrack' (gycrthstsbvkojggzkjk) plan=free; list_extensions against compliance-tracker's real project ('verdian-ai', pcrjmlpuqsbocqfwoxod) AND projexa's real project (evpckeuxgvahguwsaeul) both list pgaudit (default_version 17.1) as installable -- confirmed available on the free tier, not blocked. The enablement SQL is authored and ready (CREATE EXTENSION IF NOT EXISTS pgaudit; ALTER DATABASE postgres SET pgaudit.log = 'write, ddl';) but NOT executed against either live project."
+  needed_action: "Owner decision to authorize (or decline) running ai-os/pgaudit/ENABLE_PGAUDIT_2026-07-24.sql against project_id pcrjmlpuqsbocqfwoxod and evpckeuxgvahguwsaeul via the Supabase MCP connector's apply_migration tool. If authorized, a future task runs it and confirms via list_extensions that installed_version is no longer null."
+  why_not_done_automatically: "Both projects are real, ACTIVE_HEALTHY production databases backing deployed apps, not sandboxes. Enabling pgaudit changes logging volume/behavior on live infrastructure and (per Supabase's own extension-enable mechanism) may briefly restart the database -- this matches the same 'modifying shared infrastructure needs explicit sign-off' category already established in this file for e.g. webhook-receiver-network-exposure, not a case-by-case judgment call an agent should make unilaterally on production data stores."
+  status: awaiting_owner_decision
 - id: chatgpt-promptlib-openai-api-key
   raised_by_task: task-20260724-141538-chatgpt-prompt-library-infrastructure
   raised_ts: '2026-07-24T14:20:00+00:00'
