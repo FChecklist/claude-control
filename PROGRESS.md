@@ -10,7 +10,7 @@
 - [x] ai-os/KNOWLEDGE_ENGINE_PHASE3_CANDIDATES_2026-07-24.yaml written (5 real follow-ons, incl. the Supabase credential gap found this task).
 
 ## Remaining
-- [ ] Commit + push + PR
+- [x] Commit + push + PR (#10: https://github.com/FChecklist/claude-control/pull/10)
 - [ ] Demonstrate task-gateway.py close live (knowledge_engine_reverify key) for this task itself
 - [ ] Final checkpoint summary to Owner
 
