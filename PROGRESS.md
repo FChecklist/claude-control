@@ -34,7 +34,8 @@
 - [x] Updated ai-os/TERMINOLOGY_STANDARDIZATION_PHASE_PLAN_2026-07-24.yaml: phase_1_dictionary_coverage_expansion
       marked status: done with a real_evidence_2026-07-24 block (before/after dictionary counts, guardrail
       run counts, what's deferred), and its dependency_table edge flipped planned -> done.
-- [x] Committed and pushed all of the above.
+- [x] Committed and pushed all of the above. PR opened and confirmed via `gh pr view`:
+      https://github.com/FChecklist/claude-control/pull/23 (worker/task-20260724-084040-phase1-terminology-dictionary-expansion -> master).
 
 ## Guardrail dictionary_gap_candidate smoke-check transcript (for the real_evidence block above)
 ```
