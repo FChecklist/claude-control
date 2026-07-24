@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://veridian.internal/schemas/metadata/package-json-metadata-2026-07-24.schema.json",
+  "title": "VERIDIAN package.json required-metadata fields",
+  "description": "Phase 2 (task-20260724-115044) metadata-domain design artifact, per AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml's metadata domain row (DCMI Metadata Terms applied in practice via JSON Schema validation of VERIDIAN's own metadata blocks). Deliberately permissive (additionalProperties: true) -- this validates that VERIDIAN's own minimum-required descriptive fields are present on a real package.json, it does not attempt to fully model npm's package.json schema (that already exists upstream, e.g. https://json.schemastore.org/package.json, and is not VERIDIAN-specific). Real finding this phase: confirmed via a live read of compliance-tracker/projexa/veda-advisors' actual package.json files that ALL THREE are missing description, license, and author today -- this schema exists so that gap is a real, machine-checkable ajv-cli finding rather than an unverified prose claim.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["name", "version", "description", "private"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "npm package name -- also VERIDIAN's own repo-identifier convention (matches the repo enum in AUDITOR_ENGINE_FINDING_RECORD_SCHEMA_2026-07-24.schema.json)."
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+",
+      "description": "Semver. All 3 real repos confirmed on 0.x today (compliance-tracker 0.2.0, projexa 0.1.0, veda-advisors 0.2.0) -- pre-1.0 is valid per Dublin Core's own 'version' term, not itself a finding."
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Dublin Core dc:description equivalent. REAL GAP (confirmed 2026-07-24): compliance-tracker, projexa, and veda-advisors package.json all have this field entirely absent, not just empty."
+    },
+    "private": {
+      "type": "boolean",
+      "description": "Must be explicitly set (true for all 3 VERIDIAN product repos today) -- an unset/missing `private` on an internal repo is itself a real publish-safety gap this schema catches structurally, distinct from the description/license/author metadata-quality gap."
+    },
+    "license": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Dublin Core dc:rights equivalent. REAL GAP (confirmed 2026-07-24): absent in all 3 repos. Not marked `required` above (see known_gaps in this phase's evidence -- Owner has not yet named a license string for internal-only repos), but ajv-cli's own required-field check is expected to flag it once promoted; captured here as a documented properties-level expectation in the interim via the metadata pipeline's own severity mapping (missing license -> severity=low, not an error-blocking required field yet)."
+    },
+    "author": {
+      "description": "Dublin Core dc:creator equivalent. npm allows string or {name,email,url} object -- both accepted.",
+      "oneOf": [
+        { "type": "string", "minLength": 1 },
+        {
+          "type": "object",
+          "required": ["name"],
+          "properties": {
+            "name": { "type": "string", "minLength": 1 },
+            "email": { "type": "string" },
+            "url": { "type": "string" }
+          }
+        }
+      ]
+    }
+  }
+}

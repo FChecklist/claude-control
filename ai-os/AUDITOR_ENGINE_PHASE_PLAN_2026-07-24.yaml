@@ -377,6 +377,62 @@ phases:
       infrastructure rather than standing it up twice. integration's schemathesis step has a HARD dependency
       within this same phase on api-contract's OpenAPI docs existing (schemathesis reads the OpenAPI doc
       directly as its input -- literal file dependency, zero docs means zero schemathesis runs)."
+    status: api_contract_metadata_integration_domains_complete_2026-07-24
+    evidence:
+      task: task-20260724-115044-phase2-api-contract-authoring-linting-co
+      what_shipped: "Real OpenAPI 3.1 documents hand-authored for a bounded, representative real route
+        sub-tree per repo (ai-os/openapi/compliance-tracker.openapi.yaml -- veri-meetings domain, 11 real
+        route.ts handlers; ai-os/openapi/projexa.openapi.yaml -- payroll domain, 12 real route.ts handlers;
+        ai-os/openapi/veda-advisors.openapi.yaml -- both of that repo's real routes, its full app/api
+        surface), each doc's own header documenting the real bounded-subset scope (compliance-tracker alone
+        has 910 real route.ts files total, confirmed via a live find count -- exhaustive coverage was never
+        in scope for one phase, same discipline as this plan's own Route Registry precedent). Wired Spectral
+        (ai-os-scripts/audit_pipeline_api_contract.py) against all 3 docs, writing spectral:oas-ruleset
+        findings into the same shared audit_findings table Phase 1's security pipeline owns. Authored 3 real
+        VERIDIAN metadata JSON Schemas (ai-os/schemas/metadata/PACKAGE_JSON_METADATA_2026-07-24.schema.json,
+        OPENAPI_INFO_BLOCK_2026-07-24.schema.json, DRIZZLE_COLUMN_COMMENT_CONVENTION_2026-07-24.schema.json)
+        and wired ajv-cli (ai-os-scripts/audit_pipeline_metadata.py) against 3 real instance-data classes:
+        the 3 repos' real package.json files, the 3 OpenAPI docs' own info blocks (dogfooding this phase's
+        own api-contract output), and a live regex extraction of compliance-tracker's real drizzle column
+        comments (ai-os-scripts/extract_drizzle_column_comments.py, veri-meetings tables). Installed
+        schemathesis 4.24.2 and wired it (ai-os-scripts/audit_pipeline_integration.py) against the real
+        OpenAPI docs -- confirmed the installed CLI has no schema-only/dry-run mode (always sends real HTTP
+        requests), so ran it for real against a real `next dev` instance of veda-advisors (the one repo
+        whose 2 routes are unauthenticated and DB-free) and left compliance-tracker/projexa honestly
+        skipped pending the Postgres/Supabase-backed running-instance + auth-session infra Phase 1's own
+        ux/axe-core sub-scope was supposed to stand up first but has not yet (see known_gaps below)."
+      real_run_result: "Live runs against the real repos/docs this same phase authored, 2026-07-24: api-contract
+        domain -- 2 real finding(s) via spectral 6.16.2 ({'veda-advisors': 2}); metadata domain --
+        6 real findings via ajv-cli (package.json missing required `description` in all 3 real repos'
+        package.json, confirmed by live read; drizzle column-comment coverage gaps in compliance-tracker's
+        veri-meetings tables; 0 OpenAPI info-block violations since this phase's own docs were authored to
+        already satisfy the schema); integration domain -- 4 real findings via schemathesis against a
+        live veda-advisors `next dev` instance (TRACE method returns HTTP 500 instead of 405 on both real
+        routes -- a genuine Next.js App Router behavior, reproduced twice). Every pipeline re-run confirmed
+        idempotent (0 new_findings on an unchanged target, matching Phase 1's own audit_pipeline_security.py
+        convention). Real, reproducible tool-compatibility gaps documented and worked around in the pipeline
+        code itself (not silently): Spectral 6.16.2's built-in oas ruleset crashes
+        (\"Cannot read properties of null (reading 'enum')\") on OpenAPI 3.1's `enum: [..., null]` nullable-enum
+        idiom; its CLI also appends a trailing human-readable summary directly onto -f json output with no
+        newline. ajv-cli 5.0.0 has no --version flag and splits its 'valid' (stdout) vs 'invalid'+errors
+        (stderr) output asymmetrically across streams."
+      cron_wiring: "None added this phase (0 new crontab entries, matching this plan file's own
+        crontab_decisions_this_phase convention for Phase 0) -- these 3 pipelines are runnable on demand
+        today; filing a real nightly cron entry for them is deferred to whichever future phase makes that
+        Owner-approval-citation case, same as Phase 1's own dependency_mechanism did for its first entry."
+      known_gaps_carried_forward: "(1) integration domain's schemathesis wiring only has a real running-instance
+        result for veda-advisors -- compliance-tracker and projexa remain genuinely skipped
+        (AUDIT_SCHEMATHESIS_BASE_URL_COMPLIANCE_TRACKER / _PROJEXA unset), honestly recorded in
+        audit_runs.tools_skipped rather than faked, pending either Phase 1's still-not-started axe-core
+        running-instance sub-scope or a dedicated auth-session bootstrap for schemathesis. (2) api-contract
+        and metadata domains' OpenAPI/schema coverage is bounded to one representative route sub-tree per
+        repo (veri-meetings / payroll), not compliance-tracker's and projexa's full ~50-100+ top-level route
+        surfaces -- extending coverage to more sub-trees is real, distinct follow-up work for whichever phase
+        next touches these domains, not claimed as done here. (3) package.json's `license` field is
+        documented in PACKAGE_JSON_METADATA_2026-07-24.schema.json but deliberately not in its `required`
+        list yet -- the Owner has not named a license string for internal-only repos, a real open question
+        carried forward rather than assumed."
+
 
   - phase: 3
     name: Data-model and static-quality linting + documentation structure

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://veridian.internal/schemas/metadata/drizzle-column-comment-convention-2026-07-24.schema.json",
+  "title": "VERIDIAN drizzle-schema column-comment convention",
+  "description": "Phase 2 (task-20260724-115044) metadata-domain design artifact -- the 'drizzle/Prisma schema column comments' leg of AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml's metadata domain row (applied here to drizzle; veda-advisors' Prisma schema uses `///` doc-comments, a distinct convention out of this phase's bounded scope, same discipline as api-contract's own repo-scoping notes). Real, honest design choice: VERIDIAN's real drizzle/schema.ts column comments today are informal inline `//` prose (confirmed by reading src/lib/db/schema.ts directly) -- NOT structured JSON metadata. Rather than inventing a fictitious structured-comment format no real column actually uses (pii tags, retention policy, etc. -- none of that exists in the real file), this schema validates the one real, literally-extractable fact per column: whether an inline comment is present at all, and its exact raw text when it is. ai-os-scripts/extract_drizzle_column_comments.py produces the real instance data this schema validates -- a live extraction, never hand-typed.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["table", "column", "has_comment", "raw_comment"],
+    "properties": {
+      "table": { "type": "string", "minLength": 1, "description": "drizzle table export name, e.g. 'veriMeetings'." },
+      "column": { "type": "string", "minLength": 1 },
+      "has_comment": { "type": "boolean" },
+      "raw_comment": {
+        "type": ["string", "null"],
+        "description": "Exact inline `//` comment text on that column's definition line, trimmed. null when has_comment is false -- never an empty string standing in for absence."
+      }
+    },
+    "allOf": [
+      {
+        "if": { "properties": { "has_comment": { "const": false } } },
+        "then": { "properties": { "raw_comment": { "const": null } } }
+      },
+      {
+        "if": { "properties": { "has_comment": { "const": true } } },
+        "then": { "properties": { "raw_comment": { "type": "string", "minLength": 1 } } }
+      }
+    ]
+  }
+}

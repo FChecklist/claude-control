@@ -1,0 +1,475 @@
+openapi: 3.1.0
+info:
+  title: compliance-tracker API -- VERI Meetings domain
+  version: "1.0.0"
+  description: >-
+    Real, hand-authored OpenAPI 3.1 contract for compliance-tracker's VERI Meetings
+    feature (Wave 34 + Wave 44, PLATFORM_STRATEGY.md §16/§25). Every path/method/schema
+    below is derived directly from the real Next.js route handlers under
+    src/app/api/veri-meetings/**/route.ts and the real drizzle table definitions
+    (veriMeetings, veriMeetingActionItems, veriMeetingShareLinks) in src/lib/db/schema.ts
+    -- confirmed by reading each file, not invented or templated.
+
+    Scope note (honest, not padded): compliance-tracker's real app/api tree has 910
+    route.ts handlers total (confirmed via `find src/app/api -name route.ts | wc -l`).
+    This document covers only the veri-meetings sub-tree (11 real route files) as the
+    first representative, fully-real OpenAPI contract for this repo -- the same
+    "real bounded subset over fabricated full coverage" discipline
+    AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml's own Route Registry (5 of ~100 capability
+    leaves) and Phase 0 smoketests (largest/most representative repo, not all 3) already
+    established. Extending this document to additional route sub-trees is real,
+    incremental follow-up work for whichever phase next touches the api-contract domain,
+    not claimed as done here.
+  contact:
+    name: VERIDIAN Platform Team
+    email: raajat.agarwal@gmail.com
+  license:
+    name: Proprietary
+servers:
+  - url: https://compliance-tracker.internal/api
+    description: Production (real base path -- Next.js app router under src/app/api)
+  - url: http://localhost:3000/api
+    description: Local dev server (bun dev)
+tags:
+  - name: veri-meetings
+    description: Minutes-of-meeting records (VERI Meetings, Wave 34/44)
+security:
+  - supabaseSessionCookie: []
+paths:
+  /veri-meetings:
+    get:
+      operationId: listVeriMeetings
+      summary: List VERI Meetings for the caller's organisation
+      tags: [veri-meetings]
+      description: "Real handler: src/app/api/veri-meetings/route.ts GET. Returns an empty list (not an error) when the caller has no orgId."
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [meetings]
+                properties:
+                  meetings:
+                    type: array
+                    items: { $ref: "#/components/schemas/VeriMeeting" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      operationId: createVeriMeeting
+      summary: Create a VERI Meeting
+      tags: [veri-meetings]
+      description: "Real handler: src/app/api/veri-meetings/route.ts POST, delegates to createVeriMeeting() in src/lib/services/veri-meeting-service.ts."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/VeriMeetingCreateInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VeriMeeting" }
+        "400":
+          description: Missing title/scheduledAt, or no organisation on the caller's session
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /veri-meetings/{id}:
+    get:
+      operationId: getVeriMeeting
+      summary: Get a single VERI Meeting with its action items
+      tags: [veri-meetings]
+      description: "Real handler: src/app/api/veri-meetings/[id]/route.ts GET, delegates to getVeriMeeting()."
+      parameters:
+        - $ref: "#/components/parameters/MeetingId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VeriMeetingWithActionItems" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      operationId: updateVeriMeetingDetails
+      summary: Update a VERI Meeting's editable details
+      tags: [veri-meetings]
+      description: >-
+        Real handler: src/app/api/veri-meetings/[id]/route.ts PATCH, delegates to
+        updateVeriMeetingDetails(). Real business rule enforced server-side
+        (assertEditable() in veri-meeting-service.ts): once status=published, this
+        returns 409 -- meeting-level fields are immutable after publish.
+      parameters:
+        - $ref: "#/components/parameters/MeetingId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/VeriMeetingUpdateInput" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VeriMeeting" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: Meeting is published and locked -- details cannot be edited
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+  /veri-meetings/{id}/action-items:
+    post:
+      operationId: addMeetingActionItem
+      summary: Add an action item to a meeting (creates a real linked `tasks` row)
+      tags: [veri-meetings]
+      description: "Real handler: src/app/api/veri-meetings/[id]/action-items/route.ts POST."
+      parameters:
+        - $ref: "#/components/parameters/MeetingId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title: { type: string }
+                assigneeUserId: { type: ["string", "null"] }
+                dueDate: { type: ["string", "null"], format: date-time }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VeriMeetingActionItem" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /veri-meetings/{id}/audit-log:
+    get:
+      operationId: listMeetingAuditLog
+      summary: List the audit-log entries for a meeting
+      tags: [veri-meetings]
+      description: "Real handler: src/app/api/veri-meetings/[id]/audit-log/route.ts GET. Returns an empty list (not an error) when the caller has no orgId."
+      parameters:
+        - $ref: "#/components/parameters/MeetingId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [entries]
+                properties:
+                  entries:
+                    type: array
+                    items: { type: object }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /veri-meetings/{id}/export:
+    get:
+      operationId: exportVeriMeeting
+      summary: Export a meeting's minutes as a print-friendly HTML document
+      tags: [veri-meetings]
+      description: >-
+        Real handler: src/app/api/veri-meetings/[id]/export/route.ts GET. Returns
+        text/html (Content-Disposition: attachment), not JSON -- deliberately
+        print-to-PDF via the browser rather than a server-side PDF library
+        (adopted from meettrack-v2's own /api/pdf route, per this file's own header
+        comment).
+      parameters:
+        - $ref: "#/components/parameters/MeetingId"
+      responses:
+        "200":
+          description: OK -- HTML document
+          content:
+            text/html:
+              schema: { type: string }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /veri-meetings/{id}/generate-intelligence:
+    post:
+      operationId: generateMeetingIntelligence
+      summary: Run AI extraction (summary/key decisions) over a meeting's minutes
+      tags: [veri-meetings]
+      description: >-
+        Real handler: src/app/api/veri-meetings/[id]/generate-intelligence/route.ts
+        POST, delegates to generateMeetingIntelligence() which calls an LLM
+        (callLLMJson via orchestra-model-resolver). This is an app feature that
+        itself uses AI -- distinct from the auditor engine's own zero-AI-in-the-loop
+        rule, which governs how THIS finding is produced, not what the audited
+        endpoint does.
+      parameters:
+        - $ref: "#/components/parameters/MeetingId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VeriMeeting" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /veri-meetings/{id}/minutes:
+    patch:
+      operationId: updateMeetingMinutes
+      summary: Update a meeting's minutes text
+      tags: [veri-meetings]
+      description: "Real handler: src/app/api/veri-meetings/[id]/minutes/route.ts PATCH."
+      parameters:
+        - $ref: "#/components/parameters/MeetingId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [minutes]
+              properties:
+                minutes: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VeriMeeting" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /veri-meetings/{id}/publish:
+    post:
+      operationId: publishVeriMeeting
+      summary: Publish (lock) a meeting
+      tags: [veri-meetings]
+      description: "Real handler: src/app/api/veri-meetings/[id]/publish/route.ts POST. Irreversible in the API surface -- no unpublish route exists."
+      parameters:
+        - $ref: "#/components/parameters/MeetingId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VeriMeeting" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /veri-meetings/{id}/share-links:
+    get:
+      operationId: listMeetingShareLinks
+      summary: List share links for a meeting
+      tags: [veri-meetings]
+      description: "Real handler: src/app/api/veri-meetings/[id]/share-links/route.ts GET."
+      parameters:
+        - $ref: "#/components/parameters/MeetingId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [links]
+                properties:
+                  links:
+                    type: array
+                    items: { $ref: "#/components/schemas/VeriMeetingShareLink" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      operationId: createMeetingShareLink
+      summary: Create a public share link for a meeting's minutes
+      tags: [veri-meetings]
+      description: >-
+        Real handler: src/app/api/veri-meetings/[id]/share-links/route.ts POST.
+        The route layer (not the service) derives shareUrl/whatsappHref/telegramHref
+        from request.nextUrl.origin, per this file's own Priority-18a comment.
+      parameters:
+        - $ref: "#/components/parameters/MeetingId"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: "#/components/schemas/VeriMeetingShareLink" }
+                  - type: object
+                    required: [shareUrl, whatsappHref, telegramHref]
+                    properties:
+                      shareUrl: { type: string, format: uri }
+                      whatsappHref: { type: string, format: uri }
+                      telegramHref: { type: string, format: uri }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /veri-meetings/share-links/{linkId}:
+    delete:
+      operationId: revokeMeetingShareLink
+      summary: Revoke a meeting share link
+      tags: [veri-meetings]
+      description: "Real handler: src/app/api/veri-meetings/share-links/[linkId]/route.ts DELETE."
+      parameters:
+        - name: linkId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VeriMeetingShareLink" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /veri-meetings/share/{token}:
+    get:
+      operationId: getMeetingByShareToken
+      summary: Fetch a meeting's shared minutes via a public share token
+      tags: [veri-meetings]
+      description: >-
+        Real handler: src/app/api/veri-meetings/share/[token]/route.ts GET.
+        Intentionally public -- no requireAuth() call, per this file's own header
+        comment (token-gated instead, mirroring /api/guest-chat/[token]). This is
+        the one route in this document with `security: []`.
+      security: []
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VeriMeeting" }
+        "404":
+          description: Share link is invalid, revoked, or expired
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+components:
+  securitySchemes:
+    supabaseSessionCookie:
+      type: apiKey
+      in: cookie
+      name: sb-access-token
+      description: Real auth mechanism -- every route in this document except share/{token} calls requireAuth() from src/lib/supabase/auth-guard.ts, which reads the Supabase session cookie.
+  parameters:
+    MeetingId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+      description: veriMeetings.id (cuid2, src/lib/db/schema.ts)
+  responses:
+    Unauthorized:
+      description: No valid Supabase session
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
+    BadRequest:
+      description: No organisation found on the caller's session, or invalid input
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
+    NotFound:
+      description: Meeting not found (or not in the caller's org)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
+  schemas:
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string }
+    VeriMeeting:
+      type: object
+      description: Real shape of veriMeetings (src/lib/db/schema.ts:5235).
+      required: [id, orgId, title, meetingType, scheduledAt, status]
+      properties:
+        id: { type: string }
+        orgId: { type: string }
+        contextEntityType: { type: ["string", "null"], enum: ["project", "client", "department"] }
+        contextEntityId: { type: ["string", "null"] }
+        title: { type: string }
+        meetingType: { type: string, enum: ["team", "client", "vendor", "one_on_one"], default: team }
+        scheduledAt: { type: string, format: date-time }
+        attendees: { type: array, items: { type: string }, default: [] }
+        agenda: { type: array, items: { type: string }, default: [] }
+        minutes: { type: ["string", "null"] }
+        minutesHistory:
+          type: array
+          default: []
+          items:
+            type: object
+            properties:
+              date: { type: string, format: date-time }
+              amendedBy: { type: string }
+              text: { type: string }
+        systemId: { type: ["string", "null"], description: "e.g. MOM-2026-4821" }
+        status: { type: string, enum: ["draft", "published"], default: draft }
+        publishedAt: { type: ["string", "null"], format: date-time }
+        publishedById: { type: ["string", "null"] }
+        aiSummary: { type: ["string", "null"] }
+        aiKeyDecisions: { type: array, default: [], items: { type: string } }
+    VeriMeetingWithActionItems:
+      allOf:
+        - { $ref: "#/components/schemas/VeriMeeting" }
+        - type: object
+          required: [actionItems]
+          properties:
+            actionItems:
+              type: array
+              items: { $ref: "#/components/schemas/VeriMeetingActionItem" }
+    VeriMeetingCreateInput:
+      type: object
+      required: [title, scheduledAt]
+      properties:
+        title: { type: string }
+        meetingType: { type: string, enum: ["team", "client", "vendor", "one_on_one"] }
+        scheduledAt: { type: string, format: date-time }
+        attendees: { type: array, items: { type: string } }
+        agenda: { type: array, items: { type: string } }
+        contextEntityType: { type: string, enum: ["project", "client", "department"] }
+        contextEntityId: { type: string }
+    VeriMeetingUpdateInput:
+      type: object
+      properties:
+        title: { type: string }
+        meetingType: { type: string, enum: ["team", "client", "vendor", "one_on_one"] }
+        scheduledAt: { type: string, format: date-time }
+        attendees: { type: array, items: { type: string } }
+        agenda: { type: array, items: { type: string } }
+    VeriMeetingActionItem:
+      type: object
+      description: Real shape of veriMeetingActionItems (src/lib/db/schema.ts:5284) -- a join row onto a real `tasks` record.
+      required: [id, meetingId, taskId, createdAt]
+      properties:
+        id: { type: string }
+        meetingId: { type: string }
+        taskId: { type: string }
+        createdAt: { type: string, format: date-time }
+        task:
+          type: object
+          description: "Joined `tasks` row (with { task: true } in getVeriMeeting())."
+          properties:
+            title: { type: string }
+            status: { type: string }
+    VeriMeetingShareLink:
+      type: object
+      description: Real shape of veriMeetingShareLinks (src/lib/db/schema.ts:5272).
+      required: [id, meetingId, token, createdById, expiresAt, createdAt]
+      properties:
+        id: { type: string }
+        meetingId: { type: string }
+        token: { type: string }
+        createdById: { type: string }
+        expiresAt: { type: string, format: date-time }
+        revokedAt: { type: ["string", "null"], format: date-time }
+        createdAt: { type: string, format: date-time }
