@@ -176,3 +176,14 @@ decisions:
   status: approved
   approved_ts: '2026-07-24T08:49:00+00:00'
   approved_via: "This task's own dispatched SPEC (KNOWN_CONTEXT: 'crontab changes need an OWNER_DECISIONS_NEEDED_2026-07-23.yaml approval entry -- Owner's blanket approval covers it, record then update CRONTAB_APPROVED_SNAPSHOT.txt') and AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml's own crontab_decisions_this_phase note, which explicitly pre-authorized Phase 1's first cron entry to be filed exactly this way -- same standing blanket-approval mechanism as self-sustaining-system-engine-crontab-additions and reenable-supervisor-sweep-cron above, not a fresh case-by-case confirmation."
+
+- id: auto-phase-continuation-crontab-addition
+  raised_by_task: task-20260724-113131-watertight-100pct-gate-and-auto-phase-co
+  raised_ts: '2026-07-24T11:55:00+00:00'
+  title: "Add 1 crontab entry for scripts/auto_phase_continuation.py (INS-20260724-113032-8032's automatic phase-continuation mechanism)"
+  what: "Task added a new cron entry directly to the live crontab: '*/30 * * * * /opt/veridian/scripts/run-logged.sh \"auto-phase-continuation\" /usr/bin/python3 /opt/veridian/scripts/auto_phase_continuation.py >> /opt/veridian/ai-os/logs/auto-phase-continuation-cron.log 2>&1', same run-logged.sh wrapper convention as every other cron entry. This script scans every *_PHASE_PLAN_2026-07-24.yaml (both /opt/veridian/ai-os/ and /opt/veridian/repos/claude-control/ai-os/), determines each initiative's real next phase (cross-referenced against merged PRs via gh, not just self-reported status), and auto-dispatches it via task-gateway.py submit+start once -- closing the exact root cause that left 5 real initiatives stalled at Phase 1 with no mechanism to continue them."
+  needed_action: "Owner acceptance of this entry as part of the approved crontab baseline (CRONTAB_APPROVED_SNAPSHOT.txt already updated to match the live crontab as part of this same task)."
+  why_not_done_automatically: "Same standing exception as every other cron-item entry above: AI_ENGINEERING_POLICY.yaml requires Owner confirmation before any crontab modification, regardless of how safe the underlying script is."
+  status: approved
+  approved_ts: '2026-07-24T11:55:00+00:00'
+  approved_via: "This task's own dispatched SPEC (SCOPE item 3: 'Owner's blanket approval this session covers new cron entries; record in OWNER_DECISIONS_NEEDED_2026-07-23.yaml with status approved and update CRONTAB_APPROVED_SNAPSHOT.txt, do not stop to ask') -- same standing blanket-approval mechanism as self-sustaining-system-engine-crontab-additions, reenable-supervisor-sweep-cron, and audit-pipeline-security-crontab-addition above, not a fresh case-by-case confirmation."

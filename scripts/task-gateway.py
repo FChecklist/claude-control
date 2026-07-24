@@ -31,6 +31,7 @@ AI_OS = f"{VERIDIAN_ROOT}/ai-os"
 SUPERBOSS = f"{SCRIPTS}/superboss-register.py"
 VERIDIAN_TASK = f"{SCRIPTS}/veridian-task.py"
 POSTFLIGHT = f"{AI_OS}/scripts/postflight_audit_gate.py"
+TIGHT_VALIDATION = f"{SCRIPTS}/tight_task_validation.py"
 DB_PATH = f"{AI_OS}/memory/superboss-register.sqlite"
 
 REQUIRED_SECTIONS = [
@@ -211,6 +212,27 @@ def cmd_start(args):
         fail(
             "prompt-file does not follow the literal_template -- missing required section(s)",
             missing_sections=missing,
+            prompt_file=args.prompt_file,
+        )
+
+    # INS-20260724-113032-8032: the section-presence check above only proves
+    # SUCCESS_CRITERIA exists and isn't empty -- it does not catch prose-only
+    # SUCCESS_CRITERIA that reads as satisfied but gives postflight_audit_gate.py's
+    # audit_cmd nothing real to run. tight_task_validation.py's fuller check
+    # (placeholders/ambiguity/contradiction/tier + the runnable-command check)
+    # runs here, before veridian-task.py create, so dispatch is blocked until
+    # the prompt is actually fixed rather than merely well-formed.
+    tight_proc = run(["python3", TIGHT_VALIDATION, args.prompt_file])
+    try:
+        tight_result = json.loads(tight_proc.stdout)
+    except json.JSONDecodeError:
+        fail("tight_task_validation.py did not return parseable JSON",
+             stdout=tight_proc.stdout, stderr=tight_proc.stderr)
+    if not tight_result.get("valid", False):
+        fail(
+            "tight_task_validation.py rejected this prompt-file -- dispatch blocked until fixed",
+            reason=tight_result.get("reason"),
+            guidance=tight_result.get("guidance"),
             prompt_file=args.prompt_file,
         )
 
