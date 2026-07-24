@@ -334,6 +334,34 @@ phases:
     dependency_mechanism: "Phase 0's installed binaries (~/.local/bin/{gitleaks,trivy,checkov,dependency-check})
       and the finding-record schema this phase's output must emit into are the literal artifacts Phase 1
       consumes -- a real file/binary dependency, not just sequencing."
+    status: security_domain_complete_2026-07-24_test_coverage_and_ux_subscopes_not_started
+    evidence:
+      task: task-20260724-083724-phase1-auditor-engine-security-scanners
+      what_shipped: "Real, cron-scheduled pipeline (ai-os/scripts/audit_pipeline_security.py, mirrored
+        in the claude-control repo at ai-os-scripts/audit_pipeline_security.py) runs gitleaks + trivy +
+        checkov against the real compliance-tracker repo, normalizes native tool output into
+        AUDITOR_ENGINE_FINDING_RECORD_SCHEMA_2026-07-24.schema.json-conformant records, and upserts them
+        into a new audit_findings table (+ audit_runs run-log table) in the existing knowledge_engine
+        database (ai-os/memory/superboss-register.sqlite) -- zero AI/LLM calls anywhere in the run path.
+        Also ships ai-os/AUDITOR_ENGINE_SECRET_ALLOWLIST_2026-07-24.toml (gitleaks config) resolving Phase
+        0's documented anon-key/.next-build-artifact false positives by matching a literal substring
+        unique to this repo's specific Supabase anon key, not a generic pattern."
+      real_run_result: "2026-07-24T08:48Z live run against /opt/veridian/repos/compliance-tracker: 29 real
+        findings (27 gitleaks generic-api-key leaks in src/lib/composio-connectors.ts and 2 other files,
+        0 trivy vulnerabilities -- see known_gaps, 2 checkov Dockerfile misconfigurations CKV_DOCKER_2/3).
+        Re-run same day confirmed idempotent upsert (0 new_findings on an unchanged repo state)."
+      cron_wiring: "Added to crontab via the existing run-logged.sh wrapper convention (see
+        CRONTAB_APPROVED_SNAPSHOT.txt and OWNER_DECISIONS_NEEDED_2026-07-23.yaml id
+        audit-pipeline-security-crontab-addition for the Owner-approval citation)."
+      known_gaps_carried_forward: "(1) OWASP Dependency-Check still excluded from the cron-run pipeline --
+        first-run NVD sync is impractical without an NVD_API_KEY, unchanged since Phase 0, re-documented
+        in the pipeline script's own _SKIPPED_TOOLS constant rather than silently dropped. (2) Trivy's
+        bun.lock non-detection (aquasecurity/trivy issues #8839/#8840/#8897/#8998) is unfixed -- trivy
+        runs for real every cycle but only ever sees services/doc-processing/requirements.txt, so its
+        finding count for compliance-tracker's own JS/TS dependency tree is a known 0, not a silent skip.
+        (3) test-coverage and ux sub-scopes of this same phase (coverage-threshold gate,
+        @playwright/test for veda-advisors, axe-core against running routes) were explicitly out of
+        scope for this task's own CONSTRAINTS and are not started."
 
   - phase: 2
     name: API contract authoring + linting + contract testing
