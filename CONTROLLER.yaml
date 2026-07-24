@@ -5172,3 +5172,15 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260724-180011-phase7-evaluate-whether-vericomposer-cha/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-183102-fix-terminology-phase4-gitlink-issue
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''fix-terminology-phase4-gitlink-issue'' on claude-control
+      reached status=blocked. tier1, Superboss-approved, but the merge itself FAILED
+      (gh pr view confirms state=, mergedAt=; see supervisor.log) — needs manual attention,
+      NOT actually merged: '
+    where: /opt/veridian/ai-os/tasks/task-20260724-183102-fix-terminology-phase4-gitlink-issue/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-24'
