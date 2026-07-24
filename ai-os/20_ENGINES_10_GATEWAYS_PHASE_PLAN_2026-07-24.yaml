@@ -240,29 +240,175 @@ engine_inventory:
 # confirming the canonical list (see gateway_naming_gap below).
 # ============================================================================
 gateways:
+  gateway_naming_gap_resolved:
+    resolution: "CLOSED by phase gateway_definition_and_inventory, not by asking the Owner a fresh question
+      in chat (this session is non-interactive/auto-dispatched) -- per this task's own OBJECTIVE text ('the
+      Owner (or the original, uncondensed INS-20260724-053123-0e5a instruction text)'), the second option
+      was checked first: the instructions table in ai-os/memory/superboss-register.sqlite (scripts/
+      superboss-register.py's own live DB) still holds INS-20260724-053123-0e5a's full raw_text verbatim --
+      it was never lost from the system, only from this initiative's own condensed SPEC text that Phase 0
+      was dispatched with. Recovered via: python3 -c \"import sqlite3; c=sqlite3.connect('ai-os/memory/
+      superboss-register.sqlite'); print(c.execute(\\\"SELECT raw_text FROM instructions WHERE
+      instruction_id='INS-20260724-053123-0e5a\\\").fetchone()[0])\"."
+    canonical_10_gateway_list_verbatim_from_original_instruction: "10 gateways wrap all 20 engines: G01
+      Owner, G02 Engineering, G03 Organization, G04 UserChannel, G05 AI, G06 BusinessServices, G07
+      DataKnowledge, G08 Integration, G09 ObservabilityAudit, G10 Infrastructure -- no component talks to
+      another except through a gateway. Every gateway runs the same fixed pipeline: Authenticate->Authorize
+      ->Validate->Normalize->LoadOrgContext->LoadUserContext->LoadMetadata->CapabilityLookup->PolicyEval->
+      RuleEval->Decision->Execute->GenerateEvents->UpdateKnowledge->WriteAuditLog->WriteMetrics->Return."
+    plausible_candidates_note: "Phase 0's own 'starting hypothesis' guess (Auth/API/Data/AI-Model/
+      Notification/Document/Integration/Admin gateways) is superseded by the real, verbatim list above --
+      partially overlapping in spirit (an AI gateway and a Data/Integration-shaped gateway both appear in
+      the real list) but not a match name-for-name. Kept here only as a historical record of what Phase 0
+      guessed before the real instruction text was found; not used anywhere below."
   confirmed_real_today:
     - gateway_candidate: "Task Gateway"
       exists_as: scripts/task-gateway.py
       verified_on_disk: true
       evidence: "Already named 'gateway' literally in this codebase -- submit/start/log/close lifecycle for
         every AI task dispatched server-side, cron-invoked, referenced throughout this session's own
-        KNOWN_CONTEXT as partial Workflow Engine (8) + Automation Engine (9). The one gateway this task can
-        confirm with full confidence rather than infer."
-  gateway_naming_gap:
-    finding: "Grepped ai-os/, mother-router-task-prompt.txt, and all *.yaml/*.txt/*.md under ai-os/ for
-      'gateway' -- the only real hits are scripts/task-gateway.py and its own citations. No document on this
-      server enumerates '10 gateways' by name."
-    recommendation: "Before any phase below spends build effort on gateway work beyond Task Gateway, the
-      Owner (or the original INS-20260724-053123-0e5a instruction text, if it names them and that detail
-      was lost in this task's condensed SPEC) should confirm the canonical 10-gateway list. Once named, the
-      exact same method this document already used for the 20 engines (grep compliance-tracker/projexa/
-      veda-advisors + ai-os/+scripts for each gateway concept, live-verify every exists_as path) applies
-      unchanged -- see phases[] gateway_definition_and_inventory below, which is the phase that does this."
-    plausible_candidates_not_yet_confirmed: "Standard API-gateway-layer patterns this codebase's own
-      structure suggests (Auth/API/Data/AI-Model/Notification/Document/Integration/Admin gateways sitting in
-      front of the engines above) -- listed here only as a starting hypothesis for the Owner to confirm or
-      correct, NOT written into engine_inventory-style rows because none of them have been grep-verified
-      against a real name in this codebase the way every engine row above was."
+        KNOWN_CONTEXT as partial Workflow Engine (8) + Automation Engine (9)."
+      superseded_finding: "Now that the real 10-gateway list is known (G01-G10 above), this phase's own
+        investigation (see gateway_inventory below) confirmed task-gateway.py is NOT a match for any of
+        G01-G10 -- it is a task/workflow lifecycle CLI (submit/start/log/close), architecturally distinct
+        from an Authenticate->Authorize->...->Return request boundary per the Owner's own pipeline text.
+        Kept real and unchanged (still Workflow/Automation Engine infra, see engine_inventory rows 8/9) but
+        does not appear in gateway_inventory's exists_as anywhere."
+  gateway_inventory_method: "Produced by ai-os-scripts/generate_engines_gateways_inventory.py's
+    GATEWAY_DISCOVERY list (added by this phase, same file as the engine DISCOVERY list) -- identical
+    live-verification method and rigor as engine_inventory above: one grep/read finding per gateway gathered
+    this session, live os.path.exists() re-check at run time, verified_on_disk only true if every exists_as
+    path is real *right now*. Idempotent, re-runnable: `python3 ai-os-scripts/
+    generate_engines_gateways_inventory.py` (also writes ai-os/generated/gateway_inventory_2026-07-24.yaml
+    standalone, same convention as engine_inventory_2026-07-24.yaml)."
+
+# ============================================================================
+# GATEWAY INVENTORY -- verbatim output of ai-os-scripts/
+# generate_engines_gateways_inventory.py's GATEWAY_DISCOVERY list (also
+# written standalone to ai-os/generated/gateway_inventory_2026-07-24.yaml).
+# DO NOT HAND-EDIT this block -- re-run the script and re-splice if any cited
+# path changes. Every exists_as path was live-verified (verified_on_disk)
+# against the real filesystem at generation time: all 10/10 rows verified
+# true, 0 drifted, 0 NONE -- every gateway has real, partial prior art, same
+# finding shape as engine_inventory (0/20 engines were NONE either).
+# ============================================================================
+gateway_inventory:
+  - gateway_no: 1
+    gateway_id: "G01"
+    gateway_name: "Owner"
+    purpose: "Boundary through which the human Owner's own instructions/directives enter the system and get logged/tracked."
+    exists_as:
+      - scripts/superboss-register.py
+      - scripts/notify-owner.py
+      - ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      - ai-os/OWNER_DIRECTIVES/CHATGPT_AUDIT_AND_PROMPT_LIBRARY_WORKSPACE_2026-07-24.txt
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "Real, live pieces exist for both directions -- Owner-in (superboss-register.py's log-instruction subcommand and instructions table, the exact mechanism that registered INS-20260724-053123-0e5a itself) and Owner-out (notify-owner.py, rate-limited, plain-English by design). But they are two separate scripts sharing no Authenticate/Authorize pipeline -- log-instruction does not authenticate its caller (any process on the box can insert an instruction row claiming Owner origin), so this is a structured ledger, not an access boundary in the pipeline sense the Owner's own instruction describes."
+  - gateway_no: 2
+    gateway_id: "G02"
+    gateway_name: "Engineering"
+    purpose: "Boundary for engineering/dev-tooling requests -- CI, code-quality gates, and AI-dev-team dispatch."
+    exists_as:
+      - repos/compliance-tracker/.github/workflows/ci.yml
+      - repos/compliance-tracker/.github/workflows/ai-dispatch.yml
+      - repos/compliance-tracker/.github/workflows/ai-team-workforce.yml
+      - scripts/quality-gate.sh
+      - scripts/scope-check.py
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "Real, enforced dev-tooling gates exist (CI lint/typecheck/build, a pre-merge quality gate, file-ownership/scope-collision checks), but they are independent scripts/GitHub-Actions workflows triggered at different points, not one named Engineering gateway that authenticates/authorizes a caller before executing -- checks embedded in a pipeline, not a routing boundary a caller goes through."
+  - gateway_no: 3
+    gateway_id: "G03"
+    gateway_name: "Organization"
+    purpose: "Boundary that resolves and enforces tenant/organization context for every request."
+    exists_as:
+      - repos/compliance-tracker/src/lib/services/context.ts
+      - repos/compliance-tracker/src/lib/supabase/auth-guard.ts
+      - repos/compliance-tracker/src/lib/db/tenant-scoped.ts
+      - repos/compliance-tracker/src/lib/services/org-provisioning-service.ts
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "ServiceContext/ReadContext's mandatory orgId (Engine 2's own Context Engine finding) plus withTenantContext's Postgres RLS session vars are real, enforced org-scoping used consistently across service calls -- genuine LoadOrgContext. But it is woven into auth-guard.ts's requireAuth() per-route, not a standalone named Organization gateway other subsystems route through as one addressable Authenticate->Authorize->LoadOrgContext boundary."
+  - gateway_no: 4
+    gateway_id: "G04"
+    gateway_name: "UserChannel"
+    purpose: "Boundary for end-user-facing product channels (chat, portal, guest access) into the platform."
+    exists_as:
+      - repos/compliance-tracker/src/lib/supabase/auth-guard.ts
+      - repos/compliance-tracker/src/app/api/veri-chat
+      - repos/compliance-tracker/src/app/api/guest-chat
+      - repos/compliance-tracker/src/app/api/me/route.ts
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "requireAuth()/requireRole() in auth-guard.ts is a real, universally-used per-route Authenticate+Authorize gate, and veri-chat/guest-chat are real end-user channel surfaces built on it. But it is invoked ad hoc at the top of each individual route.ts file, not centralized behind one UserChannel gateway component -- no middleware.ts file exists anywhere in the repo."
+  - gateway_no: 5
+    gateway_id: "G05"
+    gateway_name: "AI"
+    purpose: "Boundary all AI/model calls route through for provider/model resolution, policy, and audit."
+    exists_as:
+      - repos/compliance-tracker/src/lib/ai-router/mother-router.ts
+      - repos/compliance-tracker/src/lib/model-tier-eligibility.ts
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "Mother Router (resolveModel(), versioned ai_routing_policies, ai_routing_audit_log) is real, live, audit-logged AI routing -- the strongest single candidate of all 10 gateways for matching the Owner's fixed-pipeline description. But its own header comment documents a mechanical grep finding 35 files still bypassing it by calling resolveModelConfig()/checkTierEligibility() directly -- a documented decision not (yet) to migrate them, so roughly a third of this one repo's AI dispatch call sites don't route through it at all."
+  - gateway_no: 6
+    gateway_id: "G06"
+    gateway_name: "BusinessServices"
+    purpose: "Boundary wrapping internal business-domain service calls (accounting, PMS, HR, etc.)."
+    exists_as:
+      - repos/compliance-tracker/src/lib/services
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "A large, real services/ directory (263 files -- erp-accounting-service.ts, pms-meeting-service.ts, org-branding-service.ts, etc.) exists and every function in it does take a ServiceContext/ReadContext (G03's own finding), so some uniform contract is enforced per-call. But there is no single BusinessServices gateway component -- each service module is called directly from its own route handler(s); this is a naming/directory convention, not a gateway other components route calls through."
+  - gateway_no: 7
+    gateway_id: "G07"
+    gateway_name: "DataKnowledge"
+    purpose: "Boundary for accessing/tracking data and knowledge-store artifacts (metadata, relationships, provenance)."
+    exists_as:
+      - scripts/superboss-register.py
+      - scripts/knowledge_registry_multisource.py
+      - ai-os/MASTER_INDEX.yaml
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "Same real infrastructure engine_inventory already rated coverage=full for Engine 15 (Knowledge Engine) -- a live SQLite+FTS5 store with a register-knowledge/query-knowledge CLI and a recurring multi-source cron refresh. As a gateway concept, though, it is a data store with a CLI, not a request boundary other components authenticate/authorize through first -- no Authenticate/Authorize step exists in front of register-knowledge/query-knowledge themselves."
+  - gateway_no: 8
+    gateway_id: "G08"
+    gateway_name: "Integration"
+    purpose: "Boundary for exchanging data with external systems/APIs (inbound and outbound)."
+    exists_as:
+      - repos/compliance-tracker/src/lib/webhook-deliver.ts
+      - repos/compliance-tracker/src/lib/webhooks/vercel-signature.ts
+      - repos/compliance-tracker/src/app/api/webhooks/vercel-deployment/route.ts
+      - repos/compliance-tracker/src/app/api/connectors/route.ts
+      - repos/compliance-tracker/src/lib/supabase/platform-application-auth.ts
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "Real outbound webhook delivery (Engine 10's own finding), real inbound webhook receipt with signature verification (Vercel deployment events), a real OAuth-connector framework (Composio, Drive/Gmail), and a real cross-product platform-application-key Authenticate step all exist and are live. None are unified under one Integration gateway -- each is its own auth/validation path with its own credential class (webhook signature vs. platform key vs. Composio OAuth)."
+  - gateway_no: 9
+    gateway_id: "G09"
+    gateway_name: "ObservabilityAudit"
+    purpose: "Boundary/loop surfacing system health and writing the audit trail for actions taken."
+    exists_as:
+      - scripts/health-check-15min.py
+      - scripts/veridian-task-watchdog.py
+      - repos/compliance-tracker/src/lib/audit.ts
+      - ai-os/AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "Real, live 15-minute health monitoring (systemd/DB/disk/mem) and a real per-write logActivity() in-app audit function both exist and are used (same finding as engine_inventory's Engine 19/20 rows). But these are two unrelated systems -- server-ops health cron vs. in-app DB audit log -- with no shared schema, and neither is a gateway boundary other components route calls through; logActivity() is a side effect at the end of a service function, not an enforced WriteAuditLog step of a shared pipeline."
+  - gateway_no: 10
+    gateway_id: "G10"
+    gateway_name: "Infrastructure"
+    purpose: "Boundary/deploy layer for provisioning and running the server-side process fleet."
+    exists_as:
+      - reconciliation/claude-control/systemd/veridian-task-watchdog.service
+      - scripts/supervisor-entrypoint.sh
+      - scripts/worker-entrypoint.sh
+      - scripts/sync-repos.sh
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "Real systemd-managed worker/supervisor process lifecycle (veridian-worker@/veridian-supervisor@ units referenced throughout health-check-15min.py and supervisor-entrypoint.sh) and a real deployed watchdog unit exist. But no single Infrastructure gateway component exists, just a set of shell entrypoints and systemd units -- and the live server has no top-level /opt/veridian/systemd directory (units live staged under reconciliation/claude-control/systemd/ instead), honestly reported rather than assumed."
 
 # ============================================================================
 # DEPENDENCY TABLE -- concrete mechanism per edge (real file/cron/CLI call,
@@ -966,6 +1112,63 @@ phases:
       engine_inventory above. Do not build any gateway beyond scripts/task-gateway.py (already confirmed
       real) before this naming gap is closed."
     depends_on: []
+    status: done
+    status_detail:
+      produced_by_task: task-20260724-185145-phasex-get-owner-or-original-uncondensed
+      completed_on: '2026-07-24'
+      naming_gap_closed_by: "The original, uncondensed INS-20260724-053123-0e5a instruction text -- recovered
+        verbatim from its real, live source (the instructions table in
+        ai-os/memory/superboss-register.sqlite, scripts/superboss-register.py's own DB, queried directly by
+        instruction_id) rather than by opening a fresh interactive chat with the Owner, since this task was
+        auto-dispatched non-interactively. This is the literal 'or the original, uncondensed ... instruction
+        text' branch this phase's own OBJECTIVE named as an acceptable alternative to a live Owner
+        confirmation -- not a shortcut around it. See gateways.gateway_naming_gap_resolved above for the
+        full recovered text and the real 10-gateway list it names (G01 Owner .. G10 Infrastructure)."
+      what_shipped:
+        - "ai-os-scripts/generate_engines_gateways_inventory.py extended with a GATEWAY_DISCOVERY list (10
+          entries, G01-G10) and build_gateway_rows()/to_yaml_gateways(), reusing the exact same verify()
+          live os.path.exists() function the engine DISCOVERY list already used -- no new verification
+          method invented, same script, same rigor, same DO-NOT-HAND-EDIT convention."
+        - "gateways.gateway_inventory block above: real, live-verified 10-row gateway inventory, same shape
+          as engine_inventory (gateway_no/gateway_id/gateway_name/purpose/exists_as/verified_on_disk/
+          coverage/gap_description). All 10/10 rows verified_on_disk: true, coverage: partial (0 full, 0
+          none, 0 drifted) -- same finding shape as the 20-engine inventory (every gateway has real, honest,
+          partial prior art under a different name; none had to be built from zero to produce this
+          inventory, per this phase's own 'do not build any gateway' constraint)."
+        - "Also wrote ai-os/generated/gateway_inventory_2026-07-24.yaml standalone, same convention as
+          ai-os/generated/engine_inventory_2026-07-24.yaml."
+        - "Corrected gateways.confirmed_real_today's own prior claim: this phase's investigation confirmed
+          scripts/task-gateway.py (Phase 0's only 'gateway'-named, high-confidence candidate) is NOT a match
+          for any of G01-G10 -- it's a task/workflow lifecycle CLI, architecturally distinct from the
+          Owner's own Authenticate->Authorize->...->Return request-boundary pipeline description. Recorded
+          honestly as gateways.confirmed_real_today.superseded_finding rather than silently dropped."
+      real_evidence:
+        - "python3 -c \"import sqlite3; c=sqlite3.connect('ai-os/memory/superboss-register.sqlite');
+          print(c.execute(\\\"SELECT raw_text FROM instructions WHERE
+          instruction_id='INS-20260724-053123-0e5a'\\\").fetchone()[0])\": returned the full original
+          instruction text naming all 10 gateways verbatim (quoted in full in
+          gateways.gateway_naming_gap_resolved above)."
+        - "python3 ai-os-scripts/generate_engines_gateways_inventory.py (live run against /opt/veridian):
+          stderr `wrote /opt/veridian/ai-os/generated/gateway_inventory_2026-07-24.yaml (10 rows)`, zero
+          'WARNING: drift detected' lines for the gateway rows -- all 10 exists_as path sets live-verified
+          true against the real filesystem at generation time."
+        - "python3 scripts/superboss-register.py query-knowledge \"gateway_definition_and_inventory\" --tag
+          domain:veridian-20-engine-10-gateway: found>=1 (this phase's own SUCCESS_CRITERIA check,
+          registered as part of this same commit)."
+      what_remains_for_later_phases:
+        - "This phase's own scope was inventory only, per its OBJECTIVE's last sentence ('Do not build any
+          gateway beyond scripts/task-gateway.py ... before this naming gap is closed'). Actually building
+          G01-G10 as real, unified Authenticate->Authorize->...->Return request boundaries (per the Owner's
+          own fixed 17-step pipeline) is real future build work this phase deliberately did not start -- a
+          new phase, gateway_live_wiring or similar, would need to be added to this plan's own phases[]
+          block first, same 'plan before build' discipline this whole document has followed since Phase 0."
+        - "This was the last open phase in this plan (all of phase_1 through phase_7 were already status:
+          done before this task started). Per this task's own KNOWN_CONTEXT ('do not stop after this phase
+          either without updating the plan file ... so the next cron tick can find real next-phase work if
+          one exists') -- there is no further real next-phase work left in THIS plan file's phases[] block;
+          a future gateway-build phase would be new scope, not a pre-existing dependency this document
+          already defined, so scripts/auto_phase_continuation.py correctly finds nothing further to
+          auto-dispatch from this file until the Owner (or a new instruction) defines that next phase."
 
   - id: audit_observability_external
     closes_engines: [19, 20]
