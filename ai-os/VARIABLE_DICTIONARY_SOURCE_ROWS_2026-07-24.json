@@ -1,0 +1,427 @@
+{
+  "_meta": {
+    "fetched_by": "Supabase MCP execute_sql (SELECT ... LIMIT 1 per table, UNION ALL, single read-only query)",
+    "fetched_at": "2026-07-24T00:00:00Z_approx_this_task_session",
+    "project_id": "pcrjmlpuqsbocqfwoxod",
+    "project_name": "verdian-ai",
+    "project_ref_confirmed_matches_database_catalog": "yes -- table_name/schema cross-checked against /opt/veridian/ai-os/DATABASE_CATALOG.json (abac_policies, organisations, users all present in both)",
+    "environment_note": "Dev/seed/demo data (org_001='Acme Corp', demo_org, org_firstrun_test rows observed) -- not live customer production PII. Confirmed by inspecting compliance.organisations sample rows before running this extraction.",
+    "redaction_rule": "Any column name matching /password|passcode|secret|credential|_hash$|^hash$|token/i is redacted to a fixed marker string and MUST NOT be used as a dictionary example value -- generate_variable_dictionary.py falls back to a synthetic example for those columns regardless of this file's content.",
+    "sales_partners_and_training_paths_note": "row: null -- LIMIT 1 SELECT returned zero rows (tables exist but were empty at fetch time). generate_variable_dictionary.py falls back to synthetic examples for these two tables' columns."
+  },
+  "rows": [
+    {
+      "table_name": "clients",
+      "row": {
+        "id": "3948d27f-e0ee-4a64-a412-ae8b91b1cf2a",
+        "org_id": "org_001",
+        "branch_id": null,
+        "name": "Acme Corp (Self / Direct)",
+        "is_self": true,
+        "is_active": true,
+        "created_at": "2026-07-01T13:59:31.030287+00:00",
+        "updated_at": "2026-07-01T13:59:31.030287+00:00"
+      }
+    },
+    {
+      "table_name": "users",
+      "row": {
+        "id": "user_mgr_fin",
+        "name": "Finance Manager",
+        "email": "manager.finance@acme.com",
+        "password_hash": "REDACTED_SENSITIVE_FIELD_NOT_USED_AS_EXAMPLE",
+        "role": "manager",
+        "avatar_url": null,
+        "is_active": true,
+        "last_login_at": null,
+        "org_id": "org_001",
+        "department_id": "dept_finance",
+        "created_at": "2026-06-28T20:35:35.140998+00:00",
+        "updated_at": "2026-06-28T20:35:35.140998+00:00",
+        "onboarding_completed": false,
+        "auth_user_id": null,
+        "reporting_to_id": null,
+        "onboarding_stage": "profile",
+        "account_stage": null,
+        "passcode_hash": "REDACTED_SENSITIVE_FIELD_NOT_USED_AS_EXAMPLE",
+        "passcode_set_at": "REDACTED_SENSITIVE_FIELD_NOT_USED_AS_EXAMPLE"
+      }
+    },
+    {
+      "table_name": "projects",
+      "row": {
+        "id": "proj_test_wave19",
+        "product_id": "prod_test_wave19",
+        "org_id": "org_001",
+        "client_id": null,
+        "name": "FY26 Audit Cycle",
+        "description": null,
+        "is_active": true,
+        "created_at": "2026-07-03T14:33:45.739067",
+        "updated_at": "2026-07-03T14:33:45.739067",
+        "issue_prefix": null,
+        "issue_sequence": 0,
+        "lead_user_id": null,
+        "start_date": null,
+        "target_date": null,
+        "health_status": null,
+        "parent_project_id": null
+      }
+    },
+    {
+      "table_name": "tasks",
+      "row": {
+        "id": "dqcbcy5p4hdxk38re3g6lblw",
+        "org_id": "obux019rsc5nzxjx93rrpc1j",
+        "client_id": null,
+        "user_id": "ninezxq8f86ei9ji7x5vj7h0",
+        "assistant_id": null,
+        "title": "Current budget variance report (edited by load-test validation)",
+        "description": "Show cost vs. budget for all trades up to 15‑Sep‑2026.",
+        "status": "completed",
+        "created_at": "2026-07-10T11:02:42.916261+00:00",
+        "updated_at": "2026-07-10T11:11:25.221+00:00",
+        "task_embedding": null,
+        "assigned_by_id": "ninezxq8f86ei9ji7x5vj7h0",
+        "project_id": null,
+        "due_date": null,
+        "resolved_worker_agent_id": null,
+        "priority": 2,
+        "dynamic_chain_id": null,
+        "last_reprioritized_at": null,
+        "last_reprioritization_reason": null
+      }
+    },
+    {
+      "table_name": "departments",
+      "row": {
+        "id": "dept_operations",
+        "name": "Operations",
+        "description": "Operational compliance",
+        "org_id": "org_001",
+        "head_id": null,
+        "created_at": "2026-06-28T20:35:34.396539+00:00",
+        "updated_at": "2026-06-28T20:35:34.396539+00:00"
+      }
+    },
+    {
+      "table_name": "compliance_items",
+      "row": {
+        "id": "ci_02",
+        "title": "TDS Quarterly Filing",
+        "description": "Quarterly TDS return filing and reconciliation",
+        "compliance_type": "TDS",
+        "status": "in_progress",
+        "priority": "high",
+        "due_date": "2026-07-10T20:35:36.647768+00:00",
+        "completed_at": null,
+        "department_id": "dept_finance",
+        "assigned_to_id": "user_mem_fin",
+        "org_id": "org_001",
+        "created_at": "2026-06-28T20:35:36.647768+00:00",
+        "updated_at": "2026-06-28T20:35:36.647768+00:00",
+        "embedding": null,
+        "search_vector": "'file':3A,7B 'quarter':2A,4B 'reconcili':9B 'return':6B 'tds':1A,5B",
+        "metadata": {},
+        "filed_date": null,
+        "paid_date": null,
+        "period": null,
+        "financial_year": null,
+        "acknowledgement_number": null,
+        "registration_number": null,
+        "recurrence_type": "none",
+        "recurrence_parent_id": null,
+        "is_template_suggested": false,
+        "amount": null,
+        "client_id": "3948d27f-e0ee-4a64-a412-ae8b91b1cf2a"
+      }
+    },
+    {
+      "table_name": "worker_agents",
+      "row": {
+        "id": "c6703fea-7077-49b3-bdce-002f3fcbd076",
+        "tier": "global",
+        "name": "List Compliance Items",
+        "domain": "Cross-Cutting > Data Access",
+        "description": "List compliance items for the organisation with optional filters.",
+        "code_reference": "list_compliance_items",
+        "prompt_template": null,
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "page": {
+              "type": "number",
+              "default": 1
+            },
+            "limit": {
+              "type": "number",
+              "default": 20,
+              "maximum": 100
+            },
+            "search": {
+              "type": "string"
+            },
+            "status": {
+              "enum": [
+                "pending",
+                "in_progress",
+                "completed",
+                "overdue",
+                "not_applicable",
+                "draft"
+              ],
+              "type": "string"
+            },
+            "department_id": {
+              "type": "string"
+            },
+            "compliance_type": {
+              "enum": [
+                "GST",
+                "TDS",
+                "MCA",
+                "PF",
+                "ESIC",
+                "INCOME_TAX",
+                "ROC",
+                "LABOUR",
+                "ENVIRONMENTAL",
+                "OTHER"
+              ],
+              "type": "string"
+            }
+          }
+        },
+        "output_schema": {},
+        "is_immutable": true,
+        "version": 1,
+        "usage_count": 0,
+        "accuracy_score": null,
+        "org_id": null,
+        "client_id": null,
+        "user_id": null,
+        "created_at": "2026-07-01T16:38:10.988424+00:00",
+        "updated_at": "2026-07-01T16:38:10.988424+00:00",
+        "capability_embedding": null,
+        "knowledge_embedding": null,
+        "lifecycle_status": "published",
+        "supervisor_worker_agent_id": null,
+        "proposed_by_id": null,
+        "project_id": null,
+        "domain_group_id": "77d43d32-92bb-486e-9736-9c35fc0a7bcd"
+      }
+    },
+    {
+      "table_name": "conversations",
+      "row": {
+        "id": "vfwekbc6yo2i4zxlgs48n0dl",
+        "org_id": "org_001",
+        "client_id": null,
+        "type": "ai",
+        "is_ai_thread": true,
+        "title": "VERIDIAN AI",
+        "created_at": "2026-07-04T16:14:55.546082",
+        "updated_at": "2026-07-04T16:14:57.876",
+        "context_entity_type": null,
+        "context_entity_id": null,
+        "current_state": null,
+        "previous_state": null,
+        "workflow_id": null,
+        "status": "active",
+        "dynamic_chain_id": null,
+        "veri_participant": false,
+        "chain_selector_skipped": false,
+        "clarification_round_trips": 0
+      }
+    },
+    {
+      "table_name": "tickets",
+      "row": {
+        "id": "demo_ticket_1",
+        "org_id": "demo_org",
+        "client_id": null,
+        "conversation_id": "demo_conv_ticket1",
+        "subject": "ERP login access needed for new hire",
+        "category": "access_request",
+        "priority": "medium",
+        "status": "open",
+        "assignee_id": "demo_user_projects_hod",
+        "requester_user_id": "demo_user_hr_exec",
+        "sla_deadline": "2026-07-08T18:00:00",
+        "resolved_at": null,
+        "created_by_id": "demo_user_hr_exec",
+        "created_at": "2026-07-06T11:27:22.337817",
+        "updated_at": "2026-07-06T11:27:22.337817",
+        "installed_product_id": null
+      }
+    },
+    {
+      "table_name": "documents",
+      "row": {
+        "id": "doc_01",
+        "name": "GST_Monthly_Return_GSTR-3B_document.pdf",
+        "file_url": "https://storage.acme.com/compliance/ci_01/document.pdf",
+        "file_type": "application/pdf",
+        "file_size": 245000,
+        "compliance_item_id": "ci_01",
+        "uploaded_by_id": "user_admin",
+        "created_at": "2026-06-28T20:35:39.509546+00:00",
+        "client_id": "3948d27f-e0ee-4a64-a412-ae8b91b1cf2a",
+        "notice_id": null,
+        "extracted_data": null,
+        "org_id": "org_001",
+        "category": null,
+        "expiry_date": null,
+        "linked_entity_type": null,
+        "linked_entity_id": null,
+        "parent_document_id": null,
+        "version_number": 1,
+        "is_latest_version": true,
+        "retention_period_days": null,
+        "disposal_date": null,
+        "legal_hold": false,
+        "is_disposed": false,
+        "disposed_at": null,
+        "disposed_by_id": null,
+        "metadata": null,
+        "correspondent_id": null,
+        "tags": [],
+        "auto_classified": false
+      }
+    },
+    {
+      "table_name": "erp_items",
+      "row": {
+        "id": "demo_item_widget_a",
+        "org_id": "demo_org",
+        "item_code": "WID-A-001",
+        "item_name": "Industrial Widget A",
+        "item_group_id": "demo_ig_finished",
+        "uom": "Nos",
+        "is_stock_item": true,
+        "is_sales_item": true,
+        "is_purchase_item": true,
+        "standard_selling_rate": 2500,
+        "standard_buying_rate": 1600,
+        "is_active": true,
+        "created_at": "2026-07-06T11:19:57.825813",
+        "updated_at": "2026-07-06T11:19:57.825813",
+        "has_batch_no": false,
+        "has_serial_no": false,
+        "hsn_sac_code": "8479"
+      }
+    },
+    {
+      "table_name": "employee_profiles",
+      "row": {
+        "id": "e1ede196-8848-4009-9892-a2af9f9dfdcf",
+        "user_id": "demo_co_1_sharma_u0",
+        "org_id": "demo_co_1_sharma",
+        "employee_code": "SHARMA-ASSOCIATES-1000",
+        "job_title": "Managing Director",
+        "employment_type": "full_time",
+        "date_of_joining": null,
+        "date_of_birth": null,
+        "created_at": "2026-07-07T09:01:01.606392",
+        "updated_at": "2026-07-07T09:01:01.606392",
+        "income_tax_slab_id": null,
+        "employment_status": "active",
+        "emergency_contact_name": null,
+        "emergency_contact_phone": null,
+        "company_id": null
+      }
+    },
+    {
+      "table_name": "notices",
+      "row": {
+        "id": "demo_notice_1",
+        "notice_number": "GST/MH/2026/4471",
+        "authority": "GST Department, Maharashtra",
+        "date_received": "2026-06-20T00:00:00",
+        "demand_amount": 45000,
+        "reply_deadline": "2026-07-20T00:00:00",
+        "status": "in_progress",
+        "description": "Mismatch in GSTR-2A vs GSTR-3B for FY24-25",
+        "compliance_item_id": null,
+        "department_id": "demo_dept_finance",
+        "assigned_to_id": "demo_user_finance_hod",
+        "org_id": "demo_org",
+        "created_at": "2026-07-06T11:25:06.613801",
+        "updated_at": "2026-07-06T11:25:06.613801",
+        "client_id": null
+      }
+    },
+    {
+      "table_name": "sales_partners",
+      "row": null
+    },
+    {
+      "table_name": "training_paths",
+      "row": null
+    },
+    {
+      "table_name": "orchestra_layers",
+      "row": {
+        "id": "c8251762-6981-4a14-b4ee-823c4a577c9b",
+        "layer_key": "facilities_management_register_digitize_oa",
+        "name": "FM Register Digitization",
+        "description": "Extracts structured asset rows from an uploaded Excel/CSV asset register or a photo of a physical register, staged for mandatory human review before commit (fm-register-digitization-service.ts)",
+        "layer_order": 7,
+        "default_model_config": {
+          "model": "openai/gpt-4o-mini",
+          "provider": "openrouter"
+        },
+        "created_at": "2026-07-06T17:18:11.072623+00:00"
+      }
+    },
+    {
+      "table_name": "api_keys",
+      "row": {
+        "id": "b199026b-dc76-402e-ab40-616db6068774",
+        "name": "PROJEXA (Phase 1 E2E test org)",
+        "key_hash": "REDACTED_SENSITIVE_FIELD_NOT_USED_AS_EXAMPLE",
+        "key_prefix": "vk_GJrYO...",
+        "org_id": "4ecc472f-4152-4310-ae8d-cf8b7c52ab6d",
+        "scopes": "read,write",
+        "is_active": true,
+        "last_used_at": "2026-07-19T10:54:12.88+00:00",
+        "created_at": "2026-07-19T06:38:59.288718+00:00",
+        "updated_at": "2026-07-19T06:38:59.288718+00:00",
+        "domain_scope": null,
+        "rate_limit_per_minute": null,
+        "issued_for_application_id": "a1dab7a7-8fb5-4853-9876-a3cb72703da1"
+      }
+    },
+    {
+      "table_name": "messages",
+      "row": {
+        "id": "yhn7u8xk5i3mbfs47tsv8ilw",
+        "conversation_id": "vfwekbc6yo2i4zxlgs48n0dl",
+        "sender_id": "user_mem_fin",
+        "content": "What are the key steps to file a GSTR-3B return?",
+        "is_instruction": false,
+        "created_at": "2026-07-04T16:14:57.203702",
+        "assistant_id": null,
+        "source_platform": null,
+        "source_ref": null,
+        "guest_access_id": null,
+        "confidence_label": null
+      }
+    },
+    {
+      "table_name": "erp_salary_components",
+      "row": {
+        "id": "demo_sc_basic",
+        "org_id": "demo_org",
+        "name": "Basic Salary",
+        "component_type": "earning",
+        "calculation_type": "flat",
+        "default_percentage": null,
+        "default_amount": null,
+        "is_statutory": false,
+        "include_in_pf_wage": true,
+        "created_at": "2026-07-06T11:21:09.618766"
+      }
+    }
+  ]
+}
