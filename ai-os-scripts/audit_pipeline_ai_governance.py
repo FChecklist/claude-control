@@ -44,6 +44,9 @@ import sqlite3
 import subprocess
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import auditor_engine_events as _events  # Phase 7 shared event-emitter (AUDITOR_ENGINE_EVENT_SCHEMA)
+
 DB_PATH = os.environ.get("SUPERBOSS_REGISTER_DB", "/opt/veridian/ai-os/memory/superboss-register.sqlite")
 _WRITE_LOCK_PATH = DB_PATH + ".writelock"
 
@@ -277,12 +280,17 @@ def main():
         except Exception as exc:
             errors[suite] = str(exc)
     duration = (datetime.datetime.now(datetime.timezone.utc) - start).total_seconds()
+    run_status = "ok" if not errors else "partial"
 
     new_count = 0
+    run_trace = None if args.dry_run else _events.start_audit_run(
+        domain=DOMAIN, repo="compliance-tracker", producer_name=os.path.basename(__file__), run_id=run_id,
+    )
     if not args.dry_run:
         with _write_lock():
             conn = _connect()
             ensure_tables(conn)
+            _events.stamp_new_finding_events(conn, all_records, run_trace)
             new_count, new_finding_ids = upsert_findings(conn, all_records, run_id)
             conn.execute("""
                 INSERT INTO audit_runs (run_id, ts, domain, repo, tools_run, tools_skipped,
@@ -292,10 +300,12 @@ def main():
                 run_id, _now_iso(), DOMAIN, "compliance-tracker",
                 json.dumps({"promptfoo": {"version": PROMPTFOO_VERSION, "suites": suite_stats}}),
                 json.dumps(errors),
-                len(all_records), new_count, duration, "ok" if not errors else "partial", json.dumps(errors) if errors else None,
+                len(all_records), new_count, duration, run_status, json.dumps(errors) if errors else None,
             ))
             conn.commit()
             conn.close()
+        _events.complete_audit_run(run_trace, status=run_status, total_findings=len(all_records),
+                                    new_findings=new_count, duration_s=duration)
 
     summary = {
         "ok": not errors, "run_id": run_id, "domain": DOMAIN,
