@@ -1,0 +1,34 @@
+{
+  "route_id": "RT-capability_registry_dedup-001",
+  "capability_name": "capability_registry_dedup",
+  "hop_results": [
+    {
+      "hop_no": 1,
+      "hop_name": "UI Composition Engine",
+      "mechanism_path": "repos/compliance-tracker/src/app/(app)/capability-registry",
+      "live_or_planned_claim": "live",
+      "found_live_today": true,
+      "verdict": "match",
+      "evidence": "mechanism_path exists on disk: repos/compliance-tracker/src/app/(app)/capability-registry"
+    },
+    {
+      "hop_no": 2,
+      "hop_name": "Capability Registry Engine",
+      "mechanism_path": "repos/compliance-tracker/src/app/api/capability-registry",
+      "live_or_planned_claim": "live",
+      "found_live_today": true,
+      "verdict": "match",
+      "evidence": "mechanism_path exists on disk: repos/compliance-tracker/src/app/api/capability-registry"
+    },
+    {
+      "hop_no": 3,
+      "hop_name": "Automation Engine",
+      "mechanism_path": "repos/compliance-tracker/src/lib/loops/capability-index-freshness-audit.ts",
+      "live_or_planned_claim": "live",
+      "found_live_today": true,
+      "verdict": "match",
+      "evidence": "mechanism_path exists on disk: repos/compliance-tracker/src/lib/loops/capability-index-freshness-audit.ts"
+    }
+  ],
+  "dependency_validation_status": "validated_match"
+}

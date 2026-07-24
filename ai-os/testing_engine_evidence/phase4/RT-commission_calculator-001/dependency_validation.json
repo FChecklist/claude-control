@@ -1,0 +1,43 @@
+{
+  "route_id": "RT-commission_calculator-001",
+  "capability_name": "commission_calculator",
+  "hop_results": [
+    {
+      "hop_no": 1,
+      "hop_name": "UI Composition Engine",
+      "mechanism_path": "repos/compliance-tracker/src/components/veri-chat/ChainSelector.tsx",
+      "live_or_planned_claim": "live",
+      "found_live_today": true,
+      "verdict": "match",
+      "evidence": "mechanism_path exists on disk: repos/compliance-tracker/src/components/veri-chat/ChainSelector.tsx"
+    },
+    {
+      "hop_no": 2,
+      "hop_name": "Capability Registry Engine",
+      "mechanism_path": "repos/compliance-tracker/src/lib/services/capability-tree-service.ts",
+      "live_or_planned_claim": "live",
+      "found_live_today": true,
+      "verdict": "match",
+      "evidence": "mechanism_path exists on disk: repos/compliance-tracker/src/lib/services/capability-tree-service.ts"
+    },
+    {
+      "hop_no": 3,
+      "hop_name": "Workflow Engine",
+      "mechanism_path": "repos/compliance-tracker/src/lib/task-execution-engine.ts",
+      "live_or_planned_claim": "live",
+      "found_live_today": true,
+      "verdict": "match",
+      "evidence": "real dispatchEngine() switch case \"commission_calculator\" -> @/lib/engines/payroll-engine::calculatePayrollCommission()"
+    },
+    {
+      "hop_no": 4,
+      "hop_name": "Rule Engine",
+      "mechanism_path": "repos/compliance-tracker/src/lib/guardrail-registrations.ts",
+      "live_or_planned_claim": "live",
+      "found_live_today": true,
+      "verdict": "match",
+      "evidence": "real registerGuardrail() registration found for leaf \"commission_calculator\" in repos/compliance-tracker/src/lib/guardrail-registrations.ts"
+    }
+  ],
+  "dependency_validation_status": "validated_match"
+}

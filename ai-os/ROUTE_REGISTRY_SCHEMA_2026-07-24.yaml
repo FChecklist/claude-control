@@ -95,6 +95,19 @@ route_record_schema:
       and whether a replay run''s output has been diffed against the captured baseline. Honest default is
       not_yet_captured -- no replay storage mechanism exists yet (see
       TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml phase_3_route_replay_storage_and_diff).'
+  dependency_validation_status:
+    type: enum
+    values: [not_yet_validated, validated_match, validated_mismatch]
+    required: true
+    description: 'Whether ai-os-scripts/validate_dependency_graph.py (TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml
+      phase_4_dependency_graph_validation) has re-run this row''s expected_path hops against the real call
+      sites they claim (dispatchEngine() switch cases in task-execution-engine.ts for Workflow Engine hops,
+      real registerGuardrail() registrations in guardrail-registrations.ts for Rule Engine hops, real
+      file-exists checks for structural hops) and whether every hop''s live_or_planned value matched what was
+      actually found. Honest default is not_yet_validated -- validated_mismatch means at least one hop''s
+      live_or_planned claim did not match the real source (e.g. a "planned" hop that has since shipped, or a
+      "live" hop whose call site has since been removed) and the mismatch is detailed in that route''s evidence
+      file under ai-os/testing_engine_evidence/phase4/<route_id>/.'
   confidence:
     type: number, 0.0-1.0
     required: true
@@ -146,6 +159,7 @@ populated_routes:
     test_status: passing
     trace_verification_status: not_instrumented
     replay_status: replayed_match
+    dependency_validation_status: validated_match
     confidence: 1.0
     notes: "Phase 1 route-test auto-generation: real dispatch target @/lib/engines/payroll-engine::calculateGratuity() (dispatchEngine() switch case \"gratuity_calculator\" in task-execution-engine.ts), executed via `bunx bun test` against compliance-tracker's real checkout, exit_code=0. Evidence: ai-os/testing_engine_evidence/phase1/RT-gratuity_calculator-001/."
   - route_id: RT-commission_calculator-001
@@ -180,6 +194,7 @@ populated_routes:
     test_status: passing
     trace_verification_status: not_instrumented
     replay_status: replayed_match
+    dependency_validation_status: validated_match
     confidence: 1.0
     notes: "Phase 1 route-test auto-generation: real dispatch target @/lib/engines/payroll-engine::calculatePayrollCommission() (dispatchEngine() switch case \"commission_calculator\" in task-execution-engine.ts), executed via `bunx bun test` against compliance-tracker's real checkout, exit_code=0. Evidence: ai-os/testing_engine_evidence/phase1/RT-commission_calculator-001/."
   - route_id: RT-gst_calculation_engine-001
@@ -214,6 +229,7 @@ populated_routes:
     test_status: passing
     trace_verification_status: not_instrumented
     replay_status: replayed_match
+    dependency_validation_status: validated_match
     confidence: 1.0
     notes: "Phase 1 route-test auto-generation: real dispatch target @/lib/engines/in/gst-engine::calculateGst() (dispatchEngine() switch case \"gst_calculation_engine\" in task-execution-engine.ts), executed via `bunx bun test` against compliance-tracker's real checkout, exit_code=0. Evidence: ai-os/testing_engine_evidence/phase1/RT-gst_calculation_engine-001/."
   - route_id: RT-trend_analysis_engine-001
@@ -248,6 +264,7 @@ populated_routes:
     test_status: passing
     trace_verification_status: not_instrumented
     replay_status: replayed_match
+    dependency_validation_status: validated_match
     confidence: 1.0
     notes: "Phase 1 route-test auto-generation: real dispatch target @/lib/engines/analytics-engine::analyzeTrendExplained() (dispatchEngine() switch case \"trend_analysis_engine\" in task-execution-engine.ts), executed via `bunx bun test` against compliance-tracker's real checkout, exit_code=0. Evidence: ai-os/testing_engine_evidence/phase1/RT-trend_analysis_engine-001/."
   - route_id: RT-capability_registry_dedup-001
@@ -276,6 +293,7 @@ populated_routes:
     test_status: quarantined
     trace_verification_status: not_instrumented
     replay_status: not_yet_captured
+    dependency_validation_status: validated_match
     confidence: 1.0
     notes: "grep of repos/compliance-tracker/src/lib/task-execution-engine.ts's dispatchEngine() switch found no case \"capability_registry_dedup\": -- no live Workflow Engine dispatch target for this capability today."
 
@@ -289,3 +307,5 @@ registration:
   route_replay_evidence_dir: ai-os/testing_engine_evidence/phase3
   route_replay_storage: 'scripts/superboss-register.py route_replay table (ai-os/memory/superboss-register.sqlite)
     via its capture-replay / run-replay / list-replays CLI subcommands'
+  dependency_validation_script: ai-os-scripts/validate_dependency_graph.py
+  dependency_validation_evidence_dir: ai-os/testing_engine_evidence/phase4
