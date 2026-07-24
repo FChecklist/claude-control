@@ -8,7 +8,8 @@
     "environment_note": "Dev/seed/demo data (org_001='Acme Corp', demo_org, org_firstrun_test rows observed) -- not live customer production PII. Confirmed by inspecting compliance.organisations sample rows before running this extraction.",
     "redaction_rule": "Any column name matching /password|passcode|secret|credential|_hash$|^hash$|token/i is redacted to a fixed marker string and MUST NOT be used as a dictionary example value -- generate_variable_dictionary.py falls back to a synthetic example for those columns regardless of this file's content.",
     "sales_partners_and_training_paths_note": "row: null -- LIMIT 1 SELECT returned zero rows (tables exist but were empty at fetch time). generate_variable_dictionary.py falls back to synthetic examples for these two tables' columns.",
-    "tier2_2026-07-24_note": "Phase 1 dictionary-coverage-expansion tier (TOP_N 20->60): appended real rows for the 39 newly-in-scope tables (rank 21-60 by combined_reference_score) that exist in the live verdian-ai DB, fetched via the same Supabase MCP execute_sql SELECT-LIMIT-1-per-table UNION ALL pattern as tier 1. Did NOT refetch any of tier 1's 20 tables (append-only, per the phase plan's own instruction). 24 of the 39 had a real row; 15 exist as live tables but were empty at fetch time (row: null, same synthetic-fallback handling as tier 1's dynamic_chains/sales_partners/training_paths). One rank-21-60 table from DATABASE_CATALOG.json, ticket_intelligence_items, does not exist in the live verdian-ai DB at all (confirmed via information_schema.tables query against the compliance schema, 420 live tables vs 444 in the catalog) -- this is real catalog/DB drift, not a fetch failure; generate_variable_dictionary.py falls back to a synthetic example for it exactly as it does for any table absent from this source-rows file."
+    "tier2_2026-07-24_note": "Phase 1 dictionary-coverage-expansion tier (TOP_N 20->60): appended real rows for the 39 newly-in-scope tables (rank 21-60 by combined_reference_score) that exist in the live verdian-ai DB, fetched via the same Supabase MCP execute_sql SELECT-LIMIT-1-per-table UNION ALL pattern as tier 1. Did NOT refetch any of tier 1's 20 tables (append-only, per the phase plan's own instruction). 24 of the 39 had a real row; 15 exist as live tables but were empty at fetch time (row: null, same synthetic-fallback handling as tier 1's dynamic_chains/sales_partners/training_paths). One rank-21-60 table from DATABASE_CATALOG.json, ticket_intelligence_items, does not exist in the live verdian-ai DB at all (confirmed via information_schema.tables query against the compliance schema, 420 live tables vs 444 in the catalog) -- this is real catalog/DB drift, not a fetch failure; generate_variable_dictionary.py falls back to a synthetic example for it exactly as it does for any table absent from this source-rows file.",
+    "phase_5_update": "Phase 5 (task-20260724-220012-phase5-full-repo-wide-enforcement-dictio, TERMINOLOGY_STANDARDIZATION_PHASE_PLAN_2026-07-24.yaml phase_5_full_enforcement_and_dictionary_completion): final dictionary tier (all 444 catalog tables). Extended append-only with real Supabase-fetched rows for the 386 tables not yet covered by tiers 1-2 (60 tables), fetched via the same Supabase MCP execute_sql SELECT-LIMIT-1-per-table pattern against project pcrjmlpuqsbocqfwoxod (verdian-ai), batched via a pg_temp PL/pgSQL helper function (5 batches of ~80 tables, per-table EXCEPTION-caught so one missing/empty table doesn't abort the batch) rather than one MCP call per table. 122 tables had a real live row, 264 are live tables confirmed empty at fetch time (synthetic fallback, same handling as tiers 1-2) or (interior_furniture_placements) returned a non-object row shape from the batch helper and was treated as no-row rather than guessed at. A small number of bulky/incidental field values (a giant pgvector embedding array, a Next.js dev-server stack trace, an mcp_access_codes token, a platform_applications key_hash, a real internal preview-deployment referrer URL) were dropped or replaced with the script's own REDACTED_SENSITIVE_FIELD_NOT_USED_AS_EXAMPLE sentinel / a generic placeholder domain before merging, matching this file's own redaction_rule for sensitive columns and to avoid vendoring irrelevant bulk or incidental internal URLs into this dictionary's source data -- generate_variable_dictionary.py falls back to its normal synthetic example for any column not present in a merged row, exactly as it already does for tables with no source row at all."
   },
   "rows": [
     {
@@ -925,6 +926,2964 @@
     },
     {
       "table_name": "fm_assets",
+      "row": null
+    },
+    {
+      "table_name": "abac_policies",
+      "row": null
+    },
+    {
+      "table_name": "access_review_certifications",
+      "row": null
+    },
+    {
+      "table_name": "access_review_cycles",
+      "row": null
+    },
+    {
+      "table_name": "ai_agent_directory",
+      "row": null
+    },
+    {
+      "table_name": "ai_assistants",
+      "row": {
+        "id": "64a664e6-e26d-407f-91c5-0e00de15f411",
+        "label": "Assistant 5",
+        "status": "idle",
+        "user_id": "user_mem_hr",
+        "created_at": "2026-07-01T16:20:18.068852+00:00",
+        "updated_at": "2026-07-01T16:20:18.068852+00:00",
+        "assistant_number": 5,
+        "personality_config": {}
+      }
+    },
+    {
+      "table_name": "ai_configurations",
+      "row": null
+    },
+    {
+      "table_name": "ai_model_registry",
+      "row": {
+        "id": "e34a9fce-5185-4cbb-a648-5f1f3b95320e",
+        "role": null,
+        "tier": "mechanical",
+        "model": "meta-llama/llama-4-scout-17b-16e-instruct",
+        "notes": "Vision-capable override for vision_document_extraction source type",
+        "status": "active",
+        "provider": "groq",
+        "created_at": "2026-07-19T03:05:06.840988",
+        "updated_at": "2026-07-19T03:05:06.840988",
+        "health_status": "healthy",
+        "cost_per_1k_input": 0.00011,
+        "cost_per_1k_output": 0.00034
+      }
+    },
+    {
+      "table_name": "ai_reduction_snapshots",
+      "row": null
+    },
+    {
+      "table_name": "ai_routing_audit_log",
+      "row": null
+    },
+    {
+      "table_name": "ai_routing_policies",
+      "row": null
+    },
+    {
+      "table_name": "ai_team_role_overrides",
+      "row": null
+    },
+    {
+      "table_name": "api_key_request_log",
+      "row": {
+        "id": "dz0zi1ljzgaq894yw1y79g21",
+        "route": "/api/v1/projexa/dashboard",
+        "method": "GET",
+        "org_id": "projexa_demo_org",
+        "api_key_id": "projexa_demo_key",
+        "created_at": "2026-07-15T06:40:55.583972",
+        "was_rate_limited": false
+      }
+    },
+    {
+      "table_name": "application_errors",
+      "row": {
+        "id": "rtk5t20j6404gynvzqd98pqj",
+        "route": "/api/v1/projexa/projects",
+        "stack": "REDACTED_STACKTRACE",
+        "org_id": null,
+        "message": "Failed query: select redacted",
+        "user_id": null,
+        "digest_id": null,
+        "created_at": "2026-07-18T16:09:51.70295"
+      }
+    },
+    {
+      "table_name": "approval_preferences",
+      "row": null
+    },
+    {
+      "table_name": "approval_workflow_definitions",
+      "row": null
+    },
+    {
+      "table_name": "approval_workflow_instances",
+      "row": null
+    },
+    {
+      "table_name": "approval_workflow_step_approvals",
+      "row": null
+    },
+    {
+      "table_name": "approval_workflow_step_definitions",
+      "row": null
+    },
+    {
+      "table_name": "approval_workflow_step_instances",
+      "row": null
+    },
+    {
+      "table_name": "asset_registration_config",
+      "row": {
+        "id": "d5275283-0928-44fa-af2e-71a2a59b0e10",
+        "is_active": true,
+        "asset_type": "document",
+        "created_at": "2026-07-12T10:42:26.400814",
+        "org_column": "org_id",
+        "updated_at": "2026-07-12T10:42:26.400814",
+        "name_column": "name",
+        "owner_column": "uploaded_by_id",
+        "source_table": "documents",
+        "active_column": null,
+        "module_column": null,
+        "purpose_column": null
+      }
+    },
+    {
+      "table_name": "assistant_memories",
+      "row": null
+    },
+    {
+      "table_name": "assistant_metrics_daily",
+      "row": null
+    },
+    {
+      "table_name": "assistant_sessions",
+      "row": null
+    },
+    {
+      "table_name": "audit_findings",
+      "row": {
+        "id": "dngx9rm6x8v5qkjm67fulog8",
+        "title": "Missing edge protection on Level 5 slab perimeter",
+        "org_id": "projexa_demo_org",
+        "due_date": null,
+        "owner_id": null,
+        "severity": "medium",
+        "client_id": null,
+        "created_at": "2026-07-14T16:25:17.478095",
+        "updated_at": "2026-07-14T16:26:30.447",
+        "capa_status": "closed",
+        "retest_result": "passed",
+        "linked_risk_id": null,
+        "audit_engagement_id": "jw7b18t5yc68keu8zgygxxjw"
+      }
+    },
+    {
+      "table_name": "audit_logs",
+      "row": {
+        "id": "log_06",
+        "action": "update",
+        "org_id": "org_001",
+        "details": "Updated compliance item: PF Monthly Challan",
+        "user_id": "user_mgr_fin",
+        "client_id": null,
+        "entity_id": "ci_06",
+        "actor_name": "Finance Manager",
+        "actor_role": "manager",
+        "api_key_id": null,
+        "created_at": "2026-06-28T05:35:41.064811+00:00",
+        "ip_address": null,
+        "user_agent": null,
+        "entity_type": "ComplianceItem",
+        "support_session_id": null,
+        "acting_on_behalf_of_user_id": null
+      }
+    },
+    {
+      "table_name": "audit_points",
+      "row": {
+        "id": "ap_01a",
+        "title": "Initial review of GST Monthly Return (GSTR-3B)",
+        "status": "completed",
+        "due_date": "2026-06-26T20:35:37.421617+00:00",
+        "client_id": "3948d27f-e0ee-4a64-a412-ae8b91b1cf2a",
+        "created_at": "2026-06-28T20:35:37.421617+00:00",
+        "updated_at": "2026-06-28T20:35:37.421617+00:00",
+        "description": null,
+        "completed_at": null,
+        "assigned_to_id": "user_admin",
+        "compliance_item_id": "ci_01"
+      }
+    },
+    {
+      "table_name": "audit_protocol_findings",
+      "row": null
+    },
+    {
+      "table_name": "auth_failure_events",
+      "row": null
+    },
+    {
+      "table_name": "automation_rule_runs",
+      "row": null
+    },
+    {
+      "table_name": "automation_rules",
+      "row": null
+    },
+    {
+      "table_name": "bcm_business_impact_analyses",
+      "row": null
+    },
+    {
+      "table_name": "bcm_exercises",
+      "row": null
+    },
+    {
+      "table_name": "bcm_plans",
+      "row": null
+    },
+    {
+      "table_name": "bcm_recovery_procedures",
+      "row": null
+    },
+    {
+      "table_name": "board_action_items",
+      "row": null
+    },
+    {
+      "table_name": "board_evaluations",
+      "row": null
+    },
+    {
+      "table_name": "branches",
+      "row": null
+    },
+    {
+      "table_name": "business_terminology_glossary",
+      "row": {
+        "id": "162c0fda-5263-4be6-a5ab-e8fea6265403",
+        "term": "SPI",
+        "org_id": null,
+        "aliases": [
+          "Schedule Performance Index"
+        ],
+        "category": "construction",
+        "created_at": "2026-07-19T03:07:38.762007",
+        "definition": "Schedule Performance Index -- Earned Value divided by Planned Value. Above 1 means a project is ahead of its time-linear schedule baseline, below 1 means behind.",
+        "updated_at": "2026-07-19T03:07:38.762007"
+      }
+    },
+    {
+      "table_name": "calculation_invocations",
+      "row": null
+    },
+    {
+      "table_name": "cap_table_entries",
+      "row": null
+    },
+    {
+      "table_name": "cap_table_events",
+      "row": null
+    },
+    {
+      "table_name": "capability_improvement_proposals",
+      "row": null
+    },
+    {
+      "table_name": "challans",
+      "row": null
+    },
+    {
+      "table_name": "client_entities",
+      "row": {
+        "id": "8a18860c-55f8-4829-b44c-622393a783d2",
+        "cin": null,
+        "pan": null,
+        "gstin": null,
+        "client_id": "3948d27f-e0ee-4a64-a412-ae8b91b1cf2a",
+        "is_active": true,
+        "created_at": "2026-07-02T13:53:02.592502+00:00",
+        "legal_name": "Acme Corp",
+        "updated_at": "2026-07-02T13:53:02.592502+00:00",
+        "entity_type": null
+      }
+    },
+    {
+      "table_name": "client_model_config",
+      "row": null
+    },
+    {
+      "table_name": "clm_clauses",
+      "row": null
+    },
+    {
+      "table_name": "clm_contract_templates",
+      "row": null
+    },
+    {
+      "table_name": "clm_template_clauses",
+      "row": null
+    },
+    {
+      "table_name": "code_change_requests",
+      "row": null
+    },
+    {
+      "table_name": "comments",
+      "row": {
+        "id": "cm_01a",
+        "content": "Started working on GST Monthly Return (GSTR-3B). All documents collected.",
+        "author_id": "user_admin",
+        "embedding": null,
+        "entity_id": "ci_01",
+        "created_at": "2026-06-28T20:35:38.747398+00:00",
+        "entity_type": "compliance",
+        "search_vector": null,
+        "compliance_item_id": "ci_01"
+      }
+    },
+    {
+      "table_name": "committees",
+      "row": null
+    },
+    {
+      "table_name": "company_charges",
+      "row": null
+    },
+    {
+      "table_name": "compliance_frameworks",
+      "row": null
+    },
+    {
+      "table_name": "computation_engines",
+      "row": {
+        "id": "aab59a4e-4a86-478e-b264-907bf29d379b",
+        "name": "Route Optimization",
+        "notes": "Nearest-neighbor heuristic + haversine distance",
+        "status": "implemented",
+        "category": "Logistics Engine",
+        "created_at": "2026-07-08T05:05:54.142031",
+        "engine_key": "route_optimization_engine",
+        "updated_at": "2026-07-08T05:05:54.142031",
+        "description": null,
+        "effective_to": null,
+        "input_schema": {},
+        "output_schema": {},
+        "effective_from": "2026-07-19T03:08:41.461278",
+        "engine_version": "1.0.0",
+        "open_source_ref": "consider a routing library (e.g. OSRM) rather than hand-rolled TSP",
+        "implementation_ref": "src/lib/engines/logistics-engine.ts:optimizeRouteNearestNeighbor"
+      }
+    },
+    {
+      "table_name": "connector_accounts",
+      "row": null
+    },
+    {
+      "table_name": "connector_documents",
+      "row": null
+    },
+    {
+      "table_name": "construction_activities",
+      "row": {
+        "id": "projexa_demo_activity",
+        "name": "Brickwork",
+        "unit": "sqft",
+        "org_id": "projexa_demo_org",
+        "created_at": "2026-07-08T17:51:50.947809",
+        "project_id": "projexa_demo_project",
+        "category_id": "projexa_demo_cat",
+        "planned_quantity": 1200
+      }
+    },
+    {
+      "table_name": "construction_attendance",
+      "row": {
+        "id": "projexa_demo_att1",
+        "org_id": "projexa_demo_org",
+        "status": "present",
+        "roster_id": "projexa_demo_worker1",
+        "created_at": "2026-07-08T17:51:50.947809",
+        "daily_cost": 900,
+        "project_id": "projexa_demo_project",
+        "hours_worked": null,
+        "attendance_date": "2026-07-06"
+      }
+    },
+    {
+      "table_name": "construction_boq_line_items",
+      "row": {
+        "id": "projexa_demo_boq_item1",
+        "rate": 85,
+        "unit": "sqft",
+        "amount": 102000,
+        "boq_id": "projexa_demo_boq",
+        "quantity": 1200,
+        "item_code": "CIV-001",
+        "created_at": "2026-07-08T17:51:50.947809",
+        "activity_id": null,
+        "description": "Brickwork in superstructure",
+        "labour_cost": null,
+        "material_cost": null,
+        "equipment_cost": null,
+        "profit_percent": null,
+        "overhead_percent": null
+      }
+    },
+    {
+      "table_name": "construction_boqs",
+      "row": {
+        "id": "hx73txknjwnmevom5wfaubk2",
+        "title": "Load Test BOQ v1",
+        "org_id": "obux019rsc5nzxjx93rrpc1j",
+        "status": "approved",
+        "version": 1,
+        "created_at": "2026-07-10T10:54:08.921573",
+        "project_id": "y236tw43r152r5qjrowttxfi",
+        "updated_at": "2026-07-10T10:54:08.921573",
+        "approved_at": null,
+        "created_by_id": "loadtest-harness",
+        "parent_boq_id": null,
+        "approved_by_id": null
+      }
+    },
+    {
+      "table_name": "construction_categories",
+      "row": {
+        "id": "projexa_demo_cat",
+        "name": "Civil",
+        "org_id": "projexa_demo_org",
+        "created_at": "2026-07-08T17:51:50.947809",
+        "project_id": "projexa_demo_project",
+        "parent_category_id": null
+      }
+    },
+    {
+      "table_name": "construction_change_orders",
+      "row": {
+        "id": "pj_co_p1_2",
+        "title": "Additional false ceiling cove lighting - living & dining",
+        "number": 2,
+        "org_id": "projexa_demo_org",
+        "reason": "Client aesthetic upgrade request",
+        "status": "pending_approval",
+        "created_at": "2026-07-12T20:47:42.662107",
+        "project_id": "projexa_demo_project",
+        "approved_at": null,
+        "cost_impact": 32000,
+        "description": "Client requested extended cove lighting design change",
+        "approved_by_id": null,
+        "requested_by_id": "pj_user_04",
+        "schedule_impact_days": 2,
+        "esignature_request_id": null
+      }
+    },
+    {
+      "table_name": "construction_expense_entries",
+      "row": {
+        "id": "pj_exp_p1_2",
+        "amount": 42000,
+        "org_id": "projexa_demo_org",
+        "created_at": "2026-07-12T20:47:15.876596",
+        "project_id": "projexa_demo_project",
+        "description": "Weekly labour wages - civil & finishing crew",
+        "expense_date": "2026-07-06",
+        "expense_head": "labour",
+        "recorded_by_id": "pj_user_07",
+        "linked_entity_id": null,
+        "linked_entity_type": null
+      }
+    },
+    {
+      "table_name": "construction_kpi_definitions",
+      "row": {
+        "id": "pj_kpi_hours",
+        "unit": "hours",
+        "org_id": "projexa_demo_org",
+        "period": "monthly",
+        "owner_id": "pj_user_04",
+        "created_at": "2026-07-12T20:47:15.876596",
+        "project_id": null,
+        "metric_name": "Designer Hours Utilized",
+        "target_value": 160
+      }
+    },
+    {
+      "table_name": "construction_kpi_entries",
+      "row": {
+        "id": "pj_kpie_h1",
+        "period": "2026-05",
+        "created_at": "2026-07-12T20:47:15.876596",
+        "approved_at": "2026-06-02T09:00:00",
+        "actual_value": 145,
+        "filled_by_id": "pj_user_04",
+        "approved_by_id": "pj_user_01",
+        "approval_status": "approved",
+        "kpi_definition_id": "pj_kpi_hours"
+      }
+    },
+    {
+      "table_name": "construction_labour_roster",
+      "row": {
+        "id": "projexa_demo_worker1",
+        "name": "Ramesh Kumar",
+        "trade": "civil",
+        "org_id": "projexa_demo_org",
+        "is_active": true,
+        "vendor_id": null,
+        "created_at": "2026-07-08T17:51:50.947809",
+        "daily_rate": 900,
+        "project_id": "projexa_demo_project",
+        "skill_level": null
+      }
+    },
+    {
+      "table_name": "construction_punch_list_items",
+      "row": {
+        "id": "pj_punch_p1_2",
+        "trade": "Carpentry",
+        "number": 2,
+        "org_id": "projexa_demo_org",
+        "status": "open",
+        "due_date": "2026-07-18",
+        "location": "Unit 2A",
+        "priority": "low",
+        "created_at": "2026-07-12T20:47:42.662107",
+        "project_id": "projexa_demo_project",
+        "description": "Door hinge squeaking - Unit 2A main door",
+        "verified_at": null,
+        "created_by_id": "pj_user_07",
+        "assigned_to_id": "pj_user_07",
+        "verified_by_id": null
+      }
+    },
+    {
+      "table_name": "construction_rfis",
+      "row": {
+        "id": "msg_rfi_msg_project_cedar_14",
+        "answer": null,
+        "number": 14,
+        "org_id": "projexa_demo_org",
+        "status": "closed",
+        "subject": "RFI #14 - Waterproofing detail at joint",
+        "due_date": "2026-07-28",
+        "question": "Please clarify the specification/drawing discrepancy for item 14 on this project.",
+        "created_at": "2026-06-30T15:41:36.908284",
+        "project_id": "msg_project_cedar",
+        "answered_at": null,
+        "raised_by_id": "pj_user_01",
+        "ball_in_court": "contractor",
+        "answered_by_id": null,
+        "assigned_to_id": null
+      }
+    },
+    {
+      "table_name": "construction_site_diaries",
+      "row": {
+        "id": "pj_diary_p1_1",
+        "issues": "None reported",
+        "org_id": "projexa_demo_org",
+        "remarks": "Steady progress, no delays",
+        "weather": "Clear",
+        "visitors": "None",
+        "work_done": "Brickwork on first floor continued; false ceiling framework fixed in bedrooms; electrical wiring pulled on ground floor",
+        "created_at": "2026-07-12T20:46:36.467037",
+        "diary_date": "2026-07-07",
+        "project_id": "projexa_demo_project",
+        "instructions": "Proceed with tile laying in Unit 2A once grouting on ground floor is complete",
+        "labour_count": 9,
+        "recorded_by_id": "pj_user_07",
+        "material_received": "40 bags OPC cement, 5 tonnes river sand"
+      }
+    },
+    {
+      "table_name": "construction_submittals",
+      "row": {
+        "id": "pj_sub_p1_2",
+        "type": "product_data",
+        "title": "Sanitaryware & CP fittings - brand samples",
+        "number": 2,
+        "org_id": "projexa_demo_org",
+        "status": "pending",
+        "due_date": "2026-07-18",
+        "created_at": "2026-07-12T20:47:42.662107",
+        "project_id": "projexa_demo_project",
+        "reviewed_at": null,
+        "spec_section": "22 40 00",
+        "reviewed_by_id": null,
+        "review_comments": null,
+        "submitted_by_id": "pj_user_03"
+      }
+    },
+    {
+      "table_name": "construction_work_progress_entries",
+      "row": {
+        "id": "pj_prog_brick3",
+        "org_id": "projexa_demo_org",
+        "remarks": "Ground floor brickwork nearing completion",
+        "created_at": "2026-07-12T20:46:04.167181",
+        "entry_date": "2026-07-09",
+        "project_id": "projexa_demo_project",
+        "activity_id": "projexa_demo_activity",
+        "quantity_done": 180,
+        "recorded_by_id": "pj_user_02",
+        "percent_complete": 65
+      }
+    },
+    {
+      "table_name": "contact_submissions",
+      "row": null
+    },
+    {
+      "table_name": "contract_compliance_items",
+      "row": null
+    },
+    {
+      "table_name": "conversation_guest_access",
+      "row": null
+    },
+    {
+      "table_name": "conversation_participants",
+      "row": {
+        "id": "vztta9ivr6b3lqfux1jialex",
+        "user_id": "user_mem_fin",
+        "created_at": "2026-07-04T16:14:55.546082",
+        "last_read_at": null,
+        "conversation_id": "vfwekbc6yo2i4zxlgs48n0dl"
+      }
+    },
+    {
+      "table_name": "conversation_share_links",
+      "row": null
+    },
+    {
+      "table_name": "cost_payments",
+      "row": {
+        "id": "demo_cp_1",
+        "amount": 8000,
+        "org_id": "demo_org",
+        "client_id": null,
+        "created_at": "2026-07-06T11:25:06.613801",
+        "payment_date": "2026-07-02T00:00:00",
+        "payment_method": "bank_transfer",
+        "recorded_by_id": "demo_user_finance_hod",
+        "reference_number": "UTR2607020011",
+        "compliance_cost_id": "demo_cc_1",
+        "receipt_document_id": null
+      }
+    },
+    {
+      "table_name": "crm_contacts",
+      "row": null
+    },
+    {
+      "table_name": "crm_stage_history",
+      "row": {
+        "id": "pw3jm35e8ggzuh56ibb3wlu0",
+        "note": null,
+        "org_id": "ve45lczmkodbiq1m20fy48r5",
+        "to_stage": "new",
+        "entity_id": "phj4xm39meth030ec0s8tgun",
+        "changed_at": "2026-07-18T16:50:56.857845",
+        "from_stage": null,
+        "entity_type": "lead",
+        "changed_by_id": "d85txngcm9mwdpl04qgy5jwc"
+      }
+    },
+    {
+      "table_name": "custom_charts",
+      "row": null
+    },
+    {
+      "table_name": "data_separation_audit",
+      "row": {
+        "id": "hdlhsnn7rks7ipxja2ipzaoc",
+        "org_id": "org_001",
+        "details": {
+          "rowsChecked": 18,
+          "leakedRowIds": [],
+          "tableChecked": "compliance_items",
+          "leakedRowCount": 0
+        },
+        "user_id": null,
+        "audit_type": "cross_contamination_test",
+        "created_at": "2026-07-05T03:21:01.768944+00:00",
+        "query_text": null,
+        "vector_spaces_accessed": null,
+        "cross_contamination_detected": false
+      }
+    },
+    {
+      "table_name": "delegation_of_authority",
+      "row": null
+    },
+    {
+      "table_name": "deployment_events",
+      "row": null
+    },
+    {
+      "table_name": "directors_kmp",
+      "row": null
+    },
+    {
+      "table_name": "doc_processing_jobs",
+      "row": null
+    },
+    {
+      "table_name": "document_correspondents",
+      "row": null
+    },
+    {
+      "table_name": "document_matching_rules",
+      "row": null
+    },
+    {
+      "table_name": "drafted_communications",
+      "row": null
+    },
+    {
+      "table_name": "dynamic_chains",
+      "row": null
+    },
+    {
+      "table_name": "email_intelligence_action_items",
+      "row": null
+    },
+    {
+      "table_name": "embedding_cache",
+      "row": {
+        "id": "5088eb39-7168-453f-8ff6-8f9371c06a4c",
+        "content": "What should I focus on today?",
+        "created_at": "2026-07-10T14:44:18.832201",
+        "content_hash": "a5096eaa68cf8324a73c0c75ce1ffad81c976a3c215bb3a9248dba1af6f780c0",
+        "last_used_at": "2026-07-10T14:50:12.782507"
+      }
+    },
+    {
+      "table_name": "embeddings",
+      "row": {
+        "id": "5730a9a9-db29-44be-b7c8-6250d5f63e5c",
+        "org_id": null,
+        "content": "Create Compliance Item | Cross-Cutting > Data Access | Create a new compliance item.",
+        "entity_id": "9331c561-eb6f-4413-8bac-0e9f9129b7b2",
+        "created_at": "2026-07-04T14:26:08.757399",
+        "entity_type": "worker_agent",
+        "content_hash": "5ef6f0bf7929171539e22b5a467c78c4ec653ab1fab633a39cd53d299f668421"
+      }
+    },
+    {
+      "table_name": "entity_relationships",
+      "row": null
+    },
+    {
+      "table_name": "erp_abc_classifications",
+      "row": null
+    },
+    {
+      "table_name": "erp_accounting_periods",
+      "row": null
+    },
+    {
+      "table_name": "erp_accounts",
+      "row": {
+        "id": "demo_acc_bank",
+        "org_id": "demo_org",
+        "is_group": false,
+        "is_frozen": false,
+        "root_type": "asset",
+        "created_at": "2026-07-06T11:19:57.825813",
+        "updated_at": "2026-07-06T11:19:57.825813",
+        "currency_id": null,
+        "account_name": "HDFC Bank - Current A/c",
+        "account_type": "Bank",
+        "account_number": null,
+        "parent_account_id": null
+      }
+    },
+    {
+      "table_name": "erp_addresses",
+      "row": null
+    },
+    {
+      "table_name": "erp_asset_categories",
+      "row": null
+    },
+    {
+      "table_name": "erp_asset_disposals",
+      "row": null
+    },
+    {
+      "table_name": "erp_asset_movements",
+      "row": null
+    },
+    {
+      "table_name": "erp_bank_accounts",
+      "row": {
+        "id": "demo_bank_hdfc",
+        "org_id": "demo_org",
+        "bank_name": "HDFC Bank",
+        "created_at": "2026-07-06T11:19:57.825813",
+        "is_default": true,
+        "currency_id": "demo_ccy_inr",
+        "account_name": "HDFC Bank - Current A/c",
+        "gl_account_id": "demo_acc_bank",
+        "ifsc_or_swift": "HDFC0001234",
+        "account_number": "50200012345678"
+      }
+    },
+    {
+      "table_name": "erp_bank_statement_imports",
+      "row": null
+    },
+    {
+      "table_name": "erp_bank_statement_lines",
+      "row": null
+    },
+    {
+      "table_name": "erp_budget_line_items",
+      "row": null
+    },
+    {
+      "table_name": "erp_budgets",
+      "row": null
+    },
+    {
+      "table_name": "erp_cash_accounts",
+      "row": null
+    },
+    {
+      "table_name": "erp_cash_vouchers",
+      "row": null
+    },
+    {
+      "table_name": "erp_companies",
+      "row": {
+        "id": "po04n3a86uzn7n0eqyha38q1",
+        "abbr": null,
+        "org_id": "4ecc472f-4152-4310-ae8d-cf8b7c52ab6d",
+        "country": null,
+        "is_group": false,
+        "is_active": true,
+        "created_at": "2026-07-19T07:46:45.878983",
+        "company_name": "E2E Batch C Test Office 1784447203224",
+        "parent_company_id": null,
+        "default_currency_id": null,
+        "date_of_incorporation": null
+      }
+    },
+    {
+      "table_name": "erp_contacts",
+      "row": null
+    },
+    {
+      "table_name": "erp_contract_amendments",
+      "row": null
+    },
+    {
+      "table_name": "erp_contract_billing_schedules",
+      "row": null
+    },
+    {
+      "table_name": "erp_contract_negotiation_rounds",
+      "row": null
+    },
+    {
+      "table_name": "erp_contract_obligations",
+      "row": null
+    },
+    {
+      "table_name": "erp_contract_revenue_schedules",
+      "row": null
+    },
+    {
+      "table_name": "erp_contracts",
+      "row": null
+    },
+    {
+      "table_name": "erp_cost_centers",
+      "row": {
+        "id": "5c7a62be-a75b-47a4-bcee-dc67969c7d1e",
+        "name": "Head Office",
+        "org_id": "projexa_demo_org",
+        "is_group": false,
+        "created_at": "2026-07-15T06:31:30.061805",
+        "project_id": null,
+        "department_id": null,
+        "parent_cost_center_id": null
+      }
+    },
+    {
+      "table_name": "erp_currencies",
+      "row": {
+        "id": "demo_ccy_inr",
+        "code": "INR",
+        "name": "Indian Rupee",
+        "org_id": "demo_org",
+        "symbol": "\u20b9",
+        "created_at": "2026-07-06T11:19:57.825813",
+        "is_base_currency": true
+      }
+    },
+    {
+      "table_name": "erp_cycle_count_lines",
+      "row": null
+    },
+    {
+      "table_name": "erp_cycle_count_plans",
+      "row": null
+    },
+    {
+      "table_name": "erp_delivery_note_items",
+      "row": null
+    },
+    {
+      "table_name": "erp_delivery_notes",
+      "row": null
+    },
+    {
+      "table_name": "erp_depreciation_schedules",
+      "row": null
+    },
+    {
+      "table_name": "erp_e_invoice_logs",
+      "row": null
+    },
+    {
+      "table_name": "erp_employee_tax_exemptions",
+      "row": null
+    },
+    {
+      "table_name": "erp_exchange_rates",
+      "row": null
+    },
+    {
+      "table_name": "erp_fiscal_years",
+      "row": {
+        "id": "demo_fy_2627",
+        "org_id": "demo_org",
+        "end_date": "2027-03-31",
+        "is_closed": false,
+        "year_name": "FY 2026-27",
+        "created_at": "2026-07-06T11:19:57.825813",
+        "start_date": "2026-04-01"
+      }
+    },
+    {
+      "table_name": "erp_fixed_assets",
+      "row": null
+    },
+    {
+      "table_name": "erp_income_tax_slab_rates",
+      "row": null
+    },
+    {
+      "table_name": "erp_income_tax_slabs",
+      "row": null
+    },
+    {
+      "table_name": "erp_item_batches",
+      "row": null
+    },
+    {
+      "table_name": "erp_item_groups",
+      "row": {
+        "id": "demo_ig_finished",
+        "org_id": "demo_org",
+        "created_at": "2026-07-06T11:19:57.825813",
+        "group_name": "Finished Goods",
+        "parent_group_id": null
+      }
+    },
+    {
+      "table_name": "erp_item_serials",
+      "row": null
+    },
+    {
+      "table_name": "erp_item_uom_conversions",
+      "row": null
+    },
+    {
+      "table_name": "erp_journal_entries",
+      "row": {
+        "id": "demo_je_1",
+        "org_id": "demo_org",
+        "status": "submitted",
+        "company_id": null,
+        "created_at": "2026-07-06T11:20:47.685346",
+        "total_debit": 650000,
+        "user_remark": "Opening balances for FY 2026-27",
+        "entry_number": 1,
+        "posting_date": "2026-04-01",
+        "reference_id": null,
+        "submitted_at": "2026-04-01T10:00:00",
+        "total_credit": 650000,
+        "created_by_id": "demo_user_finance_hod",
+        "reference_type": "opening_balance",
+        "is_opening_entry": true
+      }
+    },
+    {
+      "table_name": "erp_journal_entry_lines",
+      "row": {
+        "id": "demo_jel_1a",
+        "debit": 500000,
+        "credit": 0,
+        "remark": "Opening bank balance",
+        "party_id": null,
+        "client_id": null,
+        "account_id": "demo_acc_bank",
+        "party_type": null,
+        "cost_center": null,
+        "currency_id": null,
+        "exchange_rate": null,
+        "cost_center_id": null,
+        "journal_entry_id": "demo_je_1",
+        "debit_in_currency": null,
+        "credit_in_currency": null
+      }
+    },
+    {
+      "table_name": "erp_landed_cost_allocations",
+      "row": null
+    },
+    {
+      "table_name": "erp_landed_cost_charges",
+      "row": null
+    },
+    {
+      "table_name": "erp_landed_cost_vouchers",
+      "row": null
+    },
+    {
+      "table_name": "erp_payslip_lines",
+      "row": {
+        "id": "8ddff1e8-ecba-4b43-a0cb-dd27f5264f03",
+        "label": "Basic Pay",
+        "amount": 200000,
+        "line_type": "earning",
+        "payslip_id": "e6adb8fb-8812-4240-b182-376315c14c0e",
+        "component_id": "920c5e0b-8ad6-4571-9f17-5a414e074004"
+      }
+    },
+    {
+      "table_name": "erp_period_closing_checklist_items",
+      "row": null
+    },
+    {
+      "table_name": "erp_pricing_rules",
+      "row": null
+    },
+    {
+      "table_name": "erp_purchase_credit_note_items",
+      "row": null
+    },
+    {
+      "table_name": "erp_purchase_credit_notes",
+      "row": null
+    },
+    {
+      "table_name": "erp_purchase_invoice_items",
+      "row": {
+        "id": "demo_pii_1",
+        "rate": 85,
+        "amount": 17000,
+        "item_id": "demo_item_steel_sheet",
+        "quantity": 200,
+        "invoice_id": "demo_pi_2001",
+        "description": "Steel Sheet 2mm",
+        "hsn_sac_code": "7208",
+        "tax_template_id": "demo_tax_gst18",
+        "purchase_order_item_id": null
+      }
+    },
+    {
+      "table_name": "erp_purchase_invoices",
+      "row": {
+        "id": "demo_pi_2001",
+        "org_id": "demo_org",
+        "status": "paid",
+        "due_date": "2026-06-14",
+        "subtotal": 17000,
+        "company_id": null,
+        "created_at": "2026-07-06T11:20:26.636829",
+        "tax_amount": 3060,
+        "tds_amount": 0,
+        "updated_at": "2026-07-06T11:20:26.636829",
+        "currency_id": null,
+        "grand_total": 20060,
+        "supplier_id": "demo_supp_steelcorp",
+        "posting_date": "2026-05-15",
+        "created_by_id": "demo_user_accounts",
+        "exchange_rate": 1,
+        "invoice_number": 2001,
+        "journal_entry_id": null,
+        "purchase_order_id": null,
+        "outstanding_amount": 0
+      }
+    },
+    {
+      "table_name": "erp_purchase_order_items",
+      "row": {
+        "id": "re779a7zv3l5kxdeml246ttj",
+        "rate": 100,
+        "amount": 500,
+        "item_id": null,
+        "quantity": 5,
+        "description": "E2E Line Item A e2e-z1o3dt",
+        "purchase_order_id": "uqp8tk2rqs1j8h8e8hrhy3i1",
+        "received_quantity": 0
+      }
+    },
+    {
+      "table_name": "erp_purchase_orders",
+      "row": {
+        "id": "ixw0ueh9de1n9xriz7hwfig8",
+        "org_id": "4ecc472f-4152-4310-ae8d-cf8b7c52ab6d",
+        "status": "draft",
+        "po_number": 17,
+        "company_id": null,
+        "created_at": "2026-07-19T08:43:49.17084",
+        "order_date": "2026-07-19",
+        "updated_at": "2026-07-19T08:43:49.17084",
+        "currency_id": null,
+        "grand_total": 2500,
+        "supplier_id": "7f83f255-afe1-45fd-9270-443a9b9f8083",
+        "created_by_id": "b199026b-dc76-402e-ab40-616db6068774",
+        "exchange_rate": 1,
+        "expected_delivery_date": null
+      }
+    },
+    {
+      "table_name": "erp_purchase_receipt_items",
+      "row": {
+        "id": "demo_pri_1",
+        "rate": 85,
+        "item_id": "demo_item_steel_sheet",
+        "quantity": 300,
+        "receipt_id": "demo_pr_4001",
+        "warehouse_id": "demo_wh_main",
+        "purchase_order_item_id": "demo_poi_1"
+      }
+    },
+    {
+      "table_name": "erp_purchase_receipts",
+      "row": {
+        "id": "demo_pr_4001",
+        "org_id": "demo_org",
+        "status": "submitted",
+        "created_at": "2026-07-06T11:20:47.685346",
+        "supplier_id": "demo_supp_steelcorp",
+        "posting_date": "2026-07-04",
+        "created_by_id": "demo_user_accounts",
+        "putaway_status": "pending",
+        "receipt_number": 5001,
+        "purchase_order_id": "demo_po_3001"
+      }
+    },
+    {
+      "table_name": "erp_purchase_requisition_items",
+      "row": null
+    },
+    {
+      "table_name": "erp_purchase_requisitions",
+      "row": null
+    },
+    {
+      "table_name": "erp_purchase_return_items",
+      "row": null
+    },
+    {
+      "table_name": "erp_purchase_returns",
+      "row": null
+    },
+    {
+      "table_name": "erp_quotation_items",
+      "row": {
+        "id": "demo_qi_1",
+        "rate": 15000,
+        "amount": 30000,
+        "item_id": "demo_item_installation",
+        "quantity": 2,
+        "description": "Installation & Commissioning Service",
+        "quotation_id": "demo_quote_6001"
+      }
+    },
+    {
+      "table_name": "erp_quotations",
+      "row": {
+        "id": "demo_quote_6001",
+        "org_id": "demo_org",
+        "status": "sent",
+        "lead_id": null,
+        "version": 1,
+        "company_id": null,
+        "created_at": "2026-07-06T11:22:07.21933",
+        "project_id": null,
+        "valid_till": "2026-07-05",
+        "currency_id": null,
+        "customer_id": "demo_cust_nexus",
+        "grand_total": 35400,
+        "revision_of": null,
+        "created_by_id": "demo_user_sales_exec",
+        "exchange_rate": 1,
+        "quotation_date": "2026-06-05",
+        "quotation_number": 6001
+      }
+    },
+    {
+      "table_name": "erp_reorder_levels",
+      "row": null
+    },
+    {
+      "table_name": "erp_rfq_auction_bids",
+      "row": null
+    },
+    {
+      "table_name": "erp_rfq_items",
+      "row": {
+        "id": "hv8n3ksiu4p95cx46mbk5cl3",
+        "rfq_id": "ond2u1d5bms439vtqyjdoq33",
+        "item_id": null,
+        "quantity": 10,
+        "description": "E2E Test Material e2e-kamami"
+      }
+    },
+    {
+      "table_name": "erp_rfq_negotiation_rounds",
+      "row": null
+    },
+    {
+      "table_name": "erp_rfq_quotation_scores",
+      "row": null
+    },
+    {
+      "table_name": "erp_rfq_reverse_auctions",
+      "row": null
+    },
+    {
+      "table_name": "erp_rfq_scoring_criteria",
+      "row": null
+    },
+    {
+      "table_name": "erp_rfq_suppliers",
+      "row": {
+        "id": "mext2gtb502wswakm3bv21m6",
+        "rfq_id": "ond2u1d5bms439vtqyjdoq33",
+        "supplier_id": "7f83f255-afe1-45fd-9270-443a9b9f8083"
+      }
+    },
+    {
+      "table_name": "erp_rfqs",
+      "row": {
+        "id": "vm9vetw88ynmteaanb2u8ni1",
+        "org_id": "4ecc472f-4152-4310-ae8d-cf8b7c52ab6d",
+        "status": "draft",
+        "created_at": "2026-07-19T08:14:38.607004",
+        "rfq_number": 2,
+        "posting_date": "2026-07-19",
+        "created_by_id": "b199026b-dc76-402e-ab40-616db6068774",
+        "requisition_id": null
+      }
+    },
+    {
+      "table_name": "erp_salary_structure_components",
+      "row": {
+        "id": "demo_ssc_ceo_basic",
+        "amount": 125000,
+        "percentage": null,
+        "component_id": "demo_sc_basic",
+        "structure_id": "demo_ss_ceo"
+      }
+    },
+    {
+      "table_name": "erp_sales_credit_note_items",
+      "row": null
+    },
+    {
+      "table_name": "erp_sales_credit_notes",
+      "row": null
+    },
+    {
+      "table_name": "erp_sales_invoice_items",
+      "row": {
+        "id": "demo_sii_1",
+        "rate": 2500,
+        "amount": 25000,
+        "item_id": "demo_item_widget_a",
+        "quantity": 10,
+        "invoice_id": "demo_si_1001",
+        "description": "Industrial Widget A",
+        "hsn_sac_code": "8479",
+        "tax_template_id": "demo_tax_gst18"
+      }
+    },
+    {
+      "table_name": "erp_sales_order_items",
+      "row": {
+        "id": "demo_soi_1",
+        "rate": 4200,
+        "amount": 42000,
+        "item_id": "demo_item_widget_b",
+        "quantity": 10,
+        "description": "Industrial Widget B (Premium)",
+        "sales_order_id": "demo_so_7001",
+        "delivered_quantity": 0
+      }
+    },
+    {
+      "table_name": "erp_sales_orders",
+      "row": {
+        "id": "demo_so_7001",
+        "org_id": "demo_org",
+        "status": "confirmed",
+        "so_number": 7001,
+        "company_id": null,
+        "created_at": "2026-07-06T11:22:07.21933",
+        "order_date": "2026-06-26",
+        "project_id": null,
+        "updated_at": "2026-07-06T11:22:07.21933",
+        "currency_id": null,
+        "customer_id": "demo_cust_horizon",
+        "grand_total": 49560,
+        "quotation_id": "demo_quote_6002",
+        "created_by_id": "demo_user_sales_hod",
+        "delivery_date": "2026-07-20",
+        "exchange_rate": 1,
+        "opportunity_id": null
+      }
+    },
+    {
+      "table_name": "erp_sales_return_items",
+      "row": null
+    },
+    {
+      "table_name": "erp_sales_returns",
+      "row": null
+    },
+    {
+      "table_name": "erp_statutory_rules",
+      "row": null
+    },
+    {
+      "table_name": "erp_stock_ledger_entries",
+      "row": {
+        "id": "yk4n6h6tyezaskcal3d7gpy2",
+        "org_id": "4ecc472f-4152-4310-ae8d-cf8b7c52ab6d",
+        "item_id": "xtgmvftwwe44orv9a1ss43z3",
+        "batch_id": null,
+        "serial_id": null,
+        "created_at": "2026-07-19T08:07:08.167088",
+        "project_id": null,
+        "voucher_id": "b199026b-dc76-402e-ab40-616db6068774",
+        "balance_qty": 50,
+        "posting_date": "2026-07-19",
+        "voucher_type": "manual_receipt",
+        "warehouse_id": "zo2g97zvjmk9f3c7nk38pmn8",
+        "balance_value": 6000,
+        "valuation_rate": 120,
+        "quantity_change": 50,
+        "transaction_qty": null,
+        "transaction_uom": null
+      }
+    },
+    {
+      "table_name": "erp_stock_reconciliation_items",
+      "row": null
+    },
+    {
+      "table_name": "erp_stock_reconciliations",
+      "row": null
+    },
+    {
+      "table_name": "erp_stock_valuation_layers",
+      "row": {
+        "id": "w47684qggg1ivbnjgtt13sw1",
+        "rate": 120,
+        "org_id": "4ecc472f-4152-4310-ae8d-cf8b7c52ab6d",
+        "item_id": "xtgmvftwwe44orv9a1ss43z3",
+        "created_at": "2026-07-19T08:07:08.167088",
+        "original_qty": 50,
+        "receipt_date": "2026-07-19",
+        "warehouse_id": "zo2g97zvjmk9f3c7nk38pmn8",
+        "remaining_qty": 50,
+        "stock_ledger_entry_id": "yk4n6h6tyezaskcal3d7gpy2"
+      }
+    },
+    {
+      "table_name": "erp_subscription_plans",
+      "row": null
+    },
+    {
+      "table_name": "erp_subscriptions",
+      "row": null
+    },
+    {
+      "table_name": "erp_supplier_bank_accounts",
+      "row": null
+    },
+    {
+      "table_name": "erp_supplier_portal_links",
+      "row": null
+    },
+    {
+      "table_name": "erp_supplier_qualifications",
+      "row": null
+    },
+    {
+      "table_name": "erp_supplier_quotation_items",
+      "row": {
+        "id": "xjqijxzlx5fwle6ssd5cp3hc",
+        "rate": 250,
+        "item_id": null,
+        "quantity": 10,
+        "description": "E2E Test Material e2e-gqv307",
+        "quotation_id": "ohb0up27kyaymnavwnqbss4v"
+      }
+    },
+    {
+      "table_name": "erp_supplier_quotations",
+      "row": {
+        "id": "ohb0up27kyaymnavwnqbss4v",
+        "org_id": "4ecc472f-4152-4310-ae8d-cf8b7c52ab6d",
+        "rfq_id": null,
+        "status": "draft",
+        "created_at": "2026-07-19T08:08:34.046122",
+        "valid_till": null,
+        "supplier_id": "7f83f255-afe1-45fd-9270-443a9b9f8083",
+        "posting_date": "2026-07-19",
+        "created_by_id": "b199026b-dc76-402e-ab40-616db6068774",
+        "quotation_number": 1
+      }
+    },
+    {
+      "table_name": "erp_supplier_sanction_checks",
+      "row": null
+    },
+    {
+      "table_name": "erp_suppliers",
+      "row": {
+        "id": "demo_supp_steelcorp",
+        "gstin": "27AACCS1122G1Z4",
+        "trade": null,
+        "org_id": "demo_org",
+        "is_active": true,
+        "created_at": "2026-07-06T11:20:26.636829",
+        "pan_number": null,
+        "project_id": null,
+        "credit_limit": null,
+        "supplier_name": "SteelCorp India Ltd.",
+        "supplier_type": "local",
+        "qualification_status": "not_started",
+        "sanction_screened_at": null,
+        "vendor_risk_profile_id": null,
+        "sanction_screening_status": "not_checked",
+        "default_payment_terms_days": 30,
+        "tax_withholding_category_id": null
+      }
+    },
+    {
+      "table_name": "erp_tax_template_items",
+      "row": {
+        "id": "demo_tti_gst18",
+        "rate": 18,
+        "description": "CGST+SGST 9%+9%",
+        "tax_account_id": "demo_acc_gst_payable",
+        "tax_template_id": "demo_tax_gst18"
+      }
+    },
+    {
+      "table_name": "erp_tax_templates",
+      "row": {
+        "id": "demo_tax_gst18",
+        "name": "GST 18% (Intra-state)",
+        "org_id": "demo_org",
+        "created_at": "2026-07-06T11:19:57.825813",
+        "is_sales_tax": true,
+        "is_purchase_tax": true
+      }
+    },
+    {
+      "table_name": "erp_tax_withholding_categories",
+      "row": null
+    },
+    {
+      "table_name": "erp_tax_withholding_rates",
+      "row": null
+    },
+    {
+      "table_name": "esg_metrics",
+      "row": null
+    },
+    {
+      "table_name": "esignature_signers",
+      "row": null
+    },
+    {
+      "table_name": "fde_requests",
+      "row": {
+        "id": "wz49fn4vhjzfvlghaku0tv35",
+        "org_id": "org_001",
+        "status": "proposed_agent",
+        "user_id": "user_admin",
+        "created_at": "2026-07-04T15:34:18.365127",
+        "reuse_level": null,
+        "request_text": "I want to automatically translate incoming vendor invoices from German to English before storage",
+        "matched_label": null,
+        "response_text": "I couldn't find an existing capability that matches your request for automatic translation of vendor invoices from German to English. I propose creating a new Worker Agent, 'Vendor Invoice Translator', to fulfill this requirement.",
+        "top_candidates": null,
+        "created_worker_agent_id": "bgi7fmimlxgq6m3eoij366v1",
+        "matched_worker_agent_id": null,
+        "created_dynamic_chain_id": null
+      }
+    },
+    {
+      "table_name": "field_service_dispatches",
+      "row": null
+    },
+    {
+      "table_name": "firm_billable_rates",
+      "row": null
+    },
+    {
+      "table_name": "firm_client_portal_links",
+      "row": null
+    },
+    {
+      "table_name": "firm_client_service_lines",
+      "row": null
+    },
+    {
+      "table_name": "firm_engagement_deliverables",
+      "row": null
+    },
+    {
+      "table_name": "firm_engagements",
+      "row": null
+    },
+    {
+      "table_name": "firm_invoice_line_items",
+      "row": null
+    },
+    {
+      "table_name": "firm_invoices",
+      "row": null
+    },
+    {
+      "table_name": "firm_staff_assignments",
+      "row": null
+    },
+    {
+      "table_name": "firm_tax_cases",
+      "row": null
+    },
+    {
+      "table_name": "firm_time_entries",
+      "row": null
+    },
+    {
+      "table_name": "fm_amc_contracts",
+      "row": null
+    },
+    {
+      "table_name": "fm_asset_categories",
+      "row": {
+        "id": "2967d85c-4762-4fcd-8ed4-f57482f1b8b1",
+        "is_active": true,
+        "created_at": "2026-07-06T17:18:11.072623",
+        "category_key": "dg_set",
+        "display_name": "DG Set",
+        "typical_spec_unit": "KVA"
+      }
+    },
+    {
+      "table_name": "fm_asset_duplicate_candidates",
+      "row": null
+    },
+    {
+      "table_name": "fm_checklist_template_items",
+      "row": null
+    },
+    {
+      "table_name": "fm_checklist_templates",
+      "row": null
+    },
+    {
+      "table_name": "fm_ppm_occurrence_item_results",
+      "row": null
+    },
+    {
+      "table_name": "fm_ppm_occurrences",
+      "row": null
+    },
+    {
+      "table_name": "fm_ppm_schedules",
+      "row": null
+    },
+    {
+      "table_name": "fm_register_digitization_batches",
+      "row": {
+        "id": "e5u3tqd6z0i3nef4mqwqsq63",
+        "org_id": "obux019rsc5nzxjx93rrpc1j",
+        "status": "under_review",
+        "created_at": "2026-07-10T12:28:44.444365",
+        "reviewed_at": null,
+        "source_type": "csv",
+        "created_by_id": "gm97o33kgf5y6pvc26jo8edm",
+        "source_document_id": "i89fhga7hlro7osrvtmkunm3",
+        "total_rows_committed": 0,
+        "total_rows_extracted": 5
+      }
+    },
+    {
+      "table_name": "fm_register_digitization_rows",
+      "row": {
+        "id": "r1j5151jnx2m4j24o3aoyx3a",
+        "org_id": "obux019rsc5nzxjx93rrpc1j",
+        "batch_id": "vt4qgnnsx8wha6ixb30tjdud",
+        "confidence": 0.9,
+        "created_at": "2026-07-10T12:34:42.813922",
+        "edited_data": null,
+        "review_status": "pending",
+        "extracted_data": {
+          "make": null,
+          "model": null,
+          "warnings": [],
+          "assetName": "HVAC Unit 1",
+          "confidence": 0.9,
+          "capacitySpec": null,
+          "categoryHint": "HVAC",
+          "locationLabel": "Floor 1 East Wing"
+        },
+        "source_row_number": 1,
+        "committed_asset_id": null
+      }
+    },
+    {
+      "table_name": "fm_visitor_logs",
+      "row": null
+    },
+    {
+      "table_name": "fm_visitors",
+      "row": null
+    },
+    {
+      "table_name": "forge_project_requests",
+      "row": null
+    },
+    {
+      "table_name": "framework_controls",
+      "row": null
+    },
+    {
+      "table_name": "fraud_cases",
+      "row": {
+        "id": "rl9bslwx818k3j23u7v53n3m",
+        "title": "Test Fraud",
+        "org_id": "4ecc472f-4152-4310-ae8d-cf8b7c52ab6d",
+        "status": "reported",
+        "client_id": null,
+        "created_at": "2026-07-19T07:38:58.925194",
+        "fraud_type": "other",
+        "updated_at": "2026-07-19T07:38:58.925194",
+        "case_number": 1,
+        "description": null,
+        "reported_date": "2026-07-19",
+        "resolved_date": null,
+        "linked_risk_id": null,
+        "recorded_by_id": "b199026b-dc76-402e-ab40-616db6068774",
+        "investigator_id": null,
+        "detection_source": "other",
+        "financial_exposure": null,
+        "resolution_summary": null
+      }
+    },
+    {
+      "table_name": "gst_ai_review_reports",
+      "row": null
+    },
+    {
+      "table_name": "gst_canonical_invoice_items",
+      "row": null
+    },
+    {
+      "table_name": "gst_canonical_invoices",
+      "row": null
+    },
+    {
+      "table_name": "gst_gstin_master",
+      "row": null
+    },
+    {
+      "table_name": "gst_hsn_master",
+      "row": {
+        "id": "992d64af-6979-4ace-98d7-e4ecc1cfa9bc",
+        "created_at": "2026-07-08T14:57:11.401575",
+        "is_service": true,
+        "description": "Management consulting services",
+        "hsn_sac_code": "998311",
+        "default_gst_rate_percent": 18
+      }
+    },
+    {
+      "table_name": "gst_import_batches",
+      "row": null
+    },
+    {
+      "table_name": "gst_import_staging_rows",
+      "row": null
+    },
+    {
+      "table_name": "gst_reconciliation_matches",
+      "row": null
+    },
+    {
+      "table_name": "gst_reconciliation_runs",
+      "row": null
+    },
+    {
+      "table_name": "gst_return_periods",
+      "row": null
+    },
+    {
+      "table_name": "gst_source_profiles",
+      "row": null
+    },
+    {
+      "table_name": "gst_validation_findings",
+      "row": null
+    },
+    {
+      "table_name": "holiday_list_filings",
+      "row": null
+    },
+    {
+      "table_name": "hr_attendance_records",
+      "row": null
+    },
+    {
+      "table_name": "hr_compliance_items",
+      "row": null
+    },
+    {
+      "table_name": "hr_holidays",
+      "row": null
+    },
+    {
+      "table_name": "incidents",
+      "row": {
+        "id": "demo_inc_1",
+        "stage": "remediated",
+        "title": "Unauthorized access attempt on finance ERP login",
+        "org_id": "demo_org",
+        "category": "cybersecurity",
+        "notified": false,
+        "severity": "medium",
+        "client_id": null,
+        "created_at": "2026-07-06T11:25:06.613801",
+        "updated_at": "2026-07-06T11:25:06.613801",
+        "closed_date": "2026-06-12T00:00:00",
+        "capa_due_date": "2026-06-12T00:00:00",
+        "capa_owner_id": "demo_user_projects_hod",
+        "classification": "internal",
+        "linked_risk_id": null,
+        "reported_by_id": "demo_user_projects_hod",
+        "notify_deadline": null,
+        "linked_control_id": null,
+        "regulatory_notify_required": false
+      }
+    },
+    {
+      "table_name": "ingestion_batches",
+      "row": null
+    },
+    {
+      "table_name": "ingestion_items",
+      "row": null
+    },
+    {
+      "table_name": "instruction_commitments",
+      "row": null
+    },
+    {
+      "table_name": "instruction_execution_cache",
+      "row": null
+    },
+    {
+      "table_name": "instruction_mismatch_detections",
+      "row": null
+    },
+    {
+      "table_name": "instruction_packages",
+      "row": null
+    },
+    {
+      "table_name": "interior_ffe_items",
+      "row": {
+        "id": "pj_ffe_p1_4",
+        "sku": "UNF-BED-KG-01",
+        "org_id": "projexa_demo_org",
+        "status": "ordered",
+        "category": "furniture",
+        "depth_cm": 210,
+        "quantity": 1,
+        "width_cm": 180,
+        "height_cm": 110,
+        "item_name": "King Size Bed with Upholstered Headboard",
+        "unit_cost": 38000,
+        "vendor_id": "pj_vendor_furniture",
+        "created_at": "2026-07-12T20:48:05.938551",
+        "project_id": "projexa_demo_project",
+        "unit_price": 54000,
+        "description": "Boucle beige upholstered headboard, walnut frame",
+        "document_id": null,
+        "room_or_area": "Master Bedroom",
+        "created_by_id": "pj_user_04",
+        "lead_time_days": 21
+      }
+    },
+    {
+      "table_name": "interior_floor_plan_rooms",
+      "row": {
+        "id": "vau97o3bhl4r8ueg9w3ze0yj",
+        "name": "Living Room",
+        "polygon": [
+          {
+            "x": 0,
+            "y": 0
+          },
+          {
+            "x": 500,
+            "y": 0
+          },
+          {
+            "x": 500,
+            "y": 400
+          },
+          {
+            "x": 0,
+            "y": 400
+          }
+        ],
+        "created_at": "2026-07-09T07:37:36.624297",
+        "sort_order": 0,
+        "floor_plan_id": "yjcf65boo4eblcr8ooypkale",
+        "wall_material_id": "ed5qpoauoh1wo527ntvwq889",
+        "ceiling_height_cm": 270,
+        "floor_material_id": "yt94s8sgum7cjh90p7gxe58v",
+        "ceiling_material_id": null
+      }
+    },
+    {
+      "table_name": "interior_floor_plans",
+      "row": {
+        "id": "yjcf65boo4eblcr8ooypkale",
+        "name": "Living + Dining Layout",
+        "org_id": "projexa_demo_org",
+        "status": "draft",
+        "created_at": "2026-07-09T07:37:23.797914",
+        "project_id": "projexa_demo_project",
+        "floor_level": "Ground Floor",
+        "created_by_id": "projexa_demo_key"
+      }
+    },
+    {
+      "table_name": "interior_furniture_placements",
+      "row": null
+    },
+    {
+      "table_name": "interior_materials",
+      "row": {
+        "id": "yt94s8sgum7cjh90p7gxe58v",
+        "name": "Oak Herringbone",
+        "org_id": "projexa_demo_org",
+        "category": "flooring",
+        "color_hex": "#c19a6b",
+        "metalness": 0,
+        "roughness": 0.6,
+        "created_at": "2026-07-09T07:37:33.406332",
+        "texture_document_id": null
+      }
+    },
+    {
+      "table_name": "interior_mood_board_items",
+      "row": {
+        "id": "agxgimfhu64oceaccfkl3i5v",
+        "label": "Accent Wallpaper",
+        "notes": "Botanical print, matte finish",
+        "created_at": "2026-07-09T06:08:50.855456",
+        "sort_order": 0,
+        "document_id": null,
+        "mood_board_id": "mzcibdzrgb1eqgp7rk0ohndh"
+      }
+    },
+    {
+      "table_name": "interior_mood_boards",
+      "row": {
+        "id": "pj_mb_p1_2",
+        "title": "Master Bedroom Mood Board",
+        "org_id": "projexa_demo_org",
+        "status": "shared",
+        "created_at": "2026-07-12T20:48:05.938551",
+        "project_id": "projexa_demo_project",
+        "description": "Warm neutral palette with upholstered headboard and layered lighting",
+        "room_or_area": "Master Bedroom",
+        "created_by_id": "pj_user_04"
+      }
+    },
+    {
+      "table_name": "interview_feedback",
+      "row": null
+    },
+    {
+      "table_name": "ip_portfolio",
+      "row": null
+    },
+    {
+      "table_name": "irdai_compliance_items",
+      "row": null
+    },
+    {
+      "table_name": "it_dr_backup_verifications",
+      "row": null
+    },
+    {
+      "table_name": "it_dr_failover_tests",
+      "row": null
+    },
+    {
+      "table_name": "it_dr_plans",
+      "row": null
+    },
+    {
+      "table_name": "job_applications",
+      "row": null
+    },
+    {
+      "table_name": "knowledge_base_pages",
+      "row": {
+        "id": "m6cs26fnlzo31hquukm8y6jw",
+        "slug": "standard-operating-procedure-concrete-pour-approval",
+        "title": "Standard Operating Procedure - Concrete Pour Approval",
+        "org_id": "ve45lczmkodbiq1m20fy48r5",
+        "content": "All concrete pours require site engineer sign-off on the pre-pour checklist before batching is authorized.",
+        "version": 1,
+        "created_at": "2026-07-18T17:28:53.090593",
+        "updated_at": "2026-07-18T17:28:53.090593",
+        "is_archived": false,
+        "updated_by_id": null,
+        "parent_page_id": null
+      }
+    },
+    {
+      "table_name": "knowledge_flow_log",
+      "row": null
+    },
+    {
+      "table_name": "leave_balances",
+      "row": {
+        "id": "demo_lb_ceo_earned",
+        "year": 2026,
+        "org_id": "demo_org",
+        "user_id": "demo_user_ceo",
+        "used_days": 6,
+        "created_at": "2026-07-06T11:23:06.498056",
+        "leave_type": "Earned Leave",
+        "total_days": 24,
+        "updated_at": "2026-07-06T11:23:06.498056"
+      }
+    },
+    {
+      "table_name": "leave_policy_entries",
+      "row": null
+    },
+    {
+      "table_name": "legal_arbitration_cases",
+      "row": null
+    },
+    {
+      "table_name": "legal_matters",
+      "row": null
+    },
+    {
+      "table_name": "legal_opinions",
+      "row": null
+    },
+    {
+      "table_name": "legal_spend_entries",
+      "row": null
+    },
+    {
+      "table_name": "legal_vendors",
+      "row": null
+    },
+    {
+      "table_name": "litigation_matters",
+      "row": null
+    },
+    {
+      "table_name": "llm_response_cache",
+      "row": null
+    },
+    {
+      "table_name": "loop_definitions",
+      "row": {
+        "id": "0f4962ca-ac00-4b72-84dd-4038279c8f8a",
+        "act_what": null,
+        "is_active": false,
+        "loop_name": "Self-Coding",
+        "created_at": "2026-07-01T16:53:44.657037+00:00",
+        "analyze_how": null,
+        "description": "Writes/modifies platform code based on observed patterns. Deferred -- see Wave 5 notes.",
+        "loop_number": 2,
+        "measure_what": null,
+        "observe_what": null,
+        "execution_frequency": null,
+        "target_orchestra_layers": [
+          "task_oa",
+          "user_assistant_oa"
+        ]
+      }
+    },
+    {
+      "table_name": "loop_executions",
+      "row": {
+        "id": "larxzveer5bpj2ga2i7g49wa",
+        "loop_id": "dd5ea36c-bbc4-4dd1-922f-1a132b341ef8",
+        "created_at": "2026-07-05T03:20:58.14881+00:00",
+        "action_taken": {},
+        "triggered_by": "scheduled",
+        "analysis_result": {
+          "violations": [],
+          "unanonymizedViolationCount": 0
+        },
+        "observation_data": {
+          "lookbackDays": 30,
+          "upwardFlowsChecked": 0
+        },
+        "execution_time_ms": 132,
+        "improvement_delta": null,
+        "measurement_result": {}
+      }
+    },
+    {
+      "table_name": "loop_health_metrics",
+      "row": null
+    },
+    {
+      "table_name": "loop_improvements",
+      "row": null
+    },
+    {
+      "table_name": "mca_filings",
+      "row": null
+    },
+    {
+      "table_name": "mcp_access_codes",
+      "row": {
+        "id": "mcp_sys_orchestrator",
+        "name": "Groq Orchestrator (System)",
+        "token": "REDACTED_SENSITIVE_FIELD_NOT_USED_AS_EXAMPLE",
+        "org_id": "org_001",
+        "is_active": true,
+        "created_at": "2026-06-30T17:56:25.205946+00:00",
+        "last_used_at": null
+      }
+    },
+    {
+      "table_name": "mdm_duplicate_candidates",
+      "row": null
+    },
+    {
+      "table_name": "mdm_merge_log",
+      "row": null
+    },
+    {
+      "table_name": "message_attachments",
+      "row": null
+    },
+    {
+      "table_name": "metric_alert_rules",
+      "row": null
+    },
+    {
+      "table_name": "module_registry",
+      "row": {
+        "id": "981004b0-fe06-442d-9434-4792c2b51964",
+        "domain": "compliance",
+        "is_core": true,
+        "category": "CORE",
+        "is_active": true,
+        "tool_type": "data_access",
+        "created_at": "2026-07-03T15:00:29.946726",
+        "module_key": "compliance_items",
+        "table_name": "compliance_items",
+        "updated_at": "2026-07-03T15:00:29.946726",
+        "description": "Core statutory compliance item tracking",
+        "display_name": "Compliance Items"
+      }
+    },
+    {
+      "table_name": "module_rule_configs",
+      "row": {
+        "id": "1fdc5349-f0c2-4fe3-855e-6ad4b59a8973",
+        "rule_key": "severity_matrix",
+        "scope_id": null,
+        "is_active": true,
+        "created_at": "2026-07-03T15:06:42.128932",
+        "module_key": "risks",
+        "rule_value": {
+          "bands": [
+            {
+              "max": 6,
+              "min": 1,
+              "label": "low"
+            },
+            {
+              "max": 15,
+              "min": 7,
+              "label": "medium"
+            },
+            {
+              "max": 25,
+              "min": 16,
+              "label": "high"
+            }
+          ]
+        },
+        "scope_type": "platform",
+        "updated_at": "2026-07-03T15:06:42.128932",
+        "created_by_id": null
+      }
+    },
+    {
+      "table_name": "monitor_agents",
+      "row": {
+        "id": "10c49fa9-645f-4ba1-8645-f116885b157d",
+        "name": "approval_decision_timeliness_monitor",
+        "owner": "chief_operating_officer",
+        "is_active": true,
+        "max_retry": 3,
+        "report_to": "chief_operating_officer",
+        "created_at": "2026-07-13T08:46:39.063441",
+        "next_agent": null,
+        "timeout_ms": 21600000,
+        "updated_at": "2026-07-13T08:46:39.063441",
+        "description": "Tier 1 rule-engine monitor: checks an approval_requests decision was made within the expected timeframe.",
+        "escalate_to": "chief_operating_officer",
+        "event_types": "approval_granted,approval_rejected",
+        "execution_tier": "rule_engine",
+        "failure_action": "escalate",
+        "success_action": "log_only",
+        "escalation_level": 1,
+        "max_execution_time_ms": 86400000
+      }
+    },
+    {
+      "table_name": "monitor_execution_log",
+      "row": {
+        "id": "bijqpmbu09quozjac5o0ekwr",
+        "ok": 0,
+        "ran_at": "2026-07-14T08:33:35.943885",
+        "checked": 0,
+        "escalated": 0,
+        "monitor_name": "dispatch_completion_monitor",
+        "summary_text": "0 checked, 0 ok, 0 escalated, 0 invalid reports across 0 org(s).",
+        "invalid_reports": 0
+      }
+    },
+    {
+      "table_name": "monitor_task_state",
+      "row": null
+    },
+    {
+      "table_name": "notice_dispatches",
+      "row": null
+    },
+    {
+      "table_name": "notifications",
+      "row": {
+        "id": "notif_01",
+        "type": "deadline_reminder",
+        "title": "GST Return Due Soon",
+        "is_read": false,
+        "message": "GSTR-3B is due in 5 days. Please ensure all data is ready.",
+        "user_id": "user_admin",
+        "metadata": {},
+        "created_at": "2026-06-28T20:35:40.273331+00:00"
+      }
+    },
+    {
+      "table_name": "onboarding_steps",
+      "row": null
+    },
+    {
+      "table_name": "orchestra_executions",
+      "row": {
+        "id": "sub4vrp7dluro42ppz4eyvyc",
+        "model": "openai/gpt-oss-120b",
+        "org_id": "obux019rsc5nzxjx93rrpc1j",
+        "status": "completed",
+        "task_id": null,
+        "user_id": "gz1swnz000i7sjpm9u0rcprt",
+        "cost_usd": 3.3e-05,
+        "provider": "groq",
+        "client_id": null,
+        "created_at": "2026-07-10T12:20:07.824433+00:00",
+        "event_type": "chat.ai_thread_reply",
+        "duration_ms": 3059,
+        "prompt_tokens": 466,
+        "completion_tokens": 88,
+        "payload_purged_at": null,
+        "routing_rationale": null,
+        "orchestra_layer_id": "575ecb0d-62d1-48b0-923c-8d16359149db"
+      }
+    },
+    {
+      "table_name": "org_invite_links",
+      "row": null
+    },
+    {
+      "table_name": "org_join_code_attempts",
+      "row": null
+    },
+    {
+      "table_name": "org_join_codes",
+      "row": null
+    },
+    {
+      "table_name": "org_product_branch_enablements",
+      "row": {
+        "id": "demo_opbe_grc",
+        "org_id": "demo_org",
+        "created_at": "2026-07-06T11:17:51.304361",
+        "enabled_at": "2026-07-06T11:17:51.304361",
+        "is_enabled": true,
+        "updated_at": "2026-07-06T11:17:51.304361",
+        "disabled_at": null,
+        "enabled_by_id": "demo_user_ceo",
+        "product_branch_id": "927b94e7-f793-44b3-a9cb-6c80f0b68943"
+      }
+    },
+    {
+      "table_name": "passcode_login_attempts",
+      "row": null
+    },
+    {
+      "table_name": "performance_review_cycles",
+      "row": {
+        "id": "demo_prc_h1_2026",
+        "name": "H1 FY2026-27 Performance Review",
+        "org_id": "demo_org",
+        "status": "active",
+        "end_date": "2026-09-30",
+        "created_at": "2026-07-06T11:23:06.498056",
+        "start_date": "2026-04-01",
+        "created_by_id": "demo_user_hr_hod"
+      }
+    },
+    {
+      "table_name": "performance_reviews",
+      "row": {
+        "id": "demo_pr_accounts",
+        "org_id": "demo_org",
+        "status": "submitted",
+        "cycle_id": "demo_prc_h1_2026",
+        "strengths": "Strong attention to detail on GST reconciliations.",
+        "created_at": "2026-07-06T11:23:06.498056",
+        "updated_at": "2026-07-06T11:23:06.498056",
+        "reviewer_id": "demo_user_finance_hod",
+        "self_rating": 4,
+        "improvements": "Could improve turnaround time on month-close.",
+        "submitted_at": null,
+        "manager_rating": 4,
+        "acknowledged_at": null,
+        "employee_profile_id": "demo_emp_accounts",
+        "goals_for_next_period": "Own the AP ageing report end-to-end."
+      }
+    },
+    {
+      "table_name": "platform_applications",
+      "row": {
+        "id": "a1dab7a7-8fb5-4853-9876-a3cb72703da1",
+        "key_hash": "REDACTED_SENSITIVE_FIELD_NOT_USED_AS_EXAMPLE",
+        "is_active": true,
+        "created_at": "2026-07-14T18:49:12.723292",
+        "key_prefix": "pk_qBQB7...",
+        "updated_at": "2026-07-14T18:49:12.723292",
+        "display_name": "PROJEXA",
+        "application_key": "projexa"
+      }
+    },
+    {
+      "table_name": "pms_baseline_issue_snapshots",
+      "row": {
+        "id": "lvm1sn2u7ovsw6sqnxll55yb",
+        "issue_id": "projexa_demo_issue_foundation",
+        "created_at": "2026-07-09T05:15:33.517496",
+        "baseline_id": "sf5c4kt3wzj8qen7ob28gp52",
+        "baseline_due_date": "2026-07-06",
+        "baseline_start_date": "2026-07-01"
+      }
+    },
+    {
+      "table_name": "pms_billable_rates",
+      "row": null
+    },
+    {
+      "table_name": "pms_budget_line_items",
+      "row": null
+    },
+    {
+      "table_name": "pms_budgets",
+      "row": null
+    },
+    {
+      "table_name": "pms_estimate_points",
+      "row": null
+    },
+    {
+      "table_name": "pms_estimate_schemes",
+      "row": null
+    },
+    {
+      "table_name": "pms_issue_assignees",
+      "row": null
+    },
+    {
+      "table_name": "pms_issue_labels",
+      "row": {
+        "id": "demo_il_1",
+        "issue_id": "demo_iss_web2",
+        "label_id": "demo_label_web_urgent"
+      }
+    },
+    {
+      "table_name": "pms_issue_relations",
+      "row": {
+        "id": "projexa_demo_rel_1",
+        "org_id": "projexa_demo_org",
+        "issue_id": "projexa_demo_issue_foundation",
+        "lag_days": 0,
+        "created_at": "2026-07-09T05:11:37.377885",
+        "relation_type": "blocks",
+        "related_issue_id": "projexa_demo_issue_framing"
+      }
+    },
+    {
+      "table_name": "pms_issue_statuses",
+      "row": {
+        "id": "demo_ws_backlog",
+        "name": "Backlog",
+        "color": null,
+        "group": "backlog",
+        "org_id": "demo_org",
+        "position": 0,
+        "created_at": "2026-07-06T11:26:00.011026",
+        "is_default": false,
+        "project_id": "demo_project_website"
+      }
+    },
+    {
+      "table_name": "pms_issue_types",
+      "row": {
+        "id": "demo_it_task",
+        "icon": null,
+        "name": "Task",
+        "color": null,
+        "org_id": "demo_org",
+        "is_epic": false,
+        "created_at": "2026-07-06T11:26:00.011026",
+        "is_default": true
+      }
+    },
+    {
+      "table_name": "pms_labels",
+      "row": {
+        "id": "demo_label_web_frontend",
+        "name": "frontend",
+        "color": "#3B82F6",
+        "org_id": "demo_org",
+        "created_at": "2026-07-06T11:26:33.46713",
+        "project_id": "demo_project_website"
+      }
+    },
+    {
+      "table_name": "pms_meeting_agenda_items",
+      "row": {
+        "id": "demo_mai_1",
+        "title": "Review hero section design",
+        "issue_id": "demo_iss_web1",
+        "position": 0,
+        "meeting_id": "demo_meeting_web",
+        "duration_minutes": 10
+      }
+    },
+    {
+      "table_name": "pms_meeting_outcomes",
+      "row": {
+        "id": "demo_mo_web",
+        "notes": "Agreed to launch the hero redesign by July 15. Mobile nav fix prioritised for this sprint.",
+        "created_at": "2026-07-06T11:26:33.46713",
+        "meeting_id": "demo_meeting_web"
+      }
+    },
+    {
+      "table_name": "pms_meeting_participants",
+      "row": {
+        "id": "demo_mp_1",
+        "user_id": "demo_user_projects_hod",
+        "meeting_id": "demo_meeting_web",
+        "response_status": "accepted"
+      }
+    },
+    {
+      "table_name": "pms_meetings",
+      "row": {
+        "id": "demo_meeting_web",
+        "title": "Website Revamp - Weekly Sync",
+        "org_id": "demo_org",
+        "created_at": "2026-07-06T11:26:33.46713",
+        "project_id": "demo_project_website",
+        "scheduled_at": "2026-07-08T11:00:00",
+        "recurrence_rule": null,
+        "duration_minutes": 30
+      }
+    },
+    {
+      "table_name": "pms_milestones",
+      "row": {
+        "id": "demo_ms_web_launch",
+        "name": "Website Go-Live",
+        "org_id": "demo_org",
+        "status": "in_progress",
+        "created_at": "2026-07-06T11:26:33.46713",
+        "project_id": "demo_project_website",
+        "description": "Public launch of the redesigned website",
+        "target_date": "2026-08-31"
+      }
+    },
+    {
+      "table_name": "pms_resource_allocations",
+      "row": {
+        "id": "qj8fv9otbp7amtc3jshfecgo",
+        "org_id": "projexa_demo_org",
+        "user_id": "demo_site_engineer",
+        "end_date": "2026-07-08",
+        "issue_id": null,
+        "created_at": "2026-07-09T05:16:53.34841",
+        "project_id": "projexa_demo_project",
+        "start_date": "2026-07-08",
+        "allocated_hours_per_day": 4
+      }
+    },
+    {
+      "table_name": "pms_saved_views",
+      "row": null
+    },
+    {
+      "table_name": "pms_schedule_baselines",
+      "row": {
+        "id": "sf5c4kt3wzj8qen7ob28gp52",
+        "name": "Original Plan",
+        "org_id": "projexa_demo_org",
+        "created_at": "2026-07-09T05:15:33.517496",
+        "project_id": "projexa_demo_project",
+        "captured_by_id": "projexa_demo_key"
+      }
+    },
+    {
+      "table_name": "pms_sprint_issues",
+      "row": {
+        "id": "demo_spi_1",
+        "issue_id": "demo_iss_web2",
+        "sprint_id": "demo_sprint_web1",
+        "created_at": "2026-07-06T11:26:33.46713"
+      }
+    },
+    {
+      "table_name": "pms_sprints",
+      "row": {
+        "id": "demo_sprint_web1",
+        "goal": "Ship mobile nav fix and blog migration",
+        "name": "Sprint 5 (Jun 29 - Jul 12)",
+        "org_id": "demo_org",
+        "status": "active",
+        "end_date": "2026-07-12",
+        "created_at": "2026-07-06T11:26:33.46713",
+        "project_id": "demo_project_website",
+        "start_date": "2026-06-29",
+        "updated_at": "2026-07-06T11:26:33.46713",
+        "progress_snapshot": null
+      }
+    },
+    {
+      "table_name": "pms_time_entries",
+      "row": null
+    },
+    {
+      "table_name": "pms_wiki_pages",
+      "row": {
+        "id": "d3yqdzzu5jhouxapenz4e0l1",
+        "slug": "site-access-and-safety-briefing",
+        "title": "Site Access and Safety Briefing",
+        "org_id": "ve45lczmkodbiq1m20fy48r5",
+        "content": "All visitors must sign in at the site office and complete a 10-minute safety briefing before entering the active construction zone.",
+        "version": 1,
+        "created_at": "2026-07-18T17:28:55.634252",
+        "project_id": "g555imnoq4wihavpwc7t64um",
+        "updated_at": "2026-07-18T17:28:55.634252",
+        "is_archived": false,
+        "updated_by_id": null,
+        "parent_page_id": null
+      }
+    },
+    {
+      "table_name": "pms_workflow_transitions",
+      "row": null
+    },
+    {
+      "table_name": "policies",
+      "row": {
+        "id": "tebw4nvv405yj9y7fiqciwfy",
+        "title": "Test Policy",
+        "org_id": "4ecc472f-4152-4310-ae8d-cf8b7c52ab6d",
+        "status": "draft",
+        "history": [
+          {
+            "date": "19/7/2026",
+            "note": "Initial draft",
+            "version": "v1.0",
+            "editedBy": "PROJEXA (Phase 1 E2E test org)"
+          }
+        ],
+        "version": "v1.0",
+        "category": "hr",
+        "client_id": null,
+        "created_at": "2026-07-19T07:38:57.068801",
+        "updated_at": "2026-07-19T07:38:57.068801",
+        "created_by_id": "b199026b-dc76-402e-ab40-616db6068774",
+        "attestation_rate": 0
+      }
+    },
+    {
+      "table_name": "posh_annual_reports",
+      "row": null
+    },
+    {
+      "table_name": "posh_committee",
+      "row": {
+        "id": "demo_posh_1",
+        "role": "Presiding Officer",
+        "org_id": "demo_org",
+        "client_id": null,
+        "created_at": "2026-07-06T11:23:06.498056",
+        "member_name": "Neha Gupta"
+      }
+    },
+    {
+      "table_name": "posh_complaints",
+      "row": null
+    },
+    {
+      "table_name": "problem_records",
+      "row": null
+    },
+    {
+      "table_name": "problem_tickets",
+      "row": null
+    },
+    {
+      "table_name": "product_branch_modules",
+      "row": {
+        "id": "8a011b25-dd40-45d5-8a20-5f678d8397f3",
+        "created_at": "2026-07-03T15:00:29.946726",
+        "is_enabled": true,
+        "module_key": "compliance_items",
+        "product_branch_id": "927b94e7-f793-44b3-a9cb-6c80f0b68943"
+      }
+    },
+    {
+      "table_name": "product_branches",
+      "row": {
+        "id": "23728f64-58ab-4d9c-ab1f-6891f92d2ab7",
+        "icon": "ShieldCheck",
+        "domain": "facilities_management",
+        "status": "building",
+        "tagline": "Every building, every shift, covered",
+        "is_active": true,
+        "branch_key": "facilities_management",
+        "build_tier": "ground_up",
+        "created_at": "2026-07-06T13:40:01.32538",
+        "description": "Facilities management and security guard services: assets, tickets, guard-shift rostering. Not yet built -- zero existing schema.",
+        "display_name": "VERI FM AI OS",
+        "launch_order": 23,
+        "parent_domain": "operations"
+      }
+    },
+    {
+      "table_name": "prompt_cache_metrics",
+      "row": null
+    },
+    {
+      "table_name": "prompt_eval_cases",
+      "row": null
+    },
+    {
+      "table_name": "prompt_eval_runs",
+      "row": null
+    },
+    {
+      "table_name": "rbi_compliance_items",
+      "row": null
+    },
+    {
+      "table_name": "related_party_transactions",
+      "row": null
+    },
+    {
+      "table_name": "report_definitions",
+      "row": {
+        "id": "3c70b75e-0bf1-43a9-a604-ba9fe2c07117",
+        "name": "Mood Board Approval Report",
+        "org_id": null,
+        "status": "built",
+        "category": "software_report",
+        "is_active": true,
+        "created_at": "2026-07-13T16:42:23.95771",
+        "created_by": "system",
+        "updated_at": "2026-07-13T16:42:23.95771",
+        "description": "Draft/shared/approved status of every mood board for a project.",
+        "periodicity": "weekly",
+        "data_gap_note": null,
+        "execution_type": "deterministic_formula",
+        "output_formats": [
+          "table"
+        ],
+        "classifications": [
+          "interior_design",
+          "project"
+        ],
+        "execution_config": {
+          "kind": "formula",
+          "formulaKey": "interior_mood_board_approval_report"
+        },
+        "periodicity_config": {
+          "dayOfWeek": 1
+        },
+        "promoted_from_context": null
+      }
+    },
+    {
+      "table_name": "report_item_actions",
+      "row": null
+    },
+    {
+      "table_name": "report_schedules",
+      "row": null
+    },
+    {
+      "table_name": "risk_anomaly_events",
+      "row": null
+    },
+    {
+      "table_name": "risks",
+      "row": {
+        "id": "demo_risk_1",
+        "title": "GST input credit mismatch risk due to vendor non-compliance",
+        "impact": 4,
+        "org_id": "demo_org",
+        "status": "open",
+        "category": "regulatory",
+        "owner_id": "demo_user_compliance_hod",
+        "client_id": null,
+        "created_at": "2026-07-06T11:25:06.613801",
+        "likelihood": 3,
+        "owner_dept": null,
+        "updated_at": "2026-07-06T11:25:06.613801",
+        "linked_control_ids": []
+      }
+    },
+    {
+      "table_name": "sales_commission_accruals",
+      "row": null
+    },
+    {
+      "table_name": "saved_reports",
+      "row": null
+    },
+    {
+      "table_name": "scoped_delegations",
+      "row": null
+    },
+    {
+      "table_name": "sebi_compliance_items",
+      "row": null
+    },
+    {
+      "table_name": "secretarial_audits",
+      "row": null
+    },
+    {
+      "table_name": "shared_pool_allocations",
+      "row": null
+    },
+    {
+      "table_name": "sso_configurations",
+      "row": null
+    },
+    {
+      "table_name": "stage0_sources",
+      "row": null
+    },
+    {
+      "table_name": "task_agent_executions",
+      "row": null
+    },
+    {
+      "table_name": "task_capabilities",
+      "row": null
+    },
+    {
+      "table_name": "task_chat_messages",
+      "row": {
+        "id": "n64gb355zqgrq3vd25yc0fhs",
+        "role": "system",
+        "content": "No LLM provider is configured for this organisation (task_oa layer). Set one up in Settings -> AI Configuration.",
+        "task_id": "wupyxfcmtmxklevhva7tz4o3",
+        "created_at": "2026-07-02T06:47:25.547852+00:00"
+      }
+    },
+    {
+      "table_name": "task_reflections",
+      "row": null
+    },
+    {
+      "table_name": "task_register",
+      "row": null
+    },
+    {
+      "table_name": "ticket_intelligence_action_items",
+      "row": null
+    },
+    {
+      "table_name": "ticket_intelligence_items",
+      "row": null
+    },
+    {
+      "table_name": "ticket_satisfaction_surveys",
+      "row": null
+    },
+    {
+      "table_name": "token_usage_ledger",
+      "row": null
+    },
+    {
+      "table_name": "tool_health_events",
+      "row": null
+    },
+    {
+      "table_name": "training_assessment_attempts",
+      "row": null
+    },
+    {
+      "table_name": "training_assessments",
+      "row": null
+    },
+    {
+      "table_name": "training_completions",
+      "row": null
+    },
+    {
+      "table_name": "training_courses",
+      "row": null
+    },
+    {
+      "table_name": "training_enrollments",
+      "row": null
+    },
+    {
+      "table_name": "training_lessons",
+      "row": null
+    },
+    {
+      "table_name": "training_modules",
+      "row": null
+    },
+    {
+      "table_name": "training_path_assignments",
+      "row": null
+    },
+    {
+      "table_name": "training_path_courses",
+      "row": null
+    },
+    {
+      "table_name": "training_questions",
+      "row": null
+    },
+    {
+      "table_name": "user_active_sessions",
+      "row": null
+    },
+    {
+      "table_name": "user_client_access",
+      "row": null
+    },
+    {
+      "table_name": "veri_meeting_action_items",
+      "row": null
+    },
+    {
+      "table_name": "veri_meeting_share_links",
+      "row": null
+    },
+    {
+      "table_name": "veri_meetings",
+      "row": {
+        "id": "demo_co_1_sharma_mtg_draft",
+        "title": "Weekly Ops Sync - Sharma & Associates LLP",
+        "agenda": [],
+        "org_id": "demo_co_1_sharma",
+        "status": "draft",
+        "minutes": null,
+        "attendees": [],
+        "system_id": null,
+        "ai_summary": null,
+        "created_at": "2026-07-07T09:01:01.606392",
+        "updated_at": "2026-07-07T09:01:01.606392",
+        "meeting_type": "team",
+        "published_at": null,
+        "scheduled_at": "2026-07-07T09:01:01.606392",
+        "created_by_id": "demo_co_1_sharma_u0",
+        "ai_generated_at": null,
+        "minutes_history": [],
+        "published_by_id": null,
+        "ai_key_decisions": [],
+        "context_entity_id": null,
+        "context_entity_type": null,
+        "ai_suggested_action_items": []
+      }
+    },
+    {
+      "table_name": "veri_reward_achievement_definitions",
+      "row": {
+        "id": "60b565a6-ab9d-40b1-a067-5ca77a4dfb31",
+        "icon": "CheckCircle2",
+        "org_id": null,
+        "context": "product_engagement",
+        "is_active": true,
+        "created_at": "2026-07-07T19:08:45.81583",
+        "updated_at": "2026-07-07T19:08:45.81583",
+        "description": "Complete your first compliance item",
+        "display_name": "First Step",
+        "target_value": 1,
+        "points_reward": 25,
+        "achievement_key": "first_compliance_item"
+      }
+    },
+    {
+      "table_name": "veri_reward_achievement_unlocks",
+      "row": null
+    },
+    {
+      "table_name": "veri_reward_points_ledger",
+      "row": null
+    },
+    {
+      "table_name": "veri_reward_referrals",
+      "row": null
+    },
+    {
+      "table_name": "veri_reward_streaks",
+      "row": null
+    },
+    {
+      "table_name": "visitor_events",
+      "row": {
+        "id": "c7d86e8729xnduoq2teetib7",
+        "page": "/",
+        "section": null,
+        "metadata": null,
+        "created_at": "2026-07-07T11:53:28.594249",
+        "event_type": "page_view",
+        "visitor_id": "v_mralbkyo_9kv237z0",
+        "product_key": "cognitive"
+      }
+    },
+    {
+      "table_name": "visitor_sessions",
+      "row": {
+        "id": "i13jxei6t9w905cmwt03tswk",
+        "referrer": "https://example-referrer.test/",
+        "last_page": "/",
+        "first_page": "/",
+        "user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.0 Safari/537.36",
+        "visitor_id": "v_mralbkyo_9kv237z0",
+        "visit_count": 1,
+        "converted_at": null,
+        "last_seen_at": "2026-07-07T11:53:28.469156",
+        "first_seen_at": "2026-07-07T11:53:28.469156",
+        "converted_org_id": null
+      }
+    },
+    {
+      "table_name": "voice_memo_action_items",
+      "row": null
+    },
+    {
+      "table_name": "webhook_deliveries",
+      "row": null
+    },
+    {
+      "table_name": "whistleblower_cases",
+      "row": null
+    },
+    {
+      "table_name": "worker_agent_domain_groups",
+      "row": {
+        "id": "08a9c8dd-a6db-432f-8673-bdb7ff50d38d",
+        "key": "construction",
+        "name": "Construction",
+        "created_at": "2026-07-13T05:46:35.11683",
+        "description": "Construction project intelligence capabilities (budget/schedule risk, progress, KPI, dashboard)."
+      }
+    },
+    {
+      "table_name": "worker_agent_domain_index",
+      "row": {
+        "id": "7c499588-58c5-4b7b-a253-bd8952191b73",
+        "created_at": "2026-07-01T16:38:10.988424+00:00",
+        "domain_path": "Cross-Cutting > Data Access",
+        "worker_agent_id": "c6703fea-7077-49b3-bdce-002f3fcbd076"
+      }
+    },
+    {
+      "table_name": "worker_agent_learnings",
+      "row": null
+    },
+    {
+      "table_name": "worker_agent_usage_log",
+      "row": null
+    },
+    {
+      "table_name": "worker_agent_versions",
+      "row": null
+    },
+    {
+      "table_name": "workspace_memory_capsule_events",
       "row": null
     }
   ]
