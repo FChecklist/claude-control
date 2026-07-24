@@ -1,0 +1,156 @@
+meta:
+  title: VERIDIAN POLICY ENGINE -- Shared Decision Schema (Phase 2 deliverable)
+  created: '2026-07-24'
+  produced_by_task: task-20260724-115041-phase2-give-policy-engine-preflight-guar
+  instruction: INS-20260724-113032-8032
+  scope_of_this_document: 'Closes phase_2_policy_rule_decision_unification in
+    ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml (engines 5/6/7: Policy Engine, Rule Engine,
+    Decision Engine). Same method as CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml: real investigation of the
+    4 files this phase names (scripts/preflight-guard.py, repos/compliance-tracker/src/lib/
+    policy-enforcement-engine.ts, scripts/risk-tier.py, repos/compliance-tracker/src/lib/explainability/
+    ai-decision-explanation.ts) before designing anything -- every field below is traced to a real,
+    read shape, not invented.'
+  repo_boundary_honestly_stated: 'preflight-guard.py and risk-tier.py are real, live, verified-on-disk
+    (per 20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml''s own engine_inventory row 5/7) but were never
+    committed to claude-control''s git history before this task (confirmed by git log --all and
+    git ls-tree origin/master -- both absent; one of 26 live /opt/veridian/scripts/*.py files in the same
+    untracked state, a pre-existing gap this task does not attempt to close wholesale). This task adds
+    exactly the 2 files this phase names to git for the first time, alongside the new shared module both
+    now use. policy-enforcement-engine.ts and ai-decision-explanation.ts live in the separate
+    FChecklist/compliance-tracker repo, whose live checkout (/opt/veridian/repos/compliance-tracker) was
+    found already dirty with unrelated in-flight changes from other processes at investigation time --
+    consistent with Phase 1''s own precedent (reused compliance-tracker''s mechanisms, never edited its
+    source) and this session''s "investigate before overwriting shared state" discipline, this document
+    designs the schema those 2 TS files should adopt and records their REAL current shape below, but does
+    not itself edit them -- that adoption is compliance-tracker''s own next PR to make, same deferral
+    posture Phase 1 used for capability-registry-service.ts''s findSimilar() embedding-fallback stage.'
+
+# ============================================================================
+# REAL CURRENT SHAPES -- read directly from the 4 named files before any
+# schema field below was written, so the shared schema is a genuine
+# generalization of what already exists, not a fifth incompatible shape.
+# ============================================================================
+real_current_shapes:
+  preflight_guard_py:
+    path: scripts/preflight-guard.py
+    shape: '{"proceed": bool, "reason"?: string, "detail"?: string} -- printed to stdout, exit code 0/1.
+      fail(reason, detail) / ok(detail) are the only 2 producers. 7 real checks compose into one decision:
+      circuit_breaker, tight_task_schema, disk, memory, worktree_locked, crontab_unauthorized_change,
+      credit_accountant_rejected, proxy_unreachable/budget_exhausted, openrouter_balance_exhausted,
+      canary_call_failed.'
+  policy_enforcement_engine_ts:
+    path: repos/compliance-tracker/src/lib/policy-enforcement-engine.ts
+    shape: '{allowed: boolean, category: "personal_use"|"prompt_injection"|"out_of_domain"|"ok", reason?:
+      string} -- enforcePolicy() composes 3 checks (checkDomainValidity, checkPromptInjection,
+      classifyBusinessPurpose) into one PolicyDecision, first non-allowed wins.'
+  risk_tier_py:
+    path: scripts/risk-tier.py
+    shape: 'tier ("tier1"|"tier2") on stdout line 1, reasons list on stderr -- classifies a git diff by
+      path-pattern match (TIER2_PATH_PATTERNS: migrations/auth/permission/payment/billing/rls/security/.env)
+      plus a heavy-deletion heuristic (>20 deletions AND >2x additions).'
+  ai_decision_explanation_ts:
+    path: repos/compliance-tracker/src/lib/explainability/ai-decision-explanation.ts
+    shape: 'AiDecisionExplanation {summary: string, reasoning: string, recommendedAction?: string,
+      confidence?: "low"|"medium"|"high", rejectedAlternatives?: [{option,reason}], assumptions?: string[],
+      businessImpact?: string} -- a plain converter-function shape (explainCrmLeadDecision/
+      explainCrmOpportunityDecision/explainTaskPrediction), not a service with its own DB table.'
+
+# ============================================================================
+# SHARED DECISION SCHEMA -- the one envelope every gate above can emit. Every
+# field is either a rename/passthrough of a field one of the 4 shapes above
+# already has, or additive metadata needed to compose them (source_gate,
+# schema_version) -- nothing here invents behavior the real gates don't have.
+# ============================================================================
+policy_decision_schema:
+  source_gate:
+    type: string
+    required: true
+    description: 'Which real gate produced this decision, e.g. "preflight-guard.py:check_disk",
+      "policy-enforcement-engine.ts:enforcePolicy", "risk-tier.py:classify_risk_tier". Lets a caller trace
+      a decision back to the exact deterministic check that made it -- no gate here is an LLM classifier.'
+  decision:
+    type: string, enum
+    values: [allow, deny, review]
+    required: true
+    description: 'Generalizes preflight-guard.py''s proceed (true->allow, false->deny) and
+      policy-enforcement-engine.ts''s allowed (true->allow, false->deny). "review" is new -- it is what
+      risk-tier.py''s tier2 and closureReviewCheck''s escalation_required band both really mean today
+      (not an outright deny, a required human checkpoint) but neither had a shared vocabulary word for.'
+  reason_code:
+    type: string
+    required: true
+    description: 'Stable machine-matchable code -- directly reuses preflight-guard.py''s existing reason
+      strings (circuit_breaker_tripped, disk_low, memory_low, ...) and policy-enforcement-engine.ts''s
+      category values (personal_use, prompt_injection, out_of_domain) verbatim where one already exists.
+      "ok" / "ok_tier1" for a clean allow, matching each gate''s own existing convention for the pass case.'
+  detail:
+    type: string
+    required: false
+    description: 'Human-readable elaboration -- passthrough of preflight-guard.py''s detail and
+      policy-enforcement-engine.ts''s reason fields verbatim.'
+  risk_tier:
+    type: string, enum, nullable
+    values: [tier1, tier2, null]
+    required: false
+    description: 'Populated only by risk-tier.py-shaped decisions (or any future gate that classifies by
+      blast-radius rather than allow/deny). Null for policy-enforcement-engine.ts-shaped decisions, which
+      have no tier concept -- null is a real, valid absence, not an unpopulated field.'
+  capability_match:
+    type: object, nullable
+    item_schema: '{ capability_name: string, ai_required: bool, business_rules_registered: bool }'
+    required: false
+    description: 'Populated when the decision was informed by a Phase 1 capability_registry lookup (see
+      dependency_table entry "Capability Registry Engine (3) -> Policy Engine (5)" in
+      20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml, mechanism now real via scripts/decision-service.py --
+      see decision_service_contract below). Null when no capability lookup was performed for this decision.'
+  explanation:
+    type: object, nullable
+    item_schema: 'Same shape as AiDecisionExplanation above (summary/reasoning/recommendedAction/confidence/
+      rejectedAlternatives/assumptions/businessImpact), field-for-field -- this is the literal "generalize
+      risk-tier.py + ai-decision-explanation.ts into one callable decision service" unification: any
+      decision (Python or TS side) can carry the exact same explanation envelope the TS UI card
+      (AiDecisionExplanationCard.tsx) already knows how to render. Null when the caller only needs the
+      bare decision, not a rendered explanation (e.g. a hot-path preflight check with no UI consumer).'
+  evidence:
+    type: array of string
+    required: false
+    description: 'Passthrough of risk-tier.py''s reasons[] (path-pattern matches, heavy-deletion heuristic)
+      or any other gate''s list of concrete signals that led to the decision -- always real, matched
+      strings, never a fabricated justification.'
+  schema_version:
+    type: string
+    required: true
+    description: 'Literal "2026-07-24-v1" for every decision emitted by scripts/policy_decision.py. Lets a
+      future consumer detect and migrate an older decision shape without guessing.'
+
+# ============================================================================
+# DECISION SERVICE CONTRACT -- the "one callable decision service" this
+# phase's objective asks for, generalizing risk-tier.py + ai-decision-
+# explanation.ts. Implemented as scripts/decision-service.py (Python, callable
+# from any server-side gate) -- a TS-side equivalent is deferred to
+# compliance-tracker's own PR per repo_boundary_honestly_stated above, but the
+# schema is identical so that port is a direct field-for-field translation,
+# not a redesign.
+# ============================================================================
+decision_service_contract:
+  function_signature: 'decide(source_gate: str, decision: "allow"|"deny"|"review", reason_code: str,
+    detail: str = "", risk_tier: str|None = None, capability_match: dict|None = None,
+    explanation: dict|None = None, evidence: list[str]|None = None) -> PolicyDecision'
+  cli_entrypoints:
+    - 'scripts/decision-service.py risk-tier <workspace> <base_ref> -- wraps risk-tier.py''s real
+      classify_risk_tier() logic (unchanged heuristics) and returns a full policy_decision_schema envelope
+      including an auto-generated explanation (summary/reasoning/evidence) instead of a bare tier string.
+      risk-tier.py itself keeps its original stdout contract unchanged (tier string on stdout, reasons on
+      stderr) for supervisor-entrypoint.sh''s existing `TIER=$(...)` capture -- this is the additive,
+      richer sibling call, not a breaking replacement.'
+    - 'scripts/decision-service.py capability-check <intent_text> -- composes
+      scripts/superboss-register.py lookup-capability (Phase 1, live) with policy_decision_schema''s
+      capability_match field, implementing the dependency_table edge "Capability Registry Engine (3) ->
+      Decision Engine (7)" for the first time as running code.'
+  non_goals_this_phase: 'Does not modify policy-enforcement-engine.ts or ai-decision-explanation.ts in the
+    compliance-tracker repo (see repo_boundary_honestly_stated). Does not implement the embedding-similarity
+    resolution stage (Phase 1''s own deferred item, unchanged here).'
+
+registration:
+  knowledge_engine_query_command: 'python3 scripts/superboss-register.py query-knowledge "phase_2_policy_rule_decision_unification" --tag domain:veridian-20-engine-10-gateway'
+  master_index_registry_id: phase_2_policy_rule_decision_unification
