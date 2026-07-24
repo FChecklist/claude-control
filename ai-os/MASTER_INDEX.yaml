@@ -718,6 +718,27 @@ quick_reference:
   summary: Live alert surface. Written by health-check-15min.py (systemd unit failures, stalled checkpoints, Mother
     Router DB reachability, disk/mem,...
 registries:
+- id: engines_gateways_architecture
+  type: engine_inventory_capability_schema_and_phase_plan
+  path: ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml + ai-os/CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml
+  scope: 'Phase 0 (task-20260724-053213, instruction INS-20260724-053123-0e5a) of the VERIDIAN 20-ENGINE/
+    10-GATEWAY architecture: a real, verified inventory mapping all 20 named engines (Intent, Context,
+    CapabilityRegistry, Planning, Policy, Rule, Decision, Workflow, Automation, Integration, Document,
+    Notification, Data, Metadata, Knowledge, Learning, UIComposition, Analytics, Audit, Observability) to
+    existing prior art in compliance-tracker/projexa/veda-advisors + ai-os/+scripts, produced by
+    ai-os-scripts/generate_engines_gateways_inventory.py (every exists_as path live-verified). Result:
+    19/20 partial coverage, 1/20 full (Knowledge Engine) -- zero engines are NONE, confirming the Owner''s
+    standing instruction that most engines already exist under a different name. Also designs the
+    Capability Registry Engine''s PART4 schema (the piece flagged as most important missing) with a
+    lookup_contract and 5 real populated capabilities, verified by
+    ai-os-scripts/generate_capability_registry_candidates.py. Distinct from
+    registries.auditor_engine (Engines 19/20, Audit/Observability, cross-linked not re-planned) and
+    unrelated to compliance-tracker/ai-os/engines/ENGINES.yaml (a namespace collision, confirmed this
+    session, not prior art for this registry).'
+  status: phase_0_complete_phase_1_plus_not_yet_dispatched
+  query_command: python3 scripts/superboss-register.py query-knowledge "engines_gateways_architecture" --tag domain:engines_gateways_architecture
+  next_phase: 'phase_1_capability_registry_live_wiring per ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml
+    phases[] -- dispatched as a separate task, not part of this registry entry''s own scope.'
 - id: self_sustaining_system_engine
   type: knowledge_registry_and_software_catalog
   path: ai-os/memory/superboss-register.sqlite (knowledge_engine table) + ai-os/SOFTWARE_CATALOG.yaml
@@ -1842,6 +1863,55 @@ registries:
   status: live_2026_07_22
   note: consolidates and formalizes cross_system_memory_map_2026_07_22 (already in this same file) into one authoritative
     design document -- read this first for 'is layer X's memory real or designed'
+- id: testing_engine_irvf
+  type: route_registry_coverage_methodology_and_phase_plan
+  path: ai-os/ROUTE_REGISTRY_SCHEMA_2026-07-24.yaml + ai-os/ROUTE_COVERAGE_METHODOLOGY_2026-07-24.yaml
+    + ai-os/TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml
+  scope: 'Phase 0 (task-20260724-063645, instruction INS-20260724-063539-9dc8) of the VERIDIAN TESTING ENGINE
+    / IRVF: a real Route Registry schema (route_id/source/destination/expected_path/test_status/
+    trace_verification_status/replay_status) populated with 5 real routes -- 1:1 with
+    registries.engines_gateways_architecture''s Capability Registry (5/5 populated_capabilities covered,
+    29/29 cited paths live-verified by ai-os-scripts/generate_route_registry_candidates.py); a Route Coverage
+    Methodology covering all 9 Owner-directive coverage percentages (capability/route/integration/dependency/
+    workflow/business-rule/metadata/API/UI -- 5 MEASURABLE_TODAY[_PARTIAL], 4 explicit NOT_YET_MEASURABLE with
+    named gaps) plus a gateway matrix, service matrix, and route completeness score; and a 4-phase build plan
+    (route test auto-generation, distributed trace verification wiring, route replay storage+diff, dependency
+    graph validation) with 2 hard external dependencies: registries.engines_gateways_architecture''s
+    Capability Registry live-wiring phase, and the VERIDIAN Auditor Engine''s Phase 7 PART6 observability
+    layer (ai-os/AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml -- read via git history from its own
+    not-yet-merged PR branch worker/task-20260724-042659-veridian-auditor-engine-phase0-inventory, commit
+    cf906ac, since it was not yet on master at the time this task ran). Explicitly cannot reach 100% route
+    coverage until the 20-Engines/10-Gateways architecture itself is live -- see
+    TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml''s own ceiling_this_framework_cannot_exceed_yet field.'
+  status: phase_0_complete_phase_1_plus_not_yet_dispatched
+  query_command: python3 scripts/superboss-register.py query-knowledge "route_registry" --tag domain:testing_engine_irvf
+  next_phase: 'phase_1_route_test_autogeneration per ai-os/TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml phases[]
+    -- dispatched as a separate task, not part of this registry entry''s own scope. Hard-blocked in part on
+    registries.engines_gateways_architecture''s own next_phase (phase_1_capability_registry_live_wiring)
+    landing first.'
+- id: terminology_standardization
+  type: variable_dictionary_guardrail_and_phase_plan
+  path: ai-os/VARIABLE_DICTIONARY_2026-07-24.yaml + ai-os/TERMINOLOGY_GUARDRAIL_2026-07-24.py
+    + ai-os/TERMINOLOGY_STANDARDIZATION_PHASE_PLAN_2026-07-24.yaml
+  scope: 'Phase 0 (task-20260724-070131, instruction INS-20260724-070047-3a2d) of VERIDIAN Terminology
+    Standardization: a real Variable Dictionary (320 <Entity.Attribute> placeholders, one per real column of
+    the top-20 most-referenced tables in registries.database_catalog''s 444, ranked by a combined declared-FK
+    + naming-convention "_id" reference-count score -- only 7/444 tables carry a declared SQL FK, so the
+    naming-convention signal dominates; example values sourced from real dev-seed rows fetched live via
+    Supabase MCP against the verdian-ai project backing compliance-tracker''s schema.ts, 182/320 real,
+    138/320 clearly-marked synthetic, sensitive columns like password_hash always forced synthetic); a
+    designed (not yet CI-wired) Terminology Guardrail lint script flagging hardcoded human-example literals
+    (placeholder company/person names, fake email domains, bare ISO dates, PAN/GSTIN-shaped literals) not
+    expressed as a registered placeholder, plus unregistered-placeholder-token drift, smoke-tested against 3
+    real compliance-tracker files (communication-drafting-service.ts, orchestra-mock-data.ts, db/seed.ts --
+    36 real findings); and a 6-phase rollout plan (dictionary coverage expansion, directory-scoped rollout,
+    CI enforcement wiring modeled on compliance-tracker ci.yml''s real guardrail-presence/asset-registry
+    -coverage/metadata-index-coverage jobs, migration of existing hardcoded examples, full enforcement) with
+    an 8-edge dependency table.'
+  status: phase_0_complete_phase_1_plus_not_yet_dispatched
+  query_command: python3 scripts/superboss-register.py query-knowledge "variable_dictionary" --tag domain:terminology_standardization
+  next_phase: 'phase_1_dictionary_coverage_expansion per ai-os/TERMINOLOGY_STANDARDIZATION_PHASE_PLAN_2026-07-24.yaml
+    phases[] -- dispatched as a separate task, not part of this registry entry''s own scope.'
 tree_lineage:
   tree1_audit_tree:
     path: /opt/veridian/repos/compliance-tracker/ai-os/audit-tree/

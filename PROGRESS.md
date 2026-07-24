@@ -39,7 +39,32 @@
   completed both succeeded. `scripts/veridian-task.py` and `scripts/worker-entrypoint.sh` newly
   tracked in this repo (previously live-only at /opt/veridian/scripts/, with no in-sync tracked
   source -- compliance-tracker's copy is present but hundreds of lines stale).
+- [x] 2026-07-24 (task-20260724-074329 gap-close, against this task's own review.json rejection
+  of PR #11): fixed the exact regression the reviewer caught -- SCOPE 3's two layers weren't
+  reconciled. `worker-entrypoint.sh`'s genuine-no-op branch (`AHEAD_COUNT==0`) still called
+  `checkpoint --status completed` directly, which SCOPE 3's own new guard in `veridian-task.py`
+  now hard-rejects (no prior `pending_review` in history) -- silently, since this script never
+  checked that exit code, leaving a first-run no-op task stuck at in_progress with its systemd
+  service disabled. Fix: route the no-op through `checkpoint --status pending_review` + start the
+  supervisor, same pattern as the non-no-op path, instead of inventing a new terminal status
+  (rejected that option: several other scripts hardcode which statuses are "terminal" --
+  sync-controller-back.py, queue-dispatcher.py, health-check-15min.py -- a status they don't
+  recognize would reproduce the same stuck-task bug, just moved). Confirmed
+  supervisor-entrypoint.sh does not special-case an empty diff but always reaches a terminal
+  checkpoint regardless (blocked via the AI reviewer correctly declining to review nothing, or via
+  its own failed-merge fallback), so this does not create a new silent-stuck-task class. Added
+  `tests/worker_noop_pending_review_test.sh` (extracts the real NOOP-COMPLETION-BLOCK from the
+  live script under a real git fixture + mocked python3/systemctl, same convention as
+  `tests/supervisor_merge_detection_test.sh`) -- verified it fails against the pre-fix code
+  (checkpoints `completed` directly) and passes against the fix. Applied identically to the live
+  `/opt/veridian/scripts/worker-entrypoint.sh` so the actual running system is fixed, not just
+  tracked source. Commit 8202a00, pushed to this same PR #11 branch.
 
 ## Remaining
 - [x] Commit + push + PR (#11: https://github.com/FChecklist/claude-control/pull/11, separate from #10)
+- [x] No-op pending_review gap fixed and pushed (commit 8202a00, 2026-07-24)
+- [ ] Merge master into this branch to resolve the conflict from PR #12/#18/#19 having merged
+      since PR #11 was opened (PROGRESS.md was the only real conflict -- task-scoped log content,
+      not shared; resolved by keeping this branch's own log, same precedent as the PR #12 conflict
+      resolution task). Push resolution, re-verify `gh pr view 11` shows mergeable=MERGEABLE.
 - [ ] Final checkpoint summary to Owner
