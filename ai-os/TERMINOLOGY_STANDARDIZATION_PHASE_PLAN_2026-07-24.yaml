@@ -131,6 +131,8 @@ phases:
 
   - id: phase_2_directory_scoped_rollout
     name: Directory-scoped guardrail rollout (manual runs, not yet CI-blocking)
+    status: done
+    completed_by_task: task-20260724-115921-phase2-directory-scoped-guardrail-rollou
     scope:
       - "Run ai-os/TERMINOLOGY_GUARDRAIL_2026-07-24.py across compliance-tracker directories in priority
          order, each a separate sub-phase with its own findings report committed to
@@ -149,6 +151,66 @@ phases:
     dependency_mechanism: "Direct mechanism dependency -- Phase 2 runs the exact
       ai-os/TERMINOLOGY_GUARDRAIL_2026-07-24.py script this phase built and smoke-tested, with no new
       scanning logic, only a wider --file argument list per directory sweep."
+    real_evidence_2026-07-24:
+      target_repo_commit: c4d74e8766cec27c7a349aea627f574650dde241
+      dictionary_used: "ai-os/VARIABLE_DICTIONARY_2026-07-24.yaml, Phase 1's top-60-table tier (894 entries)
+        -- unchanged this phase, per the soft accuracy dependency in dependency_table."
+      scanner_unchanged: true
+      per_directory_baselines:
+        - slug: src-lib-services
+          priority: 1
+          files_scanned: 199
+          total_findings: 129
+          findings_by_category: {hardcoded_iso_date: 127, placeholder_company_name: 2}
+          dictionary_gap_candidate_findings: 3
+          findings_report: ai-os/guardrail-findings/src-lib-services-2026-07-24.json
+          classification: required_fix_candidate
+        - slug: src-lib-toplevel
+          priority: 2
+          files_scanned: 88
+          total_findings: 131
+          findings_by_category: {hardcoded_iso_date: 103, placeholder_company_name: 27, indian_pan_literal: 1}
+          dictionary_gap_candidate_findings: 1
+          findings_report: ai-os/guardrail-findings/src-lib-toplevel-2026-07-24.json
+          classification: required_fix_candidate
+        - slug: src-app-api
+          priority: 3
+          files_scanned: 910
+          total_findings: 50
+          findings_by_category: {hardcoded_iso_date: 50}
+          dictionary_gap_candidate_findings: 0
+          findings_report: ai-os/guardrail-findings/src-app-api-2026-07-24.json
+          classification: required_fix_candidate
+        - slug: src-seed-and-test-fixtures
+          priority: 4
+          files_scanned: 144
+          total_findings: 178
+          findings_by_category: {hardcoded_iso_date: 139, placeholder_email_domain: 20, indian_gstin_literal: 13,
+            placeholder_company_name: 5, indian_pan_literal: 1}
+          dictionary_gap_candidate_findings: 0
+          findings_report: ai-os/guardrail-findings/src-seed-and-test-fixtures-2026-07-24.json
+          classification: exemption_candidate
+          classification_note: "Per this phase's own scope item 4 -- defaults into the Phase 3 exemption
+            file rather than a required fix. Phase 2 classifies only; creating
+            ai-os/registry/terminology-guardrail-exemptions.yaml in the compliance-tracker repo is Phase 3
+            scope (external_depends_on)."
+      migration_debt_baseline:
+        total_files_scanned: 1341
+        total_findings: 488
+        required_fix_candidate_findings: 310
+        exemption_candidate_findings: 178
+        note: "Phase 4's 'migration debt' starting number, mirroring Phase 0's 36-finding/3-file smoke test
+          and Phase 1's 61-finding/32-file wider run. Full detail in
+          ai-os/guardrail-findings/PHASE_2_BASELINE_SUMMARY_2026-07-24.yaml."
+      note: "Full per-directory sweeps this phase (1341 files total, all 4 priority tiers), not the smaller
+        sample sets used as supporting evidence in Phase 0 (3 files) and Phase 1 (32-file wider run). No
+        new scanning logic added -- exact same TERMINOLOGY_GUARDRAIL_2026-07-24.py script, only a wider
+        --file-list per directory tier, per this phase's own dependency_mechanism."
+      deferred_to_later_phases:
+        - "Creating ai-os/registry/terminology-guardrail-exemptions.yaml itself and wiring CI (Phase 3
+           scope, external compliance-tracker repo dependency)."
+        - "--suggest-fix placeholder mapping and actual literal-to-placeholder migration PRs (Phase 4
+           scope)."
 
   - id: phase_3_ci_enforcement_wiring
     name: Wire guardrail into compliance-tracker CI as a coverage-gate job
@@ -226,7 +288,7 @@ dependency_table:
     to: phase_2_directory_scoped_rollout
     mechanism: "Direct mechanism dependency -- Phase 2 runs the same ai-os/TERMINOLOGY_GUARDRAIL_2026-07-24.py
       script this task built and smoke-tested against 3 files, widened to full directories."
-    status: planned
+    status: done
   - from: phase_2_directory_scoped_rollout
     to: phase_3_ci_enforcement_wiring
     mechanism: "Content dependency -- the CI job's exemption file needs Phase 2's real per-directory findings

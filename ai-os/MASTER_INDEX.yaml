@@ -2248,12 +2248,19 @@ registries:
     ci.yml''s real guardrail-presence/asset-registry -coverage/metadata-index-coverage
     jobs, migration of existing hardcoded examples, full enforcement) with an 8-edge
     dependency table.'
-  status: phase_0_complete_phase_1_plus_not_yet_dispatched
+  status: phase_0_phase_1_phase_2_complete_phase_3_not_yet_dispatched
   query_command: python3 scripts/superboss-register.py query-knowledge "variable_dictionary"
     --tag domain:terminology_standardization
-  next_phase: phase_1_dictionary_coverage_expansion per ai-os/TERMINOLOGY_STANDARDIZATION_PHASE_PLAN_2026-07-24.yaml
-    phases[] -- dispatched as a separate task, not part of this registry entry's own
-    scope.
+  phase_2_note: 'task-20260724-115921-phase2-directory-scoped-guardrail-rollou (2026-07-24): ran the
+    unmodified TERMINOLOGY_GUARDRAIL_2026-07-24.py across all 4 compliance-tracker directory priority
+    tiers (src/lib/services, src/lib top-level, src/app/api, src/db/seed.ts+test fixtures) -- 1341 files
+    scanned, 488 findings baseline (310 required-fix candidates, 178 seed/test exemption candidates). Full
+    detail: ai-os/guardrail-findings/PHASE_2_BASELINE_SUMMARY_2026-07-24.yaml and this phase''s own
+    real_evidence_2026-07-24 block in the phase plan file.'
+  next_phase: phase_3_ci_enforcement_wiring per ai-os/TERMINOLOGY_STANDARDIZATION_PHASE_PLAN_2026-07-24.yaml
+    phases[] -- external_depends_on compliance-tracker/.github/workflows/ci.yml (external repo), must be
+    dispatched as, or coordinate with, a compliance-tracker-scoped task, not part of this registry entry's
+    own scope.
   note_on_repo_vs_live_drift: This task also added the identical entry to the git-tracked
     /opt/veridian/repos/claude-control ai-os/MASTER_INDEX.yaml (branch worker/task-20260724-070131-veridian-terminology-standardization-pha).
     Pre-existing drift between this live file and that repo copy (e.g. registries.auditor_engine
