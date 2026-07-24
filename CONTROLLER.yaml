@@ -5230,3 +5230,25 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260724-214215-chatgpt-manual-bridge-workflow/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/54'
     last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-213832-phase7-part6-observability-audit-trail-l
+    project: veridian
+    type: worker-task
+    status: in-progress
+    summary: 'Server-worker task ''phase7-part6-observability-audit-trail-layer'' on
+      claude-control reached status=awaiting_human_approval. tier2, Superboss-approved,
+      held for human merge: https://github.com/FChecklist/claude-control/pull/55'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-213832-phase7-part6-observability-audit-trail-l/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/55'
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-220012-phase5-full-repo-wide-enforcement-dictio
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''phase5-full-repo-wide-enforcement-dictionary-completion''
+      on claude-control reached status=completed. tier1, Superboss-approved, merged
+      autonomously: https://github.com/FChecklist/claude-control/pull/56'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-220012-phase5-full-repo-wide-enforcement-dictio/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/56'
+    last_touched: '2026-07-24'
