@@ -2318,6 +2318,43 @@ registries:
     per ROUTE_COVERAGE_METHODOLOGY_2026-07-24.yaml's capability_coverage gap) per
     TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml phases[] -- dispatched as a separate
     task, not part of this registry entry's own scope.
+- id: chatgpt_prompt_library
+  type: sandbox_workspace_schema_and_coverage_tooling
+  path: ai-os/CHATGPT_PROMPT_SCHEMA_2026-07-24.yaml + ai-os/CHATGPT_PROMPTLIB_BLOCKER_2026-07-24.yaml
+    + scripts/chatgpt_promptlib_guard.py + scripts/generate_prompt_coverage_report.py
+    + scripts/detect_prompt_duplicates.py
+  scope: 'task-20260724-141538-chatgpt-prompt-library-infrastructure (instruction INS-20260724-141341-5f67):
+    real infrastructure for the VERIDIAN ChatGPT Prompt Library Workspace. Built: (1) the sandbox itself
+    (/opt/veridian/chatgpt-prompt-library/, 15 real subfolders -- CSV, Intent, Keywords, Variables,
+    Capabilities, Entities, Modules, Domains, Routes, Coverage, Validation, Duplicates, Statistics,
+    Reports, History), write-restricted via scripts/chatgpt_promptlib_guard.py (no existing guard pattern
+    to reuse yet -- the sibling task-20260724-141323-chatgpt-audit-workspace-infrastructure had not
+    started, see that entry below once it lands); (2) the real 15-column per-prompt CSV schema
+    (ai-os/CHATGPT_PROMPT_SCHEMA_2026-07-24.yaml), reusing registries.variable_dictionary''s
+    `<Entity.Attribute>` placeholder convention rather than rebuilding it; (3) a real coverage report
+    (scripts/generate_prompt_coverage_report.py) that reads registries.engines_gateways_architecture''s
+    live capability_registry (10 real rows) and real CSV/ data to compute Capability/Prompt/
+    Intent-Coverage-pct -- run for real this task, honest 0pct baseline (every real capability listed
+    missing, since 0 prompts exist); (4) a duplicate-detection script
+    (scripts/detect_prompt_duplicates.py), proven via --test-fixture against a synthetic 3-row fixture
+    with a planted duplicate (no real prompts exist yet to test against); (5)
+    ai-os/CHATGPT_PROMPTLIB_BLOCKER_2026-07-24.yaml, documenting the exact remaining gap (a real
+    OPENAI_API_KEY -- confirmed absent from /opt/veridian/shared/.env, placeholder comment only -- and
+    the Owner-named model) and the exact capability->N-prompts generation call shape, registered as
+    OWNER_DECISIONS_NEEDED_2026-07-23.yaml id chatgpt-promptlib-openai-api-key. The actual LLM-execution
+    step (ChatGPT generating the 10,000 real prompts) is explicitly out of this task''s scope.'
+  status: infrastructure_100pct_ready_generation_blocked_on_owner_supplied_openai_api_key
+  query_command: python3 scripts/superboss-register.py query-knowledge "chatgpt_prompt_library"
+    --tag domain:chatgpt_prompt_library
+  cross_link_note: 'registries.chatgpt_audit_workspace (sibling task-20260724-141323-chatgpt-audit-workspace-infrastructure)
+    had not landed as of this entry -- cross-link once it registers; do not build a second sandbox-guard
+    pattern from scratch if that task''s scripts/chatgpt_audit_guard.py already exists by the time a
+    future phase touches this.'
+  next_phase: 'A future task, once the Owner supplies a real OPENAI_API_KEY and names the model: the
+    actual capability->N-prompts generation call per ai-os/CHATGPT_PROMPTLIB_BLOCKER_2026-07-24.yaml''s
+    exact_generation_call_shape_once_unblocked, writing real CSV/ rows only via
+    scripts/chatgpt_promptlib_guard.py, then re-running generate_prompt_coverage_report.py and
+    detect_prompt_duplicates.py in real (non---test-fixture) mode.'
 tree_lineage:
   tree1_audit_tree:
     path: /opt/veridian/repos/compliance-tracker/ai-os/audit-tree/
