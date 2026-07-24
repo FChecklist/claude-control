@@ -2288,6 +2288,42 @@ registries:
     per ROUTE_COVERAGE_METHODOLOGY_2026-07-24.yaml's capability_coverage gap) per
     TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml phases[] -- dispatched as a separate
     task, not part of this registry entry's own scope.
+- id: chatgpt_audit_workspace
+  type: sandboxed_audit_workspace_and_guard
+  path: /opt/veridian/chatgpt-audit/ (live, 23 domain subfolders) + ai-os/CHATGPT_AUDIT_RECORD_SCHEMA_2026-07-24.yaml
+    + scripts/chatgpt_audit_guard.py + scripts/chatgpt_audit_versioning.py + scripts/generate_chatgpt_audit_index.py
+    + ai-os/CHATGPT_AUDIT_MASTER_CATALOGUE_2026-07-24.yaml + ai-os/CHATGPT_AUDIT_BLOCKER_2026-07-24.yaml
+  scope: 'Instruction INS-20260724-141101-89d8 (task-20260724-141323-chatgpt-audit-workspace-infrastructure):
+    real infrastructure for a future ChatGPT-generated audit workspace -- the LLM-execution step itself
+    is explicitly out of scope for this task (no OPENAI_API_KEY exists yet, see
+    ai-os/CHATGPT_AUDIT_BLOCKER_2026-07-24.yaml). Built: (1) a real, live sandboxed write directory at
+    /opt/veridian/chatgpt-audit/ with 23 domain subfolders (Architecture/Business/Capabilities/Modules/
+    Metadata/Database/Rules/Workflow/APIs/UI/Reports/Security/Performance/AI/Prompts/Routes/Testing/
+    Dependencies/Integrations/Observability/Release/Recommendations/History); (2)
+    scripts/chatgpt_audit_guard.py -- mechanical access control, not a policy statement: guarded_open()/
+    guarded_write() refuse any resolved path outside that directory before a byte is written, verified
+    live this session (--test-path against a real compliance-tracker file rejects with exit 1; against
+    the workspace itself allows with exit 0; a lookalike-prefix path also rejects; a real guarded write
+    succeeds in-scope and is refused, with nothing written, out-of-scope); (3)
+    scripts/chatgpt_audit_versioning.py -- real, flock()-protected incrementing audit_id + timestamped
+    filename allocation (<Subfolder>/AUDIT-<id>-<ts>.yaml), verified to never overwrite (re-checks the
+    target path is free before returning it); (4) ai-os/CHATGPT_AUDIT_RECORD_SCHEMA_2026-07-24.yaml --
+    the audit-record field schema (Audit ID through Confidence %, 15 fields) plus the 9 linkage fields
+    (Capability/Workflow/Metadata/Business Rule/Database/API/UI/Report/Document); (5)
+    scripts/generate_chatgpt_audit_index.py -- scans the live workspace and machine-generates both a
+    local searchable index (/opt/veridian/chatgpt-audit/Metadata/INDEX.yaml) and
+    ai-os/CHATGPT_AUDIT_MASTER_CATALOGUE_2026-07-24.yaml (0 records today, by design -- see (6)); (6)
+    ai-os/CHATGPT_AUDIT_BLOCKER_2026-07-24.yaml -- documents exactly what is needed to go live (a real
+    OPENAI_API_KEY) and the exact call shape (model left for the Owner to name, prompt template, read
+    scope, guard-only output path) a future task will use once that key exists.'
+  status: infrastructure_100pct_ready_blocked_on_owner_supplied_openai_api_key
+  query_command: 'ls /opt/veridian/chatgpt-audit/ ; python3 scripts/chatgpt_audit_guard.py --test-path <path>
+    ; python3 scripts/chatgpt_audit_versioning.py allocate --subfolder <Domain> ; python3
+    scripts/generate_chatgpt_audit_index.py'
+  owner_decision: ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml#chatgpt-audit-openai-api-key
+  next_phase: 'Once the Owner supplies OPENAI_API_KEY and names the model (see owner_decision above), a
+    future task wires the real ChatGPT call using ai-os/CHATGPT_AUDIT_BLOCKER_2026-07-24.yaml''s
+    exact_call_shape_once_key_exists -- not part of this registry entry''s own scope.'
 tree_lineage:
   tree1_audit_tree:
     path: /opt/veridian/repos/compliance-tracker/ai-os/audit-tree/
