@@ -1,0 +1,72 @@
+id: KNOWLEDGE-ENGINE-PHASE3-CANDIDATES
+version: '1.0'
+built_ts: '2026-07-24T04:10:00+00:00'
+instruction_id: task-20260724-033446-self-sustaining-system-engine-phase2-con
+purpose: >
+  Phase 2 (this task) built the Self-Sustaining System Engine: multi-source knowledge_engine coverage
+  (SERVER/VERCEL/SUPABASE/GITHUB/LOCAL, 26 rows), a machine-generated SOFTWARE_CATALOG.yaml, real
+  entity_relationships for every row, task-gateway.py close auto-reverify, and resolution of the 3
+  Phase-1 drift rows. This file lists real remaining follow-on work, same pattern as
+  ai-os/KNOWLEDGE_ENGINE_PHASE2_CANDIDATES_2026-07-23.yaml, for Owner-directed dispatch only.
+
+candidates:
+  - id: supabase_cron_credential_broken
+    problem: >
+      SUPABASE_ACCESS_TOKEN stored in /opt/veridian/shared/.env returns 401/403 Unauthorized from the
+      real Supabase Management API (https://api.supabase.com/v1/projects), confirmed live 2026-07-24
+      both via `supabase projects list` CLI and a direct curl call. knowledge_registry_multisource.py
+      degrades gracefully (keeps last-known-good metadata, does not crash), but its cron-scheduled
+      SUPABASE refresh cannot pull fresh live data until this is fixed -- the SUPABASE row in
+      knowledge_engine is currently accurate only as of the one successful live check this task did via
+      the interactive Supabase MCP connector.
+    proposed_shape: Owner issues a fresh Supabase PAT/service token with project-read scope; swap it into
+      shared/.env under the same SUPABASE_ACCESS_TOKEN key so the existing script needs no code change.
+    priority: medium
+    real_blocker_if_any: requires an Owner-supplied credential; not a code gap.
+
+  - id: laptop_memory_unreachable
+    problem: >
+      The Owner's Windows laptop-side Claude Code memory/*.md files have no sync mechanism, repo, or
+      server-side path anywhere on this server (confirmed via exhaustive grep across ai-os/ 2026-07-24) --
+      STANDING_DIRECTIVE.yaml's own assistant_working_protocol documents the laptop as holding "no
+      persistent copy... only transient display/relay". This is an architectural gap, not a missed
+      lookup: this task's LOCAL source registers only the reachable half (repos/claude-control/CONTROLLER.yaml,
+      via the git mirror) and records this as an explicit gap rather than skipping it silently.
+    proposed_shape: If the Owner wants laptop-side memory queryable from the server, a real sync mechanism
+      (e.g. a laptop-side push hook, same pattern as the existing laptop-chat transcript
+      index-transcript CLI) would need to be built and explicitly authorized -- this is a new capability,
+      not a bug fix.
+    priority: low
+    real_blocker_if_any: requires an explicit Owner decision on whether laptop-side memory should ever
+      leave the laptop at all (STANDING_DIRECTIVE.yaml currently treats that as intentional, not a gap
+      to close by default).
+
+  - id: entity_relationship_graph_depth
+    problem: >
+      Every knowledge_engine row now has at least 1 real entity_relationships edge (26/26), but most rows
+      still have only 1-2 edges -- this satisfies "populated, non-empty" but is far short of a dense,
+      genuinely useful dependency graph (e.g. no VERCEL row yet links to its GITHUB row for the same repo,
+      no GITHUB row links to its own knowledge_engine SERVER governance rows).
+    proposed_shape: A follow-on pass using the new add-relationship subcommand to add real cross-source
+      edges (e.g. VERCEL project row <-> GITHUB repo row <-> SERVER governance rows for the same project),
+      mechanically derived from the "project:X" tag already present on every row this phase added.
+    priority: low
+    real_blocker_if_any: none -- purely additive, same mechanism already built this phase.
+
+  - id: veda_advisors_no_own_supabase_project
+    problem: >
+      DATABASE_CATALOG.json and the live Supabase project list (2 projects: verdian-ai, projexa) show no
+      distinct Supabase project for veda-advisors -- unclear if it shares compliance-tracker's DB, has no
+      backend yet, or uses a different DB entirely. Not investigated further this phase (out of the
+      original 6 SCOPE items).
+    proposed_shape: A short investigation task to confirm veda-advisors' real data-layer architecture and
+      register the correct SUPABASE (or "no database" / "shares project X") knowledge_engine row.
+    priority: low
+    real_blocker_if_any: none -- needs investigation, not an Owner decision.
+
+  - id: projexa_the_firm_brand_knowledge
+    problem: Carried over unresolved from Phase 2 candidates -- still blocked on Owner-supplied content.
+    proposed_shape: unchanged, see ai-os/KNOWLEDGE_ENGINE_PHASE2_CANDIDATES_2026-07-23.yaml.
+    priority: low
+    real_blocker_if_any: Owner must supply or author real brand-knowledge content; out of scope for any
+      AI session per that file's own note.

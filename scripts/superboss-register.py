@@ -328,18 +328,29 @@ def init_db():
         metadata_json TEXT NOT NULL DEFAULT '{}'
     );
     CREATE VIRTUAL TABLE IF NOT EXISTS knowledge_engine_fts USING fts5(
-        purpose, tags, entity_relationships,
+        artifact_path, purpose, tags, entity_relationships,
         content='knowledge_engine', content_rowid='rowid'
     );
     CREATE TRIGGER IF NOT EXISTS knowledge_engine_ai AFTER INSERT ON knowledge_engine BEGIN
-        INSERT INTO knowledge_engine_fts(rowid, purpose, tags, entity_relationships)
-        VALUES (new.rowid, new.purpose, new.tags, new.entity_relationships);
+        INSERT INTO knowledge_engine_fts(rowid, artifact_path, purpose, tags, entity_relationships)
+        VALUES (new.rowid, new.artifact_path, new.purpose, new.tags, new.entity_relationships);
+    END;
+    CREATE TRIGGER IF NOT EXISTS knowledge_engine_au AFTER UPDATE ON knowledge_engine BEGIN
+        INSERT INTO knowledge_engine_fts(knowledge_engine_fts, rowid, artifact_path, purpose, tags, entity_relationships)
+        VALUES ('delete', old.rowid, old.artifact_path, old.purpose, old.tags, old.entity_relationships);
+        INSERT INTO knowledge_engine_fts(rowid, artifact_path, purpose, tags, entity_relationships)
+        VALUES (new.rowid, new.artifact_path, new.purpose, new.tags, new.entity_relationships);
+    END;
+    CREATE TRIGGER IF NOT EXISTS knowledge_engine_ad AFTER DELETE ON knowledge_engine BEGIN
+        INSERT INTO knowledge_engine_fts(knowledge_engine_fts, rowid, artifact_path, purpose, tags, entity_relationships)
+        VALUES ('delete', old.rowid, old.artifact_path, old.purpose, old.tags, old.entity_relationships);
     END;
     CREATE INDEX IF NOT EXISTS idx_knowledge_engine_type ON knowledge_engine(artifact_type);
     CREATE INDEX IF NOT EXISTS idx_knowledge_engine_path ON knowledge_engine(artifact_path);
     """)
     conn.commit()
     _migrate_schema(conn)
+    _migrate_knowledge_engine_fts(conn)
     conn.close()
     print(json.dumps({"ok": True, "db": DB_PATH}))
 
@@ -755,16 +766,68 @@ def _ensure_knowledge_engine_table(conn):
         metadata_json TEXT NOT NULL DEFAULT '{}'
     )""")
     conn.execute("""CREATE VIRTUAL TABLE IF NOT EXISTS knowledge_engine_fts USING fts5(
-        purpose, tags, entity_relationships,
+        artifact_path, purpose, tags, entity_relationships,
         content='knowledge_engine', content_rowid='rowid'
     )""")
     conn.execute("""CREATE TRIGGER IF NOT EXISTS knowledge_engine_ai AFTER INSERT ON knowledge_engine BEGIN
-        INSERT INTO knowledge_engine_fts(rowid, purpose, tags, entity_relationships)
-        VALUES (new.rowid, new.purpose, new.tags, new.entity_relationships);
+        INSERT INTO knowledge_engine_fts(rowid, artifact_path, purpose, tags, entity_relationships)
+        VALUES (new.rowid, new.artifact_path, new.purpose, new.tags, new.entity_relationships);
+    END""")
+    # 2026-07-24 fix (Phase2 candidate fts5_relevance_tuning): verify-knowledge/
+    # annotate-knowledge/add-relationship (below) all UPDATE existing rows in place
+    # -- without an AFTER UPDATE sync trigger this reintroduces exactly the same
+    # system_index_fts desync bug already root-caused and fixed once (see
+    # system_index_au above). AFTER DELETE included too even though nothing here
+    # deletes rows yet, so the FTS index cannot silently drift if that changes.
+    conn.execute("""CREATE TRIGGER IF NOT EXISTS knowledge_engine_au AFTER UPDATE ON knowledge_engine BEGIN
+        INSERT INTO knowledge_engine_fts(knowledge_engine_fts, rowid, artifact_path, purpose, tags, entity_relationships)
+        VALUES ('delete', old.rowid, old.artifact_path, old.purpose, old.tags, old.entity_relationships);
+        INSERT INTO knowledge_engine_fts(rowid, artifact_path, purpose, tags, entity_relationships)
+        VALUES (new.rowid, new.artifact_path, new.purpose, new.tags, new.entity_relationships);
+    END""")
+    conn.execute("""CREATE TRIGGER IF NOT EXISTS knowledge_engine_ad AFTER DELETE ON knowledge_engine BEGIN
+        INSERT INTO knowledge_engine_fts(knowledge_engine_fts, rowid, artifact_path, purpose, tags, entity_relationships)
+        VALUES ('delete', old.rowid, old.artifact_path, old.purpose, old.tags, old.entity_relationships);
     END""")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_knowledge_engine_type ON knowledge_engine(artifact_type)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_knowledge_engine_path ON knowledge_engine(artifact_path)")
     conn.commit()
+    _migrate_knowledge_engine_fts(conn)
+
+
+def _migrate_knowledge_engine_fts(conn):
+    """Additive migration for a knowledge_engine_fts created before artifact_path
+    was indexed (Phase 1 build, 2026-07-23). Detects the old 3-column shape via
+    pragma_table_info (fts5 virtual tables support this same as real tables),
+    and if found: drops + recreates with the artifact_path column, then rebuilds
+    the index from the real knowledge_engine content table using fts5's own
+    documented 'rebuild' special command -- never re-derives text by hand."""
+    cols = {r["name"] for r in conn.execute("SELECT name FROM pragma_table_info('knowledge_engine_fts')").fetchall()}
+    if cols and "artifact_path" not in cols:
+        conn.execute("DROP TRIGGER IF EXISTS knowledge_engine_ai")
+        conn.execute("DROP TRIGGER IF EXISTS knowledge_engine_au")
+        conn.execute("DROP TRIGGER IF EXISTS knowledge_engine_ad")
+        conn.execute("DROP TABLE knowledge_engine_fts")
+        conn.execute("""CREATE VIRTUAL TABLE knowledge_engine_fts USING fts5(
+            artifact_path, purpose, tags, entity_relationships,
+            content='knowledge_engine', content_rowid='rowid'
+        )""")
+        conn.execute("""CREATE TRIGGER knowledge_engine_ai AFTER INSERT ON knowledge_engine BEGIN
+            INSERT INTO knowledge_engine_fts(rowid, artifact_path, purpose, tags, entity_relationships)
+            VALUES (new.rowid, new.artifact_path, new.purpose, new.tags, new.entity_relationships);
+        END""")
+        conn.execute("""CREATE TRIGGER knowledge_engine_au AFTER UPDATE ON knowledge_engine BEGIN
+            INSERT INTO knowledge_engine_fts(knowledge_engine_fts, rowid, artifact_path, purpose, tags, entity_relationships)
+            VALUES ('delete', old.rowid, old.artifact_path, old.purpose, old.tags, old.entity_relationships);
+            INSERT INTO knowledge_engine_fts(rowid, artifact_path, purpose, tags, entity_relationships)
+            VALUES (new.rowid, new.artifact_path, new.purpose, new.tags, new.entity_relationships);
+        END""")
+        conn.execute("""CREATE TRIGGER knowledge_engine_ad AFTER DELETE ON knowledge_engine BEGIN
+            INSERT INTO knowledge_engine_fts(knowledge_engine_fts, rowid, artifact_path, purpose, tags, entity_relationships)
+            VALUES ('delete', old.rowid, old.artifact_path, old.purpose, old.tags, old.entity_relationships);
+        END""")
+        conn.execute("INSERT INTO knowledge_engine_fts(knowledge_engine_fts) VALUES ('rebuild')")
+        conn.commit()
 
 
 def register_knowledge(args):
@@ -853,6 +916,141 @@ def query_knowledge(args):
         result = [r for r in result if args.tag in json.loads(r["tags"] or "[]")]
     conn.close()
     print(json.dumps({"found": len(result), "matches": result}, indent=2, default=str))
+
+
+def verify_knowledge(args):
+    """Phase2 candidate auto_update_on_task_completion: re-verify the LATEST
+    knowledge_engine row for each --path against a live read of the real file
+    (never a second guess) -- UPDATE in place (never INSERT), so a re-verify
+    can never create a duplicate row for the same artifact_path. Called both
+    ad-hoc and from task-gateway.py's close subcommand for every knowledge_engine
+    artifact_path touched by the just-closed task's own git diff."""
+    init_db_silent()
+    conn = _connect()
+    _ensure_knowledge_engine_table(conn)
+    now = _now_iso()
+    results = []
+    for path in args.path:
+        row = conn.execute(
+            "SELECT artifact_id, content_hash FROM knowledge_engine WHERE artifact_path = ? ORDER BY ts DESC LIMIT 1",
+            (path,),
+        ).fetchone()
+        if not row:
+            results.append({"path": path, "found": False})
+            continue
+        exists = os.path.isfile(path)
+        if exists:
+            with open(path, "rb") as f:
+                new_hash = hashlib.sha256(f.read()).hexdigest()
+            status = "VERIFIED_MATCH" if new_hash == row["content_hash"] else "HASH_DRIFTED"
+        else:
+            new_hash = row["content_hash"]
+            status = "PATH_MISSING"
+        conn.execute(
+            "UPDATE knowledge_engine SET verification_status=?, last_verified_ts=?, exists_on_disk=?, content_hash=? WHERE artifact_id=?",
+            (status, now, 1 if exists else 0, new_hash, row["artifact_id"]),
+        )
+        results.append({
+            "path": path, "found": True, "artifact_id": row["artifact_id"],
+            "previous_hash": row["content_hash"], "new_hash": new_hash,
+            "hash_changed": new_hash != row["content_hash"], "verification_status": status,
+        })
+    conn.commit()
+    conn.close()
+    print(json.dumps({"verified_count": len(results), "results": results}, indent=2, default=str))
+
+
+def annotate_knowledge(args):
+    """Appends a dated correction note to the LATEST row's metadata_json for
+    --path, without touching content_hash/verification_status (those stay
+    exactly what a live read of the real file says -- an annotation records a
+    judgment call about the row, e.g. 'citing text corrected instead of
+    authoring a phantom file', it never fabricates verification evidence).
+    Phase2 candidate fill_the_3_real_drift_gaps: the mechanism this uses to
+    make a PATH_MISSING row's resolution visible without inventing a file."""
+    init_db_silent()
+    conn = _connect()
+    _ensure_knowledge_engine_table(conn)
+    row = conn.execute(
+        "SELECT artifact_id, metadata_json FROM knowledge_engine WHERE artifact_path = ? ORDER BY ts DESC LIMIT 1",
+        (args.path,),
+    ).fetchone()
+    if not row:
+        print(json.dumps({"error": "no knowledge_engine row found for that path", "path": args.path}))
+        sys.exit(1)
+    metadata = json.loads(row["metadata_json"] or "{}")
+    corrections = metadata.setdefault("corrections", [])
+    corrections.append({"ts": _now_iso(), "note": args.note})
+    conn.execute(
+        "UPDATE knowledge_engine SET metadata_json=? WHERE artifact_id=?",
+        (json.dumps(metadata), row["artifact_id"]),
+    )
+    conn.commit()
+    conn.close()
+    print(json.dumps({"artifact_id": row["artifact_id"], "path": args.path, "metadata_json": metadata}, indent=2, default=str))
+
+
+def add_relationship(args):
+    """Appends one real edge to the LATEST row's entity_relationships for
+    --path, resolved against already-registered rows the same way
+    register_knowledge's own --relationships resolution works (never
+    fabricates a related_artifact_id). Lets item-2 (entity-relationship layer)
+    populate edges for rows that already existed before this ability existed
+    -- register_knowledge only accepts relationships at insert time."""
+    init_db_silent()
+    conn = _connect()
+    _ensure_knowledge_engine_table(conn)
+    row = conn.execute(
+        "SELECT artifact_id, entity_relationships FROM knowledge_engine WHERE artifact_path = ? ORDER BY ts DESC LIMIT 1",
+        (args.path,),
+    ).fetchone()
+    if not row:
+        print(json.dumps({"error": "no knowledge_engine row found for that path", "path": args.path}))
+        sys.exit(1)
+    related_row = conn.execute(
+        "SELECT artifact_id FROM knowledge_engine WHERE artifact_path = ? ORDER BY ts DESC LIMIT 1",
+        (args.related_path,),
+    ).fetchone()
+    rels = json.loads(row["entity_relationships"] or "[]")
+    rels.append({
+        "related_artifact_id": related_row["artifact_id"] if related_row else None,
+        "related_artifact_path": args.related_path,
+        "relationship_type": args.relationship_type,
+        "evidence": args.evidence,
+    })
+    conn.execute(
+        "UPDATE knowledge_engine SET entity_relationships=? WHERE artifact_id=?",
+        (json.dumps(rels), row["artifact_id"]),
+    )
+    conn.commit()
+    conn.close()
+    print(json.dumps({"artifact_id": row["artifact_id"], "path": args.path, "entity_relationships": rels}, indent=2, default=str))
+
+
+def add_tag(args):
+    """Merges one tag into the LATEST row's tags list for --path (no-op if
+    already present). Used by knowledge_registry_multisource.py to retag the
+    9 Phase-1 rows with source:SERVER without re-inserting them (which would
+    duplicate, since register_knowledge is insert-only) and without hand-SQL."""
+    init_db_silent()
+    conn = _connect()
+    _ensure_knowledge_engine_table(conn)
+    row = conn.execute(
+        "SELECT artifact_id, tags FROM knowledge_engine WHERE artifact_path = ? ORDER BY ts DESC LIMIT 1",
+        (args.path,),
+    ).fetchone()
+    if not row:
+        print(json.dumps({"error": "no knowledge_engine row found for that path", "path": args.path}))
+        sys.exit(1)
+    tags = json.loads(row["tags"] or "[]")
+    if args.tag not in tags:
+        tags.append(args.tag)
+    conn.execute("UPDATE knowledge_engine SET tags=? WHERE artifact_id=?", (json.dumps(tags), row["artifact_id"]))
+    conn.commit()
+    conn.close()
+    print(json.dumps({"artifact_id": row["artifact_id"], "path": args.path, "tags": tags}, indent=2, default=str))
+
+
 def init_db_silent():
     if not os.path.exists(DB_PATH):
         conn = _connect()
@@ -965,6 +1163,25 @@ if __name__ == "__main__":
     p_queryk = sub.add_parser("query-knowledge")
     p_queryk.add_argument("query")
     p_queryk.add_argument("--tag", default=None, help="filter results to rows whose tags list contains this exact tag")
+
+    p_verifyk = sub.add_parser("verify-knowledge")
+    p_verifyk.add_argument("--path", required=True, action="append",
+                            help="artifact_path to re-verify against a live file read; repeatable")
+
+    p_annotk = sub.add_parser("annotate-knowledge")
+    p_annotk.add_argument("--path", required=True)
+    p_annotk.add_argument("--note", required=True, help="dated correction/decision note appended to metadata_json.corrections")
+
+    p_relk = sub.add_parser("add-relationship")
+    p_relk.add_argument("--path", required=True)
+    p_relk.add_argument("--related-path", dest="related_path", required=True)
+    p_relk.add_argument("--relationship-type", dest="relationship_type", required=True)
+    p_relk.add_argument("--evidence", default=None)
+
+    p_tagk = sub.add_parser("add-tag")
+    p_tagk.add_argument("--path", required=True)
+    p_tagk.add_argument("--tag", required=True)
+
     args = p.parse_args()
     if args.cmd == "init":
         with _write_lock():
@@ -1003,3 +1220,15 @@ if __name__ == "__main__":
             register_knowledge(args)
     elif args.cmd == "query-knowledge":
         query_knowledge(args)
+    elif args.cmd == "verify-knowledge":
+        with _write_lock():
+            verify_knowledge(args)
+    elif args.cmd == "annotate-knowledge":
+        with _write_lock():
+            annotate_knowledge(args)
+    elif args.cmd == "add-relationship":
+        with _write_lock():
+            add_relationship(args)
+    elif args.cmd == "add-tag":
+        with _write_lock():
+            add_tag(args)

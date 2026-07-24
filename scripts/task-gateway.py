@@ -310,6 +310,69 @@ def check_branch_merged_to_master(task_id):
     }
 
 
+# Knowledge Engine Phase 2 (task-20260724-033446), SCOPE item 4 /
+# candidate auto_update_on_task_completion: a task's real changed-file set
+# (from its own git diff) mapped to live absolute paths, using the same
+# repo-root -> live-path prefix convention every prior phase has used to
+# deploy tracked files (ai-os/ and scripts/ mirror their live counterparts
+# 1:1; ai-os-scripts/ mirrors ai-os/scripts/ -- see ai-os-scripts/file_inventory.py's
+# own live deployment history). Best-effort: an unrecognized prefix is
+# skipped, never guessed.
+REPO_PATH_PREFIXES = [
+    ("ai-os-scripts/", f"{AI_OS}/scripts/"),
+    ("ai-os/", f"{AI_OS}/"),
+    ("scripts/", f"{SCRIPTS}/"),
+]
+
+
+def _map_repo_path_to_live(repo_relative_path):
+    for prefix, live_prefix in REPO_PATH_PREFIXES:
+        if repo_relative_path.startswith(prefix):
+            return live_prefix + repo_relative_path[len(prefix):]
+    if repo_relative_path == "CONTROLLER.yaml":
+        return f"{VERIDIAN_ROOT}/repos/claude-control/CONTROLLER.yaml"
+    return None
+
+
+def reverify_touched_knowledge_engine_rows(task_id):
+    """Real fix for Phase2 candidate auto_update_on_task_completion: knowledge_engine
+    rows were only ever written by an explicit register-knowledge call -- nothing
+    re-checked content_hash when a governed artifact actually changed, so
+    verification_status could silently go stale. This computes the just-closed
+    task's own real changed-file set (git diff against its branch point), maps
+    each to a live absolute path, and calls verify-knowledge (in-place UPDATE,
+    never a duplicate INSERT) for every knowledge_engine row whose artifact_path
+    matches -- so every close is a real re-verify, not a one-off manual run."""
+    workspace = f"{AI_OS}/tasks/{task_id}/workspace"
+    if not os.path.exists(os.path.join(workspace, ".git")):
+        return {"status": "NO_GIT_ACTIVITY", "touched_knowledge_engine_paths": [], "reverify_result": None}
+
+    diff_proc = subprocess.run(
+        ["git", "-C", workspace, "diff", "--name-only", "origin/master...HEAD"],
+        capture_output=True, text=True, timeout=15,
+    )
+    changed = [line.strip() for line in diff_proc.stdout.splitlines() if line.strip()]
+    live_paths = sorted({p for p in (_map_repo_path_to_live(c) for c in changed) if p})
+
+    if not os.path.isfile(DB_PATH) or not live_paths:
+        return {"status": "NO_TOUCHED_ROWS", "changed_files": changed, "touched_knowledge_engine_paths": [], "reverify_result": None}
+
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    known_paths = {r["artifact_path"] for r in conn.execute("SELECT DISTINCT artifact_path FROM knowledge_engine")}
+    conn.close()
+    matched = [p for p in live_paths if p in known_paths]
+
+    if not matched:
+        return {"status": "NO_TOUCHED_ROWS", "changed_files": changed, "touched_knowledge_engine_paths": [], "reverify_result": None}
+
+    cmd = ["python3", SUPERBOSS, "verify-knowledge"]
+    for p in matched:
+        cmd += ["--path", p]
+    result = run_json(cmd, "verify-knowledge")
+    return {"status": "REVERIFIED", "changed_files": changed, "touched_knowledge_engine_paths": matched, "reverify_result": result}
+
+
 def cmd_close(args):
     task_dir = f"{AI_OS}/tasks/{args.task_id}"
     prompt_file = f"{task_dir}/prompt.txt"
@@ -383,12 +446,15 @@ def cmd_close(args):
             f":{git_merge_status['commits_ahead_of_master']}_commits_ahead",
         ])
 
+    knowledge_engine_reverify = reverify_touched_knowledge_engine_rows(args.task_id)
+
     print(json.dumps({
         "audit_verdict": verdict,
         "checkpoint_status": checkpoint_status,
         "audit_id": audit_result.get("audit_id"),
         "work_item_id": close_result.get("work_item_id"),
         "git_merge_status": git_merge_status,
+        "knowledge_engine_reverify": knowledge_engine_reverify,
     }, indent=2, default=str))
 
 

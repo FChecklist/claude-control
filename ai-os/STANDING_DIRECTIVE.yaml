@@ -19,6 +19,18 @@ execution:
   mobile_execution_note: 'Mobile devices (phone/tablet) are thin-client access only, same prohibition as RULE-067 (RULES_ARTICLES_198.json) already states for local
     machines: no development, execution, or AI processing shall occur on a mobile device, unless explicitly authorized. A mobile device may be used only to view or
     trigger work that still runs on VERIDIAN-DEV via SSH -- never as the machine doing the work.'
+  owner_remote_access: laptop_or_mobile_thin_client_via_ssh
+  owner_remote_access_note: 'Governance item 45 (allow_owner_connect_from_laptop_or_mobile). SSH (port 22) is a
+    device-agnostic protocol -- the same auth/session mechanism this directive''s own laptop_role: ssh_client_only
+    (below, line ~371) already documents applies identically to a mobile SSH client (e.g. Termius/Blink), no
+    separate mobile-specific server-side mechanism exists or is needed. Re-verified live 2026-07-23 (phase 15):
+    `ss -tlnp` shows sshd bound to 0.0.0.0:22 and [::]:22 (all interfaces, not restricted to a specific source);
+    /etc/hosts.allow and /etc/hosts.deny both contain no active rules (comments only); fail2ban.service is active
+    (running) -- an IP-based brute-force ban, orthogonal to device type, not a device-type gate. Honest caveat:
+    this session has no root/sudo (same limitation as item 21''s auth.log gap), so /etc/ssh/sshd_config itself and
+    any iptables/ufw rules could not be read directly to positively rule out an IP-allowlist; no evidence of one
+    exists anywhere in this codebase or in crontab/systemd config, and the live network-level binding evidence
+    above is the strongest signal available without root.'
 guardrails:
   mandatory:
   - ai-os/RULES_ARTICLES_198.json
@@ -615,7 +627,12 @@ v2_knowledge_engine:
     ai-os/VERIDIAN_EXECUTION_RULES_2026-07-23.md, ai-os/MASTER_INDEX.yaml, ai-os/SYSTEM_MAP.yaml, ai-os/STANDING_DIRECTIVE.yaml;
     3 exists_on_disk=0 real-drift rows -- ai-os/EXECUTION_RULES_AUDIT_2026-07-23.yaml, ai-os/GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml,
     ai-os/MASTER_GAP_AUDIT_2026-07-23.yaml -- each cited as if real by a live document but never actually written to disk),
-    exactly matching KNOWLEDGE_ENGINE_SCHEMA_DESIGN_2026-07-23.yaml''s seed_rows_planned_for_phase_1_not_created_by_phase_0.count.'
+    exactly matching KNOWLEDGE_ENGINE_SCHEMA_DESIGN_2026-07-23.yaml''s seed_rows_planned_for_phase_1_not_created_by_phase_0.count.
+    Phase 2 resolution (2026-07-24, task-20260724-033446, see v2_self_sustaining_system_engine below): all 3 re-verified
+    live via the new verify-knowledge subcommand. ai-os/GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml now genuinely exists
+    (written by intervening Phase 15 governance work) and flipped to VERIFIED_MATCH. The other 2 remain real
+    PATH_MISSING (still never written) -- resolved by correcting the citing text instead of authoring them (see
+    v2_self_sustaining_system_engine.item_4_drift_gaps for the full decision + reasoning).'
   gateway_wiring: 'scripts/task-gateway.py submit now also calls query-knowledge with the same mechanically-extracted keyword
     string it already uses for check-duplicate/search, adding a knowledge_matches key to submit''s JSON output -- so every
     future task submission is matched against the Knowledge Engine automatically, not just system_index.'
@@ -624,6 +641,44 @@ v2_knowledge_engine:
     `python3 scripts/task-gateway.py submit --text "test knowledge engine wiring" --source ai_agent --session-id ke-test`
     returned a non-null knowledge_matches key ({"found": 0, "matches": []} for that text; re-tested with
     --text "check the constitution rules" returning found=6 real matches).'
+v2_self_sustaining_system_engine:
+  id: SELF-SUSTAINING-SYSTEM-ENGINE
+  status: LIVE
+  built_by_task: task-20260724-033446-self-sustaining-system-engine-phase2-con
+  purpose: >-
+    Single entrypoint for Knowledge Engine Phase 2: extends v2_knowledge_engine (above) to cover
+    full-system file/entity metadata across 5 sources, a real software catalog, and cron coverage for
+    both -- per the single-entrypoint convention MASTER_INDEX.yaml's own registries already use.
+  row_count_live_as_of_2026-07-24: 26
+  sources_covered:
+    SERVER: 9 rows (Phase 1 seed, retagged source:SERVER this phase)
+    VERCEL: 3 rows (compliance-tracker/projexa/veda-advisors, live via vercel CLI + shared/.env token)
+    SUPABASE: 1 row (2 live projects -- verdian-ai/compliance-tracker + projexa -- anchored at DATABASE_CATALOG.json)
+    GITHUB: 11 rows (every repo under /opt/veridian/repos, live via gh api/gh pr list)
+    LOCAL: 1 row (repos/claude-control/CONTROLLER.yaml, reachable via git mirror) + 1 explicit,
+      documented gap (Owner laptop-side memory/*.md, unreachable -- see that row's metadata_json)
+  new_cli_subcommands: 'scripts/superboss-register.py verify-knowledge / annotate-knowledge / add-relationship / add-tag
+    (all UPDATE-in-place on the latest row for a path, never a duplicate INSERT)'
+  item_4_drift_gaps:
+    EXECUTION_RULES_AUDIT_2026-07-23.yaml: 'stays PATH_MISSING -- citing text corrected in ai-os/scripts/generate_task_checklist.py
+      (regenerated into MASTER_INDEX.yaml) rather than authored, since its citations reference narrative
+      audit content that would require AI-fabricated judgment (self_certification: forbidden)'
+    GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml: 'now VERIFIED_MATCH -- the file was genuinely created by
+      intervening Phase 15 work; verify-knowledge caught the transition mechanically'
+    MASTER_GAP_AUDIT_2026-07-23.yaml: 'stays PATH_MISSING -- citing text corrected in this file (see
+      completeness_guarantees.hundred_pct_completion above) to point at the real, already-live
+      ai-os/gap_queue.yaml instead of authoring a duplicate (zero_duplication_mandatory)'
+  item_3_software_catalog:
+    artifact: ai-os/SOFTWARE_CATALOG.yaml
+    generator: ai-os/scripts/generate_software_catalog.py (re-run to refresh, do not hand-edit)
+    source: 'crontab -l + directory listing of scripts/+ai-os/scripts/ + systemctl --user list-units -- machine-generated, not hand-typed'
+  item_5_cron: '2 new run-logged.sh entries: knowledge-registry-multisource (every 6h) and software-catalog-gen (daily 04:15)'
+  item_4_auto_verify: 'scripts/task-gateway.py close now calls reverify_touched_knowledge_engine_rows() --
+    maps the closing task''s own git diff to live paths and calls verify-knowledge for every matching
+    knowledge_engine row, output under the close JSON''s knowledge_engine_reverify key'
+  known_gap_supabase_cron_credential: 'SUPABASE_ACCESS_TOKEN in shared/.env returns 401/403 from the real
+    Supabase Management API as of 2026-07-24 -- recurring cron refresh of the SUPABASE source is degraded
+    until the Owner issues a working token; see ai-os/KNOWLEDGE_ENGINE_PHASE3_CANDIDATES_2026-07-24.yaml'
 v2_truthfulness_enforcement:
   no_fabrication: true
   no_incomplete_reported_as_complete: true
@@ -767,8 +822,10 @@ v2_task_lifecycle_pipeline:
     hundred_pct_gap_analysis: enforced by phase_2's requirement that every item in the target audit have an explicit status, no silent omissions -- an audit file
       missing this for any item is itself a phase_7 audit-gate FAIL
     hundred_pct_completion: NOT claimed as achievable on a fixed timeline -- phase_11 only fires per-task on real verified evidence; the OVERALL gap list (187+ items
-      as of 2026-07-23) closes incrementally, phase by phase, chain by chain, tracked in ai-os/MASTER_GAP_AUDIT_2026-07-23.yaml -- 100% is a direction, not a promised
-      date, per v2_truthfulness_enforcement
+      as of 2026-07-23) closes incrementally, phase by phase, chain by chain, tracked in ai-os/gap_queue.yaml (live queue) and ai-os/GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml
+      (the real 60-item governance audit) -- 100% is a direction, not a promised date, per v2_truthfulness_enforcement. (Corrected 2026-07-24, task-20260724-033446,
+      Knowledge Engine Phase 2 candidate fill_the_3_real_drift_gaps -- this line previously cited ai-os/MASTER_GAP_AUDIT_2026-07-23.yaml, a file that was never actually
+      written to disk -- its intended function is already served live by the two real files named above, so the file was not authored, per zero_duplication_mandatory.)
   phase_minus1_trigger_rule:
     purpose: Defines WHEN the pipeline fires at all -- missing before 2026-07-23, causes ambiguity.
     enter_full_pipeline_if_any:
