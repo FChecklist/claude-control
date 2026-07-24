@@ -1,0 +1,165 @@
+meta:
+  title: "VERIDIAN Document Engine Contract -- Phase 4 (document_notification_data) deliverable"
+  created: '2026-07-24'
+  produced_by_task: task-20260724-133622-phase4-unify-document-pipeline-pdf-gener
+  parent_plan: ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml
+  parent_phase: phase_4_document_notification_data
+  precedent: "Same method as ai-os/WORKFLOW_CONTRACT_SCHEMA_2026-07-24.yaml (Phase 3) and
+    ai-os/POLICY_DECISION_SCHEMA_2026-07-24.yaml (Phase 2): read the real, live shapes of every named
+    file first, design one shared envelope that generalizes them without editing or duplicating them,
+    then wire the one, real, non-speculative cross-call this session's engine boundaries allow."
+  repo_boundary_honestly_stated: "pdf-generator.ts, document-processing-engine.ts,
+    document-extraction-service.ts, ocr-client.ts, services/doc-processing/main.py, and
+    data-quality-engine.ts all live in the separate FChecklist/compliance-tracker repo. Per Phase 1/2/3's
+    own established boundary (this task's EXPECTED_OUTPUT requires a claude-control PR only), this
+    document reads those files' real shapes to ground the shared facade schema below but does not edit
+    or commit to that repo. What IS built live in claude-control is scripts/document_engine.py -- a real
+    Python-side facade for the AI-OS operational layer, reusing Phase 1's capability_registry table and
+    Phase 3's automation_rule_engine.py rather than re-implementing any of the 6 TS/Python files above."
+
+# ============================================================================
+# REAL SHAPES -- what each named file actually does today, live-verified by
+# direct read (not inferred from the engine_inventory summary alone).
+# ============================================================================
+real_shapes:
+  - file: repos/compliance-tracker/src/lib/pdf-generator.ts
+    real: "jsPDF-based branded-document helpers (createBrandedDocument/drawDocumentHeader/
+      drawSectionLabel/drawFooterNote/pdfToBuffer). Generic, no payslip/invoice-specific knowledge --
+      designed for reuse by any PDF-generating caller. Deterministic, no AI, no network I/O."
+    operation: generate_pdf
+    ai_required: false
+  - file: repos/compliance-tracker/services/doc-processing/main.py
+    real: "Standalone FastAPI microservice wrapping PaddleOCR (CPU, use_gpu=False). POST /ocr accepts
+      {image_base64}, returns {text, regions[bbox+confidence], overallConfidence}. NOT called via direct
+      HTTP from the Next.js app anywhere in the codebase (confirmed by grep -- zero fetch()/axios call
+      sites naming this service's own host/port). The ONLY real caller is
+      src/lib/services/ocr-client.ts, which fires a GitHub Actions repository_dispatch
+      (doc-processing-job event) that runs .github/workflows/doc-processing-job.yml, polling
+      docProcessingJobs rows for a result written back by that CI job -- a genuinely working, but
+      indirect, dispatch-and-poll pipeline (confirmed working end-to-end 2026-07-11 per that file's own
+      header), not a synchronous service call."
+    operation: ocr_paddleocr
+    ai_required: false
+    dispatch_mechanism: github_actions_repository_dispatch
+  - file: repos/compliance-tracker/src/lib/services/ocr-client.ts
+    real: "runOcr({orgId, userId, imageBase64}): inserts a docProcessingJobs row (status=pending), fires
+      the repository_dispatch above, polls the same row every 3s up to 90s, returns OcrResult
+      {text, regions, overallConfidence} on status=completed, throws on status=failed or timeout. No
+      caller anywhere notifies on the failed/timeout paths today -- confirmed absent by grep, this is the
+      real gap dependency_table's 'Document Engine (11) -> Notification Engine (12)' edge names."
+    operation: ocr_dispatch_and_poll
+    ai_required: false
+  - file: repos/compliance-tracker/src/lib/services/document-extraction-service.ts
+    real: "Wave 35 Document AI. isVisionExtractable() routes jpeg/png/webp to callLLMVision();
+      isTextExtractable() routes pdf/docx/pptx/eml to a text-extraction-then-callLLMJson path
+      (pdf-parse/officecli-client/extractEmailRawText). Populates documents.extractedData
+      {summary, documentType, dates, amounts, referenceNumbers, parties}. Fire-and-forget from the
+      upload route by design -- extraction must never block or fail the upload it enriches. Real,
+      live, and the actual OCR/extraction workhorse for this codebase (PaddleOCR above is not)."
+    operation: extract_vision
+    operation_2: extract_text
+    ai_required: true
+  - file: repos/compliance-tracker/src/lib/engines/document-processing-engine.ts
+    real: "Deliberately thin per its own header: BarcodeDecodeRequest/Result CONTRACT only (real decode
+      call belongs client-side, zxing-js/jsQR) + detectDuplicateDocumentsByHash() (exact contentHash
+      match, groups ids with >1 match). Explicitly defers OCR/extraction to
+      document-extraction-service.ts (does not duplicate it) -- confirmed accurate by this document's
+      own read of that file above."
+    operation: detect_duplicate_hash
+    operation_2: barcode_decode_contract
+    ai_required: false
+  - file: repos/compliance-tracker/src/lib/engines/data-quality-engine.ts
+    real: "7 real call sites (vendor-risk assess route, task-execution-engine.ts, gst-reconciliation-service.ts,
+      crm-accounts-service.ts, gst/validation-engine.ts, guardrail-registrations.ts, pii-redaction.ts), all
+      using it as a pure per-record validator (isValidPanFormat/isValidGstin/isValidIfscFormat/isValidEmail/
+      isValidPhoneNumber/isValidBankAccountFormat/standardizeAddress) called inline at the point a single
+      record is validated. No caller chains these into a multi-step extract/transform/load sequence, no
+      queue/job/batch-runner references it, and grep across both repos for ETL/pipeline/data-movement
+      terminology returns zero hits outside this plan's own text. This phase's objective explicitly permits
+      leaving Data Engine (13) un-extended until a real multi-step data-movement need is identified --
+      that condition is not met today, so no ETL/pipeline infrastructure is built by this phase. See
+      data_engine_finding below for the full, evidence-backed record of this judgment call."
+
+data_engine_finding:
+  engine_closed: 13
+  verdict: no_speculative_etl_built
+  evidence:
+    - "grep -rl 'data-quality-engine' compliance-tracker/src --include=*.ts: 7 files, every call site a
+      single inline validator call inside a larger domain function (vendor risk scoring, GST
+      reconciliation, CRM account creation, PII redaction), never a pipeline stage."
+    - "grep -rl 'ETL|extract.*transform.*load|dataPipeline|data-pipeline' compliance-tracker/src: 0 hits."
+    - "grep -rl 'ETL|multi-step data|data.movement' claude-control ai-os/ scripts/ (excluding this
+      plan's own generated task workspaces): 0 hits outside this plan file and its own inventory doc."
+  conclusion: "Consistent with CONSTRAINTS' 'do not build speculative ETL infrastructure' -- this phase
+    closes Engine 13 by recording the honest finding (real validation exists, no real pipeline need
+    exists) rather than fabricating a data-movement layer nothing currently calls for. Same
+    acceptable-as-is judgment posture Phase 7 (ui_composition_analytics) already applies to Engines
+    17/18 in this same plan."
+
+# ============================================================================
+# DOCUMENT ENGINE OPERATION SCHEMA -- the facade. One row per real operation,
+# each backed by the real file above, registered live into Phase 1's
+# capability_registry table by scripts/document_engine.py register-capabilities
+# (see that script + real_evidence in the phase plan's own status_detail).
+# ============================================================================
+document_engine_operation_schema:
+  envelope_fields: [operation_name, backing_file, ai_required, confidence, reachable_from_ai_os_layer, notes]
+  operations:
+    - operation_name: document_pdf_generation
+      backing_file: repos/compliance-tracker/src/lib/pdf-generator.ts
+      ai_required: false
+      confidence: 1.0
+      reachable_from_ai_os_layer: false
+      notes: "jsPDF, in-process TS call only -- no CLI/HTTP surface exists for the AI-OS layer to invoke
+        it directly. Registered in capability_registry so a future caller's lookup-capability check
+        surfaces it (does not fabricate a Python bridge that doesn't exist)."
+    - operation_name: document_ocr_paddleocr
+      backing_file: repos/compliance-tracker/services/doc-processing/main.py
+      ai_required: false
+      confidence: 0.8
+      reachable_from_ai_os_layer: false
+      notes: "Real FastAPI service, but only reachable today via ocr-client.ts's GitHub Actions dispatch
+        from inside the Next.js app -- no standalone AI-OS-layer path to it. confidence < 1.0 reflects
+        this indirection (deterministic OCR, but not directly invokable)."
+    - operation_name: document_extraction_vision
+      backing_file: repos/compliance-tracker/src/lib/services/document-extraction-service.ts
+      ai_required: true
+      confidence: 0.9
+      reachable_from_ai_os_layer: false
+      notes: "LLM-Vision based, in-process TS call inside the upload route's fire-and-forget path."
+    - operation_name: document_extraction_text
+      backing_file: repos/compliance-tracker/src/lib/services/document-extraction-service.ts
+      ai_required: true
+      confidence: 0.9
+      reachable_from_ai_os_layer: false
+      notes: "pdf-parse/officecli text extraction feeding callLLMJson -- same call site as
+        document_extraction_vision, split into its own row since it is a genuinely separate code path
+        (isTextExtractable vs isVisionExtractable)."
+    - operation_name: document_duplicate_detection
+      backing_file: repos/compliance-tracker/src/lib/engines/document-processing-engine.ts
+      ai_required: false
+      confidence: 1.0
+      reachable_from_ai_os_layer: true
+      notes: "Exact contentHash grouping is trivially portable (no framework dependency) --
+        scripts/document_engine.py detect-duplicates ports this exact algorithm for the AI-OS layer,
+        not a competing implementation of a different algorithm."
+
+# ============================================================================
+# DEPENDENCY_TABLE EDGE REALIZED -- turns 20_ENGINES_10_GATEWAYS_PHASE_PLAN's
+# own 'Document Engine (11) -> Notification Engine (12): planned' edge into
+# 'live', for the one half of that edge this task's repo boundary allows.
+# ============================================================================
+document_to_notification_edge:
+  previously: "planned -- doc-processing completion should call notify-owner.py or app/api/notifications
+    on failure; no such call site existed (dependency_table entry, Phase 0)."
+  now: "live, for the AI-OS operational layer -- scripts/document_engine.py report-failure dispatches
+    through scripts/automation_rule_engine.py's evaluate-rules (Phase 3) against trigger_type
+    document.pipeline_failed, which fires a real notify_owner action (Phase 3's existing action type,
+    calling this phase's own newly-committed scripts/notify-owner.py). A real automation_rule row
+    (document-pipeline-failure-notify-owner) is registered live, tied to the document_ocr_paddleocr
+    capability_registry row above -- see real_evidence in the phase plan's status_detail for the live
+    test proving a matching payload really dispatches a notify_owner action."
+  still_out_of_bounds: "The TS-side half (ocr-client.ts's own catch block on job status=failed/timeout
+    actually calling anything) is compliance-tracker's own PR to make -- same deferral posture Phase 1/2/3
+    used for their own TS-side gaps. This schema's operation rows are designed so that call is a direct
+    dependency-registry lookup (document_ocr_paddleocr), not a redesign."

@@ -1,0 +1,98 @@
+meta:
+  title: "VERIDIAN Notification Engine Contract -- Phase 4 (document_notification_data) deliverable"
+  created: '2026-07-24'
+  produced_by_task: task-20260724-133622-phase4-unify-document-pipeline-pdf-gener
+  parent_plan: ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml
+  parent_phase: phase_4_document_notification_data
+  objective_text: "Merge in-app app/api/notifications with server-side notify-owner.py under one
+    Notification Engine contract (or at minimum a shared schema + cross-call)."
+  scope_decision: "This document delivers the 'at minimum' half of the objective explicitly -- a shared
+    envelope schema plus a real, live, tested cross-call from the AI-OS operational layer into
+    notify-owner.py. It does NOT rewrite app/api/notifications or add a TS-side createNotification()
+    facade -- that is compliance-tracker's own repo/PR, per Phase 1/2/3's established repo boundary
+    (this task's EXPECTED_OUTPUT requires a claude-control PR only). Full merge (one literal shared
+    implementation two systems both call) is not possible across a Python AI-OS process and a Next.js/
+    Postgres app process without a network boundary neither side has today -- the schema below is
+    designed so that boundary, if a future phase adds it (e.g. an HTTP endpoint on either side), is a
+    direct translation, not a redesign."
+
+# ============================================================================
+# REAL SHAPES -- both real, live, but disconnected notification mechanisms.
+# ============================================================================
+real_shapes:
+  - system: notify-owner.py
+    location: "scripts/notify-owner.py (this repo, newly committed this phase -- was live at
+      /opt/veridian/scripts/notify-owner.py and already depended on by path from
+      scripts/automation_rule_engine.py's notify_owner action, but never committed to claude-control git
+      until now; same 'live but untracked' gap Phase 2 fixed for preflight-guard.py/risk-tier.py)."
+    real_callers: "scripts/health-check-15min.py, scripts/security-check.py,
+      scripts/supervisor-entrypoint.sh (tier2 approval-needed escalation, see
+      ai-os/patches/supervisor-entrypoint-approval-notification-2026-07-23.diff), and this repo's own
+      scripts/automation_rule_engine.py notify_owner action (Phase 3)."
+    channel: email
+    recipient: "single hardcoded Owner address (raajat.agarwal@gmail.com), via Resend API"
+    real_fields: {subject: str, body: str, dedupe_key: "str, optional, defaults to sha256(subject+body)",
+      force: "bool, bypasses hourly rate limit"}
+    dedup_mechanism: "local JSON state file keyed by dedupe_key hash, 1-hour rate limit per distinct
+      signature, 24h state pruning"
+    delivery_guarantee: "best-effort, synchronous HTTP call to Resend, real HTTP error surfaced to caller
+      (non-zero exit + stderr), no retry queue"
+  - system: app/api/notifications (in-app)
+    location: "repos/compliance-tracker/src/app/api/notifications/route.ts (GET, lists 20 most recent +
+      unread count) and [id]/read/route.ts (PATCH, marks one read). Both real, both tenant-scoped via
+      requireAuth()/withTenantContext()."
+    real_callers: "13 real `db.insert(notifications).values(...)` call sites across
+      lib/services/{fm-visitor,metric-alert,task-nudge-digest,ticket,automation-rule,report-schedule,
+      compliance,task,risk-escalation}-service.ts, app/api/tasks/[id]/comments/route.ts,
+      lib/loops/instruction-mismatch-audit.ts, lib/cost-guard.ts -- confirmed by grep, no single
+      createNotification() facade exists; every call site constructs the insert inline."
+    channel: in_app
+    recipient: "single org user (userId + orgId, tenant-scoped)"
+    real_fields: {userId: str, title: str, message: str, type: "enum: deadline_reminder | assignment |
+      status_change | comment | system | mention | instruction_mismatch", isRead: bool, metadata: jsonb}
+    dedup_mechanism: none
+    delivery_guarantee: "durable (Postgres row), read via polling GET, no push/websocket delivery"
+
+# ============================================================================
+# SHARED NOTIFICATION ENVELOPE -- the "at minimum a shared schema" the
+# objective asks for. Every field in both real systems above maps onto this
+# without loss; neither real system needs to change shape to satisfy it.
+# ============================================================================
+notification_envelope_schema:
+  fields:
+    - {name: channel, type: "enum: owner_email | in_app", maps_to: "notify-owner.py (owner_email) /
+        app/api/notifications (in_app)"}
+    - {name: recipient, type: str, maps_to: "hardcoded OWNER_EMAIL (owner_email) / userId (in_app)"}
+    - {name: subject_or_title, type: str, maps_to: "--subject (owner_email) / title (in_app)"}
+    - {name: body_or_message, type: str, maps_to: "--body (owner_email) / message (in_app)"}
+    - {name: dedupe_key, type: "str, optional", maps_to: "--dedupe-key (owner_email, real) / no
+        equivalent (in_app, real gap -- documented, not invented)"}
+    - {name: notification_type, type: "str, optional", maps_to: "no equivalent (owner_email) / type enum
+        (in_app, real gap -- documented, not invented)"}
+    - {name: metadata, type: "object, optional", maps_to: "no equivalent (owner_email) / metadata jsonb
+        (in_app)"}
+    - {name: source_engine, type: str, new_field: true, description: "which of the 20 engines fired this
+      notification -- e.g. document_ocr_paddleocr, automation_rule_engine. Neither real system carries
+      this today; added so a future consumer of either channel can trace provenance."}
+  cross_call_realized: "scripts/notification_engine.py send-owner is the real, live, tested
+    implementation of this envelope for the owner_email channel -- validates the envelope shape, then
+    calls scripts/notify-owner.py with the mapped --subject/--body/--dedupe-key. The in_app channel is
+    documented (fields above) but not implemented by this task, since a Python-side facade cannot insert
+    into compliance-tracker's own Postgres DB without that repo's own connection/schema -- out of repo
+    boundary, same deferral Phase 1/2/3 applied to their own TS-side gaps."
+  real_cross_call_chain: "scripts/document_engine.py report-failure -> scripts/automation_rule_engine.py
+    evaluate-rules (trigger_type=document.pipeline_failed) -> notify_owner action ->
+    scripts/notify-owner.py (this phase's newly committed copy) -> Resend API. The literal, live,
+    non-simulated realization of 'Document Engine -> Notification Engine' from dependency_table, and of
+    this phase's own 'or at minimum a shared schema + cross-call' permission."
+
+what_remains_for_later_phases:
+  - "compliance-tracker's own PR: a createNotification() facade consolidating the 13 inline insert call
+    sites, and (optionally) a dedupe_key/source_engine column addition to the notifications table, so
+    the in_app channel can fully satisfy notification_envelope_schema -- this schema's field-for-field
+    mapping is designed so that port is a direct translation, not a redesign, same posture as
+    WORKFLOW_CONTRACT_SCHEMA's field_equivalence_table."
+  - "A real HTTP bridge between the two processes (e.g. app/api/notifications accepting an owner_email-
+    channel POST, or notify-owner.py able to write directly to compliance-tracker's DB) would be the
+    genuine 'one Notification Engine' full merge -- not built here since no real need for that direction
+    of integration was identified (same discipline this phase's own CONSTRAINTS applies to Data Engine)."
