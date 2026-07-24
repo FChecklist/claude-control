@@ -794,10 +794,11 @@ registries:
     registries.auditor_engine (Engines 19/20, Audit/Observability, cross-linked not re-planned) and
     unrelated to compliance-tracker/ai-os/engines/ENGINES.yaml (a namespace collision, confirmed this
     session, not prior art for this registry).'
-  status: phase_0_complete_phase_1_complete_phase_2_plus_not_yet_dispatched
+  status: phase_0_through_phase_5_complete_phase_6_plus_not_yet_dispatched
   query_command: python3 scripts/superboss-register.py query-knowledge "engines_gateways_architecture" --tag domain:engines_gateways_architecture
-  next_phase: 'phase_2_policy_rule_decision_unification per ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml
-    phases[] -- dispatched as a separate task, not part of this registry entry''s own scope.'
+  next_phase: 'phase_6_intent_context_planning_learning (depends_on phase_1 + phase_5, both now
+    done) and phase_7_ui_composition_analytics per ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml
+    phases[] -- each dispatched as a separate task, not part of this registry entry''s own scope.'
   phase_1_capability_registry_live_wiring: 'DONE (task-20260724-083420, 2026-07-24) -- real
     capability_registry table live in ai-os/memory/superboss-register.sqlite (extends the same DB as
     knowledge_engine, scripts/superboss-register.py register-capability/lookup-capability/
@@ -853,13 +854,42 @@ registries:
     (1 now VERIFIED_MATCH, 2 intentionally left PATH_MISSING with corrected citing
     text, logged); adds artifact_path to knowledge_engine_fts (fts5_relevance_tuning).
     Full detail: ai-os/STANDING_DIRECTIVE.yaml v2_self_sustaining_system_engine. Known
-    gap: SUPABASE cron refresh degraded pending a working SUPABASE_ACCESS_TOKEN (see
-    ai-os/KNOWLEDGE_ENGINE_PHASE3_CANDIDATES_2026-07-24.yaml).'
+    gap: SUPABASE Management API refresh degraded pending a working SUPABASE_ACCESS_TOKEN
+    (see ai-os/KNOWLEDGE_ENGINE_PHASE3_CANDIDATES_2026-07-24.yaml,
+    ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml#supabase-management-api-token-refresh --
+    a real Owner-dashboard credential dependency, not a code gap). Phase 5
+    (task-20260724-135834) shipped a real mitigation, not a full fix: a per-project
+    anon-key /auth/v1/health fallback keeps SUPABASE rows genuinely live-checked every
+    cron tick even while the Management API token stays broken. Phase 5 also reconciles
+    this registry entry against MASTER_INDEX.yaml''s own registries: section -- see
+    registries.metadata_engine_reconciliation below.'
   status: live
   query_command: python3 scripts/superboss-register.py query-knowledge "<search>"
     [--tag source:VERCEL|source:SUPABASE|source:GITHUB|source:LOCAL|source:SERVER]
   refresh_commands: python3 scripts/knowledge_registry_multisource.py (every 6h via
     crontab); python3 scripts/generate_software_catalog.py (daily 04:15 via crontab)
+- id: metadata_engine_reconciliation
+  type: sync_direction_contract_and_enforcement_script
+  path: ai-os/METADATA_ENGINE_RECONCILIATION_2026-07-24.yaml + scripts/metadata_reconciliation.py
+  scope: 'Phase 5 (task-20260724-135834, phase_5_metadata_knowledge_consolidation) of the
+    VERIDIAN 20-ENGINE/10-GATEWAY architecture (ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml),
+    closes engines 14/15 (Metadata/Knowledge). Reconciles this registries: section against
+    knowledge_engine (registries.self_sustaining_system_engine) -- full merge judged too
+    disruptive (91 heterogeneous entries, actively cited by id across this whole session),
+    so this documents and ENFORCES a sync direction instead: MASTER_INDEX.yaml stays
+    authoritative for human citation/scope narrative, knowledge_engine stays authoritative
+    for machine drift-detection, and every registries[] entry''s real on-disk file path(s)
+    get a knowledge_engine row tagged registry:<id> as the queryable back-reference between
+    the two. Live-run 2026-07-24: 74 new rows registered + 14 existing rows tagged (of 88
+    real file-path tokens extracted from 83/91 registries -- 6 entries have no path field
+    by design, 2 named directory-only/not-yet-created paths, both listed honestly in the
+    script''s own report rather than silently skipped); re-run confirmed idempotent (0 new,
+    88 no-op re-tags, knowledge_engine row count unchanged).'
+  status: live
+  query_command: python3 scripts/metadata_reconciliation.py report
+  do_not_build_a_parallel_reconciliation_mechanism: if a future session needs to check
+    registries<->knowledge_engine sync drift again, re-run scripts/metadata_reconciliation.py
+    (safe, idempotent) rather than writing a second reconciliation script.
 - id: rules_articles_198
   type: guardrail_ruleset
   path: ai-os/RULES_ARTICLES_198.json
