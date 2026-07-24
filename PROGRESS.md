@@ -26,12 +26,16 @@
 - [x] Ran the register script. Verified: `query-knowledge "iFixAi"` -> 1 hit (KE-20260724-062517-e6b1);
       `query-knowledge "OmniRoute"` -> 1 hit (same artifact_id). Tags now 64 (was 43), entity_relationships
       now 6 (was 3, +3 new edges).
-- [x] Committed + pushed catalog/merge-script commit (87bbd4c) to
+- [x] Committed + pushed both commits (87bbd4c catalog+merge-script, 1b57ee8 register-script) to
       `worker/task-20260724-091206-xpost-github-catalog-batch2-2026-07-24`.
+- [x] Opened PR #27: https://github.com/FChecklist/claude-control/pull/27
 
 ## Remaining
-- [ ] Commit + push the registration script (register_xpost_github_catalog_batch2.py) and open a
-      PR against claude-control master.
-- [ ] Final checkpoint: total catalog row count before this task = 34 repos / 3 checked_no_repo;
-      after = **53 repos / 7 checked_no_repo** (19 new repo rows + 4 new checked_no_repo rows, 0
-      duplicates -- diegosouzapw/OmniRoute stored once despite being named 3x in the instruction).
+- [ ] None -- task complete, awaiting PR #27 review/merge.
+
+## Final checkpoint
+Total catalog row count before this task = 34 repos / 3 checked_no_repo;
+after = **53 repos / 7 checked_no_repo** (19 new repo rows + 4 new checked_no_repo rows, 0
+duplicates -- diegosouzapw/OmniRoute stored once despite being named 3x in the instruction).
+knowledge_engine row KE-20260724-062517-e6b1 updated in place (64 tags, was 43; 6
+entity_relationships, was 3) -- no duplicate row created.
