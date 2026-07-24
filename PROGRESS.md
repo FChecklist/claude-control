@@ -35,5 +35,26 @@
       drift between the two files unrelated to this task (auditor_engine present live but not in this
       branch's repo copy; testing_engine_irvf present in this branch but not yet live).
 
+- [x] Committed + pushed 4 units of work, opened PR #18
+      (https://github.com/FChecklist/claude-control/pull/18), verified via `gh pr view` real state:
+      OPEN, mergeable=MERGEABLE, mergeStateStatus=CLEAN.
+
 ## Remaining
-- [ ] Commit + push, open PR, final checkpoint summary.
+- [ ] None -- this task's own SCOPE (dictionary generation, guardrail design+smoke-test, phase planning) is
+      complete. Repo-wide rollout, CI enforcement wiring, and dictionary expansion past the top-20 tables are
+      explicitly deferred to the phases ai-os/TERMINOLOGY_STANDARDIZATION_PHASE_PLAN_2026-07-24.yaml defines,
+      per this task's own CONSTRAINTS.
+
+## Final checkpoint summary
+Phase 0 of VERIDIAN Terminology Standardization is complete. Delivered, all real and script-generated (none
+hand-typed): (1) `ai-os-scripts/generate_variable_dictionary.py` + its real output
+`ai-os/VARIABLE_DICTIONARY_2026-07-24.yaml` -- 320 `<Entity.Attribute>` placeholders, one per real column of
+the top-20 most-referenced tables (of 444) in `DATABASE_CATALOG.json`, ranked by a combined declared-FK +
+naming-convention reference-count score (only 7/444 tables carry a declared SQL FK), 182 example values
+sourced from real dev-seed rows fetched live via Supabase MCP, 138 clearly-marked synthetic; (2)
+`ai-os/TERMINOLOGY_GUARDRAIL_2026-07-24.py`, designed (not CI-wired) and smoke-tested against 3 real
+compliance-tracker files with 36 real, inspectable findings; (3)
+`ai-os/TERMINOLOGY_STANDARDIZATION_PHASE_PLAN_2026-07-24.yaml`, a 6-phase rollout plan with an 8-edge real
+dependency table. All 3 registered in knowledge_engine and in `registries.terminology_standardization` in
+both the git-tracked and live `MASTER_INDEX.yaml`. PR #18 open, clean, mergeable. No crontab entries added
+this phase (design-only, per CONSTRAINTS).
