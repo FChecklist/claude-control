@@ -22,7 +22,18 @@
       ai-os/patches/worker-entrypoint-noop-pending-review-fix-2026-07-24.diff (same convention as
       the other ai-os/patches/*.diff files for live-only, non-git-tracked scripts).
 
+- [x] task-20260724-042659 (PR #12, closed): Auditor Engine's 4 phase-0 files existed live +
+      in knowledge_engine but were never committed to master (PR #12 closed unmerged, PR #19
+      only had PROGRESS.md). Recovered all 4 files from the task's own workspace and committed.
+- [x] task-20260724-063645 (PR #17, merged): 3 deliverable files were on master but never
+      deployed live (real PATH_MISSING knowledge_engine rows) -- deployed live, re-verified
+      VERIFIED_MATCH. Live MASTER_INDEX.yaml was also missing registries.testing_engine_irvf
+      (git copy already had it) -- added via a new idempotent script.
+- [x] Verified remaining tasks (053213, 060203, 063403, 070131, 072725) against real state --
+      all criteria TRUE except PR #12's own mergeable status (now moot/stale, content recovered
+      separately).
+- [x] Wrote ai-os/SESSION_AUDIT_2026-07-24.yaml: 10/10 tasks accounted for, 8 DONE + 2 PARTIAL
+      (both PARTIALs' underlying real gaps already fixed this task).
+
 ## Remaining
-- [ ] Verify remaining 8 tasks' SUCCESS_CRITERIA against real state
-- [ ] Write ai-os/SESSION_AUDIT_2026-07-24.yaml
-- [ ] Final commit/push/PR + summary
+- [ ] Final push + PR + summary to Owner
