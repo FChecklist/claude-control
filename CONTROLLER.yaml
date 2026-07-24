@@ -4853,3 +4853,46 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260724-114058-test/ on VERIDIAN-DEV server
       (task.yaml, worker.log, review.json)
     last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-115041-phase2-give-policy-engine-preflight-guar
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''phase2-give-policy-engine-preflight-guard-py'' on
+      claude-control reached status=completed. tier1, Superboss-approved, merged autonomously:
+      https://github.com/FChecklist/claude-control/pull/31'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-115041-phase2-give-policy-engine-preflight-guar/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/31'
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-115044-phase2-api-contract-authoring-linting-co
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''phase2-api-contract-authoring-linting-contract-testing''
+      on claude-control reached status=completed. tier1, Superboss-approved, merged
+      autonomously: https://github.com/FChecklist/claude-control/pull/34'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-115044-phase2-api-contract-authoring-linting-co/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/34'
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-115921-phase2-directory-scoped-guardrail-rollou
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''phase2-directory-scoped-guardrail-rollout-manual-runs''
+      on claude-control reached status=completed. tier1, Superboss-approved, merged
+      autonomously: https://github.com/FChecklist/claude-control/pull/32'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-115921-phase2-directory-scoped-guardrail-rollou/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/32'
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-115924-phase3-route-replay-storage-diff
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''phase3-route-replay-storage-diff'' on claude-control
+      reached status=completed. tier1, Superboss-approved, merged autonomously: https://github.com/FChecklist/claude-control/pull/33'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-115924-phase3-route-replay-storage-diff/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/33'
+    last_touched: '2026-07-24'
