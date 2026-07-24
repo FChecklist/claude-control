@@ -36,9 +36,31 @@ it is a coarse heuristic -- Phase 2's per-directory findings reports use its
 frequency counts to prioritize which dictionary tier to grow next, not as a
 precise auto-fix suggestion (that's Phase 4's --suggest-fix scope).
 
+PHASE 4 ADDITION (task-20260724-143013-phase4-migrate-existing-hardcoded-exampl),
+per the phase plan's phase_4_existing_hardcoded_example_migration scope item 1:
+--suggest-fix. For each finding, this mode searches the loaded
+VARIABLE_DICTIONARY_2026-07-24.yaml for a placeholder whose entity/attribute
+plausibly matches the finding's surrounding code context (nearby identifiers,
+file name, the matched category's expected attribute family -- e.g. a
+placeholder_company_name finding looks for a "*.Name"-family attribute on an
+entity whose name appears near the finding), and attaches a "suggested_fix"
+object to the finding: the candidate placeholder token, its dictionary
+example_value, a plain suggested_diff (old line -> new line with the literal
+substring replaced by the placeholder token), and how the entity was matched
+(context keyword vs. category-only fallback vs. no match at all). This is
+intentionally a suggestion engine, not an autofix: --suggest-fix never writes
+to any file, it only enriches the JSON findings report (and, in human-
+readable mode, prints the suggested diff) for a human to review and apply
+(or reject in favor of a permanent exemption-file entry) themselves. Matching
+is a coarse keyword heuristic (same honesty class as the dictionary_gap_candidate
+check above), not NLP/semantic -- a finding with no plausible entity match in
+its surrounding context gets suggested_fix: null and a stated reason, rather
+than a confident-looking wrong guess.
+
 Run:
   python3 ai-os/TERMINOLOGY_GUARDRAIL_2026-07-24.py --file <path> [--file <path> ...] [--output <json_path>]
   python3 ai-os/TERMINOLOGY_GUARDRAIL_2026-07-24.py --string "some prompt text"
+  python3 ai-os/TERMINOLOGY_GUARDRAIL_2026-07-24.py --file <path> --suggest-fix
 Exit code: 0 if no findings, 1 if any findings (so it can gate CI once wired
 in a later phase -- see the phase plan's ci_enforcement design note).
 """
@@ -101,6 +123,126 @@ PATTERN_FAMILIES = [
         "rather than a hand-typed example GSTIN.",
     ),
 ]
+
+# PHASE 4 ADDITION -- --suggest-fix support. Each finding category maps to the
+# family of dictionary attribute names that would plausibly replace it (e.g. a
+# placeholder_company_name literal wants a "*Name" attribute, not a "*Email"
+# one). Order matters: earlier substrings are tried first.
+CATEGORY_ATTRIBUTE_FAMILIES = {
+    "placeholder_company_name": ["name"],
+    "placeholder_person_name": ["name"],
+    "placeholder_email_domain": ["email"],
+    "indian_pan_literal": ["pan"],
+    "indian_gstin_literal": ["gstin", "gst"],
+    "hardcoded_iso_date": ["createdat", "updatedat", "duedate", "deadline", "date", "at"],
+}
+
+_CAMEL_SPLIT_RE = re.compile(r"[A-Z][a-z0-9]*|[a-z0-9]+")
+_WORD_RE = re.compile(r"[A-Za-z0-9]+")
+
+
+def _entity_keywords(entity_name):
+    """Split an entity name like 'CrmAccounts' into lowercase context
+    keywords ('crm', 'accounts') a human would plausibly write near code that
+    deals with that entity. Words shorter than 3 chars are dropped as too
+    generic to match on (e.g. 'Id')."""
+    return [w.lower() for w in _CAMEL_SPLIT_RE.findall(entity_name) if len(w) >= 3]
+
+
+def load_dictionary_entries(dictionary_path):
+    """Full entry list (placeholder/entity/attribute/example_value/etc.) from
+    VARIABLE_DICTIONARY_2026-07-24.yaml, for --suggest-fix's entity/attribute
+    matching. Returns [] if the dictionary can't be loaded (same soft-fail
+    posture as load_registered_placeholders)."""
+    if yaml is None or not os.path.isfile(dictionary_path):
+        return []
+    with open(dictionary_path) as f:
+        doc = yaml.safe_load(f)
+    return doc.get("entries", [])
+
+
+def build_context_words(source_label):
+    """Context keyword source for entity matching: the scanned file's own
+    basename only (e.g. crm-accounts-service.ts -> {"crm", "accounts",
+    "service", "ts"}), deliberately NOT surrounding prose lines. This
+    codebase names service/route files after the entity they own
+    (crm-accounts-service.ts, esignature-service.ts, ...), which is a
+    precise signal -- prose in nearby comments is not: this repo's own
+    compliance-domain vocabulary (audit/risk/vendor/client/task) overlaps so
+    heavily with real entity-name components that a prose window matched
+    confidently-wrong entities in testing (e.g. an unrelated "Risk
+    assessment" comment line matching VendorRiskProfiles). Filename-only
+    trades recall for precision, matching this script's own "no plausible
+    match beats a confident wrong one" design note."""
+    return set(w.lower() for w in _WORD_RE.findall(os.path.basename(source_label)))
+
+
+def suggest_fix_for_finding(finding, dictionary_entries, context_words):
+    """Best-effort <Entity.Attribute> suggestion for one finding. Returns a
+    dict always (never None) so every finding gets an explicit disposition
+    lead in --suggest-fix output, even when no match is found."""
+    category = finding["category"]
+    attr_families = CATEGORY_ATTRIBUTE_FAMILIES.get(category)
+    if not attr_families or category == "unregistered_placeholder_token":
+        return {
+            "placeholder": None,
+            "example_value": None,
+            "suggested_diff": None,
+            "match_basis": "none",
+            "reason": f"category '{category}' has no defined attribute-family mapping for suggest-fix.",
+        }
+
+    candidates_by_family = {}
+    for entry in dictionary_entries:
+        attr_lower = entry["attribute"].lower()
+        for rank, family in enumerate(attr_families):
+            if family in attr_lower:
+                candidates_by_family.setdefault(rank, []).append(entry)
+                break
+
+    best = None
+    best_score = -1
+    for family_rank in sorted(candidates_by_family):
+        for entry in candidates_by_family[family_rank]:
+            keywords = _entity_keywords(entry["entity"])
+            if not keywords or not all(kw in context_words for kw in keywords):
+                continue  # require EVERY keyword part of a multi-word entity to match -- a
+                          # partial hit (e.g. just "risk" out of "vendor"+"risk"+"profiles")
+                          # is exactly the noisy false-positive class this heuristic must avoid.
+            score = len(keywords) * 100 - family_rank  # more/longer entity name -> more specific match
+            if score > best_score:
+                best_score = score
+                best = entry
+        if best is not None:
+            break  # a filename-matched entity in this family rank beats trying looser families
+
+    if best is None:
+        return {
+            "placeholder": None,
+            "example_value": None,
+            "suggested_diff": None,
+            "match_basis": "none",
+            "reason": "no dictionary entity's full name matched this file's own name -- needs a "
+                      "human to pick the right entity, or this may not be migratable example "
+                      "data at all (e.g. a changelog date, a protocol-version literal, a "
+                      "format-shape description, or static UI/demo content rather than "
+                      "AI-prompt/template text).",
+        }
+
+    old_text = finding["matched_text"]
+    new_line = finding["line_excerpt"].replace(old_text, best["placeholder"], 1)
+    return {
+        "placeholder": best["placeholder"],
+        "example_value": best["example_value"],
+        "suggested_diff": {
+            "old_line": finding["line_excerpt"],
+            "new_line": new_line,
+        },
+        "match_basis": "filename_keyword",
+        "reason": f"entity '{best['entity']}' name fully matched this file's own name; "
+                  f"attribute '{best['attribute']}' matched category '{category}''s expected "
+                  f"attribute family.",
+    }
 
 
 def load_registered_placeholders(dictionary_path):
@@ -201,6 +343,21 @@ def scan_file(path, registered_placeholders, gap_regex=None, entity_by_table=Non
     return scan_text(text, registered_placeholders, source_label=path, gap_regex=gap_regex, entity_by_table=entity_by_table)
 
 
+def apply_suggest_fix(findings, dictionary_entries):
+    """Mutates `findings` in place, attaching a "suggested_fix" object to
+    each one, keyed off each finding's own "source" file name (see
+    build_context_words's docstring for why filename, not surrounding
+    prose)."""
+    context_words_cache = {}
+    for finding in findings:
+        source = finding["source"]
+        if source not in context_words_cache:
+            context_words_cache[source] = build_context_words(source)
+        finding["suggested_fix"] = suggest_fix_for_finding(
+            finding, dictionary_entries, context_words_cache[source]
+        )
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--file", action="append", default=[], help="file to scan (repeatable)")
@@ -212,6 +369,10 @@ def main():
     parser.add_argument("--catalog", default=DEFAULT_CATALOG_PATH,
                          help="path to DATABASE_CATALOG.json, for the dictionary_gap_candidate check")
     parser.add_argument("--output", default=None, help="write JSON findings report to this path")
+    parser.add_argument("--suggest-fix", action="store_true",
+                         help="attach a suggested <Entity.Attribute> replacement + diff to each finding "
+                              "(never writes to any file -- for human review only, see this script's own "
+                              "PHASE 4 ADDITION module-docstring note)")
     args = parser.parse_args()
 
     files = list(args.file)
@@ -239,6 +400,10 @@ def main():
         files_scanned.append(path)
         all_findings.extend(scan_file(path, registered_placeholders, gap_regex=gap_regex, entity_by_table=entity_by_table))
 
+    if args.suggest_fix:
+        dictionary_entries = load_dictionary_entries(args.dictionary)
+        apply_suggest_fix(all_findings, dictionary_entries)
+
     by_category = {}
     for f in all_findings:
         by_category[f["category"]] = by_category.get(f["category"], 0) + 1
@@ -261,6 +426,7 @@ def main():
             "files_scanned": files_scanned,
             "files_scanned_count": len(files_scanned),
             "inline_string_scanned": args.string is not None,
+            "suggest_fix_enabled": args.suggest_fix,
         },
         "summary": {
             "total_findings": len(all_findings),
