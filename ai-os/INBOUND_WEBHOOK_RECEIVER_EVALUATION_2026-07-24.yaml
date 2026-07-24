@@ -1,0 +1,113 @@
+meta:
+  title: "Inbound integration/connector path evaluation -- standalone OSS webhook-receiver pattern vs.
+    a full iPaaS (n8n), for phase_3_workflow_automation_integration"
+  created: '2026-07-24'
+  produced_by_task: task-20260724-122137-phase3-formalize-task-gateway-py-task-ex
+  phase: phase_3_workflow_automation_integration
+  closes_engines: [10]
+  instruction_this_evaluation_follows: "This phase's own objective text, copied verbatim from
+    20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml's phases[]: 'evaluate a standalone OSS
+    webhook-receiver pattern consistent with AUDITOR_ENGINE_PHASE_PLAN''s own finding of zero iPaaS deps in
+    any of the 3 repos -- do not install a full iPaaS like n8n without Owner confirmation, per that plan's
+    own tool_installable_compatible discipline.'"
+  grounding_fact_reused_not_rechecked: "AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml's workflow domain row
+    (tool_mapping): 'confirmed via package.json read of all 3 repos: no bpmn-js, no camunda, no workflow
+    engine dependency present anywhere in the real stack.' The same package.json read this document cites
+    also confirms zero n8n/Zapier/Make/iPaaS dependency -- reused verbatim per this task's own CONSTRAINTS
+    ('do not re-build or re-litigate anything already marked done in an earlier phase'), not re-run.
+    engine_inventory row 10's own gap_description independently confirms the same finding: 'No inbound
+    connector/iPaaS framework -- confirmed zero n8n/Kong/similar dependency in any of the 3 repos.'"
+
+# ============================================================================
+# OPTIONS CONSIDERED
+# ============================================================================
+options_considered:
+  - option: "Install n8n (or a comparable full iPaaS: Zapier self-hosted equivalent, Make, Activepieces)"
+    verdict: "REJECTED without Owner confirmation, per this phase's own objective text (verbatim above) and
+      the plan's own tool_installable_compatible discipline (AUDITOR_ENGINE_PHASE_PLAN's own convention:
+      'technically installable' is not the same question as 'should be installed' -- e.g. that plan's
+      sonar-scanner row is installable but non-functional without a paid tier, and is NOT installed for
+      that reason)."
+    why_rejected_here: "A full node-graph iPaaS is a categorically larger surface than what this phase's
+      real gap needs: VERIDIAN already has (1) a real, live trigger->condition->action rule builder in
+      automation-rule-service.ts for the product layer (see this task's own PROGRESS.md prior-art finding),
+      and (2) this task's new scripts/automation_rule_engine.py for the AI-OS operational layer. Installing
+      n8n on top of both would be a THIRD automation-rule mechanism with its own storage/execution model --
+      exactly the duplication the Owner's standing instruction warns against, not a gap-filler. It would
+      also introduce a new long-running Node.js service, a new database (n8n's own SQLite/Postgres store),
+      and a new credential-storage surface -- a materially different security posture than anything else in
+      this stack, warranting explicit Owner sign-off before any install, per this phase's own text."
+  - option: "A minimal, standalone Python stdlib HTTP receiver (http.server.BaseHTTPRequestHandler),
+      zero new pip dependency"
+    verdict: "CHOSEN -- see scripts/webhook_receiver.py"
+    why_chosen: "Zero new dependency, consistent with the confirmed zero-iPaaS-deps finding above and this
+      codebase's existing convention of preferring stdlib where it suffices (task-gateway.py,
+      superboss-register.py, decision-service.py, policy_decision.py -- every script this plan's earlier
+      phases added is stdlib-plus-sqlite3-plus-pyyaml, no new pip dependency introduced by any of them).
+      Reuses webhook-deliver.ts's own outbound signature convention (HMAC-SHA256, X-Veridian-Signature:
+      sha256=<hex>) rather than inventing a new one, so this platform has ONE webhook-signature convention
+      for both directions, not two. Delegates all rule storage/evaluation/dispatch to
+      scripts/automation_rule_engine.py -- the receiver itself is deliberately thin (parse path -> verify
+      signature -> parse JSON -> call evaluate-rules), not a second place rule logic could drift."
+  - option: "A lightweight existing OSS webhook-receiver library (e.g. a pip package purpose-built for
+      inbound webhook ingestion, as opposed to a full iPaaS)"
+    verdict: "Considered, not adopted this session"
+    why_not_adopted: "No such package is already a dependency in any of the 3 repos (same package.json/
+      requirements read cited above), and the entire real requirement here -- verify an HMAC signature,
+      parse JSON, dispatch to a handler -- is under 150 lines of stdlib code with zero third-party attack
+      surface added. Installing a dependency to save ~150 lines, when the stdlib path is already proven
+      live (see real_evidence below), would be exactly the kind of installation this phase's own objective
+      warns against doing without weighing the alternative first. Revisit if a future need (e.g. OAuth
+      inbound flows, provider-specific webhook verification schemes beyond HMAC) genuinely exceeds what a
+      thin stdlib handler can reasonably cover."
+
+# ============================================================================
+# WHAT IS LIVE vs WHAT NEEDS AN OWNER DECISION
+# ============================================================================
+live_today:
+  - "scripts/webhook_receiver.py -- real, tested standalone. See real_evidence below for a full live
+    end-to-end proof (signed request -> automation rule fired -> real action dispatched)."
+  - "scripts/automation_rule_engine.py -- the trigger/condition/action engine the receiver calls into."
+  - "systemd/veridian-webhook-receiver.service -- unit file present in this repo."
+not_enabled_pending_owner_decision:
+  - what: "Starting the systemd unit (or any equivalent long-running process) so the receiver actually
+      listens continuously, and deciding what network path (if any) can reach it beyond loopback."
+    why_not_done_automatically: "This is a genuinely different kind of change than the crontab entries this
+      plan's crontab_approval_note already blanket-approves (Recommended-default, 95pct-resources) -- those
+      are periodic, outbound-only, no new listening port. A webhook receiver is a new INBOUND network
+      listener; what can reach port 8099 (loopback-only vs. a reverse-proxied public path) is a real
+      security-posture decision the existing blanket cron approval does not cover. Flagged as a new,
+      separate OWNER_DECISIONS_NEEDED_2026-07-23.yaml entry (id: webhook-receiver-network-exposure) rather
+      than assumed."
+    default_recommended: "Loopback-only (127.0.0.1), started via the provided systemd unit, with
+      VERIDIAN_WEBHOOK_SECRET set to a real secret (never left unset -- webhook_receiver.py itself prints a
+      loud warning and disables signature verification if it is), reachable only from processes already on
+      this host (e.g. a future same-host caller) until/unless the Owner confirms a specific external
+      provider needs to reach it, at which point the reverse-proxy/firewall path for that specific need
+      should be scoped narrowly rather than opening the port broadly."
+
+# ============================================================================
+# REAL EVIDENCE -- this session's own live end-to-end test (loopback,
+# temporary, not left running -- see real_evidence entries for exact
+# commands and observed output).
+# ============================================================================
+real_evidence:
+  - "Registered a real automation rule tied to an existing, live capability_registry row:
+    `automation_rule_engine.py register-rule --rule-name capability-registry-dedup-webhook-log
+    --capability-name capability_registry_dedup --trigger-type webhook.capability_proposed
+    --action-type log_action ...` -> {\"registered\": true}."
+  - "Started scripts/webhook_receiver.py on 127.0.0.1:8100 (loopback only, temporary, killed at the end of
+    this test -- not left running) with VERIDIAN_WEBHOOK_SECRET set. Sent an UNSIGNED POST to
+    /webhook/invoice_created -> 401 {\"error\": \"invalid or missing signature\"} (signature verification
+    confirmed enforced, not just present in code)."
+  - "Sent a correctly HMAC-SHA256-signed POST to /webhook/invoice_created with a matching automation rule
+    active -> 200, body included a real evaluation result: rules_evaluated=2, rules_fired=2, each with a
+    real automation_rule_runs row id and a real dispatched log-action action_id -- proving the full chain
+    (inbound HTTP -> signature verify -> automation_rule_engine.py evaluate-rules -> real action dispatch)
+    end to end, not simulated. GET /healthz -> 200 {\"ok\": true}."
+  - "Test-only rules/runs used during this verification were deleted afterward; the one rule left live
+    (capability-registry-dedup-webhook-log) is a real, meaningful example tied to a real capability, same
+    'leave real evidence live' convention Phase 1's populate_capability_registry.py used for its 5 rows."
+
+registration:
+  knowledge_engine_query_command: 'python3 scripts/superboss-register.py query-knowledge "phase_3_workflow_automation_integration" --tag domain:veridian-20-engine-10-gateway'

@@ -25,6 +25,9 @@ import sys
 
 import yaml
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from workflow_contract import phase_for_task_gateway_subcommand  # noqa: E402
+
 VERIDIAN_ROOT = "/opt/veridian"
 SCRIPTS = f"{VERIDIAN_ROOT}/scripts"
 AI_OS = f"{VERIDIAN_ROOT}/ai-os"
@@ -188,6 +191,7 @@ def cmd_submit(args):
     ]
 
     print(json.dumps({
+        "workflow_phase": phase_for_task_gateway_subcommand("submit"),
         "instruction_id": instruction_id,
         "duplicate_found": bool(dup_result.get("found", 0) > 0),
         "duplicate_evidence": dup_result.get("matches", []),
@@ -267,6 +271,7 @@ def cmd_start(args):
     )
 
     print(json.dumps({
+        "workflow_phase": phase_for_task_gateway_subcommand("start"),
         "task_id": task_id,
         "systemd_active": systemd_active,
         "work_item_id": work_result.get("work_item_id"),
@@ -286,6 +291,7 @@ def cmd_log(args):
     action_result = run_json(cmd, "log-action")
 
     print(json.dumps({
+        "workflow_phase": phase_for_task_gateway_subcommand("log"),
         "action_id": action_result.get("action_id"),
         "work_item_id": work_item_id,
         "work_item_resolved": work_item_id is not None,
@@ -454,6 +460,7 @@ def cmd_close(args):
     verdict = audit_result.get("verdict")
     if verdict != "DONE":
         print(json.dumps({
+            "workflow_phase": "logged",  # audit failed: never reached the closed phase
             "audit_verdict": verdict,
             "reason": audit_result,
         }, indent=2, default=str))
@@ -486,6 +493,7 @@ def cmd_close(args):
     knowledge_engine_reverify = reverify_touched_knowledge_engine_rows(args.task_id)
 
     print(json.dumps({
+        "workflow_phase": phase_for_task_gateway_subcommand("close"),
         "audit_verdict": verdict,
         "checkpoint_status": checkpoint_status,
         "audit_id": audit_result.get("audit_id"),

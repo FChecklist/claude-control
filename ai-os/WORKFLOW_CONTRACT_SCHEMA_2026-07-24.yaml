@@ -1,0 +1,165 @@
+meta:
+  title: "VERIDIAN Workflow Contract Schema -- one named contract for scripts/task-gateway.py
+    (AI-OS server-side task lifecycle) and compliance-tracker's src/lib/task-execution-engine.ts
+    (product-side task dispatch)"
+  created: '2026-07-24'
+  produced_by_task: task-20260724-122137-phase3-formalize-task-gateway-py-task-ex
+  phase: phase_3_workflow_automation_integration
+  precedent: 'Same method as ai-os/POLICY_DECISION_SCHEMA_2026-07-24.yaml (Phase 2): document the real,
+    already-read shape of both real dispatchers first, then design one shared envelope that generalizes
+    both without changing either''s existing wire contract (additive fields only).'
+  closes_engines: [8]
+  gap_this_closes: "engine_inventory row 8 (Workflow Engine) gap_description: 'Neither is BPMN-modeled...
+    VERIDIAN''s workflows today are status-enum transitions and task-gateway phases, not a modeled process
+    definition.' This document does not retroactively BPMN-model either system (that remains
+    AUDITOR_ENGINE_PHASE_PLAN''s workflow domain row's own recommended custom-script substitute, a
+    separate, larger undertaking explicitly out of this phase's scope) -- it gives the two REAL, already-
+    enforced status-enum/phase lifecycles a single named contract and shared vocabulary, so a caller (or a
+    future BPMN-modeling effort) has one place to read both from, instead of two disconnected files."
+  repo_boundary_honestly_stated: "task-execution-engine.ts lives in the separate FChecklist/compliance-tracker
+    repo. Per Phase 1/2's own precedent (reused compliance-tracker's mechanisms, never edited its source)
+    this document reads that file's real shapes to ground the shared schema but does not edit or commit to
+    that repo -- this task's own EXPECTED_OUTPUT is a PR on claude-control only. scripts/task-gateway.py is
+    the only file this phase wires live to the contract (see workflow_phase field additions, additive only)."
+
+# ============================================================================
+# REAL SHAPE 1 -- scripts/task-gateway.py's actual subcommand lifecycle, as
+# it exists on disk today (not idealized).
+# ============================================================================
+real_shape_task_gateway_py:
+  file: scripts/task-gateway.py
+  lifecycle:
+    - subcommand: submit
+      function: cmd_submit
+      does: "Logs the raw instruction (superboss-register.py log-instruction), runs the mandatory
+        software-first search (check-duplicate/search/query-knowledge/lookup-capability), surfaces
+        collision with any already-active veridian-worker@ systemd unit. Produces an instruction_id, no
+        task_id yet."
+      terminal_fields: [instruction_id, capability_deterministic_path_available]
+    - subcommand: start
+      function: cmd_start
+      does: "Validates the prompt-file has all REQUIRED_SECTIONS and passes tight_task_validation.py, then
+        calls veridian-task.py create (which itself enables+starts a veridian-worker@<task_id>.service
+        systemd unit) and logs a work_items row (status=open) linked to the instruction_id."
+      terminal_fields: [task_id, systemd_active, work_item_id]
+    - subcommand: log
+      function: cmd_log
+      does: "Appends one actions row (log-action) against the work_items row resolved from task_id.
+        Called any number of times while the task is in flight."
+      terminal_fields: [action_id, work_item_id]
+    - subcommand: close
+      function: cmd_close
+      does: "Runs postflight_audit_gate.py against the task's own pre-defined SUCCESS_CRITERIA
+        (verification_command_predefinition_rule -- the --audit-cmd must be copied verbatim from the
+        prompt-file, never authored fresh at close time). Only on verdict=DONE does it mark work_items
+        status=closed, checkpoint the task completed, check the branch reached master (check_branch_merged_to_master),
+        and re-verify any touched knowledge_engine rows."
+      terminal_fields: [audit_verdict, checkpoint_status, git_merge_status, knowledge_engine_reverify]
+  status_values_observed: "No single enum column -- status is implicit in which subcommand has run
+    (submit -> start -> log* -> close) plus work_items.status (open/closed) and task.yaml's own status field
+    (read by cmd_status, values include pending/in_progress/completed per veridian-task.py's own convention)."
+
+# ============================================================================
+# REAL SHAPE 2 -- compliance-tracker's task-execution-engine.ts, as read this
+# session (executeTask + its real call graph). Read-only citation, not edited.
+# ============================================================================
+real_shape_task_execution_engine_ts:
+  file: repos/compliance-tracker/src/lib/task-execution-engine.ts
+  entrypoint: "executeTask(orgId, userId, taskId, title, description, ...)"
+  lifecycle:
+    - phase: "structured short-circuit"
+      does: "If engineKey (VCEL calculator leaf) or resolvedWorkerAgentId is already set (a human picked
+        a chain-path/agent rather than typing free text), dispatch directly via executeEngineDispatch /
+        executeStructuredDispatch -- zero LLM calls. Recorded as Priority 5's FULL_SOFTWARE classification."
+    - phase: "guardrail + policy gate"
+      does: "evaluateGuardrails(TASK_FREE_TEXT_PLANNING_LEAF) then enforcePolicy() -- both real, blocking
+        gates; a denial calls markTaskOutcome(..., 'failed', ...) and returns before any provider is
+        reached."
+    - phase: "classification"
+      does: "classifyExecutionWithReliability() buckets the remainder into PACKAGE_AVAILABLE (routes to
+        executePackageDispatch(), Lower AI, no fresh LLM plan) or NOVEL (falls through to free-text LLM
+        planning, resolveModelConfig + callLLMJson against the worker-agent roster)."
+    - phase: "dispatch + record"
+      does: "Whichever path fired, the outcome is recorded via recordExecutionOutcome() (rolling
+        FULL_SOFTWARE/PACKAGE_AVAILABLE/NOVEL counters -- the TS-side sibling of this schema's own
+        workflow_phase concept) and a taskChatMessages summary row is posted."
+    - phase: "terminal"
+      function: markTaskOutcome
+      does: "Sets tasks.status to 'completed' or 'failed' (the only two terminal values this function
+        writes; 'pending'/'in_progress' are the pre-terminal values automation-progress-audit.ts's own
+        LOOKBACK_DAYS query already groups by, cancelled is a 4th value that function does not set)."
+      terminal_fields: [status, taskChatMessages.content]
+
+# ============================================================================
+# THE SHARED CONTRACT -- one named envelope both real lifecycles above map
+# onto. Every phase name here is chosen to already read naturally against
+# BOTH systems' real code (not invented vocabulary neither system uses).
+# ============================================================================
+workflow_contract_schema:
+  schema_version: '1.0'
+  name: veridian_workflow_contract
+  phases_enum: [submitted, planned, dispatched, logged, closed]
+  phase_mapping:
+    submitted:
+      task_gateway_py: "cmd_submit -- instruction_id exists, no task_id yet."
+      task_execution_engine_ts: "Task row already exists with status=pending (created by task-service.ts,
+        upstream of executeTask() -- executeTask is always called against an already-submitted task)."
+    planned:
+      task_gateway_py: "cmd_start's tight_task_validation.py pass -- the prompt-file is confirmed
+        dispatch-ready before veridian-task.py create runs."
+      task_execution_engine_ts: "The guardrail+policy gate and classifyExecutionWithReliability() decision
+        -- FULL_SOFTWARE/PACKAGE_AVAILABLE/NOVEL is this phase's real output."
+    dispatched:
+      task_gateway_py: "cmd_start's veridian-task.py create + systemd start -- task_id and
+        systemd_active now exist."
+      task_execution_engine_ts: "executeEngineDispatch / executeStructuredDispatch / executePackageDispatch
+        / the free-text LLM plan call -- whichever branch classification selected actually runs."
+    logged:
+      task_gateway_py: "cmd_log -- any number of actions rows appended against the resolved work_item_id."
+      task_execution_engine_ts: "taskChatMessages rows + orchestra_executions recording (recordOrchestraExecution)."
+    closed:
+      task_gateway_py: "cmd_close -- terminal only on postflight_audit_gate.py verdict=DONE; work_items.status
+        becomes closed, task.yaml checkpointed completed."
+      task_execution_engine_ts: "markTaskOutcome -- tasks.status becomes completed or failed."
+  field_equivalence_table:
+    - task_gateway_py_field: task_id
+      task_execution_engine_ts_field: taskId
+      note: "Same concept, different ID space -- task-gateway.py's task_id names a veridian-worker@
+        systemd unit; taskId names a Postgres tasks.id row. Never the same value, never cross-referenced
+        today (a real gap for a future phase, not invented as solved here)."
+    - task_gateway_py_field: instruction_id
+      task_execution_engine_ts_field: "(none)"
+      note: "task-execution-engine.ts has no equivalent -- superboss-register.py's instruction ledger is
+        AI-OS-operational-layer-only, not mirrored product-side."
+    - task_gateway_py_field: work_item_id
+      task_execution_engine_ts_field: taskAgentExecutions row id
+      note: "Both are the 'one row per unit of dispatched work' concept in their own system."
+    - task_gateway_py_field: audit_verdict (DONE / not-DONE)
+      task_execution_engine_ts_field: "tasks.status (completed / failed)"
+      note: "task-gateway.py's audit_verdict is a stricter gate (postflight_audit_gate.py re-runs the
+        predefined --audit-cmd) than task-execution-engine.ts's terminal status, which is set directly by
+        markTaskOutcome without a separate re-verification step. Documented, not unified -- unifying them
+        would require task-execution-engine.ts to grow its own postflight_audit_gate.py-equivalent, out of
+        this phase's scope."
+  call_site_requirement: "Any new dispatcher wrapping either task-gateway.py or task-execution-engine.ts
+    should report its real progress using this phases_enum (submitted/planned/dispatched/logged/closed),
+    not a bespoke status vocabulary -- the same discipline the Capability Registry's lookup_contract
+    established for capability lookups in Phase 1."
+
+# ============================================================================
+# WHAT IS WIRED LIVE BY THIS PHASE (see scripts/workflow_contract.py and
+# scripts/task-gateway.py's own diff) vs what remains documentation-only.
+# ============================================================================
+live_wiring:
+  task_gateway_py: "Every cmd_submit/cmd_start/cmd_log/cmd_close JSON output now carries a
+    workflow_phase field (submitted/dispatched/logged/closed respectively) sourced from
+    scripts/workflow_contract.py's WORKFLOW_PHASES, not a locally hand-typed string -- additive only,
+    no existing field removed or renamed (same non-breaking discipline Phase 2 used on
+    preflight-guard.py/risk-tier.py)."
+  task_execution_engine_ts: "Not wired live -- out of this task's repo boundary (see
+    repo_boundary_honestly_stated above). This schema's phase_mapping is the exact field-for-field
+    translation a future compliance-tracker PR would need to emit workflow_phase itself, same deferral
+    posture Phase 2 used for policy_decision_schema's TypeScript-side port."
+
+registration:
+  knowledge_engine_query_command: 'python3 scripts/superboss-register.py query-knowledge "phase_3_workflow_automation_integration" --tag domain:veridian-20-engine-10-gateway'
