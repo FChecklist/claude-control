@@ -2418,6 +2418,47 @@ registries:
     phases[] -- picked up automatically by scripts/auto_phase_continuation.py (its PLAN_GLOB was widened
     from a hardcoded *_PHASE_PLAN_2026-07-24.yaml to *_PHASE_PLAN_*.yaml as part of this same task so this
     new, later-dated plan is discovered without further manual intervention) once this task''s PR merges.'
+- id: prompt_gateway
+  type: chat_preprocessing_pipeline
+  path: scripts/prompt_gateway/ (config.py, gateway.py, engine/{id_generator,classifier,prompt_engine,
+    context_engine,snip_engine}.py) + ai-os/PROMPT_GATEWAY_2026-07-25.yaml
+  scope: 'Task task-20260725-053025-zai-prompt-gateway-integration: integrates 9 real, working,
+    stdlib-only Python files the Owner had Z.AI build (staged at
+    /opt/veridian/workspace/zai-prompt-gateway-staging/) as a pre-processing FILTER that
+    classifies/compresses raw owner chat text into a machine_prompt BEFORE it becomes a --text
+    argument to the real, unmodified, already-in-production scripts/task-gateway.py dispatcher
+    (submit/start/log/close/register-automation/status) -- this module never calls
+    task-gateway.py itself and is never a replacement for it. CRITICAL COLLISION AVOIDED: the
+    staged entrypoint called itself "task-gateway.py" in its own header and targeted the exact
+    live dispatcher path; deployed instead under its own scripts/prompt_gateway/ namespace with
+    the entrypoint renamed gateway.py -- scripts/task-gateway.py verified byte-for-byte
+    unchanged (sha256 1e9421777219d7561511431219e04c09862d86b2761cf14c882af4599ca9a49b, 642
+    lines, before and after). Introduces a 4th, separate ID namespace (VD-YYYYMMDDHHMMSS-XXXX)
+    scoped ONLY to this pipeline''s own raw-chat pre-processing records -- explicitly NOT a task
+    id, KE- id, or INS- id; see ai-os/PROMPT_GATEWAY_2026-07-25.yaml vd_id_namespace for the full
+    distinction. Implements only the PROMPT_PROCESSING_PIPELINE + CONTEXT_MANAGEMENT_PIPELINE +
+    a slice of the COMPRESSION_STACK boxes from the Owner''s much larger 19-engine OWNER_ENGINE
+    YAML spec -- Temporal (workflow orchestration), OPA (policy), Qdrant (vector store), and
+    local-model-inference hosting are explicitly NOT implemented (named out-of-scope in this
+    task''s own CONSTRAINTS), and the remainder of the 19-engine spec beyond
+    PROMPT_PROCESSING_PIPELINE/CONTEXT_MANAGEMENT_PIPELINE/COMPRESSION_STACK is an unscoped,
+    uninventoried gap, not silently folded into "done" here. No systemd service was installed:
+    the staged veridian-gateway.service.TEMPLATE assumed a User=veridian system user (does not
+    exist; real user is rajat) and a --mode pipe named-pipe daemon with no real streaming
+    producer in this system today -- see ai-os/PROMPT_GATEWAY_2026-07-25.yaml systemd_decision
+    for the full reasoning; this pipeline runs on-demand CLI-only for now.'
+  status: live
+  query_command: python3 scripts/superboss-register.py query-knowledge "prompt_gateway" --tag domain:prompt_gateway
+  real_verification: 'python3 scripts/prompt_gateway/gateway.py --mode init (exit 0, real dirs
+    created under /opt/veridian/data/prompt_gateway/, 6 snippets seeded, real VD- test id
+    generated) and echo "<raw chat>" | python3 scripts/prompt_gateway/gateway.py --mode stdin
+    --json-only (exit 0, real 66.7% token reduction / 13.2% noise reduction on a representative
+    owner-style instruction) -- both real command outputs pasted verbatim in
+    ai-os/PROMPT_GATEWAY_2026-07-25.yaml, not paraphrased.'
+  next_phase: none dispatched by this task -- if a genuinely streaming chat-ingest use case
+    materializes later, fixing and installing the systemd unit (correct User=rajat, correct
+    ExecStart path, a real tmpfiles-managed pipe or a per-invocation design) should be its own
+    scoped follow-on task, not retrofitted here.
 tree_lineage:
   tree1_audit_tree:
     path: /opt/veridian/repos/compliance-tracker/ai-os/audit-tree/
