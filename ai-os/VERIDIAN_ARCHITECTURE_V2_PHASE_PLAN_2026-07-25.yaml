@@ -162,11 +162,7 @@ phases:
     route through.'
   depends_on:
   - phase_1_prompt_registry_lifecycle_foundation
-  external_depends_on:
-  - 'repos/compliance-tracker (repo: compliance-tracker, not claude-control) -- this
-    phase writes application code outside this session''s own repo boundary once the
-    target-repo decision resolves; must be dispatched as (or coordinate with) a compliance-tracker-scoped
-    task.'
+  external_depends_on: []
   status: not_started
   success_criteria:
   - 'python3 scripts/superboss-register.py query-knowledge "veridian_v2_compiler_pipeline"
@@ -176,6 +172,11 @@ phases:
     prompt end to end, exit 0) -- cannot be pre-specified here since the target module
     doesn't exist yet; the dispatched task's own SUCCESS_CRITERIA must include one,
     per this plan's own concrete-command convention.
+  target_repo: compliance-tracker
+  target_repo_note: 'repos/compliance-tracker (repo: compliance-tracker, not claude-control)
+    -- this phase writes application code outside this session''s own repo boundary
+    once the target-repo decision resolves; must be dispatched as (or coordinate with)
+    a compliance-tracker-scoped task.'
 - id: phase_3_governance_policy_cost_engines
   name: Business Rule, Permission, Policy, Compliance, Governance, Audit, Cost Optimization
     Engines + Lifecycle Governance Gates + GitOps
@@ -210,17 +211,18 @@ phases:
     log alongside it and the 20-Engines Audit Engine.'
   depends_on:
   - phase_1_prompt_registry_lifecycle_foundation
-  external_depends_on:
-  - 'repos/compliance-tracker (repo: compliance-tracker, not claude-control) -- wiring
-    permission-service.ts, auth-guard.ts, llm-client.ts, and prompt-os-service.ts''s
-    audit trigger is application code in that repo, once the target-repo decision
-    resolves.'
+  external_depends_on: []
   status: not_started
   success_criteria:
   - 'python3 scripts/superboss-register.py query-knowledge "veridian_v2_governance_engines"
     --tag domain:veridian_architecture_v2  # found=1'
   - 'test -f ai-os/VERIDIAN_V2_LIFECYCLE_GOVERNANCE_SCHEMA_2026-07-25.yaml  # exits
     0 (schema-design deliverable of this phase)'
+  target_repo: compliance-tracker
+  target_repo_note: 'repos/compliance-tracker (repo: compliance-tracker, not claude-control)
+    -- wiring permission-service.ts, auth-guard.ts, llm-client.ts, and prompt-os-service.ts''s
+    audit trigger is application code in that repo, once the target-repo decision
+    resolves.'
 - id: phase_4_defense_in_depth_security_quality
   name: Defense-in-Depth, Prompt Security, Red Team, Quality Engines + 4-layer security
     architecture + Guardrails pipeline stages
@@ -253,9 +255,7 @@ phases:
     for the Red Team Engine, per this phase's own scope note.
   depends_on:
   - phase_2_compiler_pipeline_intelligence_engines
-  external_depends_on:
-  - 'repos/compliance-tracker (repo: compliance-tracker, not claude-control) -- guardrail
-    library installation and pipeline wiring is application code in that repo.'
+  external_depends_on: []
   status: not_started
   success_criteria:
   - 'python3 scripts/superboss-register.py query-knowledge "veridian_v2_defense_in_depth"
@@ -263,6 +263,10 @@ phases:
   - A real command proving at least Layer 1 (input sanitization) rejects or flags
     one known adversarial sample input, exit 0 -- defined precisely by this phase's
     own dispatched task once the tool evaluation above picks a concrete library.
+  target_repo: compliance-tracker
+  target_repo_note: 'repos/compliance-tracker (repo: compliance-tracker, not claude-control)
+    -- guardrail library installation and pipeline wiring is application code in that
+    repo.'
 - id: phase_5_browser_execution_tiers
   name: Browser Execution/Lite-LLM/NPU/Built-in-AI/MCP/Function/Worker/Transformers
     Engines + Browser Compute/Parallelism tech stack
@@ -298,9 +302,7 @@ phases:
     already uses, not a separate escalation path.
   depends_on:
   - phase_2_compiler_pipeline_intelligence_engines
-  external_depends_on:
-  - 'repos/compliance-tracker (repo: compliance-tracker, not claude-control) -- all
-    browser- execution code lives in and extends litert-spike, which is already there.'
+  external_depends_on: []
   status: not_started
   success_criteria:
   - 'python3 scripts/superboss-register.py query-knowledge "veridian_v2_browser_execution"
@@ -310,6 +312,10 @@ phases:
   - A real command proving at least a 2-tier fallback (e.g. WebGPU inference attempt
     -> documented real fallback path) executes end to end in a browser context, defined
     precisely by this phase's own dispatched task.
+  target_repo: compliance-tracker
+  target_repo_note: 'repos/compliance-tracker (repo: compliance-tracker, not claude-control)
+    -- all browser- execution code lives in and extends litert-spike, which is already
+    there.'
 - id: phase_6_multi_level_cache_architecture
   name: L0-L9 Cache Engines (Semantic Cache, Knowledge Cache deepened) + Storage Tier
     tech stack
@@ -339,9 +345,7 @@ phases:
     onto knowledge_engine rather than building a second knowledge store.
   depends_on:
   - phase_5_browser_execution_tiers
-  external_depends_on:
-  - 'repos/compliance-tracker (repo: compliance-tracker, not claude-control) -- L0-L5
-    browser cache code lives in the same app phase_5 builds.'
+  external_depends_on: []
   status: not_started
   success_criteria:
   - 'python3 scripts/superboss-register.py query-knowledge "veridian_v2_cache_architecture"
@@ -349,6 +353,9 @@ phases:
   - A real command proving at least one cache level (e.g. L2 IndexedDB) round-trips
     a real write+read for a prompt object, exit 0, defined precisely by this phase's
     own dispatched task.
+  target_repo: compliance-tracker
+  target_repo_note: 'repos/compliance-tracker (repo: compliance-tracker, not claude-control)
+    -- L0-L5 browser cache code lives in the same app phase_5 builds.'
 - id: phase_7_analytics_telemetry_observability_performance
   name: Telemetry, Analytics, Performance Profiling, Memory Management, Storage Quota,
     Network Resilience, Observability Engines + Performance Budget Framework
@@ -375,9 +382,7 @@ phases:
   depends_on:
   - phase_5_browser_execution_tiers
   - phase_6_multi_level_cache_architecture
-  external_depends_on:
-  - 'repos/compliance-tracker (repo: compliance-tracker, not claude-control) -- instrumentation
-    code lives in the same app phases 5/6 build.'
+  external_depends_on: []
   status: not_started
   success_criteria:
   - 'python3 scripts/superboss-register.py query-knowledge "veridian_v2_performance_budgets"
@@ -385,6 +390,9 @@ phases:
   - A real command proving at least one pipeline stage's real measured latency is
     captured and compared against its document-specified budget (e.g. Lightweight
     Analysis vs 15ms), exit 0, defined precisely by this phase's own dispatched task.
+  target_repo: compliance-tracker
+  target_repo_note: 'repos/compliance-tracker (repo: compliance-tracker, not claude-control)
+    -- instrumentation code lives in the same app phases 5/6 build.'
 - id: phase_8_dspy_learning_distribution_engines
   name: DSPy Integration, AI Learning, Prompt Translation/Localization/Marketplace/Export/Import
     Engines
@@ -418,9 +426,7 @@ phases:
   depends_on:
   - phase_2_compiler_pipeline_intelligence_engines
   - phase_4_defense_in_depth_security_quality
-  external_depends_on:
-  - 'repos/compliance-tracker (repo: compliance-tracker, not claude-control) -- services/doc-processing/
-    is where any DSPy Python integration would live.'
+  external_depends_on: []
   status: not_started
   success_criteria:
   - 'python3 scripts/superboss-register.py query-knowledge "veridian_v2_dspy_learning"
@@ -428,6 +434,9 @@ phases:
   - A real command proving one real prompt compiles through whichever compilation
     method this phase adopts (DSPy or a justified alternative) with a measurable quality/token-count
     before/after, exit 0, defined precisely by this phase's own dispatched task.
+  target_repo: compliance-tracker
+  target_repo_note: 'repos/compliance-tracker (repo: compliance-tracker, not claude-control)
+    -- services/doc-processing/ is where any DSPy Python integration would live.'
 - id: phase_9_gateway_knowledge_sync_infrastructure
   name: Gateway Integration, Knowledge Sync Engines wired onto the existing 10-gateway/capability_registry/knowledge_engine
     infrastructure (zero-duplication phase)
@@ -463,8 +472,6 @@ phases:
     -- soft/methodological dependency (reuse its method), not a hard content block;
     this phase can proceed once that plan's own phase_1 (done) exists as the method
     template, regardless of that plan's own phase_4 completion status.
-  - 'repos/compliance-tracker (repo: compliance-tracker, not claude-control) -- the
-    gateway boundary code itself lives there.'
   status: not_started
   success_criteria:
   - 'python3 scripts/superboss-register.py query-knowledge "veridian_v2_gateway_knowledge_sync"
@@ -472,6 +479,9 @@ phases:
   - 'python3 scripts/generate_wiring_registry.py && grep -q veridian-v2 ai-os/WIRING_ENGINE_REGISTRY_2026-07-25.json  #
     exits 0 once a real hop is added, real command per WIRING_ENGINE_PHASE_PLAN''s
     own precedent'
+  target_repo: compliance-tracker
+  target_repo_note: 'repos/compliance-tracker (repo: compliance-tracker, not claude-control)
+    -- the gateway boundary code itself lives there.'
 - id: phase_10_ycml_catalog_and_consolidation
   name: Modular YCML Specification Catalog (40 specs) + final documentation consolidation
   objective: Author the document's own required YCML-format specification for every

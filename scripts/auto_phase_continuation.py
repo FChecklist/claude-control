@@ -619,7 +619,8 @@ def main():
         elif args.limit is not None and dispatched_count >= args.limit:
             entry["deferred_reason"] = f"--limit {args.limit} reached this run; left for the next cron tick"
         else:
-            result = dispatch(prompt_text, title, repo=args.repo)
+            phase_repo = next_praw.get("target_repo") or args.repo
+            result = dispatch(prompt_text, title, repo=phase_repo)
             entry["dispatch_result"] = result
             if result.get("dispatched"):
                 dispatched_count += 1
