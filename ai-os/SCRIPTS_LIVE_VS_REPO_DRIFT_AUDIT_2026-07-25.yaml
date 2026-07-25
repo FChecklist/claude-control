@@ -1,0 +1,268 @@
+meta:
+  title: Live scripts/ vs repo (claude-control) scripts/ drift audit
+  generated_by: task-20260725-092256-fix-live-repo-scripts-drift-and-system-i
+  generated_ts: "2026-07-25T09:30:00Z"
+  method: >
+    diff -rq /opt/veridian/scripts/ /opt/veridian/repos/claude-control/scripts/
+    (__pycache__ excluded), cross-checked against `git log --all -- scripts/<file>`
+    and `git hash-object` blob matching to determine whether each "differ" file
+    was a clean history match (safe to overwrite) or a genuinely independent edit.
+  headline_finding: >
+    CONFIRMED, SERIOUS, PREVIOUSLY UNDETECTED: no automatic mechanism ever copied
+    claude-control's scripts/ into /opt/veridian/scripts/ (the path every cron job
+    and every direct `python3 /opt/veridian/scripts/X.py` invocation actually runs).
+    sync-repos.sh (the only related cron job, every 2h) only ran `git pull --ff-only`
+    inside /opt/veridian/repos/<repo>/ checkouts -- it never touched live scripts/.
+    Searched for alternatives before concluding this: user crontab (full list reviewed,
+    only sync-repos.sh/cron entries shown below), root crontab (access denied --
+    `sudo crontab -l` requires a password not available in this session; flagged as
+    NOT independently verified, see note), /etc/cron.d (3 stock Ubuntu entries only,
+    no veridian job), `systemctl list-timers --all` (16 stock/system timers, zero
+    veridian units), and a repo-wide grep for rsync/cp/deploy-style patterns in
+    scripts/*.sh and scripts/*.py (zero hits touching scripts/ deployment). This
+    task built and deployed the fix: scripts/deploy-live-scripts.sh, called from
+    the end of the now-repo-tracked scripts/sync-repos.sh.
+  root_cause_confirmation_caveat: >
+    Root/system crontab could not be read in this session (no sudo password
+    available) -- this audit's "no other mechanism found" conclusion rests on
+    every USER-level and filesystem-visible mechanism (systemd timers, /etc/cron.d,
+    grep of the scripts themselves) having zero hits, not on a direct read of
+    root's crontab. If a root cron job exists that this session cannot see, it is
+    unaccounted for here. Flagged, not asserted away.
+  counts_at_generation_time:
+    live_only: 65
+    repo_only: 24
+    differ: 9
+    note: >
+      A fresh `diff -rq` re-run at task completion may show a slightly different
+      count than this generation-time snapshot -- this is a live, actively-running
+      production system (cron jobs fire every 10-30 minutes and can touch files in
+      either tree mid-audit). The final checkpoint pastes a fresh diff -rq run
+      as the authoritative completion-time count per this task's own success
+      criteria.
+
+classification_definitions:
+  operational_only: correctly live-only (crontab backups, cost/credit accounting, .bak files, the OpenRouter proxy) -- leave alone, never deploy, never delete.
+  undeployed_real_feature: exists correctly in repo, was never deployed live -- a real gap, now fixed by this task's deploy run.
+  stale_live_copy: exists in both, live was older/missing a real merged fix -- actively wrong until this task's deploy run.
+  needs_owner_decision: genuinely ambiguous two-sided divergence -- NOT auto-resolved by this task, listed for the Owner.
+
+entries:
+  # ---- differ (9): all verified as stale_live_copy, all deployed by this task ----
+  - path: scripts/auto_phase_continuation.py
+    classification: stale_live_copy
+    evidence: "live content hash matched git commit aac9a4ad exactly (2026-07-25 03:46); 4 commits landed since, including the PLAN_GLOBS widening this session's owner directive required"
+    action_taken: deployed (repo -> live), backup saved as auto_phase_continuation.py.bak-predeploy-20260725-093040
+    post_deploy_verify: "grep -c PLAN_GLOBS live copy = 4"
+  - path: scripts/generate_wiring_registry.py
+    classification: stale_live_copy
+    evidence: "live content hash matched git commit aac9a4ad exactly (2026-07-25 03:46); 1 commit landed since"
+    action_taken: deployed, backup saved as generate_wiring_registry.py.bak-predeploy-20260725-093040
+    post_deploy_verify: "re-run live, produced fresh WIRING_ENGINE_REGISTRY_2026-07-25.json, 7658 entities, see SYSTEM_INTEGRATION_CONFIRMATION doc point 2"
+  - path: scripts/knowledge_registry_multisource.py
+    classification: stale_live_copy
+    evidence: "live content hash matched git commit 64471f2b exactly (2026-07-24 14:20); 1 commit landed since"
+    action_taken: deployed, backup saved as knowledge_registry_multisource.py.bak-predeploy-20260725-093040
+    post_deploy_verify: "python3 -c \"import ast; ast.parse(open('knowledge_registry_multisource.py').read())\" -- syntax OK"
+  - path: scripts/preflight-guard.py
+    classification: stale_live_copy
+    evidence: >
+      live content had NO exact historical blob match (hand-edited or predates
+      commit-granularity tracking on this path) -- full diff read confirms repo
+      version is a Phase-2 refactor (routes through policy_decision.emit_allow/
+      emit_deny) that explicitly preserves the original proceed/reason/detail
+      stdout contract additively (repo's own in-code comment: "worker-entrypoint.sh
+      and other callers parse those 3 keys with dict.get(), so extra keys are
+      safe"). No live-only logic would be lost by deploying repo -> live.
+    action_taken: deployed, backup saved as preflight-guard.py.bak-predeploy-20260725-093040
+    post_deploy_verify: "real invocation (bad args) returned valid deny JSON envelope incl. new schema_version/source_gate/reason_code keys, no crash"
+  - path: scripts/risk-tier.py
+    classification: stale_live_copy
+    evidence: >
+      live content had NO exact historical blob match -- full diff read confirms
+      repo version moved the TIER2_PATH_PATTERNS regex classification into the
+      shared policy_decision.classify_risk_tier(), with the repo's own in-code
+      comment stating "This CLI's own stdout/stderr contract is UNCHANGED --
+      supervisor-entrypoint.sh's TIER=$(python3 risk-tier.py ...) still captures
+      a bare tier1/tier2 string." Same classification logic, single copy, not a
+      second independently-evolved one.
+    action_taken: deployed, backup saved as risk-tier.py.bak-predeploy-20260725-093040
+    post_deploy_verify: "real invocation: `python3 risk-tier.py /opt/veridian/repos/claude-control master` -> printed `tier1`, exit 0"
+  - path: scripts/superboss-register.py
+    classification: stale_live_copy
+    evidence: "live content hash matched git commit 64471f2b exactly (2026-07-24 14:20); 0 commits landed since (was already current at that commit, just never re-deployed after)"
+    action_taken: deployed, backup saved as superboss-register.py.bak-predeploy-20260725-093040
+    post_deploy_verify: "python3 superboss-register.py --help -- lists all 24 subcommands incl register-knowledge, no crash"
+  - path: scripts/task-gateway.py
+    classification: stale_live_copy
+    evidence: "live content hash matched git commit 64471f2b exactly (2026-07-24 14:20, PREDATES PR #66's OWNER_ENGINE gate merge); 1 commit landed since (the gate itself)"
+    action_taken: deployed, backup saved as task-gateway.py.bak-predeploy-20260725-093040
+    post_deploy_verify: "diff -q live vs repo = no difference; grep -c owner_engine_gate live copy = 16; python3 task-gateway.py --help lists all subcommands"
+  - path: scripts/tight_task_validation.py
+    classification: stale_live_copy
+    evidence: "live content hash matched git commit bfb6492f exactly (2026-07-24 11:51); 2 commits landed since"
+    action_taken: deployed, backup saved as tight_task_validation.py.bak-predeploy-20260725-093040
+    post_deploy_verify: "syntax OK (ast.parse)"
+  - path: scripts/veridian-task-watchdog.py
+    classification: stale_live_copy
+    evidence: >
+      live content had NO exact historical blob match -- full diff read confirms
+      repo version is PURELY ADDITIVE (imports health-check-15min.py's own
+      check_server_health()/check_systemd_units() verbatim via importlib, adds
+      check_server_vitals()/check_cli_health()/recover_confirmed_failed_workers()
+      as new functions called once per invocation). Nothing live had is removed.
+      This means governance items 1/3/4/6 (server_monitoring, cli_monitoring,
+      one_minute_status_checks, keep_server_and_cli_connected) were NOT actually
+      running on this 60s systemd timer despite being reported built -- a second,
+      independent instance of exactly this task's headline drift problem.
+    action_taken: deployed, backup saved as veridian-task-watchdog.py.bak-predeploy-20260725-093040
+    post_deploy_verify: "python3 veridian-task-watchdog.py --help -- OK, lists --dry-run-task/--dry-run-escalation"
+
+  # ---- repo-only (24 + prompt_gateway/query.py = 25): all undeployed_real_feature, all deployed ----
+  - path: scripts/automation_rule_engine.py
+    classification: undeployed_real_feature
+    action_taken: deployed
+  - path: scripts/browser/ (persistent-profile.js, smoketest.js)
+    classification: undeployed_real_feature
+    action_taken: deployed
+  - path: scripts/chatgpt_audit_guard.py
+    classification: undeployed_real_feature
+    action_taken: deployed
+  - path: scripts/chatgpt_audit_versioning.py
+    classification: undeployed_real_feature
+    action_taken: deployed
+  - path: scripts/chatgpt_promptlib_guard.py
+    classification: undeployed_real_feature
+    action_taken: deployed
+  - path: scripts/context_engine.py
+    classification: undeployed_real_feature
+    action_taken: deployed
+  - path: scripts/decision-service.py
+    classification: undeployed_real_feature
+    action_taken: deployed
+  - path: scripts/detect_prompt_duplicates.py
+    classification: undeployed_real_feature
+    action_taken: deployed
+  - path: scripts/document_engine.py
+    classification: undeployed_real_feature
+    action_taken: deployed
+  - path: scripts/generate_chatgpt_audit_index.py
+    classification: undeployed_real_feature
+    action_taken: deployed
+  - path: scripts/generate_chatgpt_audit_request.py
+    classification: undeployed_real_feature
+    action_taken: deployed
+  - path: scripts/generate_chatgpt_promptbatch_request.py
+    classification: undeployed_real_feature
+    action_taken: deployed
+  - path: scripts/generate_module_gap_audit_module_list.py
+    classification: undeployed_real_feature
+    action_taken: deployed
+  - path: scripts/generate_prompt_coverage_report.py
+    classification: undeployed_real_feature
+    action_taken: deployed
+  - path: scripts/ingest_chatgpt_audit_response.py
+    classification: undeployed_real_feature
+    action_taken: deployed
+  - path: scripts/ingest_chatgpt_promptbatch_response.py
+    classification: undeployed_real_feature
+    action_taken: deployed
+  - path: scripts/intent_engine.py
+    classification: undeployed_real_feature
+    action_taken: deployed
+  - path: scripts/learning_engine.py
+    classification: undeployed_real_feature
+    action_taken: deployed
+  - path: scripts/metadata_reconciliation.py
+    classification: undeployed_real_feature
+    action_taken: deployed
+  - path: scripts/module_gap_audit_lib.py
+    classification: undeployed_real_feature
+    action_taken: deployed
+  - path: scripts/plan_generator.py
+    classification: undeployed_real_feature
+    action_taken: deployed
+  - path: scripts/policy_decision.py
+    classification: undeployed_real_feature
+    evidence: "required by preflight-guard.py and risk-tier.py's Phase-2 refactor -- deploying it was load-bearing, not optional, for those two files to work post-deploy"
+    action_taken: deployed
+    post_deploy_verify: "python3 -c \"import policy_decision; print(policy_decision.classify_risk_tier)\" -- import OK"
+  - path: scripts/prompt_gateway/query.py
+    classification: undeployed_real_feature
+    evidence: "Owner directive machine-language query interface (KE-20260725-061008-8423 point 3) -- never deployed"
+    action_taken: deployed
+  - path: scripts/test_tight_task_validation.py
+    classification: undeployed_real_feature
+    action_taken: deployed
+  - path: scripts/webhook_receiver.py
+    classification: undeployed_real_feature
+    action_taken: deployed
+
+  # ---- live-only (65 + prompt_gateway/lib empty dir): classified below ----
+  - path: [anthropic_openrouter_proxy.py, anthropic_openrouter_proxy.py.v1.bak, anthropic_openrouter_proxy_v2.py]
+    classification: operational_only
+    note: OpenRouter proxy + its own version history, explicitly called out as operational-only in this task's KNOWN_CONTEXT
+  - path: archive/ (STRATEGIC_PLAN_2026-07-21_v2.yaml.bak-2026-07-22-pre-360synthesis)
+    classification: operational_only
+    note: archived one-off snapshot file
+  - path: prompt_gateway/lib
+    classification: operational_only
+    note: empty directory, no files inside, harmless
+  - path: batch-import-conversation-log.py.bak-2026-07-24-prelock
+    classification: operational_only
+    note: bak file
+  - path: [cost-reconciliation.py, cost-usage-60min.py, credit-accountant.py, credit-accountant.py.bak-2026-07-20-prune]
+    classification: operational_only
+    note: cost/credit accounting scripts, explicitly called out as operational-only in this task's KNOWN_CONTEXT
+  - path: [crontab-backup-2026-07-20-b.txt, crontab-backup-2026-07-20.txt]
+    classification: operational_only
+    note: crontab backups, explicitly called out as operational-only in this task's KNOWN_CONTEXT
+  - path: [check_latest_task.py, extract-db-schema-catalog.mjs, gap-status.py, gap-status.py.bak-2026-07-20-audit, generate_quick_reference.py, generate-system-diagram.py, import-memory-history.py, launch-interactive-claude.sh, quality-gate.sh, module-queue-dispatcher.py, dispatch-docworker-task.sh, doc-worker-entrypoint.sh (+2 baks), test_check_crontab_unauthorized_change.py, task-template.py, scope-check.py]
+    classification: operational_only
+    note: >
+      Small utility/one-off scripts, 0 commits in git history for every one checked.
+      Left alone per this task's scope (SCOPE item 3 only asked for a deploy
+      mechanism repo->live, not a live->repo onboarding sweep). Distinct honesty
+      note: these are NOT "correctly" operational-only in the same sense as
+      crontab backups/cost scripts (they are not throwaway) -- they simply were
+      never added to git. Recommend a dedicated follow-up task to decide, file by
+      file, which of these should be onboarded into version control.
+  - path: [health-check-15min.py (+2 baks), master-decompose.py (+1 bak), queue-dispatcher.py (+2 baks), recover-failed-workers.py, repair_controller.py, run-logged.sh, superboss-register.py.bak-preSystemIndex, superboss-register.py.bak-preTsOverride, supervisor-entrypoint.sh (+2 baks), supervisor-sweep.sh, sync-controller-back.py, sync-vercel-env.sh, sync-verdian-ai-data.sh, system-sync.py, task-gateway.py.bak-2026-07-24-premergecheck, veridian-task.py (+2 baks), worker-entrypoint.sh (+5 baks/variants)]
+    classification: operational_only
+    note: >
+      CORE ORCHESTRATION CODE (cron-invoked, load-bearing for this entire task
+      pipeline) with 0 or partial git history -- health-check-15min.py, worker-entrypoint.sh,
+      and veridian-task.py DO have some prior commits touching scripts/<name> that are
+      absent from the current repo tree (removed at some point, cause not determined
+      by this audit); the rest (queue-dispatcher.py, master-decompose.py, system-sync.py,
+      sync-repos.sh's siblings, supervisor-entrypoint.sh, supervisor-sweep.sh,
+      recover-failed-workers.py, repair_controller.py, run-logged.sh, sync-controller-back.py,
+      sync-vercel-env.sh, sync-verdian-ai-data.sh) have ZERO commits ever. This is a
+      SEPARATE, real, honestly-reported finding from this task's headline drift: core
+      task-orchestration engines this whole session depends on are not under version
+      control at all. Left alone here (out of this task's SCOPE), but explicitly NOT
+      minimized -- see SYSTEM_INTEGRATION_CONFIRMATION doc point 6.
+  - path: sync-repos.sh
+    classification: needs_owner_decision
+    note: >
+      Special case, not left alone: this file itself (the deploy mechanism's
+      entry point) had 0 git history like the rest of this bucket, but this task
+      needed to EXTEND it as SCOPE item 3's deliverable, and the Owner's own
+      EXPECTED_OUTPUT requires that fix to be real, committed, and pushed. So this
+      one file was pulled out of "leave alone" and added to git as part of this
+      task (current live content preserved verbatim as the base, then extended).
+      Flagged under needs_owner_decision only in the sense that bringing ONE
+      long-untracked live file into git while leaving ~24 structurally-identical
+      siblings alone is an inconsistency the Owner may want revisited (e.g. "bring
+      all of them in, or justify why just this one") -- not because of conflicting
+      content.
+
+needs_owner_decision_summary:
+  count: 1
+  items:
+    - path: scripts/sync-repos.sh
+      note: >
+        Brought into git as part of this task's required deploy-mechanism fix,
+        while ~24 other equally-untracked core orchestration scripts were left
+        alone -- Owner should decide whether to onboard the rest, and on what
+        timeline.
