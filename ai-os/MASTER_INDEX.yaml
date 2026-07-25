@@ -2391,6 +2391,33 @@ registries:
     exact_generation_call_shape_once_unblocked, writing real CSV/ rows only via
     scripts/chatgpt_promptlib_guard.py, then re-running generate_prompt_coverage_report.py and
     detect_prompt_duplicates.py in real (non---test-fixture) mode.'
+- id: wiring_engine
+  type: entity_relationship_schema_and_mechanical_registry
+  path: ai-os/WIRING_ENGINE_SCHEMA_2026-07-25.yaml + ai-os/WIRING_ENGINE_REGISTRY_2026-07-25.json + ai-os/WIRING_ENGINE_PHASE_PLAN_2026-07-25.yaml
+  scope: 'Phase 0 (task-20260725-032718-wiring-engine-phase0-schema-registry, instruction INS-20260725-032606-0c52)
+    of the VERIDIAN WIRING ENGINE: a real entity-relationship schema (entity_record_schema: engine|gateway|
+    table|function|route|file|script|cron_job|ai_role, reusing knowledge_engine''s own last_verified_ts/
+    verification_status fields and {path,relationship_type,evidence} shape verbatim -- see
+    WIRING_ENGINE_SCHEMA_2026-07-25.yaml meta.precedent) and scripts/generate_wiring_registry.py, which
+    mechanically populates the registry from 8 real live sources (DATABASE_CATALOG.json, FUNCTION_CATALOG.json,
+    AI_ROSTER_CATALOG.json, 20_ENGINES_10_GATEWAYS_PHASE_PLAN''s engine/gateway inventories, ROUTE_REGISTRY_SCHEMA''s
+    populated routes, SOFTWARE_CATALOG.yaml''s scripts/cron, and the live knowledge_engine + capability_registry
+    sqlite tables) -- never hand-authored. Real run 2026-07-25: 7642 entities, all 9 entity_types non-zero
+    (engine=20, gateway=10, table=444, function=5019, ai_role=195, route=5, script=40, cron_job=14, file=1895).
+    Distinct from registries.engines_gateways_architecture (which names/inventories the 20 engines/10 gateways
+    themselves) and registries.self_sustaining_system_engine (knowledge_engine''s own artifact tracking) --
+    this registry''s one addition is a single cross-source relationship graph spanning all of them, most
+    notably confirming a measured fact: of 19 real hops_through relationships derived from
+    ROUTE_REGISTRY_SCHEMA''s 5 populated routes, ZERO target a gateway entity -- the Owner''s suspected
+    "no real end-to-end gateway flow proven yet" gap, now a mechanically-confirmed number, not an impression.'
+  status: phase_0_complete_phase_1_not_yet_dispatched
+  query_command: python3 scripts/superboss-register.py query-knowledge "wiring_engine" --tag domain:wiring_engine
+  refresh_command: 'python3 scripts/generate_wiring_registry.py (every 6h via crontab, see
+    OWNER_DECISIONS_NEEDED_2026-07-23.yaml id wiring-engine-generate-registry-crontab-addition)'
+  next_phase: 'phase_1_end_to_end_gateway_verification per ai-os/WIRING_ENGINE_PHASE_PLAN_2026-07-25.yaml
+    phases[] -- picked up automatically by scripts/auto_phase_continuation.py (its PLAN_GLOB was widened
+    from a hardcoded *_PHASE_PLAN_2026-07-24.yaml to *_PHASE_PLAN_*.yaml as part of this same task so this
+    new, later-dated plan is discovered without further manual intervention) once this task''s PR merges.'
 tree_lineage:
   tree1_audit_tree:
     path: /opt/veridian/repos/compliance-tracker/ai-os/audit-tree/
