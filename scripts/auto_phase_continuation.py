@@ -73,9 +73,13 @@ PLAN_DIRS = [
     "/opt/veridian/ai-os",
     "/opt/veridian/repos/claude-control/ai-os",
 ]
-PLAN_GLOB = "*_PHASE_PLAN_*.yaml"  # was hardcoded to 2026-07-24 only; widened 2026-07-25 (Wiring Engine
-# Phase 0, task-20260725-032718) so a newly-dated plan (e.g. WIRING_ENGINE_PHASE_PLAN_2026-07-25.yaml) is
-# discovered without a further hardcoded-date edit every time a new initiative starts a day later. Still
+PLAN_GLOBS = ["*_PHASE_PLAN_*.yaml", "*_IMPLEMENTATION_PLAN_*.yaml"]  # PLAN_GLOB was hardcoded to
+# 2026-07-24 only; widened 2026-07-25 (Wiring Engine Phase 0, task-20260725-032718) so a newly-dated
+# plan (e.g. WIRING_ENGINE_PHASE_PLAN_2026-07-25.yaml) is discovered without a further hardcoded-date
+# edit every time a new initiative starts a day later. Widened again same day (Security Audit
+# Evaluation, task-20260725-041130) from a single PLAN_GLOB string to a PLAN_GLOBS list so a plan
+# named *_IMPLEMENTATION_PLAN_*.yaml (e.g. SECURITY_AUDIT_IMPLEMENTATION_PLAN_2026-07-25.yaml -- name
+# fixed by that task's own spec, not renameable to fit the narrower pattern) is discovered too. Still
 # matches every existing *_PHASE_PLAN_2026-07-24.yaml file unchanged.
 
 TASK_ID_RE = re.compile(r"task-20\d{6}-[a-z0-9-]+")
@@ -98,8 +102,9 @@ def discover_plan_paths():
     for d in PLAN_DIRS:
         if not os.path.isdir(d):
             continue
-        for path in glob.glob(os.path.join(d, PLAN_GLOB)):
-            by_name.setdefault(os.path.basename(path), []).append(path)
+        for plan_glob in PLAN_GLOBS:
+            for path in glob.glob(os.path.join(d, plan_glob)):
+                by_name.setdefault(os.path.basename(path), []).append(path)
     return by_name
 
 
@@ -306,7 +311,7 @@ def external_deps_satisfied(phase_raw, all_done_maps):
     ext = phase_raw.get("external_depends_on")
     if not ext:
         return True, None
-    file_re = re.compile(r"([A-Z0-9_]+_PHASE_PLAN_2026-07-24\.yaml)")
+    file_re = re.compile(r"([A-Z0-9_]+_(?:PHASE_PLAN|IMPLEMENTATION_PLAN)_[0-9]{4}-[0-9]{2}-[0-9]{2}\.yaml)")
     num_re = re.compile(r"[Pp]hase[ _]?(\d+)")
     for entry in ext:
         text = entry if isinstance(entry, str) else str(entry)
@@ -558,7 +563,7 @@ def main():
 
     by_name = discover_plan_paths()
     if not by_name:
-        print(json.dumps({"error": "no *_PHASE_PLAN_2026-07-24.yaml files found in any scanned dir",
+        print(json.dumps({"error": "no plan files matching PLAN_GLOBS found in any scanned dir",
                            "scanned_dirs": PLAN_DIRS}))
         sys.exit(1)
 

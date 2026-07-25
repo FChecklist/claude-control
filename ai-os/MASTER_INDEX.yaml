@@ -2458,6 +2458,41 @@ registries:
     phases[] -- picked up automatically by scripts/auto_phase_continuation.py (its PLAN_GLOB was widened
     from a hardcoded *_PHASE_PLAN_2026-07-24.yaml to *_PHASE_PLAN_*.yaml as part of this same task so this
     new, later-dated plan is discovered without further manual intervention) once this task''s PR merges.'
+- id: security_audit_implementation_plan
+  type: dual_audit_cross_reference_and_phased_closure_plan
+  path: ai-os/SECURITY_AUDIT_EVALUATION_2026-07-25.yaml + ai-os/SECURITY_AUDIT_IMPLEMENTATION_PLAN_2026-07-25.yaml
+  scope: 'task-20260725-041130-security-audit-evaluation-and-implementa: Owner directive given
+    directly in chat 2026-07-25 ("EVALUATE AUDIT BY BOTH CHATGPT AND Z.AI. MAKE IMPLEMENTATION PLAN.
+    ALL DOCUMENTATION TO BE SAVED.") -- evaluates the two real, filed Security-domain
+    ChatGPT-manual-bridge audits (AUDIT-000009 from ChatGPT, AUDIT-000010 from Z.AI, both at
+    /opt/veridian/chatgpt-audit/Security/, both analysing the same 6 real
+    repos/compliance-tracker files: drizzle/0007_wave9_unified_api_key_auth.sql,
+    drizzle/0126_wave143_visual_design_authoring.sql, and the 4 public auth route handlers under
+    src/app/api/auth/) against each other and against the real current source, including the 3
+    service-layer files (passcode-login-service.ts, auth-failure-service.ts, sso-service.ts) the
+    routes delegate to but neither audit''s files_analysed list names. Real result: 19 distinct
+    findings, 15 confirmed/partially_confirmed (3 raised by both audits independently, 4 by
+    ChatGPT only, 12 by Z.AI only) and each assigned to one of 7 real implementation phases in
+    the companion plan (shared IP-extraction + Supabase-admin-client utils; a new drizzle
+    migration closing the Wave 143 interior-schema FK/CHECK/updated_at gaps; email input
+    validation reusing the codebase''s own existing isValidEmail(); failure-event rate-limiting +
+    body-size caps -- the single highest-severity finding, the only one rated high; structured
+    passcode-login error codes + SSO ACS error-code hygiene; SSO login-initiation + failure-event
+    audit logging; security response headers), 2 deliberately deferred as codebase-wide
+    convention questions out of scope for a security-fix plan (org_id FK convention drift across
+    51 drizzle migrations; RLS-policy-boilerplate dedup used identically dozens of times
+    elsewhere), and 2 refuted against the real code (ChatGPT''s "no passcode-login audit
+    logging" claim -- exists one layer down in passcode-login-service.ts''s recordAttempt(), not
+    visible from the route file alone; ChatGPT''s "no governance-metadata linkage" claim --
+    contradicted by the analysed files'' own substantial wave/directive-citing headers).'
+  status: phase_0_complete_phases_1_through_7_not_yet_dispatched
+  query_command: python3 scripts/superboss-register.py query-knowledge "security_audit_implementation_plan"
+    --tag domain:security_audit
+  next_phase: 'phase_1_shared_auth_utils per ai-os/SECURITY_AUDIT_IMPLEMENTATION_PLAN_2026-07-25.yaml
+    phases[] -- picked up automatically by scripts/auto_phase_continuation.py (same *_PHASE_PLAN_*.yaml
+    glob and phases[].id/depends_on/status convention as ai-os/WIRING_ENGINE_PHASE_PLAN_2026-07-25.yaml)
+    once this task''s PR merges. phase_4 depends_on phase_1; the other 6 phases have no dependencies
+    and can dispatch in any order.'
 - id: browser_automation_profile
   type: browser_install_and_persistent_profile
   path: ai-os/BROWSER_AUTOMATION_PROFILE_2026-07-25.yaml + scripts/browser/persistent-profile.js
