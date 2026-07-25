@@ -560,7 +560,17 @@ decisions:
     only as reference. Not blocking on this decision entirely (phase_1 and phase_3
     are claude-control-native schema/governance design work that is useful regardless
     of the outcome), per this plan's own meta.owner_decision_dependency note.
-  status: awaiting_owner_decision
+  status: approved
+  approved_ts: '2026-07-25T17:52:44.198137+00:00'
+  approved_via: 'Owner directly clarified 2026-07-25: the browser-native AI platform
+    must MERGE with the existing system so END USERS interact with it through the
+    browser as the ONLY interaction path, two-stage software-first execution (browser-native
+    platform first, server SOFTWARE second). This resolves option (a): compliance-tracker
+    is confirmed correct -- it IS the existing end-user-facing product this platform
+    merges into, not a separate standalone product (rules out option b) and not a
+    server-only upgrade (rules out option c, since Owner explicitly requires a real
+    browser UI for end users) and not reference-only (rules out option d, Owner said
+    complete 100%, no stopping).'
 - id: task2-auto-continuation-temporary-pause-2026-07-25
   raised_by_task: direct-session-action-2026-07-25 (not a dispatched task -- Owner
     directly instructed in chat)
