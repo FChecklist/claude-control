@@ -1,0 +1,1090 @@
+meta:
+  title: VERIDIAN_Architecture_v2.0.docx -- Real Gap Analysis Against Current Real System State
+  created: '2026-07-25'
+  produced_by_task: task-20260725-112909-veridian-architecture-v2-task2-phase0-ga
+  precedent_task: "task-20260725-104606-owner-engine-document-accuracy-convergen (PR #69,
+    merged) -- extracted the document's real full text to
+    ai-os/owner-attachments/VERIDIAN_Architecture_v2.0_extracted.txt (564 lines) and proved
+    OWNER_ENGINE reproduces it with 0.0% real gap (165/165 gold content items covered). This
+    task reads that already-extracted, already-verified-accurate text in full (done, not
+    re-summarized here) and gap-checks its 108 real itemized requirements below against the
+    current real system state -- the document's own accuracy was never in question; whether
+    its CONTENT is already built is this task's question."
+  document_self_description: 'The document is explicitly NOT a spec of the current VERIDIAN
+    AI OS (this ops/orchestration system). Its own Executive Summary (extracted text line 12-15)
+    frames it as a "browser-first Prompt Intelligence Platform" -- an end-user-facing product
+    that runs LLM inference natively inside a web browser tab via WebGPU/WebNN/window.ai, with
+    its own 74-engine prompt lifecycle-management architecture, a 41-stage compiler pipeline,
+    a 10-level (L0-L9) browser+server cache hierarchy, DSPy-based prompt compilation, and a
+    4-layer defense-in-depth security model. "VERIDIAN" here is a product name shared with this
+    ops system''s own name, not evidence the same system is being described -- confirmed by
+    reading the document''s Part III references (WebLLM, WebNN, Transformers.js, DSPy, NeMo
+    Guardrails -- all client-side/ML-product technologies with zero presence anywhere in this
+    session''s own orchestration codebase, verified below) against what this ops system and its
+    2 real product repos (compliance-tracker, projexa) actually run (Next.js/TypeScript +
+    drizzle-orm/Postgres server-rendered SaaS apps, plus this repo''s own stdlib-only Python
+    cron/dispatch scripts) -- no overlap in the underlying technology stack beyond the shared
+    "prompt"/"engine" vocabulary.'
+  headline_finding: 'Of 105 itemized real requirements, 85 (81.0%) are not_implemented, 20
+    (19.0%) are partially_implemented via real but narrow/differently-scoped prior art, and 0
+    (0%) are already_implemented as this document specifies them. This is an honest count, not
+    a manufactured one -- see per-item evidence below. The document describes what is, in
+    effect, a new, third kind of software this system has never built: neither the compliance-
+    tracker/projexa business-SaaS product line nor this ai-os orchestration system''s own
+    prompt-dispatch tooling (scripts/prompt_gateway/) match its browser-native local-inference
+    product surface. The 8 partial items are real, narrowly-scoped prior art this plan must
+    extend rather than duplicate -- listed in known_partial_prior_art below and cited per-item.'
+  known_partial_prior_art:
+    - id: prompt_gateway
+      path: scripts/prompt_gateway/ (gateway.py, engine/{classifier,prompt_engine,context_engine,snip_engine}.py)
+      registry: registries.prompt_gateway (MASTER_INDEX.yaml)
+      real_capability: 'Server-side (not browser), stdlib-only Python, keyword/regex-based (not
+        embedding/DSPy-based). Classifies raw owner chat text into one of 6 categories with a
+        confidence score, strips noise (13.2% char reduction / 66.7% token reduction on its own
+        documented real run), retrieves matching snippets, and prunes session context -- all as
+        a pre-processing FILTER upstream of scripts/task-gateway.py, never a prompt registry,
+        compiler, or execution engine in the document''s sense.'
+      caveat: 'Itself explicitly documents (ai-os/PROMPT_GATEWAY_2026-07-25.yaml
+        owner_engine_spec_not_implemented) that it implements only a slice of a DIFFERENT,
+        separate "19-engine OWNER_ENGINE YAML spec" the Owner described in chat -- not this
+        document, and not fully even that spec (Temporal/OPA/Qdrant/local-model-hosting
+        explicitly out of scope there too). Two distinct unbuilt specs exist in this system''s
+        history; this gap analysis is only about VERIDIAN_Architecture_v2.0.docx.'
+    - id: knowledge_engine
+      path: scripts/superboss-register.py (knowledge_engine table, register-knowledge/query-knowledge/list-knowledge)
+      registry: registries.system_index (MASTER_INDEX.yaml), KE- id namespace
+      real_capability: 'Real, live, server-side SQLite+FTS5 structured knowledge store with
+        relationships, tags, and drift verification (verify-knowledge). Functionally the closest
+        real analog to the document''s "server knowledge base" half of L9 Knowledge Cache Engine
+        and Knowledge Sync Engine -- but has no browser-side component, no embedding/similarity
+        search, and is not a prompt-specific cache.'
+    - id: litert_spike
+      path: 'repos/compliance-tracker/src/app/litert-spike/ + litert-spike-embeddings/ (page.tsx,
+        worker-src/inference-worker.ts, types.ts)'
+      registry: not yet in MASTER_INDEX.yaml (confirmed absent by grep -- itself a small
+        registration gap, noted in phase_1 of the new phase plan)
+      real_capability: 'Real, working browser-side WebGPU/WASM ML inference prototype using
+        Google LiteRT (not WebLLM), with a real webgpu-with-wasm-fallback code path
+        (Accel = "webgpu" | "wasm" in types.ts; try/catch fallback in inference-worker.ts). This
+        is the ONLY real browser-native local-inference code anywhere in the 2 real product repos
+        -- confirmed by repo-wide grep for webllm/webgpu/webnn/transformers.js/dspy/onnx across
+        compliance-tracker and projexa. It is a spike (proof-of-concept under an app-router debug
+        route), not a production engine: no model catalog, no streaming, no JSON mode, no NPU/
+        Built-in-AI tiers, no pipeline, no cache hierarchy around it.'
+    - id: llm_client
+      path: repos/compliance-tracker/src/lib/llm-client.ts
+      real_capability: 'Real, server-side (not browser-tiered) LLM call wrapper with
+        estimateCostUsd()/estimateCacheSavingsUsd() cost-estimation functions and callLLM/
+        callLLMJson/callLLMVision entrypoints. Functionally the closest real analog to the
+        document''s Cost Estimation pipeline stage and Server Escalation Engine (Tier 5) target
+        -- but is a single flat call path, not a 5-tier browser-to-server routing/fallback system.'
+    - id: permission_service
+      path: repos/compliance-tracker/src/lib/services/permission-service.ts
+      real_capability: 'Real, generic org/user RBAC service already used across compliance-tracker.
+        Architecturally reusable for the document''s Permission Engine (RBAC for prompt access/
+        edit/approve/deploy) but not wired to any prompt-lifecycle object today, because no prompt
+        registry exists for it to protect.'
+    - id: engines_gateways_architecture_pattern
+      path: ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml + ai-os/CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml
+      real_capability: 'Real, live, mechanically-verified 20-engine/10-gateway architecture
+        (Intent, Context, CapabilityRegistry, Planning, Policy, Rule, Decision, Workflow,
+        Automation, Integration, Document, Notification, Data, Metadata, Knowledge, Learning,
+        UIComposition, Analytics, Audit, Observability + gateways G01-G10) for BUSINESS-PROCESS
+        TASK AUTOMATION in compliance-tracker/projexa -- a genuinely different subject matter
+        than this document''s prompt-lifecycle engines despite 9 literal name collisions (Audit,
+        Analytics, Workflow, Policy, Rule/Business Rule, Notification, Data, Knowledge, Governance-
+        adjacent). NOT a functional match for any single document item (confirmed per-item below,
+        never assumed from the name alone, per this task''s own zero-duplication CONSTRAINT) --
+        but its engine/gateway/capability-registry SEPARATION PATTERN and its
+        lookup-before-dispatch convention (scripts/superboss-register.py capability_registry) is
+        the pattern this plan''s phases reuse rather than reinventing a parallel structure, most
+        directly for the Gateway Integration Engine and Capability Engine items below.'
+  itemization_method: 'Granularity matches this document''s own structural units: each of the 74
+    named engines in the Complete Engine Catalog (2.1) is one item; the Improved Prompt Compiler
+    Pipeline (2.2) is itemized at its own 8 named layer-groupings (which the document itself
+    groups its 41 stages into, e.g. "Stage 3: Context Assembly Layer (Stages 8-12)"), not all 41
+    individually, to avoid 41 near-duplicate one-line items the document itself does not treat as
+    independently separable; the Cache Architecture (2.3) is itemized at all 10 real cache levels
+    (L0-L9) since each has a distinct technology/capacity/eviction contract; the Technology Stack
+    (2.4) is itemized at its 5 named sub-stacks; the Performance Budget Framework (2.5) and
+    Metadata Schema (2.6) are each one cross-cutting item (a schema/budget-table requirement, not
+    an engine); the YCML Specification Catalog (2.7) is one item (documentation format 1:1 with
+    the engines already itemized, not double-counted); the Defense-in-Depth Architecture (2.8) is
+    one item (already covered engine-by-engine via items 26-27 in the catalog; itemized separately
+    here only for its cross-cutting 4-layer ENFORCEMENT requirement, distinct from the engines
+    that implement each layer); Governance and Compliance (2.9) is 2 items (lifecycle state machine,
+    GitOps workflow). Total: 74 + 8 + 10 + 5 + 1 + 1 + 1 + 1 + 2 = 103, plus 2 real
+    scope-disambiguation findings this gap-check itself surfaced (browser-vs-server target-repo
+    decision, litert-spike own missing MASTER_INDEX.yaml registration) = 105. Part I of the document (1.1-1.6, the document''s
+    OWN gap analysis of its predecessor v1 spec) is NOT itemized as a requirement of the CURRENT
+    system -- it is the document''s internal rationale for why v2 differs from v1, already fully
+    captured by itemizing v2''s own catalog/pipeline/cache/stack sections below.'
+
+# ============================================================================
+# ITEMS -- Part II, Section 2.1: Complete Engine Catalog (74 engines, 8 domains)
+# ============================================================================
+items:
+
+  # -- Prompt Core Engines (12) --
+  - id: engine-prompt-registry
+    domain: prompt_core
+    name: Prompt Registry Engine
+    requirement: Master registry of every prompt across all lifecycle states, unique ID, indexing, discovery.
+    verdict: not_implemented
+    evidence: 'No prompt registry exists in any repo. scripts/prompt_gateway/ has no registry table
+      (only a per-invocation VD- id counter, ai-os/PROMPT_GATEWAY_2026-07-25.yaml vd_id_namespace
+      -- explicitly "NEVER a task id, a knowledge-engine row id" and scoped to raw-chat pre-processing
+      records only, not compiled/versioned prompts). Confirmed by grep: no "prompt_registry" table
+      in ai-os/DATABASE_CATALOG.json (444 tables catalogued, none named prompt*).'
+
+  - id: engine-prompt-version
+    domain: prompt_core
+    name: Prompt Version Engine
+    requirement: Semantic versioning (MAJOR.MINOR.PATCH), full diff history, immutable snapshots, rollback.
+    verdict: not_implemented
+    evidence: No prompt versioning mechanism exists. Git itself provides diff/rollback for files
+      generally, but nothing implements prompt-object-specific semantic versioning.
+
+  - id: engine-prompt-lifecycle
+    domain: prompt_core
+    name: Prompt Lifecycle Engine
+    requirement: State machine (Draft/Review/Staging/Production/Deprecated) with approval gates.
+    verdict: not_implemented
+    evidence: No such state machine exists for prompts. compliance-tracker has unrelated approval-workflow-service.ts
+      for business approvals (different domain object entirely).
+
+  - id: engine-prompt-compiler
+    domain: prompt_core
+    name: Prompt Compiler Engine
+    requirement: Natural language intent to optimized machine prompt via DSPy-style declarative compilation.
+    verdict: partially_implemented
+    evidence: 'scripts/prompt_gateway/engine/prompt_engine.py performs template-based construction
+      of a compressed machine_prompt from classified+noise-stripped input (real, documented output:
+      "[VERIDIAN:VD-...][CAT:CODE|INTENT:FIX] CODE_FIX:issue=...:target=..."). Not DSPy-based
+      (no signatures/optimizers/BootstrapFewShot/MIPROv2), not registry-integrated, server-side only.'
+    known_partial_prior_art_ref: prompt_gateway
+
+  - id: engine-prompt-optimizer
+    domain: prompt_core
+    name: Prompt Optimizer Engine
+    requirement: Automatic token reduction, instruction refinement, structure optimization, metric-guided.
+    verdict: not_implemented
+    evidence: prompt_gateway's noise-reduction is a fixed regex-strip, not metric-guided optimization
+      against a defined quality signal (no eval loop, no metric target).
+
+  - id: engine-prompt-compression
+    domain: prompt_core
+    name: Prompt Compression Engine
+    requirement: Lossless and lossy compression for reduced token count while preserving semantic intent.
+    verdict: partially_implemented
+    evidence: 'prompt_gateway''s real documented run achieved 66.7% token reduction / 13.2% char
+      reduction on one sample input (ai-os/PROMPT_GATEWAY_2026-07-25.yaml end_to_end_proof). Real,
+      but a single fixed heuristic, not a formal lossless/lossy dual-mode compressor with a
+      reversibility guarantee.'
+    known_partial_prior_art_ref: prompt_gateway
+
+  - id: engine-prompt-expansion
+    domain: prompt_core
+    name: Prompt Expansion Engine
+    requirement: Expand compressed prompts, restore hidden defaults, hydrate templates with full context.
+    verdict: not_implemented
+    evidence: No inverse-of-compression expansion mechanism exists; prompt_gateway is one-directional
+      (compress only, never decompress/expand).
+
+  - id: engine-prompt-validation
+    domain: prompt_core
+    name: Prompt Validation Engine
+    requirement: Schema completeness check, required field validation, structural integrity verification.
+    verdict: not_implemented
+    evidence: No prompt schema exists to validate against (see engine-prompt-registry -- nothing to validate).
+
+  - id: engine-prompt-testing
+    domain: prompt_core
+    name: Prompt Testing Engine
+    requirement: Automated test execution -- unit, regression, adversarial, shadow testing of prompts.
+    verdict: not_implemented
+    evidence: 'registries.testing_engine_irvf (ai-os/TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml) is
+      a real, live route/API test-generation-and-replay engine for compliance-tracker''s HTTP routes
+      -- confirmed by reading its own scope (route auto-generation on capability creation, distributed
+      trace verification, route replay/diff) to be about API ROUTE testing, not prompt testing. Not
+      a functional match; no prompt-specific test engine exists.'
+
+  - id: engine-prompt-benchmark
+    domain: prompt_core
+    name: Prompt Benchmark Engine
+    requirement: Measure speed, accuracy, cost, quality against standardized benchmark datasets.
+    verdict: not_implemented
+    evidence: No benchmark dataset or harness for prompts exists in any repo.
+
+  - id: engine-prompt-portability
+    domain: prompt_core
+    name: Prompt Portability Engine
+    requirement: Cross-model prompt adaptation across OpenAI, Anthropic, Google, and local models.
+    verdict: not_implemented
+    evidence: llm-client.ts (repos/compliance-tracker/src/lib/llm-client.ts) calls a single configured
+      model per request; no cross-provider adaptation layer exists.
+
+  - id: engine-prompt-ab
+    domain: prompt_core
+    name: Prompt A/B Engine
+    requirement: Multi-armed bandit experimentation, traffic splitting, statistical significance, auto-promotion.
+    verdict: not_implemented
+    evidence: No experimentation framework for prompts exists anywhere in the codebase.
+
+  # -- Intelligence and Matching Engines (10) --
+  - id: engine-prompt-ranking
+    domain: intelligence_matching
+    name: Prompt Ranking Engine
+    requirement: Best-prompt selection via weighted scoring across quality/cost/latency/freshness.
+    verdict: not_implemented
+    evidence: No prompt scoring/ranking mechanism exists.
+
+  - id: engine-prompt-recommendation
+    domain: intelligence_matching
+    name: Prompt Recommendation Engine
+    requirement: Suggest related prompts/templates/optimizations based on usage patterns.
+    verdict: not_implemented
+    evidence: No usage-pattern analysis or recommendation mechanism exists for prompts.
+
+  - id: engine-prompt-similarity
+    domain: intelligence_matching
+    name: Prompt Similarity Engine
+    requirement: Semantic matching via local embeddings for duplicate detection and clustering.
+    verdict: not_implemented
+    evidence: No embedding generation or similarity search exists anywhere in either product repo
+      or this ops system (confirmed by the same repo-wide grep that found zero transformers.js/
+      onnx/embedding-model references outside litert-spike-embeddings' own tokenizer scaffold,
+      which computes no similarity index).
+
+  - id: engine-intent
+    domain: intelligence_matching
+    name: Intent Engine
+    requirement: Multi-level intent extraction (primary, secondary, implicit) from natural language.
+    verdict: partially_implemented
+    evidence: 'scripts/prompt_gateway/engine/classifier.py performs single-level keyword-ratio
+      intent classification into one of 6 categories (CODE/ANALYSIS/OPS/QUERY/TASK/GENERAL) plus
+      a sub-intent tag (e.g. FIX) -- real and documented (confidence 0.2514 on its own sample run)
+      but single-level only, no primary/secondary/implicit decomposition, no ML model (pure keyword
+      ratio).'
+    known_partial_prior_art_ref: prompt_gateway
+
+  - id: engine-entity
+    domain: intelligence_matching
+    name: Entity Engine
+    requirement: Named entity recognition and extraction including domain-specific entity types.
+    verdict: not_implemented
+    evidence: No NER capability exists in prompt_gateway or elsewhere; its classifier does keyword
+      matching only, not entity extraction.
+
+  - id: engine-variable
+    domain: intelligence_matching
+    name: Variable Engine
+    requirement: Variable identification, type inference, default resolution, runtime binding.
+    verdict: not_implemented
+    evidence: No variable-detection/type-inference mechanism exists for prompts.
+
+  - id: engine-context
+    domain: intelligence_matching
+    name: Context Engine
+    requirement: Dynamic context construction combining user context, session history, business context.
+    verdict: partially_implemented
+    evidence: 'scripts/prompt_gateway/engine/context_engine.py does real session-context assembly
+      and pruning (documented real run: "Context: 1 msgs, ~20 tokens after prune") plus
+      snippet-based context retrieval (snip_engine.py, 6 seeded snippets). Real but narrow: no
+      business-context source, no multi-source merge, server-side flat-file store only.'
+    known_partial_prior_art_ref: prompt_gateway
+
+  - id: engine-workflow-intel
+    domain: intelligence_matching
+    name: Workflow Engine (prompt-lifecycle sense)
+    requirement: Workflow mapping, step orchestration, dependency resolution for multi-step prompts.
+    verdict: not_implemented
+    evidence: 'The existing "Workflow Engine" (engine 8 of 20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml,
+      exists_as task-execution-engine.ts) orchestrates business TASK workflows in compliance-tracker,
+      not multi-step PROMPT workflows -- confirmed different subject by reading its own gateway-inventory
+      description. No functional match for prompt-step orchestration exists.'
+
+  - id: engine-capability-intel
+    domain: intelligence_matching
+    name: Capability Engine (prompt-lifecycle sense)
+    requirement: Required software capability assessment matching prompt needs to available tools.
+    verdict: not_implemented
+    evidence: 'The existing Capability Registry Engine (ai-os/CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml,
+      live table via scripts/superboss-register.py register-capability/lookup-capability) matches
+      TASK DISPATCH requests to available automation capabilities (5+ live rows, e.g. gratuity
+      calculation) -- a real, live, different-domain system. Reusable PATTERN for this item (see
+      phase_9 of the new phase plan), but not itself a match: it has no notion of a "prompt" object
+      to assess capability needs for.'
+
+  - id: engine-confidence
+    domain: intelligence_matching
+    name: Confidence Engine
+    requirement: Multi-signal confidence scoring combining cache match, intent clarity, model readiness.
+    verdict: partially_implemented
+    evidence: 'classifier.py emits a single confidence float (0.2514 in its documented run) from
+      keyword-ratio scoring alone -- one signal, not the multi-signal (cache/intent/context/model)
+      composite the document specifies.'
+    known_partial_prior_art_ref: prompt_gateway
+
+  # -- Business and Policy Engines (8) --
+  - id: engine-business-rule
+    domain: business_policy
+    name: Business Rule Engine (prompt-lifecycle sense)
+    requirement: Business logic evaluation, rule matching, constraint enforcement for prompts.
+    verdict: not_implemented
+    evidence: 'The existing Rule Engine (engine 6 of 20_ENGINES_10_GATEWAYS, exists_as
+      guardrail-registrations.ts assertBusinessRulesBeforeExecution()) enforces business rules
+      before TASK dispatch execution -- confirmed real and live per WIRING_ENGINE_PHASE_PLAN_2026-07-25.yaml
+      phase 1 evidence, but scoped to compliance-tracker business-domain rules (GSTIN/PAN/gratuity
+      calc etc.), never prompt content. No functional match for prompt-rule evaluation.'
+
+  - id: engine-dependency
+    domain: business_policy
+    name: Dependency Engine
+    requirement: Required module identification and dependency graph management for prompts.
+    verdict: not_implemented
+    evidence: 'ai-os/WIRING_ENGINE_REGISTRY_2026-07-25.json is a real dependency/relationship graph,
+      but across engines/gateways/tables/functions of THIS ops system and compliance-tracker''s
+      task-dispatch pipeline -- confirmed by its own schema (entity_type in {engine, gateway,
+      table, function, route}) to carry no "prompt" entity type. No prompt-dependency graph exists.'
+
+  - id: engine-permission
+    domain: business_policy
+    name: Permission Engine
+    requirement: RBAC for prompt access, edit, approve, and deploy operations.
+    verdict: partially_implemented
+    evidence: 'repos/compliance-tracker/src/lib/services/permission-service.ts is a real, live,
+      generic org/user RBAC service used across the product today. Architecturally reusable (same
+      library, same role model) but not wired to any prompt-lifecycle object, because no prompt
+      registry/lifecycle exists yet for it to gate (see engine-prompt-registry, engine-prompt-lifecycle).'
+    known_partial_prior_art_ref: permission_service
+
+  - id: engine-policy
+    domain: business_policy
+    name: Policy Engine (prompt-lifecycle sense)
+    requirement: Company-wide policy enforcement -- content policies, brand voice, compliance rules for prompts.
+    verdict: not_implemented
+    evidence: 'The existing Policy Engine (engine 5 of 20_ENGINES_10_GATEWAYS, enforcePolicy() in
+      task-execution-engine.ts) enforces policy only on the LLM-package-dispatch path
+      (executePackageDispatch(), per WIRING_ENGINE_PHASE_PLAN_2026-07-25.yaml phase 1''s own confirmed
+      finding) -- not a content-policy/brand-voice check on prompt text itself. No functional match.'
+
+  - id: engine-compliance
+    domain: business_policy
+    name: Compliance Engine (prompt-lifecycle sense)
+    requirement: GDPR, HIPAA, SOC 2 compliance management for prompt content, eval datasets, audit logs.
+    verdict: not_implemented
+    evidence: 'IMPORTANT NAMING TRAP, explicitly checked and rejected: compliance-tracker (the
+      product itself) manages GDPR/HIPAA/SOC2 compliance as its CORE BUSINESS DOMAIN -- but for its
+      CLIENTS'' business operations (the product being sold), not for prompt content/eval-datasets/
+      audit-logs belonging to a prompt intelligence platform. Confirmed by reading its own module
+      list (ai-os/CONSTITUTION.yaml-referenced modules) -- no module manages compliance OF prompts.
+      Real gap, distinct from the product''s existing compliance-tracking business logic.'
+
+  - id: engine-governance
+    domain: business_policy
+    name: Governance Engine (prompt-lifecycle sense)
+    requirement: Ownership tracking, stewardship assignment, cross-team prompt coordination.
+    verdict: not_implemented
+    evidence: 'ai-os/AI_GOVERNANCE_REVIEW_2026-07-24.yaml and GOVERNANCE_PHASE15_CLOSEOUT_2026-07-24.yaml
+      govern THIS ai-os orchestration system''s own AI-agent behavior (governance OF the AI, not
+      governance of a prompt-product''s prompt assets) -- confirmed by reading their own scope. No
+      functional match for prompt-ownership/stewardship tracking.'
+
+  - id: engine-audit
+    domain: business_policy
+    name: Audit Engine (prompt-lifecycle sense)
+    requirement: Complete, append-only history of every prompt change, access, and execution event.
+    verdict: not_implemented
+    evidence: 'The existing Audit Engine (engine 19 of 20_ENGINES_10_GATEWAYS) and knowledge_engine''s
+      own append-only KE- record history are both real, live, generic audit-log MECHANISMS this
+      plan''s phases should reuse (per zero-duplication CONSTRAINT) rather than build a 3rd audit
+      log from scratch -- but neither currently records any prompt-object change/access/execution
+      event, because no prompt registry exists yet to generate those events. Real gap for the
+      specific requirement; reusable mechanism noted for the phase plan.'
+
+  - id: engine-cost-optimization
+    domain: business_policy
+    name: Cost Optimization Engine
+    requirement: Per-prompt cost tracking, budget guardrails, cost-reduction recommendations.
+    verdict: partially_implemented
+    evidence: 'llm-client.ts''s estimateCostUsd()/estimateCacheSavingsUsd() (repos/compliance-tracker/src/lib/llm-client.ts:212,229)
+      are real, live per-CALL cost estimation functions. registries.credit_spend_governance
+      (this ops system''s own session/task cost tracking, scripts/cost_reconciliation.py,
+      scripts/cost_usage_60min.py) is a real, separate cost-governance mechanism, but for THIS
+      ops system''s own AI-agent spend, not per-prompt product cost. Neither implements
+      budget guardrails or cost-reduction recommendations for a prompt registry (which does not exist).'
+    known_partial_prior_art_ref: llm_client
+
+  # -- Security and Quality Engines (6) --
+  - id: engine-defense-in-depth
+    domain: security_quality
+    name: Defense-in-Depth Engine
+    requirement: Coordinates multi-layer security -- input sanitization, prompt hardening, output filtering, runtime guardrails.
+    verdict: not_implemented
+    evidence: No multi-layer prompt-security coordination mechanism exists anywhere.
+
+  - id: engine-prompt-security
+    domain: security_quality
+    name: Prompt Security Engine
+    requirement: Prompt injection detection, jailbreak prevention, instruction leakage protection.
+    verdict: not_implemented
+    evidence: No injection/jailbreak detection mechanism exists for prompts in any repo (confirmed
+      by grep for prompt-guard/rebuff/injection-classifier patterns, all absent outside this document
+      and the security-audit-tooling below, which targets application code, not prompt content).
+
+  - id: engine-red-team
+    domain: security_quality
+    name: Red Team Engine
+    requirement: Automated adversarial testing using tools like Garak and PyRIT.
+    verdict: not_implemented
+    evidence: 'registries.auditor_engine and registries.security_audit_implementation_plan are real,
+      live security-scanning pipelines (gitleaks/trivy/checkov against compliance-tracker''s source
+      code, per AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml phase 1 evidence) -- a real, adjacent
+      security-tooling investment, but scanning APPLICATION CODE for secrets/CVEs/misconfig, not
+      red-teaming PROMPTS for adversarial jailbreaks. Neither Garak nor PyRIT is installed anywhere
+      (confirmed absent from package.json/requirements.txt across all repos).'
+
+  - id: engine-quality
+    domain: security_quality
+    name: Quality Engine
+    requirement: Accuracy scoring, hallucination detection, output quality assessment.
+    verdict: not_implemented
+    evidence: No LLM-output quality/hallucination scoring mechanism exists anywhere.
+
+  - id: engine-telemetry
+    domain: security_quality
+    name: Telemetry Engine
+    requirement: Performance metrics collection, latency tracking, resource utilization monitoring for prompts.
+    verdict: not_implemented
+    evidence: 'registries.sentinel_health / sentinel_violations (this ops system''s own health
+      monitoring) and testing_engine_irvf''s distributed-trace-verification wiring are real telemetry
+      mechanisms for THIS ops system''s task dispatch and compliance-tracker''s API routes,
+      respectively -- neither instruments a prompt-execution pipeline, which does not exist.'
+
+  - id: engine-analytics-prompt
+    domain: security_quality
+    name: Analytics Engine (prompt-lifecycle sense)
+    requirement: Usage analytics, trend detection, prompt efficiency scoring, staleness indexing.
+    verdict: not_implemented
+    evidence: 'The existing Analytics Engine (engine 18 of 20_ENGINES_10_GATEWAYS) analyzes business-
+      task usage in compliance-tracker, confirmed different subject by its own gateway-inventory
+      exists_as citation. No prompt-usage analytics exist.'
+
+  # -- Browser Execution Engines (10) --
+  - id: engine-browser-execution
+    domain: browser_execution
+    name: Browser Execution Engine
+    requirement: Master orchestrator for browser-native execution, routing tasks to optimal compute tier.
+    verdict: not_implemented
+    evidence: No orchestrator exists; litert-spike is a single, non-tiered inference path with no
+      routing logic across compute tiers.
+
+  - id: engine-browser-lite-llm
+    domain: browser_execution
+    name: Browser Lite LLM Engine
+    requirement: WebGPU-accelerated local LLM inference via WebLLM (165+ models, streaming, JSON mode).
+    verdict: partially_implemented
+    evidence: 'repos/compliance-tracker/src/app/litert-spike/ (page.tsx, worker-src/inference-worker.ts,
+      types.ts) is a real, working browser WebGPU-with-WASM-fallback inference prototype -- but uses
+      Google LiteRT, not WebLLM, ships no model catalog, no streaming, no JSON mode, and lives under
+      an app-router debug route, not production infrastructure.'
+    known_partial_prior_art_ref: litert_spike
+
+  - id: engine-browser-npu
+    domain: browser_execution
+    name: Browser NPU Engine
+    requirement: WebNN-based NPU inference for sub-30ms lightweight tasks.
+    verdict: not_implemented
+    evidence: No WebNN/navigator.ml usage exists anywhere (confirmed by the repo-wide grep in
+      known_partial_prior_art -- zero webnn hits outside this document itself).
+
+  - id: engine-browser-builtin-ai
+    domain: browser_execution
+    name: Browser Built-in AI Engine
+    requirement: Chrome window.ai integration for zero-download Gemini Nano inference.
+    verdict: not_implemented
+    evidence: No window.ai usage exists anywhere in either product repo.
+
+  - id: engine-browser-mcp
+    domain: browser_execution
+    name: Browser MCP Engine
+    requirement: BrowserMCP integration for authenticated browser automation and DOM interaction.
+    verdict: not_implemented
+    evidence: 'ai-os/BROWSER_AUTOMATION_PROFILE_2026-07-25.yaml exists but governs THIS session''s
+      own Playwright/browser-automation tooling for testing/scraping tasks (confirmed by reading its
+      scope), not a BrowserMCP-based end-user product feature. No functional match.'
+
+  - id: engine-browser-function
+    domain: browser_execution
+    name: Browser Function Engine
+    requirement: Browser API orchestration -- Clipboard, Notifications, Geolocation, Web APIs.
+    verdict: not_implemented
+    evidence: No such orchestration layer exists; individual pages may call browser APIs ad hoc but
+      no dedicated engine coordinates them.
+
+  - id: engine-browser-storage
+    domain: browser_execution
+    name: Browser Storage Engine
+    requirement: Multi-backend storage management across OPFS, IndexedDB, and Cache API.
+    verdict: not_implemented
+    evidence: No OPFS/IndexedDB/Cache-API management layer exists anywhere (confirmed absent by grep).
+
+  - id: engine-browser-sync
+    domain: browser_execution
+    name: Browser Sync Engine
+    requirement: Server synchronization with conflict resolution, offline queuing, delta sync.
+    verdict: not_implemented
+    evidence: No offline-queue/delta-sync mechanism exists in either product repo's client code.
+
+  - id: engine-browser-worker
+    domain: browser_execution
+    name: Browser Worker Engine
+    requirement: Web Worker lifecycle management, SharedArrayBuffer coordination, thread pool scaling.
+    verdict: partially_implemented
+    evidence: 'litert-spike''s worker-src/inference-worker.ts is a real, single dedicated Web Worker
+      hosting one inference session -- a genuine but minimal instance of worker usage, not a managed
+      lifecycle/pool/SharedArrayBuffer coordination layer (no SAB/Atomics usage found anywhere).'
+    known_partial_prior_art_ref: litert_spike
+
+  - id: engine-browser-transformers
+    domain: browser_execution
+    name: Browser Transformers Engine
+    requirement: Transformers.js v3 integration for WebGPU-accelerated embeddings, classification, etc.
+    verdict: not_implemented
+    evidence: 'litert-spike-embeddings/worker-src/wordpiece-tokenizer.ts implements only a WordPiece
+      tokenizer (text-to-token-ids), not a Transformers.js integration or embedding model inference --
+      confirmed by reading the file; no @xenova/transformers or @huggingface/transformers dependency
+      exists in compliance-tracker''s package.json.'
+
+  # -- Caching and Data Engines (8 named in 2.1, but 2.3 defines 10 real levels -- see cache items below) --
+  - id: engine-l0-memory-cache
+    domain: caching_data
+    name: L0 Memory Cache Engine
+    requirement: JavaScript in-memory LRU cache for hot data, sub-microsecond access.
+    verdict: not_implemented
+    evidence: No dedicated LRU hot-cache layer exists for prompts; this is itemized fully under the
+      2.3 cache-level items below (cache-l0 through cache-l9) to avoid double-counting the same gap
+      as both an "engine" and a "cache level" -- see cache-l0.
+
+  - id: engine-l1-browser-cache
+    domain: caching_data
+    name: L1 Browser Cache Engine
+    requirement: Cache API management for HTTP-sourced assets and pre-computed responses.
+    verdict: not_implemented
+    evidence: See cache-l1 (2.3 item below); same requirement, not double-itemized here.
+
+  - id: engine-l2-indexeddb
+    domain: caching_data
+    name: L2 IndexedDB Engine
+    requirement: Structured data storage with rich indexing for metadata and queryable results.
+    verdict: not_implemented
+    evidence: See cache-l2.
+
+  - id: engine-l3-opfs
+    domain: caching_data
+    name: L3 OPFS Engine
+    requirement: High-performance binary file storage via sync access handles for model weights.
+    verdict: not_implemented
+    evidence: See cache-l3.
+
+  - id: engine-l4-context-cache
+    domain: caching_data
+    name: L4 Context Cache Engine
+    requirement: Lite LLM context window caching with KV-cache management and eviction.
+    verdict: not_implemented
+    evidence: See cache-l4.
+
+  - id: engine-l5-semantic-cache
+    domain: caching_data
+    name: L5 Semantic Cache Engine
+    requirement: Embedding-based similarity caching with configurable thresholds and TTL policies.
+    verdict: not_implemented
+    evidence: See cache-l5.
+
+  - id: engine-l8-server-cache
+    domain: caching_data
+    name: L8 Server Cache Engine
+    requirement: Server-side caching coordination with cache invalidation and version sync.
+    verdict: not_implemented
+    evidence: 'See cache-l8. No Redis or equivalent server cache found in compliance-tracker''s
+      package.json (confirmed absent by grep for redis/ioredis/upstash).'
+
+  - id: engine-l9-knowledge-cache
+    domain: caching_data
+    name: L9 Knowledge Cache Engine
+    requirement: Domain knowledge caching with structured retrieval and knowledge graph integration.
+    verdict: partially_implemented
+    evidence: See cache-l9 -- knowledge_engine provides the real server-side half of this requirement.
+    known_partial_prior_art_ref: knowledge_engine
+
+  # -- Learning, Escalation, and Distribution Engines (8) --
+  - id: engine-ai-learning
+    domain: learning_escalation_distribution
+    name: AI Learning Engine
+    requirement: Learn from unknown prompts through autonomous exploration, evaluation, and registration.
+    verdict: not_implemented
+    evidence: 'The existing "Learning Engine" (engine 16 of 20_ENGINES_10_GATEWAYS) is named in that
+      plan''s own inventory but is a business-task-automation learning concept (per that plan''s own
+      19/20-engines-partial-coverage framing), not a prompt-exploration/auto-registration mechanism.
+      No functional match.'
+
+  - id: engine-server-escalation
+    domain: learning_escalation_distribution
+    name: Server Escalation Engine
+    requirement: Intelligent escalation from browser to server when local resources are insufficient.
+    verdict: partially_implemented
+    evidence: 'llm-client.ts provides the real SERVER-SIDE half (a working server LLM call path, the
+      Tier-5 escalation target) but nothing implements the escalation DECISION (browser resource
+      insufficiency detection + automatic fallback) since no browser-tiered execution exists to
+      escalate from (see engine-browser-execution).'
+    known_partial_prior_art_ref: llm_client
+
+  - id: engine-prompt-translation
+    domain: learning_escalation_distribution
+    name: Prompt Translation Engine
+    requirement: Multi-language prompt translation with cultural adaptation and model-specific optimization.
+    verdict: not_implemented
+    evidence: No prompt translation mechanism exists (compliance-tracker has general UI i18n in
+      places, a different, non-prompt concern, not cited as a match).
+
+  - id: engine-prompt-localization
+    domain: learning_escalation_distribution
+    name: Prompt Localization Engine
+    requirement: Country/region-specific prompt adaptation including regulatory and cultural compliance.
+    verdict: not_implemented
+    evidence: No prompt localization mechanism exists.
+
+  - id: engine-prompt-marketplace
+    domain: learning_escalation_distribution
+    name: Prompt Marketplace Engine
+    requirement: Internal prompt package discovery, sharing, versioning, dependency management.
+    verdict: not_implemented
+    evidence: No prompt package marketplace exists in any repo.
+
+  - id: engine-prompt-export
+    domain: learning_escalation_distribution
+    name: Prompt Export Engine
+    requirement: Export to JSON, YAML, TOML, and proprietary formats with schema validation.
+    verdict: not_implemented
+    evidence: No prompt-specific export mechanism exists (no prompt registry to export from).
+
+  - id: engine-prompt-import
+    domain: learning_escalation_distribution
+    name: Prompt Import Engine
+    requirement: Import from external libraries with conflict detection, dependency analysis, sandboxing.
+    verdict: not_implemented
+    evidence: No prompt import mechanism exists.
+
+  - id: engine-dspy-integration
+    domain: learning_escalation_distribution
+    name: DSPy Integration Engine
+    requirement: Stanford DSPy framework integration for declarative prompt programming and auto-optimization.
+    verdict: not_implemented
+    evidence: 'DSPy is not installed anywhere (confirmed absent from every requirements.txt/package.json
+      across all repos via grep). No declarative signature/optimizer mechanism exists.'
+
+  # -- Synchronization and Infrastructure Engines (12) --
+  - id: engine-gateway-integration
+    domain: sync_infrastructure
+    name: Gateway Integration Engine
+    requirement: API gateway routing, rate limiting, protocol translation for external integrations.
+    verdict: partially_implemented
+    evidence: 'The existing 10-gateway architecture (G01-G10, ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml)
+      is a real, live, partially-wired gateway-boundary system (WIRING_ENGINE_PHASE_PLAN_2026-07-25.yaml
+      phase 1 proved a real request crosses G03/G04 boundaries) -- for business-task dispatch routing,
+      not LLM-provider gateway routing. The SEPARATION PATTERN (named gateway boundaries with
+      verified hop evidence) is directly reusable rather than duplicable; the specific LLM-provider
+      routing/rate-limiting/protocol-translation function does not exist.'
+    known_partial_prior_art_ref: engines_gateways_architecture_pattern
+
+  - id: engine-knowledge-sync
+    domain: sync_infrastructure
+    name: Knowledge Sync Engine
+    requirement: Domain knowledge synchronization between browser cache and server knowledge base.
+    verdict: partially_implemented
+    evidence: knowledge_engine is the real server-side half; no browser-side counterpart or sync
+      mechanism exists (no browser app fetches/caches knowledge_engine content today).
+    known_partial_prior_art_ref: knowledge_engine
+
+  - id: engine-model-selection
+    domain: sync_infrastructure
+    name: Model Selection Engine
+    requirement: Task-aware model routing across NPU, WebGPU LLM, Built-in AI, and server tiers.
+    verdict: not_implemented
+    evidence: No multi-tier model routing exists; llm-client.ts calls one configured model per request
+      with no tier-selection logic.
+
+  - id: engine-execution-planner
+    domain: sync_infrastructure
+    name: Execution Planner Engine
+    requirement: Build and optimize execution plans considering latency, cost, privacy, capability constraints.
+    verdict: not_implemented
+    evidence: No prompt-execution planning mechanism exists.
+
+  - id: engine-l6-workflow-cache
+    domain: sync_infrastructure
+    name: L6 Workflow Cache Engine
+    requirement: Active workflow state machine caching with TTL and usage-frequency eviction.
+    verdict: not_implemented
+    evidence: See cache-l6.
+
+  - id: engine-l7-metadata-cache
+    domain: sync_infrastructure
+    name: L7 Metadata Cache Engine
+    requirement: Prompt metadata, permission, and configuration caching with version-aware invalidation.
+    verdict: not_implemented
+    evidence: See cache-l7.
+
+  - id: engine-testing-regression
+    domain: sync_infrastructure
+    name: Testing and Regression Engine (prompt-lifecycle sense)
+    requirement: Automated regression testing triggered by prompt version changes with threshold enforcement.
+    verdict: not_implemented
+    evidence: 'testing_engine_irvf triggers route tests on capability_registry inserts (a real,
+      live, different trigger and different tested object -- API routes, not prompt versions).
+      No functional match.'
+
+  - id: engine-performance-profiling
+    domain: sync_infrastructure
+    name: Performance Profiling Engine
+    requirement: Per-stage latency profiling with flame graph visualization and bottleneck detection.
+    verdict: not_implemented
+    evidence: No per-stage latency profiling exists for any prompt pipeline (none exists to profile).
+
+  - id: engine-memory-management
+    domain: sync_infrastructure
+    name: Memory Management Engine
+    requirement: Browser memory budget enforcement across engines with priority-based allocation.
+    verdict: not_implemented
+    evidence: No browser memory budget enforcement exists anywhere.
+
+  - id: engine-storage-quota
+    domain: sync_infrastructure
+    name: Storage Quota Engine
+    requirement: OPFS/IndexedDB/Cache API quota monitoring, eviction policies, usage optimization.
+    verdict: not_implemented
+    evidence: No storage quota monitoring exists (no OPFS/IndexedDB usage exists to monitor).
+
+  - id: engine-network-resilience
+    domain: sync_infrastructure
+    name: Network Resilience Engine
+    requirement: Offline detection, request queuing, exponential backoff, sync reconciliation.
+    verdict: not_implemented
+    evidence: No offline-first network resilience layer exists for a prompt platform (compliance-tracker's
+      own webhook-delivery-outcome-monitor.ts handles a different, unrelated webhook-retry concern,
+      not cited as a match).
+
+  - id: engine-observability
+    domain: sync_infrastructure
+    name: Observability Engine
+    requirement: Distributed tracing across pipeline stages with OpenTelemetry-compatible export.
+    verdict: not_implemented
+    evidence: 'testing_engine_irvf''s distributed-trace-verification wiring (phase_2) is real but
+      instruments compliance-tracker API routes with a custom trace_id/span_id scheme, not
+      OpenTelemetry-compatible export, and has no prompt-pipeline stages to trace. No functional match.'
+
+# ============================================================================
+# ITEMS -- Part II, Section 2.2: Improved Prompt Compiler Pipeline (8 layer-groupings, 41 stages)
+# ============================================================================
+  - id: pipeline-input-acquisition
+    domain: pipeline
+    name: 'Pipeline Layer 1: Input Acquisition (Stages 1-2)'
+    requirement: Multi-level cache waterfall check (L0 then L1-L3 parallel) before any processing, 5ms budget.
+    verdict: not_implemented
+    evidence: No cache hierarchy exists to check (see cache-l0 through cache-l3).
+
+  - id: pipeline-lightweight-analysis
+    domain: pipeline
+    name: 'Pipeline Layer 2: Lightweight Analysis (Stages 3-7)'
+    requirement: Noise removal, intent extraction, entity detection, variable detection, input classification -- 15ms budget.
+    verdict: partially_implemented
+    evidence: 'prompt_gateway performs noise removal + single-level intent classification in this
+      exact JS-free, no-LLM-inference style the document specifies (real, ~1.7ms pipeline completion
+      time in its own documented run -- comfortably inside the 15ms budget). Entity detection and
+      variable detection are absent (see engine-entity, engine-variable); input classification exists
+      only as the 6-category classifier output, not a simple/complex/novel triage.'
+    known_partial_prior_art_ref: prompt_gateway
+
+  - id: pipeline-context-assembly
+    domain: pipeline
+    name: 'Pipeline Layer 3: Context Assembly (Stages 8-12)'
+    requirement: Business context, user context, session history, variable binding, template hydration -- 25ms budget.
+    verdict: partially_implemented
+    evidence: context_engine.py assembles session-history context and snippet-based template
+      hydration (real, documented). Business context and user-preference sources are absent.
+    known_partial_prior_art_ref: prompt_gateway
+
+  - id: pipeline-prompt-construction
+    domain: pipeline
+    name: 'Pipeline Layer 4: Prompt Construction (Stages 13-18)'
+    requirement: Machine prompt build, optimization, compression, hashing, fingerprinting, semantic-cache lookup -- 30ms budget.
+    verdict: partially_implemented
+    evidence: prompt_engine.py builds and compresses a machine_prompt (real). No hash generation,
+      no semantic fingerprint, no L5 semantic-cache lookup (see cache-l5) exist.
+    known_partial_prior_art_ref: prompt_gateway
+
+  - id: pipeline-verification
+    domain: pipeline
+    name: 'Pipeline Layer 5: Verification (Stages 19-25)'
+    requirement: Confidence scoring, business/workflow/capability/permission verification, cost estimation, model selection -- 30ms budget.
+    verdict: not_implemented
+    evidence: No verification layer exists around prompt_gateway's output; llm-client.ts's cost
+      estimation (engine-cost-optimization) is not wired into any pre-execution verification gate.
+
+  - id: pipeline-pre-execution-guardrails
+    domain: pipeline
+    name: 'Pipeline Layer 6: Pre-Execution Guardrails (Stages 26-29)'
+    requirement: Input guardrails (NeMo/Llama Guard), content policy, PII detection, safety classification -- 20ms budget.
+    verdict: not_implemented
+    evidence: No guardrails library (NeMo Guardrails, Llama Guard) or PII detector (Presidio) is
+      installed anywhere (confirmed absent from all package.json/requirements.txt).
+
+  - id: pipeline-execution
+    domain: pipeline
+    name: 'Pipeline Layer 7: Execution (Stages 30-34)'
+    requirement: 5-tier routing (NPU/Built-in AI/Lite LLM/Transformers.js/Server) with per-tier fallback -- 3s max budget.
+    verdict: partially_implemented
+    evidence: 'Only Tier 5-equivalent (server, via llm-client.ts) and a non-integrated Tier-3-like
+      spike (litert-spike, browser WebGPU) exist as isolated points, with no routing/fallback logic
+      connecting them into a tiered system.'
+    known_partial_prior_art_ref: llm_client
+
+  - id: pipeline-post-execution
+    domain: pipeline
+    name: 'Pipeline Layer 8: Post-Execution (Stages 35-41)'
+    requirement: Output filtering, guardrails validation, quality scoring, result caching, telemetry, staleness comparison -- 10ms budget.
+    verdict: not_implemented
+    evidence: No output-filtering, quality-scoring, or staleness-detection mechanism exists for any
+      LLM output in this system.
+
+# ============================================================================
+# ITEMS -- Part II, Section 2.3: Enhanced Multi-Level Cache Architecture (L0-L9, 10 levels)
+# ============================================================================
+  - id: cache-l0
+    domain: cache_levels
+    name: 'L0: JavaScript Map (hot prompts, session data)'
+    requirement: <0.01ms access, 128MB cap, LRU/1000 entries.
+    verdict: not_implemented
+    evidence: No dedicated LRU JS-Map cache layer exists for prompts in any client codebase.
+
+  - id: cache-l1
+    domain: cache_levels
+    name: 'L1: Browser Cache API (HTTP responses, pre-computed assets)'
+    requirement: 1-5ms, shared quota, browser-managed LRU.
+    verdict: not_implemented
+    evidence: No custom Cache API usage for prompt assets found (Next.js's own build-asset caching
+      is a framework default, not a purpose-built prompt-cache layer, not cited as a match).
+
+  - id: cache-l2
+    domain: cache_levels
+    name: 'L2: IndexedDB (metadata, queryable results, config)'
+    requirement: 5-20ms, shared quota, manual/by-date eviction.
+    verdict: not_implemented
+    evidence: No IndexedDB usage found in either product repo's client code (confirmed absent by grep).
+
+  - id: cache-l3
+    domain: cache_levels
+    name: 'L3: OPFS sync handles (model weights, large binary data)'
+    requirement: 2-10ms, shared quota, manual/LRU-on-files eviction.
+    verdict: not_implemented
+    evidence: No OPFS usage found anywhere (confirmed absent by grep).
+
+  - id: cache-l4
+    domain: cache_levels
+    name: 'L4: Lite LLM Context Cache (KV-cache)'
+    requirement: 1ms, 256MB, LRU on KV-cache.
+    verdict: not_implemented
+    evidence: No KV-cache management exists (no Lite LLM inference engine exists to have a KV-cache
+      for -- litert-spike is stateless single-shot inference).
+
+  - id: cache-l5
+    domain: cache_levels
+    name: 'L5: Semantic Cache (embedding similarity)'
+    requirement: 10-30ms, 10K embeddings, TTL + similarity threshold.
+    verdict: not_implemented
+    evidence: No embedding index or similarity-threshold cache exists anywhere.
+
+  - id: cache-l6
+    domain: cache_levels
+    name: 'L6: Workflow Cache (active workflow state machines)'
+    requirement: 5-15ms, 1K workflows, TTL + usage-frequency eviction.
+    verdict: not_implemented
+    evidence: No workflow-state-machine cache exists for prompts (compliance-tracker's own workflow
+      engine has no prompt-object state machines to cache, since none exist).
+
+  - id: cache-l7
+    domain: cache_levels
+    name: 'L7: Metadata Cache (prompt metadata, permission, config)'
+    requirement: 1-5ms, 50K entries, TTL + version-aware invalidation.
+    verdict: not_implemented
+    evidence: No prompt-metadata cache exists (no prompt metadata schema exists yet -- see item metadata-schema-200-fields).
+
+  - id: cache-l8
+    domain: cache_levels
+    name: 'L8: Server Cache (Redis, cross-device sync, global knowledge)'
+    requirement: 10-50ms, unlimited, server-managed.
+    verdict: not_implemented
+    evidence: No Redis or equivalent server-cache dependency exists in compliance-tracker's package.json
+      (confirmed absent by grep for redis/ioredis/upstash).
+
+  - id: cache-l9
+    domain: cache_levels
+    name: 'L9: Knowledge Cache (domain knowledge, embeddings index)'
+    requirement: 20-100ms, unlimited, relevance-score eviction.
+    verdict: partially_implemented
+    evidence: 'knowledge_engine (scripts/superboss-register.py, SQLite+FTS5, KE- id namespace) is a
+      real, live, server-side structured knowledge store with relevance-rankable full-text search --
+      the real server-side half of this requirement. No embeddings index, no browser-side component,
+      and it is scoped to THIS ops system''s own operational knowledge, not a product-facing domain-
+      knowledge cache for end-user prompts.'
+    known_partial_prior_art_ref: knowledge_engine
+
+# ============================================================================
+# ITEMS -- Part II, Section 2.4: Complete Technology Stack (5 sub-stacks)
+# ============================================================================
+  - id: stack-browser-compute
+    domain: tech_stack
+    name: Browser Compute Tier (WebLLM, WebNN, window.ai, Transformers.js, ONNX Runtime Web)
+    requirement: All 7 named technologies installed and wired for GPU/NPU/Built-in-AI/embedding/vision/audio inference.
+    verdict: partially_implemented
+    evidence: 'Only LiteRT (litert-spike, an alternative to WebLLM/ONNX Runtime Web the document
+      does not name) is present, WebGPU-backed with WASM fallback. 0 of the 7 document-named
+      technologies (WebLLM, Transformers.js, ONNX Runtime Web, BrowserMCP, LocalMode.dev-pattern,
+      WebNN, window.ai) are installed (confirmed absent from compliance-tracker''s package.json).'
+    known_partial_prior_art_ref: litert_spike
+
+  - id: stack-storage-tier
+    domain: tech_stack
+    name: Storage Tier (Cache API, IndexedDB, OPFS, BroadcastChannel)
+    requirement: Multi-backend browser storage wired per the document's component table.
+    verdict: not_implemented
+    evidence: No usage of any of the 4 named browser storage technologies found anywhere in client code.
+
+  - id: stack-parallelism
+    domain: tech_stack
+    name: Parallelism and Background Processing (Web Workers, SharedArrayBuffer, Service Worker, BroadcastChannel)
+    requirement: Dedicated inference workers, SAB+Atomics thread pool, background sync/prefetch, cross-tab coordination.
+    verdict: partially_implemented
+    evidence: litert-spike uses one dedicated Web Worker per inference session (real). No
+      SharedArrayBuffer/Atomics, no Service Worker background sync/prefetch, no BroadcastChannel
+      cross-tab coordination found anywhere.
+    known_partial_prior_art_ref: litert_spike
+
+  - id: stack-security-guardrails
+    domain: tech_stack
+    name: Security and Guardrails Stack (NeMo Guardrails, Llama Guard, Prompt Guard, Garak, PyRIT, Presidio)
+    requirement: All 7 named security tools installed and wired into the pipeline.
+    verdict: not_implemented
+    evidence: None of the 7 named tools are installed anywhere (confirmed absent from all
+      package.json/requirements.txt files across all repos).
+
+  - id: stack-prompt-engineering
+    domain: tech_stack
+    name: Prompt Engineering Stack (DSPy, promptfoo, DeepEval, XGrammar, Guidance/Outlines, LangSmith/LangFuse pattern)
+    requirement: All 8 named prompt-engineering tools installed and wired.
+    verdict: not_implemented
+    evidence: None of the 8 named tools are installed anywhere (confirmed absent by the same grep).
+
+# ============================================================================
+# ITEMS -- Cross-cutting requirements (2.5, 2.6, 2.7, 2.8, 2.9)
+# ============================================================================
+  - id: perf-budget-framework
+    domain: cross_cutting
+    name: Performance Budget Framework (2.5)
+    requirement: Concrete per-stage latency budgets, memory budgets (128MB/256MB/128MB/2GB), storage
+      budgets (4GB OPFS/500MB IndexedDB) with defined fallback behavior on exceed.
+    verdict: not_implemented
+    evidence: No latency/memory/storage budget enforcement exists anywhere, because none of the
+      pipeline stages or cache levels these budgets govern exist yet.
+
+  - id: metadata-schema-200-fields
+    domain: cross_cutting
+    name: Prompt Metadata Schema (2.6) -- 200+ fields across 18 categories
+    requirement: A rich, versioned metadata schema (Functional/UI/Workflow/Business/Validation/
+      Analytics/Security/Performance/AI/Browser/Cache/Gateway/Version/Dependency/Execution/Audit/
+      Learning/Testing categories) attached to every registered prompt.
+    verdict: not_implemented
+    evidence: No prompt object exists to carry metadata (see engine-prompt-registry); no schema
+      of this shape exists in ai-os/DATABASE_CATALOG.json's 444 real tables or any repo's type
+      definitions.
+
+  - id: ycml-spec-catalog
+    domain: cross_cutting
+    name: Modular YCML Specification Catalog (2.7) -- 40 specs
+    requirement: 40 self-contained, version-controlled YCML documents, one per engine/domain, defining
+      interfaces/data models/config schema/integration points.
+    verdict: not_implemented
+    evidence: 'No YCML-format specification files exist anywhere in this system (confirmed by grep
+      for the literal string "YCML" outside this document and this gap analysis -- 0 hits). 1:1
+      correspondent to the 74-engine catalog already itemized above; not a separate implementation
+      gap beyond documenting whatever of that catalog eventually gets built (see phase_10 of the new
+      phase plan).'
+
+  - id: defense-in-depth-4-layer-enforcement
+    domain: cross_cutting
+    name: Defense-in-Depth Security Architecture (2.8) -- 4-layer enforcement, cross-cutting
+    requirement: Input sanitization (compile-time), system-prompt hardening (XML delimiters,
+      instruction hierarchy), runtime guardrails (NeMo/Llama Guard), output filtering+monitoring
+      (Presidio, content moderation, Audit Engine logging) -- ALL FOUR layers enforced together,
+      not any one alone.
+    verdict: not_implemented
+    evidence: Distinct from the per-engine items above (engine-defense-in-depth, engine-prompt-security,
+      engine-red-team) which cover the ENGINES that would implement each layer -- this item is the
+      cross-cutting requirement that all 4 layers operate together as defense-in-depth. 0 of the 4
+      layers exist individually, so the composite requirement is trivially also not implemented.
+
+  - id: governance-lifecycle-state-machine
+    domain: cross_cutting
+    name: Prompt Lifecycle Governance (2.9) -- Draft/Review/Staging/Production/Deprecated with approval gates and canary rollout
+    requirement: State machine with explicit per-transition approval, automated eval gates
+      (Review->Staging), minimum canary duration (Staging->Production), full audit logging of every transition.
+    verdict: not_implemented
+    evidence: Same underlying gap as engine-prompt-lifecycle (state machine) plus engine-audit
+      (transition logging) -- itemized separately here because 2.9 specifies the GOVERNANCE gates
+      (approval, eval thresholds, canary duration) on top of the bare state machine, a distinct
+      requirement layer.
+
+  - id: governance-gitops-workflow
+    domain: cross_cutting
+    name: GitOps Workflow Integration (2.9)
+    requirement: Prompts stored as versioned Git files, PR-based changes with mandatory CI/CD eval
+      artifacts, branch protection requiring passing evals before merge.
+    verdict: not_implemented
+    evidence: 'This SESSION''s own dev workflow (claude-control/compliance-tracker) already uses
+      real GitOps for CODE (PRs, branch protection likely present per .github/workflows -- not
+      re-verified here, out of scope) -- but that is GitOps for application source code, not for
+      versioned PROMPT files with eval-gated promotion, which do not exist as a distinct artifact
+      class in any repo. Real gap for the specific requirement (prompts-as-versioned-Git-files with
+      eval-gated CI).'
+
+# ============================================================================
+# ITEMS -- Platform-scope disambiguation (not in the document's own catalog, but real,
+# necessary findings from this gap-check that the phase plan must account for)
+# ============================================================================
+  - id: platform-anchor-repo-undecided
+    domain: scope_disambiguation
+    name: Target repo for browser-native implementation work is not yet an Owner-confirmed decision
+    requirement: n/a -- a real open question this gap analysis surfaces, not a document requirement.
+    verdict: not_implemented
+    evidence: 'claude-control (this repo) is config/YAML-only by its own MASTER_INDEX.yaml role
+      definition ("Outermost cross-project requirements/decision catalog -- config/YAML only, no
+      application code") -- it cannot host any of the 100 not_implemented items above, all of which
+      need a real browser-rendered application. The ONLY real prior art for browser-native work
+      (litert-spike) lives in compliance-tracker, a B2B compliance-SaaS product with no stated
+      product connection to a general-purpose "Prompt Intelligence Platform" -- confirmed by reading
+      compliance-tracker''s own module list, none of which is a prompt-management feature. Filed as
+      an explicit OWNER_DECISIONS_NEEDED entry (id veridian-architecture-v2-target-repo-anchor) so
+      a human confirms the anchor repo before phase_2+ commit real engineering time to it -- see the
+      new phase plan''s meta.owner_decision_dependency.'
+
+  - id: litert-spike-unregistered
+    domain: scope_disambiguation
+    name: litert-spike / litert-spike-embeddings have no MASTER_INDEX.yaml registry entry
+    requirement: n/a -- a real, small, pre-existing registration gap this task's own research found.
+    verdict: not_implemented
+    evidence: 'Confirmed by grep across MASTER_INDEX.yaml''s 103 registries: entries -- none reference
+      litert-spike, litert-spike-embeddings, or LiteRT. This predates this task and is unrelated to
+      VERIDIAN_Architecture_v2.0.docx directly, but is the single most relevant existing artifact any
+      browser-execution phase of the new plan must build on, so registering it is folded into
+      phase_5''s own scope (see the new phase plan) rather than filed as a separate, disconnected fix.'

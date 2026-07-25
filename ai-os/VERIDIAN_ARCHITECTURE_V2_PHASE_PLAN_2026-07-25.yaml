@@ -1,0 +1,375 @@
+meta:
+  title: VERIDIAN_Architecture_v2.0.docx -- Phased Implementation Plan
+  created: '2026-07-25'
+  produced_by_task: task-20260725-112909-veridian-architecture-v2-task2-phase0-ga
+  precedent: 'Same phases[]-with-id/depends_on/scope/external_depends_on structure as
+    ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml, ai-os/AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml,
+    ai-os/TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml, ai-os/TERMINOLOGY_STANDARDIZATION_PHASE_PLAN_2026-07-24.yaml,
+    and ai-os/WIRING_ENGINE_PHASE_PLAN_2026-07-25.yaml -- deliberately matched so
+    scripts/auto_phase_continuation.py (scans *_PHASE_PLAN_*.yaml / *_IMPLEMENTATION_PLAN_*.yaml,
+    normalizes phases[].id + depends_on, dispatches the next ready phase every 30 min via cron)
+    picks this plan up with zero further manual intervention once this task''s PR merges.'
+  gap_analysis: ai-os/VERIDIAN_ARCHITECTURE_V2_GAP_ANALYSIS_2026-07-25.yaml
+  real_scope_this_plan_targets: '85 not_implemented + 20 partially_implemented real requirements
+    (105 total, 0 already_implemented) from the gap analysis above. Every phase below cites its
+    own specific item ids from that file (never a vague restatement) per this task''s own
+    CONSTRAINTS: no phase exists to implement something already covered by an existing live
+    system named in that gap analysis''s known_partial_prior_art.'
+  owner_decision_dependency: 'ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml id
+    veridian-architecture-v2-target-repo-anchor (filed by this task, status
+    awaiting_owner_decision) asks the Owner to confirm the target repo for all browser-native
+    engineering (phases 2-10 below default to repos/compliance-tracker, the only repo with any
+    real prior art -- litert-spike -- per gap-analysis item platform-anchor-repo-undecided).
+    Deliberately NOT a hard depends_on gate on phase_1 or phase_3 (both are claude-control-side
+    schema/registry/governance-pattern design work, real and useful regardless of which app repo
+    eventually hosts the browser runtime) -- but phase_2 onward (the first phase that writes real
+    application code) lists this decision explicitly in its own scope as a check-before-code-step,
+    consistent with this session''s "confirm before hard-to-reverse, cross-repo actions" operating
+    rule. If the Owner has not decided by the time phase_2 is dispatched, that phase''s own task
+    must re-surface the open decision rather than silently assume compliance-tracker.'
+  cross_repo_dispatch_note: 'claude-control (this repo) is config/YAML-only (MASTER_INDEX.yaml
+    repos.core_veridian_and_customer_products role field) -- it cannot host any engine/pipeline/
+    cache/browser code. Phases 2-10 below are therefore, by construction, compliance-tracker-scoped
+    tasks (external_depends_on / scope explicitly says so in each), dispatched the same way
+    TERMINOLOGY_STANDARDIZATION_PHASE_PLAN_2026-07-24.yaml''s own Phase 3/4 cross-repo fixes were
+    -- as a compliance-tracker-repo task, coordinated with (not run inside) this claude-control
+    session. Only phase_1 (registry/schema design, config-only) and phase_3 (governance-framework
+    design, config-only) are claude-control-native.'
+  crontab_approval_note: 'Any phase below that adds a crontab entry needs an
+    ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml entry with status approved, OR falls under the
+    Owner''s existing blanket "95pct-resources / Recommended-default" approval (already cited by
+    20_ENGINES_10_GATEWAYS and WIRING_ENGINE plans) if the new entry is consistent with that default.'
+
+# ============================================================================
+# PHASES
+# ============================================================================
+phases:
+  - id: phase_1_prompt_registry_lifecycle_foundation
+    name: "Prompt Registry, Version, Lifecycle, Validation Engines + Metadata Schema (data-model foundation)"
+    objective: "Build the foundational prompt data model every other phase depends on: a real,
+      queryable prompt registry (unique IDs, indexing, discovery), semantic versioning with diff/
+      rollback, a Draft->Review->Staging->Production->Deprecated lifecycle state machine with
+      approval-gate hooks (gates themselves wired in phase_3), schema validation, and the 200+
+      field/18-category metadata schema (2.6) every registered prompt must carry. This phase is
+      config/schema design + a real live table, not application UI -- can proceed in
+      claude-control (extending scripts/superboss-register.py the same way capability_registry
+      and knowledge_engine tables were added) regardless of the owner_decision_dependency above."
+    scope:
+      - "Gap items closed: engine-prompt-registry, engine-prompt-version, engine-prompt-lifecycle,
+        engine-prompt-validation, metadata-schema-200-fields, governance-lifecycle-state-machine
+        (bare state machine only -- the approval-gate ENFORCEMENT itself is phase_3 scope, not
+        this phase's, per that item's own note distinguishing the state machine from its governance gates)."
+      - "Add a prompt_registry table (+ prompt_versions, prompt_metadata) to
+        scripts/superboss-register.py's existing SQLite DB, mirroring knowledge_engine/
+        capability_registry's own init_db()/register/lookup/list CLI pattern (per this session's
+        own zero-duplication precedent -- do not build a 4th, differently-shaped datastore)."
+      - "Define the metadata schema as a real JSON Schema file (ai-os/PROMPT_METADATA_SCHEMA_2026-07-25.schema.json
+        or similar), covering the 18 categories the document names (2.6) at minimum-viable field
+        depth, not literally all 200+ fields verbatim -- match this session's own precedent of
+        building the minimum real schema a validator can enforce (AUDITOR_ENGINE's
+        metadata domain used the same approach)."
+      - "Register the new table + schema in MASTER_INDEX.yaml and via superboss-register.py
+        register-knowledge, citing this gap analysis + phase plan as evidence."
+    depends_on: []
+    external_depends_on: []
+    status: not_started
+    success_criteria:
+      - "python3 scripts/superboss-register.py list-entities --table prompt_registry  # exits 0 once the table exists (empty list is fine)"
+      - "test -f ai-os/PROMPT_METADATA_SCHEMA_2026-07-25.schema.json  # exits 0"
+      - "python3 scripts/superboss-register.py query-knowledge \"veridian_v2_prompt_registry\" --tag domain:veridian_architecture_v2  # found=1"
+
+  - id: phase_2_compiler_pipeline_intelligence_engines
+    name: "Prompt Compiler Pipeline core (non-browser stages 1-25) + Intelligence/Matching Engines"
+    objective: "Extend scripts/prompt_gateway/'s real but narrow prompt_engine.py/classifier.py/
+      context_engine.py (gap analysis: engine-prompt-compiler, engine-intent, engine-context all
+      partially_implemented) into the document's own Layer 2-5 pipeline (Lightweight Analysis
+      through Verification, pipeline-lightweight-analysis through pipeline-verification) and the
+      remaining Intelligence & Matching engines with no prior art (Entity, Variable, Ranking,
+      Recommendation, Similarity, Workflow, Capability, Confidence -- multi-signal). Depends on
+      phase_1 because compiled/versioned output needs somewhere real to be stored and versioned."
+    scope:
+      - "Gap items closed: engine-prompt-compiler (deepen), engine-prompt-optimizer,
+        engine-prompt-expansion, engine-prompt-testing, engine-prompt-benchmark,
+        engine-prompt-portability, engine-prompt-ab, engine-prompt-ranking,
+        engine-prompt-recommendation, engine-prompt-similarity, engine-intent (deepen to
+        multi-level), engine-entity, engine-variable, engine-context (deepen), engine-confidence
+        (deepen to multi-signal), pipeline-lightweight-analysis (deepen), pipeline-context-assembly
+        (deepen), pipeline-prompt-construction (deepen), pipeline-verification."
+      - "OWNER DECISION CHECK: confirm ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml id
+        veridian-architecture-v2-target-repo-anchor is resolved before writing any application
+        code -- this is the first phase in this plan that does. If unresolved, this phase's own
+        task must re-raise it rather than default silently."
+      - "Dispatch as a compliance-tracker-scoped task (per meta.cross_repo_dispatch_note) extending
+        prompt_engine.py/classifier.py/context_engine.py's real algorithms into the target repo's
+        own application code, backed by phase_1's prompt_registry table for versioned storage."
+    depends_on: [phase_1_prompt_registry_lifecycle_foundation]
+    external_depends_on:
+      - "repos/compliance-tracker (repo: compliance-tracker, not claude-control) -- this phase
+        writes application code outside this session's own repo boundary once the target-repo
+        decision resolves; must be dispatched as (or coordinate with) a compliance-tracker-scoped task."
+    status: not_started
+    success_criteria:
+      - "python3 scripts/superboss-register.py query-knowledge \"veridian_v2_compiler_pipeline\" --tag domain:veridian_architecture_v2  # found=1"
+      - "A compliance-tracker-side smoke test the dispatched task must define and paste real output
+        for (e.g. a CLI/route that classifies+compiles+versions one real sample prompt end to end,
+        exit 0) -- cannot be pre-specified here since the target module doesn't exist yet; the
+        dispatched task's own SUCCESS_CRITERIA must include one, per this plan's own concrete-command convention."
+
+  - id: phase_3_governance_policy_cost_engines
+    name: "Business Rule, Permission, Policy, Compliance, Governance, Audit, Cost Optimization Engines + Lifecycle Governance Gates + GitOps"
+    objective: "Wire the approval-gate enforcement phase_1's bare lifecycle state machine deferred
+      here (governance-lifecycle-state-machine), plus the Business/Policy engine group with no
+      real prior art for THIS domain (Business Rule, Policy, Compliance, Governance, Audit,
+      Cost Optimization -- gap analysis explicitly rejected the 20-Engines/compliance-tracker-
+      product naming coincidences for these, see engine-business-rule/engine-policy/
+      engine-compliance/engine-governance/engine-audit evidence), reusing permission-service.ts
+      (partially_implemented) and llm-client.ts's cost functions (partially_implemented) rather
+      than rebuilding RBAC or cost estimation from scratch, and the GitOps prompt-lifecycle workflow."
+    scope:
+      - "Gap items closed: engine-business-rule, engine-dependency, engine-permission (wire
+        permission-service.ts to prompt_registry rows), engine-policy, engine-compliance,
+        engine-governance, engine-audit (wire to knowledge_engine's or 20-Engines' audit-log
+        MECHANISM per gap analysis's explicit reuse note -- do not build a 3rd audit log),
+        engine-cost-optimization (deepen llm-client.ts's estimateCostUsd/estimateCacheSavingsUsd
+        into budget guardrails), governance-lifecycle-state-machine (approval gates + eval
+        thresholds + canary duration), governance-gitops-workflow."
+      - "Design (claude-control-side, config/schema only) the approval-gate + eval-threshold +
+        canary-duration contract as a YAML schema, mirroring CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml's
+        own Phase-0-schema/Phase-1-live-wiring split -- defer live enforcement wiring (which needs
+        phase_1's live table + phase_2's compiled-prompt objects) to this phase's own live-wiring sub-scope."
+    depends_on: [phase_1_prompt_registry_lifecycle_foundation]
+    external_depends_on:
+      - "repos/compliance-tracker (repo: compliance-tracker, not claude-control) -- wiring
+        permission-service.ts and llm-client.ts is application code in that repo, once the
+        target-repo decision resolves."
+    status: not_started
+    success_criteria:
+      - "python3 scripts/superboss-register.py query-knowledge \"veridian_v2_governance_engines\" --tag domain:veridian_architecture_v2  # found=1"
+      - "test -f ai-os/VERIDIAN_V2_LIFECYCLE_GOVERNANCE_SCHEMA_2026-07-25.yaml  # exits 0 (schema-design deliverable of this phase)"
+
+  - id: phase_4_defense_in_depth_security_quality
+    name: "Defense-in-Depth, Prompt Security, Red Team, Quality Engines + 4-layer security architecture + Guardrails pipeline stages"
+    objective: "0 of the document's 7 named security/guardrails tools (NeMo Guardrails, Llama
+      Guard, Prompt Guard, Garak, PyRIT, Presidio -- stack-security-guardrails) are installed
+      anywhere. This phase evaluates and installs the minimum real subset needed to make Layer 1
+      (input sanitization, already partially covered by phase_2's classifier work) through Layer 4
+      (output filtering) real for at least one compiled prompt's execution, following the same
+      real-tool-evaluation method AUDITOR_ENGINE_PHASE_PLAN used for its own domain/tool mapping
+      (never install a tool the KNOWN_CONTEXT stack-confirmation step hasn't verified compatible)."
+    scope:
+      - "Gap items closed: engine-defense-in-depth, engine-prompt-security, engine-red-team,
+        engine-quality, pipeline-pre-execution-guardrails, pipeline-post-execution (guardrails +
+        quality-scoring sub-scope only -- staleness/caching sub-scope is phase_6/phase_7),
+        defense-in-depth-4-layer-enforcement, stack-security-guardrails."
+      - "Tool evaluation table (same shape as AUDITOR_ENGINE_PHASE_PLAN's domains[] rows):
+        tool_mapping / tool_installable_compatible / custom_work_required per of the 7 named tools,
+        confirmed against compliance-tracker's real stack (Next.js/TypeScript + bun) before any install."
+      - "Reuse registries.auditor_engine's and registries.security_audit_implementation_plan's
+        existing scanning infrastructure pattern for the Red Team Engine's adversarial-testing
+        cadence (cron-wired, findings normalized into knowledge_engine) rather than building a
+        parallel scan-and-report pipeline from scratch."
+    depends_on: [phase_2_compiler_pipeline_intelligence_engines]
+    external_depends_on:
+      - "repos/compliance-tracker (repo: compliance-tracker, not claude-control) -- guardrail
+        library installation and pipeline wiring is application code in that repo."
+    status: not_started
+    success_criteria:
+      - "python3 scripts/superboss-register.py query-knowledge \"veridian_v2_defense_in_depth\" --tag domain:veridian_architecture_v2  # found=1"
+      - "A real command proving at least Layer 1 (input sanitization) rejects or flags one known
+        adversarial sample input, exit 0 -- defined precisely by this phase's own dispatched task
+        once the tool evaluation above picks a concrete library."
+
+  - id: phase_5_browser_execution_tiers
+    name: "Browser Execution/Lite-LLM/NPU/Built-in-AI/MCP/Function/Worker/Transformers Engines + Browser Compute/Parallelism tech stack"
+    objective: "Extend the ONLY real browser-native prior art in this whole system
+      (repos/compliance-tracker/src/app/litert-spike/ + litert-spike-embeddings/, gap analysis
+      known_partial_prior_art.litert_spike) from an unregistered app-router debug spike into the
+      document's tiered Browser Execution Engine (NPU -> Built-in AI -> Lite LLM -> Transformers.js
+      -> Server, each with real fallback). This is the single largest, most novel engineering
+      surface in this whole plan (10 named browser engines + 2 tech-stack tables with 0-to-minimal
+      prior art each) -- explicitly the first phase this task's own gap analysis flags against the
+      owner_decision_dependency, since it commits the most new, product-shaping engineering effort."
+    scope:
+      - "Gap items closed: engine-browser-execution, engine-browser-lite-llm (deepen litert-spike;
+        evaluate WebLLM as the document's own named technology vs. continuing with LiteRT -- a
+        real technology-choice decision this phase must make and justify, not silently keep
+        LiteRT by default), engine-browser-npu, engine-browser-builtin-ai, engine-browser-mcp
+        (distinct from ai-os/BROWSER_AUTOMATION_PROFILE_2026-07-25.yaml's own session-tooling
+        scope per gap analysis's explicit rejection of that as a match), engine-browser-function,
+        engine-browser-storage, engine-browser-sync, engine-browser-worker (deepen),
+        engine-browser-transformers, engine-model-selection, engine-execution-planner,
+        engine-server-escalation (deepen llm-client.ts into the real Tier-5 target),
+        pipeline-input-acquisition (browser-cache-check sub-scope only -- full cache hierarchy is
+        phase_6), pipeline-execution, stack-browser-compute, stack-parallelism (deepen),
+        litert-spike-unregistered (register it in MASTER_INDEX.yaml as this phase's own first, cheap step)."
+      - "FIRST STEP, before any new code: register litert-spike/litert-spike-embeddings in
+        MASTER_INDEX.yaml registries: (closes gap-analysis item litert-spike-unregistered) so this
+        phase's own starting point is discoverable for any future session, per this system's own
+        zero-duplication protocol."
+    depends_on: [phase_2_compiler_pipeline_intelligence_engines]
+    external_depends_on:
+      - "repos/compliance-tracker (repo: compliance-tracker, not claude-control) -- all browser-
+        execution code lives in and extends litert-spike, which is already there."
+    status: not_started
+    success_criteria:
+      - "python3 scripts/superboss-register.py query-knowledge \"veridian_v2_browser_execution\" --tag domain:veridian_architecture_v2  # found=1"
+      - "grep -q 'litert-spike' ai-os/MASTER_INDEX.yaml  # exits 0 once the registration step above lands"
+      - "A real command proving at least a 2-tier fallback (e.g. WebGPU inference attempt ->
+        documented real fallback path) executes end to end in a browser context, defined precisely
+        by this phase's own dispatched task."
+
+  - id: phase_6_multi_level_cache_architecture
+    name: "L0-L9 Cache Engines (Semantic Cache, Knowledge Cache deepened) + Storage Tier tech stack"
+    objective: "0 of L0-L8 exist; L9 is partially_implemented via knowledge_engine's real
+      server-side structured store. This phase builds the browser-side L0-L4 tier (needs phase_5's
+      browser app context to exist first) and the semantic-cache L5 (needs embeddings, which
+      engine-browser-transformers from phase_5 is the real prerequisite for), then wires L9's
+      existing server-side knowledge_engine as the actual L9 backing store rather than building a
+      parallel one (per gap analysis's explicit reuse note on cache-l9)."
+    scope:
+      - "Gap items closed: engine-l0-memory-cache through engine-l9-knowledge-cache (10 items,
+        all mapped 1:1 to cache-l0 through cache-l9 -- do not re-implement as separate 'engine'
+        work once the corresponding cache-level item is done, per the gap analysis's own
+        deliberate non-double-counting note), cache-l0 through cache-l9 (10 items),
+        engine-l6-workflow-cache, engine-l7-metadata-cache, pipeline-input-acquisition (complete
+        the cache-waterfall sub-scope phase_5 started), stack-storage-tier."
+      - "L9 specifically: extend scripts/superboss-register.py's knowledge_engine table with a
+        browser-facing sync/fetch API (new CLI subcommand or a real HTTP route in
+        compliance-tracker calling into it) rather than a second knowledge store -- the direct
+        reuse this phase's own objective names."
+    depends_on: [phase_5_browser_execution_tiers]
+    external_depends_on:
+      - "repos/compliance-tracker (repo: compliance-tracker, not claude-control) -- L0-L5 browser
+        cache code lives in the same app phase_5 builds."
+    status: not_started
+    success_criteria:
+      - "python3 scripts/superboss-register.py query-knowledge \"veridian_v2_cache_architecture\" --tag domain:veridian_architecture_v2  # found=1"
+      - "A real command proving at least one cache level (e.g. L2 IndexedDB) round-trips a real
+        write+read for a prompt object, exit 0, defined precisely by this phase's own dispatched task."
+
+  - id: phase_7_analytics_telemetry_observability_performance
+    name: "Telemetry, Analytics, Performance Profiling, Memory Management, Storage Quota, Network Resilience, Observability Engines + Performance Budget Framework"
+    objective: "Instrument the pipeline+cache+browser-execution machinery phases 2/5/6 build with
+      the document's own concrete latency/memory/storage budgets (perf-budget-framework) and the
+      telemetry/analytics/observability engines needed to measure and enforce them -- explicitly
+      sequenced AFTER phases 5/6 exist, since there is nothing real to profile/budget-enforce
+      before then (unlike testing_engine_irvf's own route-tracing, which had real routes to trace
+      from day one)."
+    scope:
+      - "Gap items closed: engine-telemetry, engine-analytics-prompt, engine-performance-profiling,
+        engine-memory-management, engine-storage-quota, engine-network-resilience,
+        engine-observability, perf-budget-framework, pipeline-post-execution (staleness/telemetry
+        sub-scope remaining from phase_4)."
+      - "Reuse testing_engine_irvf's real distributed-trace-verification wiring PATTERN (trace_id/
+        span_id convention) for prompt-pipeline stage tracing rather than inventing a second
+        tracing convention in the same overall system, per gap analysis's engine-observability
+        evidence explicitly noting this as the closest (though non-matching) real precedent."
+    depends_on: [phase_5_browser_execution_tiers, phase_6_multi_level_cache_architecture]
+    external_depends_on:
+      - "repos/compliance-tracker (repo: compliance-tracker, not claude-control) -- instrumentation
+        code lives in the same app phases 5/6 build."
+    status: not_started
+    success_criteria:
+      - "python3 scripts/superboss-register.py query-knowledge \"veridian_v2_performance_budgets\" --tag domain:veridian_architecture_v2  # found=1"
+      - "A real command proving at least one pipeline stage's real measured latency is captured and
+        compared against its document-specified budget (e.g. Lightweight Analysis vs 15ms), exit 0,
+        defined precisely by this phase's own dispatched task."
+
+  - id: phase_8_dspy_learning_distribution_engines
+    name: "DSPy Integration, AI Learning, Prompt Translation/Localization/Marketplace/Export/Import Engines"
+    objective: "Evaluate and, if adopted, integrate DSPy (0 prior art, engine-dspy-integration) as
+      the document's own named prompt-compilation framework, replacing/augmenting phase_2's
+      keyword-based compiler with declarative signatures + auto-optimizers -- a real technology-
+      adoption decision, not an assumption. Then build the remaining Learning/Distribution engines
+      with no prior art (AI Learning, Translation, Localization, Marketplace, Export, Import)."
+    scope:
+      - "Gap items closed: engine-dspy-integration, engine-ai-learning, engine-prompt-translation,
+        engine-prompt-localization, engine-prompt-marketplace, engine-prompt-export,
+        engine-prompt-import, stack-prompt-engineering."
+      - "DSPy evaluation: confirm Python-package installability against compliance-tracker's real
+        stack (services/doc-processing/ already runs a standalone Python microservice per
+        AUDITOR_ENGINE_PHASE_PLAN's own stack_confirmed_2026-07-24 -- the real, existing Python
+        surface this phase's DSPy integration would extend, not a fresh Python deployment)."
+    depends_on: [phase_2_compiler_pipeline_intelligence_engines, phase_4_defense_in_depth_security_quality]
+    external_depends_on:
+      - "repos/compliance-tracker (repo: compliance-tracker, not claude-control) -- services/doc-processing/
+        is where any DSPy Python integration would live."
+    status: not_started
+    success_criteria:
+      - "python3 scripts/superboss-register.py query-knowledge \"veridian_v2_dspy_learning\" --tag domain:veridian_architecture_v2  # found=1"
+      - "A real command proving one real prompt compiles through whichever compilation method this
+        phase adopts (DSPy or a justified alternative) with a measurable quality/token-count
+        before/after, exit 0, defined precisely by this phase's own dispatched task."
+
+  - id: phase_9_gateway_knowledge_sync_infrastructure
+    name: "Gateway Integration, Knowledge Sync Engines wired onto the existing 10-gateway/capability_registry/knowledge_engine infrastructure (zero-duplication phase)"
+    objective: "This phase exists specifically to prevent the most likely zero-duplication
+      violation in this whole plan: the document's Gateway Integration Engine and Knowledge Sync
+      Engine have real, live, differently-scoped namesakes already in this system (the 10-gateway
+      G01-G10 architecture and knowledge_engine, both gap-analysis partially_implemented items).
+      Rather than each earlier phase quietly building its own routing/knowledge-sync logic, this
+      phase is the single place that decides how VERIDIAN v2's prompt-platform gateway/knowledge
+      needs attach to the existing infrastructure -- reusing WIRING_ENGINE_PHASE_PLAN_2026-07-25.yaml's
+      own proven method (trace one real request through a real gateway boundary before claiming
+      the wiring is real) rather than asserting it."
+    scope:
+      - "Gap items closed: engine-gateway-integration, engine-knowledge-sync,
+        engine-capability-intel (wire to the existing live capability_registry rather than
+        building a parallel one, per gap analysis's explicit reuse note)."
+      - "Apply WIRING_ENGINE_PHASE_PLAN_2026-07-25.yaml phase_1's exact method (pick the single
+        strongest real candidate path, trace/build each hop with file:line evidence, re-run
+        scripts/generate_wiring_registry.py to confirm) to one real VERIDIAN-v2 prompt-execution
+        request crossing a G01-G10 gateway boundary, rather than re-deriving a new verification method."
+    depends_on: [phase_1_prompt_registry_lifecycle_foundation, phase_3_governance_policy_cost_engines]
+    external_depends_on:
+      - "ai-os/WIRING_ENGINE_PHASE_PLAN_2026-07-25.yaml phase_4_extend_gateway_coverage_beyond_first_proven_path
+        -- soft/methodological dependency (reuse its method), not a hard content block; this phase
+        can proceed once that plan's own phase_1 (done) exists as the method template, regardless
+        of that plan's own phase_4 completion status."
+      - "repos/compliance-tracker (repo: compliance-tracker, not claude-control) -- the gateway
+        boundary code itself lives there."
+    status: not_started
+    success_criteria:
+      - "python3 scripts/superboss-register.py query-knowledge \"veridian_v2_gateway_knowledge_sync\" --tag domain:veridian_architecture_v2  # found=1"
+      - "python3 scripts/generate_wiring_registry.py && grep -q veridian-v2 ai-os/WIRING_ENGINE_REGISTRY_2026-07-25.json  # exits 0 once a real hop is added, real command per WIRING_ENGINE_PHASE_PLAN's own precedent"
+
+  - id: phase_10_ycml_catalog_and_consolidation
+    name: "Modular YCML Specification Catalog (40 specs) + final documentation consolidation"
+    objective: "Author the document's own required YCML-format specification for every engine this
+      plan actually built in phases 1-9 (1:1 correspondence, per gap analysis item
+      ycml-spec-catalog's own note) -- a documentation/interface-contract deliverable, not new
+      runtime behavior, so it is correctly sequenced last, after there is real, built behavior to document."
+    scope:
+      - "Gap items closed: ycml-spec-catalog (and implicitly closes out any engine item above still
+        marked partially_implemented if a later phase's own real evidence justifies upgrading it --
+        this phase must re-run the gap analysis's verdict logic against final real state, not just
+        assume phases 1-9 closed everything they targeted)."
+      - "One YCML file per engine actually shipped (not all 74 speculatively) -- if this plan's own
+        phases 1-9 ship fewer than 74 real engines (likely, given real dependency/priority
+        ordering), this phase documents what is real, and files the remainder as a named,
+        explicit, still-open gap in a successor plan rather than fabricating specs for unbuilt engines."
+      - "Update this plan's own gap analysis file in place with final real verdicts and evidence
+        for every item, closing the loop this task's own Phase 0 opened."
+    depends_on: [phase_2_compiler_pipeline_intelligence_engines, phase_3_governance_policy_cost_engines,
+      phase_4_defense_in_depth_security_quality, phase_5_browser_execution_tiers,
+      phase_6_multi_level_cache_architecture, phase_7_analytics_telemetry_observability_performance,
+      phase_8_dspy_learning_distribution_engines, phase_9_gateway_knowledge_sync_infrastructure]
+    external_depends_on: []
+    status: not_started
+    success_criteria:
+      - "python3 scripts/superboss-register.py query-knowledge \"veridian_v2_ycml_catalog\" --tag domain:veridian_architecture_v2  # found=1"
+      - "ls ai-os/veridian_v2_ycml_specs/*.yaml | wc -l  # >0, one file per engine actually shipped by phases 1-9"
+
+# ============================================================================
+# REGISTRATION
+# ============================================================================
+registration:
+  knowledge_engine_query_command: 'python3 scripts/superboss-register.py query-knowledge "VERIDIAN_Architecture_v2" --tag domain:veridian_architecture_v2'
+  master_index_registry_id: veridian_architecture_v2_implementation
+  gap_analysis: ai-os/VERIDIAN_ARCHITECTURE_V2_GAP_ANALYSIS_2026-07-25.yaml
+  source_document: ai-os/owner-attachments/VERIDIAN_Architecture_v2.0_extracted.txt
+  evidence_chain:
+    - "task-20260725-104606-owner-engine-document-accuracy-convergen (PR #69, merged) -- proved
+      the extracted text is a 0.0%-gap reproduction of the real document."
+    - "task-20260725-112909-veridian-architecture-v2-task2-phase0-ga (this task) -- read the real
+      extracted text in full, produced the 105-item real gap analysis and this 10-phase plan."
