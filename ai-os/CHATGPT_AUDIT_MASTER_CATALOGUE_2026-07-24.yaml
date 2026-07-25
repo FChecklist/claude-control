@@ -1,6 +1,6 @@
 meta:
   id: CHATGPT-AUDIT-MASTER-CATALOGUE
-  generated_ts: '2026-07-25T06:46:17Z'
+  generated_ts: '2026-07-25T08:57:37Z'
   generated_by: scripts/generate_chatgpt_audit_index.py (re-run this to refresh -- do not hand-edit)
   purpose: Real, machine-scanned index of every audit record file under /opt/veridian/chatgpt-audit --
     built for INS-20260724-141101-89d8 (task-20260724-141323-chatgpt-audit-workspace-infrastructure).
