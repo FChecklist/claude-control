@@ -236,7 +236,10 @@ populated_routes:
       per-request trace/span exists; trace_verification_status below stays instrumented_unverified, honestly
       unchanged). These 9 stages are reported here as named, honest gaps per phase_1's own SCOPE instruction,
       not marked live by assumption -- closing them for real is phase_4's job (extend beyond this one proven
-      path), not re-litigated here."
+      path), not re-litigated here. test_status: passing below is unchanged from the earlier Phase 1
+      route-test auto-generation run (real dispatch target confirmed via `bunx bun test` against
+      compliance-tracker's real checkout, exit_code=0) -- evidence still at
+      ai-os/testing_engine_evidence/phase1/RT-gratuity_calculator-001/."
   - route_id: RT-commission_calculator-001
     capability_name: commission_calculator
     source: repos/compliance-tracker/src/components/veri-chat/ChainSelector.tsx
