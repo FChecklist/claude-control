@@ -1,0 +1,225 @@
+meta:
+  title: VERIDIAN WIRING ENGINE -- Entity-Relationship Schema Design (Phase 0 deliverable)
+  created: '2026-07-25'
+  produced_by_task: task-20260725-032718-wiring-engine-phase0-schema-registry
+  instruction: INS-20260725-032606-0c52
+  precedent: 'Same method as ai-os/CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml and
+    ai-os/ROUTE_REGISTRY_SCHEMA_2026-07-24.yaml (schema design, then a live-verification/generation script over
+    real, grepped/loaded data -- never invented examples). Field names and enums below are reused VERBATIM from
+    knowledge_engine''s own live schema (scripts/superboss-register.py init_db(), the knowledge_engine table
+    that has been running since 2026-07-20): last_verified_ts, verification_status (identical CHECK-constraint
+    enum: VERIFIED_MATCH, HASH_DRIFTED, PATH_MISSING, UNVERIFIED), and the entity_relationships /
+    add-relationship CLI''s {path, relationship_type, evidence} shape (see scripts/superboss-register.py
+    add_relationship() and register_knowledge()). This is a deliberate reuse, not a parallel vocabulary --
+    per this task''s own SCOPE item 1 instruction to reuse knowledge_engine''s exact conventions.'
+  scope_of_this_document: 'Phase 0 only: schema design (this file) + a real, mechanically-populated registry
+    (ai-os/WIRING_ENGINE_REGISTRY_2026-07-25.json, produced by scripts/generate_wiring_registry.py, re-run any
+    time to refresh) + ai-os/WIRING_ENGINE_PHASE_PLAN_2026-07-25.yaml. This document does NOT itself prove or
+    build the real end-to-end request flow through all 10 gateways -- that is Phase 1 of this task''s own
+    phase plan, dispatched separately. It also does not wire a new live SQLite/Postgres table for this
+    registry (same Phase-0-vs-Phase-1 split CAPABILITY_REGISTRY_SCHEMA used: schema + file-based population
+    here, live DB wiring is a later phase''s job if warranted).'
+  builds_on_not_replaces: 'knowledge_engine (scripts/superboss-register.py, artifact_path/verification_status/
+    entity_relationships) and capability_registry (same live DB, wired Phase 1 of
+    ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml) already track individual artifacts and
+    capabilities respectively. ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml''s engine_inventory/
+    gateway_inventory names the 20 engines/10 gateways and their exists_as paths but does not cross-reference
+    them against the DB schema, the function catalog, the AI roster, or the route registry -- each of those
+    lives in its own document today. This schema''s one addition: a single entity-relationship record shape
+    spanning engine|gateway|table|function|route|file|script|cron_job|ai_role so a real cross-source
+    relationship (which function file implements which engine, which cron_job triggers which script, which
+    route hops through which engine, which real code file is shared between an engine and a gateway) is
+    queryable as one graph instead of five separate documents that never cite each other by a common id.'
+  honest_limitation: 'No gateway<->engine relationship is fabricated here. ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml''s
+    own gateway_naming_gap/superseded_finding already established that no gateway''s exists_as list is defined
+    as "wraps engine N" in any real code -- task-gateway.py (Workflow/Automation Engine infra) explicitly does
+    NOT match any of G01-G10. scripts/generate_wiring_registry.py therefore only emits a
+    shares_implementation_with relationship between an engine and a gateway when they cite the SAME real file
+    path in their own exists_as lists (a fact, not an inference) -- e.g. scripts/superboss-register.py is
+    shared by engine-15 (Knowledge Engine) and gateway-G01/gateway-G07. This is the honest state of real
+    wiring today, which is exactly what this initiative''s Phase 1 (real end-to-end gateway verification) is
+    for.'
+
+# ============================================================================
+# ENTITY RECORD SCHEMA -- one record per real, mechanically-discovered entity.
+# Every field name/enum below that also exists on knowledge_engine is reused
+# verbatim (see meta.precedent). Populated by scripts/generate_wiring_registry.py
+# from the 8 real sources in generation.sources below -- never hand-typed.
+# ============================================================================
+entity_record_schema:
+  entity_id:
+    type: string
+    required: true
+    description: 'Stable identifier, format <entity_type>-<slug>: engine-<2-digit engine_no>,
+      gateway-<gateway_id e.g. G01>, table-<schema>__<table_name>, function-<12-hex sha1 of file:line:name>,
+      route-<route_id from ROUTE_REGISTRY_SCHEMA>, file-<12-hex sha1 of the real absolute path>,
+      script-<sanitized basename>, cron_job-<index>_<sanitized job_name>, ai_role-<roleKey>.'
+  entity_type:
+    type: enum
+    values: [engine, gateway, table, function, route, file, script, cron_job, ai_role]
+    required: true
+    description: 'Closed vocabulary per this task''s own SCOPE item 1. Every entity_type maps to exactly one
+      of the 8 real sources in generation.sources (see mapping there) -- no entity_type is populated by
+      hand-authored rows.'
+  source_system:
+    type: enum
+    values: [server, vercel, supabase, github]
+    required: true
+    description: 'Where the entity physically lives: server = a script/file/db-row that only exists on this
+      box (ai-os/, scripts/, superboss-register.sqlite -- no separate repo); github = a file inside one of the
+      mirrored repos (repos/compliance-tracker/...), reused verbatim from knowledge_registry_multisource.py''s
+      own source:GITHUB/source:SERVER split; supabase = a live Postgres table (DATABASE_CATALOG.json rows);
+      vercel = reserved for a future entity_type sourced from Vercel project state (none populated this run --
+      no vercel-hosted entity exists among the 8 sources this task reads).'
+  path:
+    type: string, nullable
+    required: true
+    description: 'Real file path (verified live via os.path.exists() against /opt/veridian at generation time)
+      for file/script/engine/gateway/route/table/function/ai_role entities that have one. For table/ai_role
+      entities the identifier is logical (schema.table_name / roleKey) rather than a filesystem path -- the
+      real filesystem path of the file that DEFINES that logical entity is instead carried via a defined_in
+      relationship (see relationship_type_vocabulary), never invented as a fake path field value.'
+  relationships:
+    type: array
+    item_schema: '{ target_entity_id: string|null, relationship_type: string, evidence: string }'
+    required: true
+    description: 'Real relationships to other entities in this same registry (or, for knowledge_engine-sourced
+      rows, passthrough of that row''s own real entity_relationships, target_entity_id resolved against this
+      run''s path->entity_id map where the cited path was itself emitted as an entity this run, else left null
+      with the raw path kept in evidence -- never fabricated). Reuses knowledge_engine''s exact
+      {path, relationship_type, evidence} object shape (scripts/superboss-register.py add_relationship()),
+      renamed path->target_entity_id only because this schema''s targets are entity ids, not bare paths.'
+  last_verified_ts:
+    type: string, ISO-8601 UTC
+    required: true
+    description: 'Same field name and semantics as knowledge_engine.last_verified_ts -- the real timestamp of
+      this run''s own live check (os.path.exists / live sqlite read), not a copy-pasted placeholder. For rows
+      sourced directly from an existing knowledge_engine row, this value is reused verbatim from that row''s
+      own last_verified_ts rather than recomputed, per this schema''s builds_on_not_replaces contract (avoid
+      re-verifying what is already tracked elsewhere).'
+  verification_status:
+    type: enum
+    values: [VERIFIED_MATCH, HASH_DRIFTED, PATH_MISSING, UNVERIFIED]
+    required: true
+    description: 'Identical CHECK-constraint enum to knowledge_engine.verification_status (scripts/superboss-register.py),
+      reused verbatim, not a new vocabulary. VERIFIED_MATCH = the entity''s real path/identifier was confirmed
+      live this run (or, for a knowledge_engine-sourced row, that row''s own already-live-verified status was
+      reused). PATH_MISSING = a cited path did not exist on disk at generation time -- recorded honestly, never
+      silently dropped. HASH_DRIFTED is reserved for a future phase that compares content hashes across runs
+      (this Phase 0 run has no prior snapshot to diff against, so it is never emitted this run). UNVERIFIED is
+      the default for a logical (non-file) entity such as a table/ai_role whose OWN identifier has no
+      independent existence check beyond its defining file''s (see path field description).'
+  source_ref:
+    type: array of string
+    required: true
+    description: 'Which of the 8 real sources in generation.sources this row was mechanically derived from
+      (traceability -- a row with an empty source_ref would be a hand-authored row, which this schema
+      forbids). A file entity referenced by more than one source (e.g. scripts/superboss-register.py, cited by
+      both engine_inventory and gateway_inventory) carries every contributing source, not just the first.'
+  metadata:
+    type: object, nullable
+    required: false
+    description: 'Free-form extra structured fields the source catalog carries that do not fit the core schema
+      above (e.g. an ai_role''s team/model/escalationLevel, a function''s async/exported/params, a table''s
+      column_count). Same purpose and convention as knowledge_engine.metadata_json -- never used to smuggle in
+      a fact this schema''s core fields should carry instead.'
+
+# ============================================================================
+# RELATIONSHIP TYPE VOCABULARY -- every relationship_type
+# scripts/generate_wiring_registry.py actually emits, each grounded in a real,
+# mechanically-checked fact (never a fabricated architectural claim). Open-ended
+# (a future source can introduce a new one), but every value below is real and
+# in current use by the Phase 0 run reported in this task''s checkpoint.
+# ============================================================================
+relationship_type_vocabulary:
+  - name: defined_in
+    applies_to: 'table|function|ai_role -> file'
+    evidence_basis: 'The real source file (DATABASE_CATALOG.json source_file / FUNCTION_CATALOG.json file /
+      AI_ROSTER_CATALOG.json source_file) that defines this logical entity.'
+  - name: implemented_by
+    applies_to: 'engine|gateway -> file'
+    evidence_basis: 'One of that engine/gateway''s own exists_as paths in ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml,
+      live os.path.exists()-checked this run.'
+  - name: implements_engine
+    applies_to: 'function -> engine'
+    evidence_basis: 'The function''s real file path is a prefix/substring match of one of that engine''s real
+      exists_as paths (string comparison over live data, not a guess).'
+  - name: hops_through
+    applies_to: 'route -> engine'
+    evidence_basis: 'A real ordered hop in that route''s expected_path (ai-os/ROUTE_REGISTRY_SCHEMA_2026-07-24.yaml
+      populated_routes[].expected_path), engine_no resolved to this registry''s own engine-<NN> entity_id.'
+  - name: originates_at / terminates_at
+    applies_to: 'route -> file'
+    evidence_basis: 'That route''s real source/destination path from ai-os/ROUTE_REGISTRY_SCHEMA_2026-07-24.yaml,
+      live os.path.exists()-checked this run.'
+  - name: triggers / triggered_by
+    applies_to: 'cron_job -> script (triggers), script -> cron_job (triggered_by, reciprocal)'
+    evidence_basis: 'The cron_job''s real crontab command (ai-os/SOFTWARE_CATALOG.yaml cron_jobs[].command)
+      contains that script''s real path as a substring -- a live string match, not an assumption.'
+  - name: shares_implementation_with
+    applies_to: 'engine <-> gateway, or engine <-> engine, or gateway <-> gateway'
+    evidence_basis: 'Two entities'' own exists_as lists cite the exact same real file path -- this is the ONLY
+      engine<->gateway relationship this schema emits (see meta.honest_limitation above); it is never used to
+      claim one calls the other, only that they share real, already-cited code.'
+  - name: registered_capability_match
+    applies_to: 'route (self-annotation via verification_status, not a target entity -- capability is not one
+      of this schema''s 9 entity_type values)'
+    evidence_basis: 'A live read of the capability_registry table (scripts/superboss-register.py, wired live
+      2026-07-24) confirms that route''s capability_name is a currently-registered row -- folded into the
+      route entity''s own verification_status rather than a separate relationship object, since this schema''s
+      entity_type enum has no capability type to point at.'
+  - name: 'ke:<original relationship_type>'
+    applies_to: 'file (knowledge_engine-sourced) -> whatever that row''s own entity_relationships already cited'
+    evidence_basis: 'Passthrough of a real, pre-existing knowledge_engine row''s own entity_relationships
+      (scripts/superboss-register.py add-relationship), prefixed ke: only to make the passthrough visually
+      distinguishable from a relationship this script itself computed -- the original relationship_type string
+      is otherwise untouched, never renamed.'
+
+# ============================================================================
+# GENERATION -- how the registry file is actually produced, real and re-runnable.
+# ============================================================================
+generation:
+  script: scripts/generate_wiring_registry.py
+  output_path: ai-os/WIRING_ENGINE_REGISTRY_2026-07-25.json
+  idempotent: true
+  note: 'Each run reads all 8 sources fresh and rewrites the output file from scratch (a full snapshot, not an
+    incremental diff-and-patch) -- there is no separate live table for this registry yet in Phase 0 (see
+    meta.scope_of_this_document). Safe to schedule on a recurring cron (see registration.cron_entry below).'
+  sources:
+    - name: database_catalog
+      path: /opt/veridian/ai-os/DATABASE_CATALOG.json
+      produces: entity_type=table
+    - name: function_catalog
+      path: /opt/veridian/ai-os/FUNCTION_CATALOG.json
+      produces: entity_type=function
+    - name: ai_roster_catalog
+      path: /opt/veridian/ai-os/AI_ROSTER_CATALOG.json
+      produces: entity_type=ai_role
+    - name: engines_gateways_phase_plan
+      path: /opt/veridian/ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml
+      produces: 'entity_type=engine (engine_inventory), entity_type=gateway (gateway_inventory)'
+    - name: route_registry_schema
+      path: /opt/veridian/ai-os/ROUTE_REGISTRY_SCHEMA_2026-07-24.yaml
+      produces: entity_type=route (populated_routes)
+    - name: software_catalog
+      path: /opt/veridian/ai-os/SOFTWARE_CATALOG.yaml
+      produces: 'entity_type=script (scripts[]), entity_type=cron_job (cron_jobs[])'
+    - name: knowledge_engine
+      path: 'ai-os/memory/superboss-register.sqlite, table knowledge_engine (live, read-only query)'
+      produces: 'entity_type=file (one per existing knowledge_engine row -- verification_status/last_verified_ts
+        reused verbatim, entity_relationships passed through as ke:<type>)'
+    - name: capability_registry
+      path: 'ai-os/memory/superboss-register.sqlite, table capability_registry (live, read-only query)'
+      produces: 'no new entity_type (capability is not in this schema''s enum) -- cross-checked against
+        route entities'' capability_name to confirm registered_capability_match'
+
+# ============================================================================
+# REGISTRATION -- how this schema/registry/phase-plan get cited elsewhere.
+# ============================================================================
+registration:
+  knowledge_engine_query_command: 'python3 scripts/superboss-register.py query-knowledge "wiring_engine" --tag domain:wiring_engine'
+  master_index_registry_id: wiring_engine
+  refresh_command: python3 scripts/generate_wiring_registry.py
+  cron_entry: '0 */6 * * * /opt/veridian/scripts/run-logged.sh "generate-wiring-registry" /usr/bin/python3 /opt/veridian/scripts/generate_wiring_registry.py
+    >> /opt/veridian/ai-os/logs/generate-wiring-registry-cron.log 2>&1'
+  phase_plan: ai-os/WIRING_ENGINE_PHASE_PLAN_2026-07-25.yaml
