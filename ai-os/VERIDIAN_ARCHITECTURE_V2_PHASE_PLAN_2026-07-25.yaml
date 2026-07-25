@@ -135,7 +135,11 @@ phases:
     and the remaining Intelligence & Matching engines with no prior art (Entity, Variable,
     Ranking, Recommendation, Similarity, Workflow, Capability, Confidence -- multi-signal).
     Depends on phase_1 because compiled/versioned output needs somewhere real to be
-    stored and versioned.'
+    stored and versioned. AMENDED 2026-07-25 per Owner-clarified two-stage "SOFTWARE FIRST"
+    UX requirement (see scope below): this phase''s Stage 4 Machine Prompt Builder / Prompt
+    Compiler Engine deepening work is also the machine-language-output contract that both
+    of phase_5''s end-user input surfaces (structured mode-pill/option-chain, free-text chat)
+    must compile into before handoff to server-side SOFTWARE execution.'
   scope:
   - 'Gap items closed: engine-prompt-compiler (deepen), engine-prompt-optimizer, engine-prompt-expansion,
     engine-prompt-testing, engine-prompt-benchmark, engine-prompt-portability, engine-prompt-ab,
@@ -148,6 +152,28 @@ phases:
     veridian-architecture-v2-target-repo-anchor is resolved before writing any application
     code -- this is the first phase in this plan that does. If unresolved, this phase''s
     own task must re-raise it rather than default silently.'
+  - 'OWNER-CLARIFIED UX REQUIREMENT (2026-07-25, resolves the target-repo-anchor decision
+    above -- Owner confirmed in chat the browser-native platform merges into this existing
+    end-user product): the Owner''s own words describe a real two-stage "SOFTWARE FIRST"
+    execution model -- a browser-native FIRST pass "makes the complete machine language
+    output of the end user prompt", which is then "given to the SOFTWARE to execute" as
+    a real SECOND pass on the SERVER, for both of the Owner''s named input options (structured
+    mode-pill/option-chain input, per Option 1, and free-text chat input, per Option 2).
+    This pipeline''s own Stage 4 Machine Prompt Builder (2.2 Stage 13-18, pipeline-prompt-construction)
+    and the Prompt Compiler Engine (2.1 Prompt Core Engines, "Natural language intent to
+    optimized machine prompt via DSPy-style declarative compilation pipeline", line 79) ARE
+    that machine-language-output contract -- the document''s own vocabulary already covers
+    this; no new engine is required. This phase''s pipeline-prompt-construction/pipeline-verification
+    deepening work must make that contract explicit, stable, and versioned (written to phase_1''s
+    compliance.prompt_versions row via this phase''s own compiled/versioned storage integration_point)
+    so that phase_5''s two end-user input surfaces both compile down to the identical output
+    shape. NOTE ON SOURCING: the exact terms "mode pill" and "option chain" are the Owner''s
+    own UX vocabulary, not literal document text -- grepped the full extracted source (ai-os/owner-attachments/VERIDIAN_Architecture_v2.0_extracted.txt)
+    and confirmed zero matches for "pill", "option chain", or "chat input"; the real document
+    anchors are the abstract "User Input" entry point of 2.2 Stage 1 (Input Acquisition Layer,
+    line 213-215) and the Prompt Compiler Engine cited above (line 79) -- phase_5 owns realizing
+    the concrete UI components, this phase owns only the machine-language-output contract
+    they both compile into.'
   - Dispatch as a compliance-tracker-scoped task (per meta.cross_repo_dispatch_note)
     extending prompt_engine.py/classifier.py/context_engine.py's real algorithms into
     the target repo's own application code, backed by phase_1's prompt_registry table
@@ -278,7 +304,17 @@ phases:
     in this whole plan (10 named browser engines + 2 tech-stack tables with 0-to-minimal
     prior art each) -- explicitly the first phase this task's own gap analysis flags
     against the owner_decision_dependency, since it commits the most new, product-shaping
-    engineering effort.
+    engineering effort. AMENDED 2026-07-25 per Owner-clarified UX requirement (chat, 2026-07-25,
+    resolving OWNER_DECISIONS_NEEDED_2026-07-23.yaml id veridian-architecture-v2-target-repo-anchor)
+    -- the Owner requires this phase to build two real end-user input surfaces -- a structured
+    "dynamic mode pills + dynamic option chain" component (Option 1) and a free-text chat
+    input component (Option 2) -- both browser-only ("FOR END USER THE BROWSER IS THE ONLY
+    WAY TO INTERACT WITH THE SYSTEM", Owner's own words), and a real two-stage "SOFTWARE FIRST"
+    handoff -- this phase's own browser-native execution tiers do the FIRST pass, producing
+    phase_2's machine-language-output contract, which is then handed to SOFTWARE on the SERVER
+    for a real SECOND execution pass via this phase's own Gateway G05 integration_point below,
+    every time, not only as the escalation-on-insufficiency fallback engine-server-escalation
+    already scopes.
   scope:
   - 'Gap items closed: engine-browser-execution, engine-browser-lite-llm (deepen litert-spike;
     evaluate WebLLM as the document''s own named technology vs. continuing with LiteRT
@@ -296,10 +332,33 @@ phases:
     in MASTER_INDEX.yaml registries: (closes gap-analysis item litert-spike-unregistered)
     so this phase''s own starting point is discoverable for any future session, per
     this system''s own zero-duplication protocol.'
+  - 'OWNER-CLARIFIED UX REQUIREMENT (2026-07-25) -- concrete deliverables, in addition to
+    the gap items above: (1) a structured end-user input component realizing the Owner''s
+    "dynamic mode pills + dynamic option chain" (Option 1) description; (2) a free-text
+    chat input component (Option 2); both must be real, browser-only surfaces (per the
+    Owner''s own words, quoted in full in ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml id
+    veridian-architecture-v2-target-repo-anchor) that call into phase_2''s Prompt Compiler
+    Engine / Stage 4 Machine Prompt Builder to produce the machine-language-output contract;
+    (3) the browser-to-server handoff call itself -- this phase''s own FIRST-pass browser-native
+    execution tiers (NPU/Built-in AI/Lite LLM/Transformers.js) produce that machine-language
+    output, which must then be sent to SOFTWARE on the SERVER for a real, mandatory SECOND
+    execution pass via Gateway G05, every time a request completes the FIRST pass -- not
+    merely as engine-server-escalation''s existing Tier-5 escalation-on-insufficiency fallback,
+    which remains a separate, additional path for when browser tiers 1-4 themselves fail.
+    NOTE ON SOURCING: neither "mode pill" nor "option chain" is literal document vocabulary
+    -- grepped the full extracted source (ai-os/owner-attachments/VERIDIAN_Architecture_v2.0_extracted.txt)
+    and confirmed zero matches for "pill", "option chain", or "chat input"; the real document
+    anchors for the input surface are the abstract "User Input" entry point of 2.2 Stage 1
+    (Input Acquisition Layer, line 213-215) and the Browser Execution Engine (2.1 Browser
+    Execution Engines, "Master orchestrator for all browser-native execution, routing tasks
+    to optimal compute tier", line 144) -- this phase''s own dispatched compliance-tracker
+    task must name the specific real component files/interfaces for both input surfaces and
+    the handoff call, since they do not exist yet.'
   integration_point: MASTER_INDEX.yaml registries (litert-spike registration, this
-    phase's own first step) + Gateway G05 ("AI") for the Server Escalation Engine's
-    Tier-5 fallback calls, which must route through the same AI-call boundary llm-client.ts
-    already uses, not a separate escalation path.
+    phase's own first step) + Gateway G05 ("AI") for both the Server Escalation Engine's
+    Tier-5 fallback calls AND the Owner-clarified mandatory browser-FIRST/server-SECOND
+    handoff above, which must route through the same AI-call boundary llm-client.ts
+    already uses, not a separate escalation path or a new parallel handoff mechanism.
   depends_on:
   - phase_2_compiler_pipeline_intelligence_engines
   external_depends_on: []
@@ -312,6 +371,11 @@ phases:
   - A real command proving at least a 2-tier fallback (e.g. WebGPU inference attempt
     -> documented real fallback path) executes end to end in a browser context, defined
     precisely by this phase's own dispatched task.
+  - A real command proving the Owner-clarified two-stage handoff end to end for at least
+    one of the two input surfaces (structured mode-pill/option-chain or free-text chat)
+    -- end-user input -> browser-native FIRST-pass machine-language output -> SECOND-pass
+    SOFTWARE execution on the SERVER via Gateway G05, exit 0, defined precisely by this
+    phase's own dispatched task.
   target_repo: compliance-tracker
   target_repo_note: 'repos/compliance-tracker (repo: compliance-tracker, not claude-control)
     -- all browser- execution code lives in and extends litert-spike, which is already
