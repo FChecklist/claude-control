@@ -257,6 +257,27 @@ entries:
       all of them in, or justify why just this one") -- not because of conflicting
       content.
 
+final_verification_post_deploy:
+  ts: "2026-07-25T09:53:24Z"
+  method: "fresh `diff -rq /opt/veridian/scripts/ /opt/veridian/repos/claude-control/scripts/` (__pycache__ excluded), full 95-line output read in full (not summarized)"
+  differ_count: 0
+  only_in_repo_count: 0
+  only_in_live_count: 77
+  only_in_live_breakdown: >
+    All 77 are expected: the original operational-only set (crontab backups,
+    cost/credit scripts, the OpenRouter proxy pair, one-off utility scripts with
+    0 git history) PLUS 9 new *.bak-predeploy-20260725-093040 files this task's
+    own deploy run created as safety backups PLUS deploy-live-scripts.sh,
+    sync-repos.sh, and sync-repos.sh.bak-predeploy-20260725-093036 -- these last
+    3 show as live-only ONLY because /opt/veridian/repos/claude-control (the
+    checkout used for this comparison) has not yet pulled this task's own PR
+    #67 (not merged at generation time); once merged and pulled, those 3 become
+    identical-on-both-sides like every other file this task touched.
+  conclusion: >
+    differ=0 and only_in_repo=0 (excluding __pycache__) confirms every real
+    repo feature and every stale live copy this audit found has been deployed
+    and now matches claude-control's current master exactly.
+
 needs_owner_decision_summary:
   count: 1
   items:
