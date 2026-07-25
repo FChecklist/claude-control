@@ -103,7 +103,7 @@ phases:
     exact rows'' real schema rather than creating new registry entities.'
   depends_on: []
   external_depends_on: []
-  status: not_started
+  status: done
   success_criteria:
   - 'CORRECTED: the original ''python3 scripts/superboss-register.py list-entities
     --table prompt_registry'' command never existed as a real CLI subcommand (superboss-register.py''s
@@ -125,6 +125,9 @@ phases:
     because the real prompt registry it must extend lives there, not in this repo.
     Proceeds regardless of the owner_decision_dependency below (extending existing
     production tables is not the same commitment as new browser-native product surface).'
+  completed_by_task: task-20260725-174858-phase1-prompt-registry-version-lifecycle
+  evidence: 'compliance-tracker PR #559 merged 2026-07-25T18:46:17Z (double-audited
+    PASS, real prompt_versions lifecycle/semver/diff/rollback extension)'
 - id: phase_2_compiler_pipeline_intelligence_engines
   name: Prompt Compiler Pipeline core (non-browser stages 1-25) + Intelligence/Matching
     Engines
@@ -137,13 +140,14 @@ phases:
     Depends on phase_1 because compiled/versioned output needs somewhere real to be
     stored and versioned. AMENDED 2026-07-25 per the Owner''s real verbatim UX directive
     (/opt/veridian/ai-os/OWNER_DIRECTIVES/BROWSER_NATIVE_END_USER_ARCHITECTURE_2026-07-25.txt,
-    registered in knowledge_engine as KE-20260725-184749-e0e0; this re-derives and replaces
-    the amendment rejected in PR #72 -- see scope note below for why): this phase''s Stage
-    4 Machine Prompt Builder / Prompt Compiler Engine deepening work is also the machine-language-output
-    contract that both of phase_5''s end-user input surfaces (structured mode-pill/option-chain,
-    free-text chat) compile into before handoff to server-side SOFTWARE execution -- a
-    deterministic second pass, not a second mandatory AI call (see phase_5''s corrected
-    scope for the full credit-governance reconciliation).'
+    registered in knowledge_engine as KE-20260725-184749-e0e0; this re-derives and
+    replaces the amendment rejected in PR #72 -- see scope note below for why): this
+    phase''s Stage 4 Machine Prompt Builder / Prompt Compiler Engine deepening work
+    is also the machine-language-output contract that both of phase_5''s end-user
+    input surfaces (structured mode-pill/option-chain, free-text chat) compile into
+    before handoff to server-side SOFTWARE execution -- a deterministic second pass,
+    not a second mandatory AI call (see phase_5''s corrected scope for the full credit-governance
+    reconciliation).'
   scope:
   - 'Gap items closed: engine-prompt-compiler (deepen), engine-prompt-optimizer, engine-prompt-expansion,
     engine-prompt-testing, engine-prompt-benchmark, engine-prompt-portability, engine-prompt-ab,
@@ -157,9 +161,10 @@ phases:
     code -- this is the first phase in this plan that does. If unresolved, this phase''s
     own task must re-raise it rather than default silently.'
   - 'OWNER-VERIFIED UX REQUIREMENT (2026-07-25, corrects and replaces the amendment
-    rejected in PR #72, which (a) cited OWNER_DECISIONS_NEEDED_2026-07-23.yaml id veridian-architecture-v2-target-repo-anchor
-    as containing the Owner''s quotes "in full" when that entry only ever held a paraphrase,
-    and (b) upgraded Gateway G05 to a mandatory second AI pass without reconciling registries.credit_spend_governance
+    rejected in PR #72, which (a) cited OWNER_DECISIONS_NEEDED_2026-07-23.yaml id
+    veridian-architecture-v2-target-repo-anchor as containing the Owner''s quotes
+    "in full" when that entry only ever held a paraphrase, and (b) upgraded Gateway
+    G05 to a mandatory second AI pass without reconciling registries.credit_spend_governance
     -- both defects are corrected below, not just reworded): the Owner''s real verbatim
     words, saved at /opt/veridian/ai-os/OWNER_DIRECTIVES/BROWSER_NATIVE_END_USER_ARCHITECTURE_2026-07-25.txt
     (knowledge_engine KE-20260725-184749-e0e0), describe two input options -- Option
@@ -171,8 +176,8 @@ phases:
     in the SERVER by the SOFTWARE. SOFTWARE FIRST APPROACH." This phase''s own Stage
     4 Machine Prompt Builder (2.2 Stage 13-18, pipeline-prompt-construction) and Prompt
     Compiler Engine (2.1 Prompt Core Engines, "Natural language intent to optimized
-    machine prompt via DSPy-style declarative compilation pipeline", line 79) ARE the
-    machine-language-output contract the Owner''s FIRST pass produces -- the document''s
+    machine prompt via DSPy-style declarative compilation pipeline", line 79) ARE
+    the machine-language-output contract the Owner''s FIRST pass produces -- the document''s
     own vocabulary already covers this; no new engine is required. CREDIT-GOVERNANCE
     RECONCILIATION: the same source file also carries an interpretive note, clearly
     separated from and not attributed to the Owner''s verbatim words above, resolving
@@ -183,12 +188,12 @@ phases:
     WITHIN that software execution -- per registries.credit_spend_governance''s standing
     "software first, AI second, minimal credits only when needed" propose/report two-gate
     rule (ai-os/MASTER_INDEX.yaml), i.e. AI credits spent only when a specific request
-    genuinely requires them. This is NOT a second mandatory AI pass
-    on every completed end-user request, and this phase''s pipeline-prompt-construction/pipeline-verification
+    genuinely requires them. This is NOT a second mandatory AI pass on every completed
+    end-user request, and this phase''s pipeline-prompt-construction/pipeline-verification
     deepening work must not implement it as one; the compiled contract must be written
     to phase_1''s compliance.prompt_versions row via this phase''s own compiled/versioned
-    storage integration_point so both of phase_5''s input surfaces compile to the identical
-    output shape.'
+    storage integration_point so both of phase_5''s input surfaces compile to the
+    identical output shape.'
   - Dispatch as a compliance-tracker-scoped task (per meta.cross_repo_dispatch_note)
     extending prompt_engine.py/classifier.py/context_engine.py's real algorithms into
     the target repo's own application code, backed by phase_1's prompt_registry table
@@ -311,25 +316,25 @@ phases:
 - id: phase_5_browser_execution_tiers
   name: Browser Execution/Lite-LLM/NPU/Built-in-AI/MCP/Function/Worker/Transformers
     Engines + Browser Compute/Parallelism tech stack
-  objective: 'Extend the ONLY real browser-native prior art in this whole system (repos/compliance-tracker/src/app/litert-spike/
+  objective: Extend the ONLY real browser-native prior art in this whole system (repos/compliance-tracker/src/app/litert-spike/
     + litert-spike-embeddings/, gap analysis known_partial_prior_art.litert_spike)
-    from an unregistered app-router debug spike into the document''s tiered Browser
+    from an unregistered app-router debug spike into the document's tiered Browser
     Execution Engine (NPU -> Built-in AI -> Lite LLM -> Transformers.js -> Server,
     each with real fallback). This is the single largest, most novel engineering surface
     in this whole plan (10 named browser engines + 2 tech-stack tables with 0-to-minimal
-    prior art each) -- explicitly the first phase this task''s own gap analysis flags
+    prior art each) -- explicitly the first phase this task's own gap analysis flags
     against the owner_decision_dependency, since it commits the most new, product-shaping
     engineering effort. AMENDED 2026-07-25 (corrects and replaces the amendment rejected
-    in pull request 72 -- see scope note below) per the Owner''s real verbatim UX directive
+    in pull request 72 -- see scope note below) per the Owner's real verbatim UX directive
     (/opt/veridian/ai-os/OWNER_DIRECTIVES/BROWSER_NATIVE_END_USER_ARCHITECTURE_2026-07-25.txt)
     -- this phase builds two real end-user input surfaces -- a structured mode-pill/option-chain
     component (Option 1) and a free-text chat component (Option 2), both browser-only
-    per the Owner''s own words "FOR END USER THE BROWSER IS THE ONLY WAY TO INTERACT
-    WITH THE SYSTEM" -- and this phase''s own browser-native execution tiers perform
-    the FIRST pass, producing phase_2''s machine-language-output contract. The SECOND
+    per the Owner's own words "FOR END USER THE BROWSER IS THE ONLY WAY TO INTERACT
+    WITH THE SYSTEM" -- and this phase's own browser-native execution tiers perform
+    the FIRST pass, producing phase_2's machine-language-output contract. The SECOND
     pass is deterministic server-side SOFTWARE execution, reconciled against registries.credit_spend_governance
-    below -- not a mandatory second AI call; Gateway G05 remains this phase''s existing
-    Tier-5 escalation-only integration_point, not a new mandatory hop.'
+    below -- not a mandatory second AI call; Gateway G05 remains this phase's existing
+    Tier-5 escalation-only integration_point, not a new mandatory hop.
   scope:
   - 'Gap items closed: engine-browser-execution, engine-browser-lite-llm (deepen litert-spike;
     evaluate WebLLM as the document''s own named technology vs. continuing with LiteRT
@@ -348,19 +353,20 @@ phases:
     so this phase''s own starting point is discoverable for any future session, per
     this system''s own zero-duplication protocol.'
   - 'OWNER-VERIFIED UX REQUIREMENT (2026-07-25, corrects and replaces the amendment
-    rejected in PR #72, which (a) cited OWNER_DECISIONS_NEEDED_2026-07-23.yaml id veridian-architecture-v2-target-repo-anchor
-    as containing the Owner''s quotes "in full" when that entry only ever held a paraphrase,
-    and (b) upgraded Gateway G05 to a mandatory second AI pass on every completed end-user
-    request without reconciling registries.credit_spend_governance -- both defects
-    are corrected below, not just reworded) -- concrete deliverables, in addition to
-    the gap items above: (1) a structured end-user input component realizing the Owner''s
-    own verbatim words (/opt/veridian/ai-os/OWNER_DIRECTIVES/BROWSER_NATIVE_END_USER_ARCHITECTURE_2026-07-25.txt,
-    knowledge_engine KE-20260725-184749-e0e0) "dynamic mode pills + dynamic option chain"
-    (Option 1); (2) a free-text chat input component realizing the Owner''s own words
-    "END USER direct writing the input in the chat via web browser" (Option 2); both
-    must be real, browser-only surfaces per the Owner''s own words "FOR END USER THE
-    BROWSER IS THE ONLY WAY TO INTERACT WITH THE SYSTEM", calling into phase_2''s Prompt
-    Compiler Engine / Stage 4 Machine Prompt Builder to produce the machine-language-output
+    rejected in PR #72, which (a) cited OWNER_DECISIONS_NEEDED_2026-07-23.yaml id
+    veridian-architecture-v2-target-repo-anchor as containing the Owner''s quotes
+    "in full" when that entry only ever held a paraphrase, and (b) upgraded Gateway
+    G05 to a mandatory second AI pass on every completed end-user request without
+    reconciling registries.credit_spend_governance -- both defects are corrected below,
+    not just reworded) -- concrete deliverables, in addition to the gap items above:
+    (1) a structured end-user input component realizing the Owner''s own verbatim
+    words (/opt/veridian/ai-os/OWNER_DIRECTIVES/BROWSER_NATIVE_END_USER_ARCHITECTURE_2026-07-25.txt,
+    knowledge_engine KE-20260725-184749-e0e0) "dynamic mode pills + dynamic option
+    chain" (Option 1); (2) a free-text chat input component realizing the Owner''s
+    own words "END USER direct writing the input in the chat via web browser" (Option
+    2); both must be real, browser-only surfaces per the Owner''s own words "FOR END
+    USER THE BROWSER IS THE ONLY WAY TO INTERACT WITH THE SYSTEM", calling into phase_2''s
+    Prompt Compiler Engine / Stage 4 Machine Prompt Builder to produce the machine-language-output
     contract; (3) the browser-to-server handoff itself -- this phase''s own FIRST-pass
     browser-native execution tiers (NPU/Built-in AI/Lite LLM/Transformers.js) produce
     that machine-language output per the Owner''s own words "The browser-native AI
@@ -377,11 +383,10 @@ phases:
     AI second, minimal credits only when needed" propose/report two-gate rule (ai-os/MASTER_INDEX.yaml),
     i.e. AI credits spent only when a specific request genuinely requires them. Any
     phase_5 implementation task that would route a genuinely new AI-call pattern through
-    G05 beyond this existing Tier-5 role must
-    go through that same propose/report gate; it must not silently add new metered
-    AI volume. NOTE ON SOURCING: neither "mode pill" nor "option chain" is literal source-document
-    vocabulary (ai-os/owner-attachments/VERIDIAN_Architecture_v2.0_extracted.txt) --
-    they are the Owner''s own UX vocabulary from the verbatim directive cited above
+    G05 beyond this existing Tier-5 role must go through that same propose/report
+    gate; it must not silently add new metered AI volume. NOTE ON SOURCING: neither
+    "mode pill" nor "option chain" is literal source-document vocabulary (ai-os/owner-attachments/VERIDIAN_Architecture_v2.0_extracted.txt)
+    -- they are the Owner''s own UX vocabulary from the verbatim directive cited above
     (grepped the extracted source and confirmed zero matches for "pill", "option chain",
     or "chat input"); the document-side anchors remain the abstract "User Input" entry
     point of 2.2 Stage 1 (Input Acquisition Layer, line 213-215) and the Browser Execution
@@ -391,11 +396,11 @@ phases:
   integration_point: MASTER_INDEX.yaml registries (litert-spike registration, this
     phase's own first step) + Gateway G05 ("AI") for the Server Escalation Engine's
     Tier-5 fallback calls only (engine-server-escalation) -- per the credit-governance
-    reconciliation above, the Owner-clarified browser-FIRST/server-SECOND handoff routes
-    through deterministic server-side SOFTWARE execution, not through G05, unless a
-    specific request genuinely needs an AI escalation, in which case it uses this exact
-    same G05 boundary llm-client.ts already uses, not a separate escalation path or
-    a new mandatory hop.
+    reconciliation above, the Owner-clarified browser-FIRST/server-SECOND handoff
+    routes through deterministic server-side SOFTWARE execution, not through G05,
+    unless a specific request genuinely needs an AI escalation, in which case it uses
+    this exact same G05 boundary llm-client.ts already uses, not a separate escalation
+    path or a new mandatory hop.
   depends_on:
   - phase_2_compiler_pipeline_intelligence_engines
   external_depends_on: []
