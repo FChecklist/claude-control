@@ -75,6 +75,7 @@ import urllib.request
 
 VERIDIAN_ROOT = "/opt/veridian"
 SUPERBOSS = f"{VERIDIAN_ROOT}/scripts/superboss-register.py"
+NOTIFICATION_ENGINE = f"{VERIDIAN_ROOT}/scripts/notification_engine.py"
 DB_PATH = f"{VERIDIAN_ROOT}/ai-os/memory/superboss-register.sqlite"
 REPOS_ROOT = f"{VERIDIAN_ROOT}/repos"
 SHARED_ENV = f"{VERIDIAN_ROOT}/shared/.env"
@@ -229,6 +230,41 @@ SUPABASE_PROJECT_MAP = {
 }
 
 
+def notify_owner_supabase_token_degraded(http_status, body):
+    """Phase 5 (metadata_knowledge_consolidation, task-20260724-140008): the
+    real fix for the part of the SUPABASE cron gap that IS a code gap -- the
+    degrade above was silent (a stdout line + a metadata_json note nobody
+    actively reads, same failure mode notify-owner.py's own module docstring
+    already documents for ai-os/logs/ATTENTION.md). Fires a real, plain-English,
+    rate-limited (1/hour, so effectively once per 6h cron run while still
+    broken) Owner email via scripts/notification_engine.py's send-owner facade
+    -- the first real Metadata/Knowledge Engine (14/15) -> Notification Engine
+    (12) cross-call. Does NOT and cannot fix the credential itself (a Supabase
+    Management API PAT can only be minted by the Owner via the dashboard, see
+    ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml#supabase-access-token-credential-refresh)
+    -- this only makes the gap loud instead of silent."""
+    if not os.path.isfile(NOTIFICATION_ENGINE):
+        print(f"  ! notification_engine.py not found at {NOTIFICATION_ENGINE}, cannot alert Owner")
+        return
+    subject = "Supabase knowledge-registry refresh is still broken"
+    body_text = (
+        "The 6-hourly job that keeps your Supabase project info up to date on the server "
+        "cannot log in to Supabase right now. The saved access token is being rejected "
+        f"(status {http_status}). Nothing is broken in your Supabase projects themselves -- "
+        "this is just a server-side credential that needs replacing.\n\n"
+        "To fix it: sign in to supabase.com, go to Account Settings > Access Tokens, create a "
+        "new token, and give it to your AI assistant to save in the server's shared/.env file "
+        "under SUPABASE_ACCESS_TOKEN. Until then, this email will repeat every few hours."
+    )
+    proc = run([
+        "python3", NOTIFICATION_ENGINE, "send-owner",
+        "--subject", subject, "--body", body_text,
+        "--dedupe-key", "supabase-access-token-degraded",
+        "--source-engine", "knowledge_registry_multisource",
+    ])
+    print(f"  notify-owner: {proc.stdout.strip() or proc.stderr.strip()}")
+
+
 def read_env_file(path):
     env = {}
     if not os.path.isfile(path):
@@ -296,6 +332,7 @@ def do_supabase():
               f"ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml#supabase-management-api-token-refresh). "
               f"Falling back to a per-project anon-key health check (Phase 5 mitigation) so this run still "
               f"captures a real live signal instead of pure last-known-good data.")
+        notify_owner_supabase_token_degraded(status, projects)
 
     for supa_name, repo in SUPABASE_PROJECT_MAP.items():
         table_summary = None

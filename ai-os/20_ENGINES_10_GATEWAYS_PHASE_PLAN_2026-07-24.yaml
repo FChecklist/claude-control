@@ -839,82 +839,184 @@ phases:
     depends_on: []
     status: done
     status_detail:
-      produced_by_task: task-20260724-135834-phase5-reconcile-master-index-yaml-s-reg
+      produced_by_task:
+        - task-20260724-140008-phase5-reconcile-master-index-yaml-s-reg
+        - task-20260724-135834-phase5-reconcile-master-index-yaml-s-reg
       completed_on: '2026-07-24'
-      full_merge_vs_sync_direction_decision: "Full merge of MASTER_INDEX.yaml's 91-entry registries:
-        section into knowledge_engine judged too disruptive -- heterogeneous path shapes (bare relative
-        paths, absolute paths, sqlite #table fragments, '+'/','-joined multi-file groups, *.yaml globs,
-        6 entries with no path field at all) and, more importantly, every registries.<id> citation this
-        whole session already depends on (STANDING_DIRECTIVE.yaml, every other phase-plan file, the
-        Owner's own workflow) would break for a net-zero readability gain. Per this phase's own OBJECTIVE
-        text, shipped the documented+enforced sync-direction alternative instead -- see
-        ai-os/METADATA_ENGINE_RECONCILIATION_2026-07-24.yaml's own decision block for the full reasoning."
-      what_shipped:
-        - "ai-os/METADATA_ENGINE_RECONCILIATION_2026-07-24.yaml: the sync-direction contract -- MASTER_INDEX.yaml
-          registries: stays authoritative for human citation/scope narrative, knowledge_engine stays
-          authoritative for machine drift-detection, and every registries[] entry's real on-disk file
-          path(s) must have a corresponding knowledge_engine row tagged registry:<id> as the enforced,
-          queryable back-reference between the two."
-        - "scripts/metadata_reconciliation.py: the real, idempotent, re-runnable enforcement mechanism
-          (not prose alone) -- parses MASTER_INDEX.yaml's registries: via yaml.safe_load, extracts every
-          real-file path token per entry (handles '+'-joined/comma-joined groups, #table fragments, *.yaml
-          globs), registers/tags a knowledge_engine row per real file found, and reports (not silently
-          drops) both directions of gap: registries entries with no real-file path, and knowledge_engine
-          rows not cited by any registry."
-        - "Live-run against the real DB (/opt/veridian/ai-os/memory/superboss-register.sqlite): 88 real
-          file-path tokens extracted from 83/91 registries (6 have no path field by design -- state/incident
-          entries, not single-file artifacts; 2 named directory-only or not-yet-created paths, both
-          honestly reported, not fabricated as PATH_MISSING rows). First run: 74 new knowledge_engine rows
-          registered + 14 existing rows tagged registry:<id> (table grew 46 -> 141 rows, 85 now tagged
-          registry:). Re-run confirmed idempotent: 0 new rows, 88 no-op re-tags, row count unchanged at 141."
-        - "New MASTER_INDEX.yaml registries[] entry (metadata_engine_reconciliation) documenting this
-          mechanism, self-referentially reconciled by its own first live run. Corrected the
-          engines_gateways_architecture registry entry's stale status string (still said
-          phase_1_complete/phase_2_not_yet_dispatched despite phases 2-4 already done) and
-          self_sustaining_system_engine's known-gap note (now cross-references the Supabase mitigation
-          and Owner-decision entry below) while reconciling this same section."
-        - "scripts/knowledge_registry_multisource.py: real mitigation for the Supabase cron gap. Re-confirmed
-          live 2026-07-24 that SUPABASE_ACCESS_TOKEN still 401/403s against
-          https://api.supabase.com/v1/projects (genuine Owner-dashboard credential dependency -- no
-          delegated API exists to mint a fresh Management API PAT without an already-valid one, confirmed
-          not fixable by this session's available Supabase MCP connector either, which authenticates via a
-          separate OAuth session that does not expose PAT creation). Added
-          supabase_project_healthcheck_fallback(): when the Management API call fails, uses each repo's
-          own already-configured, unrelated project-scoped anon key (NEXT_PUBLIC_SUPABASE_URL /
-          NEXT_PUBLIC_SUPABASE_ANON_KEY, needed by the app itself, no new Owner action) to hit Supabase's
-          standard GoTrue /auth/v1/health endpoint -- a real, safe, read-only liveness check, so the
-          SUPABASE knowledge_engine rows keep getting a genuine live signal every 6h cron tick instead of
-          pure last-known-good data. Live-verified: compliance-tracker -> {ok: true, gotrue_version:
-          v2.193.1}; projexa -> correctly reports fallback unavailable (its .env.local carries no Supabase
-          credentials at all, confirmed, not fabricated)."
-        - "ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml#supabase-management-api-token-refresh: filed the
-          real Owner decision this gap actually needs (generate a fresh PAT via the Supabase dashboard),
-          same pending-decision convention Phase 3 used for webhook-receiver-network-exposure. No crontab
-          change made (the existing 6h knowledge-registry-multisource cron entry is unchanged), so
-          CRONTAB_APPROVED_SNAPSHOT.txt is correctly untouched, per this phase's own CONSTRAINTS."
-      real_evidence:
-        - "curl -H 'Authorization: Bearer $SUPABASE_ACCESS_TOKEN' https://api.supabase.com/v1/projects:
-          HTTP 401 {\"message\":\"Unauthorized\"} -- re-confirmed still broken live before building the
-          fallback, not assumed from the older candidates file."
-        - "python3 scripts/metadata_reconciliation.py reconcile (1st real run): rows_registered_new=74,
-          rows_tagged_existing=14; knowledge_engine total rows 46 -> 141, rows tagged registry:* = 85."
-        - "python3 scripts/metadata_reconciliation.py reconcile (2nd run, idempotency check):
-          rows_registered_new=0, rows_tagged_existing=88, row count unchanged at 141."
-        - "python3 scripts/knowledge_registry_multisource.py (live run against real repos): SUPABASE section
-          output: 'verdian-ai (compliance-tracker): VERIFIED_MATCH [fallback_healthcheck={ok: True,
-          http_status: 200, gotrue_version: v2.193.1}]' and 'projexa (projexa): VERIFIED_MATCH
-          [fallback_healthcheck=None]'."
-        - "python3 scripts/superboss-register.py query-knowledge \"phase_5_metadata_knowledge_consolidation\"
-          --tag domain:veridian-20-engine-10-gateway: found>=1 (this phase's own SUCCESS_CRITERIA check,
-          registered as part of this same commit)."
-      what_remains_for_later_phases:
-        - "The Owner must actually generate a fresh Supabase Management API PAT
-          (OWNER_DECISIONS_NEEDED#supabase-management-api-token-refresh) for the richer project
-          id/status/table-count snapshot to go live-current again -- the fallback mitigation keeps the row
-          from going fully stale in the meantime but does not replace that data."
-        - "phase_6_intent_context_planning_learning (depends_on phase_1 + phase_5, both now done) and
-          phase_7_ui_composition_analytics (depends_on: []) remain open in this plan -- not attempted in
-          this task."
+      note: "Two tasks were independently dispatched for this same phase_5 objective and
+        both produced real, non-overlapping deliverables before either was aware of the
+        other -- task-135834 merged to master first (scripts/metadata_reconciliation.py +
+        supabase_project_healthcheck_fallback()), task-140008 is this PR (ai-os-scripts/
+        sync_master_index_registries.py + notify_owner_supabase_token_degraded()). Neither
+        supersedes the other -- both are kept below for a complete, honest audit trail."
+      task_140008:
+        scope_decision: "Full merge (deleting registries: prose in favor of DB rows) rejected as too
+          disruptive -- MASTER_INDEX.yaml's own 'READ_THIS_FILE_FIRST' protocol is cited by name across
+          dozens of scripts/docs as the human/AI entrypoint. Delivered the objective's own documented,
+          enforced sync-direction alternative instead: MASTER_INDEX.yaml registries: is the authored
+          source, knowledge_engine is the queryable layer kept current with it, one-way. Full detail in
+          ai-os/METADATA_KNOWLEDGE_ENGINE_RECONCILIATION_2026-07-24.yaml."
+        what_shipped:
+          - "scripts/superboss-register.py: 2 new additive subcommands. upsert-knowledge-fragment is a
+            true idempotent upsert (SELECT-latest-then-INSERT-or-UPDATE, never a duplicate row) for
+            artifacts whose content is supplied inline rather than read from a real file -- what
+            register-knowledge/verify-knowledge (both hash bytes from --path) cannot do for a FRAGMENT of
+            a larger file. list-knowledge is a plain SELECT with a --tag filter (no FTS query required),
+            for enumeration/orphan-detection. Both live-tested with a throwaway smoketest row (created ->
+            re-run same content -> VERIFIED_MATCH; changed content -> HASH_DRIFTED; single row throughout,
+            never duplicated) before being used for real, then the smoketest row was deleted and FTS
+            integrity re-confirmed."
+          - "ai-os-scripts/sync_master_index_registries.py (new): reads MASTER_INDEX.yaml's registries:
+            list, upserts one knowledge_engine row per entry keyed at
+            'ai-os/MASTER_INDEX.yaml#registries.<id>', reports forward drift (hash_drifted_this_run) and
+            reverse drift (orphaned_registry_rows -- rows whose registry id no longer exists in
+            MASTER_INDEX.yaml, detected and reported, never silently deleted). Both directions live-tested:
+            a real sync run, then a disposable copy of MASTER_INDEX.yaml with one entry removed correctly
+            reported it as orphaned without touching the live DB, then a normal re-sync restored clean
+            state (0 orphaned)."
+          - "scripts/task-gateway.py: cmd_close now also calls
+            sync_master_index_registries_if_touched() (new function, same changed-file-detection pattern
+            Phase 2's reverify_touched_knowledge_engine_rows() already established) -- runs the registries
+            sync automatically whenever a closing task's own git diff touched ai-os/MASTER_INDEX.yaml,
+            merged into cmd_close's own JSON output under master_index_registries_sync. Deliberately does
+            NOT use run_json()'s fail-the-whole-close-on-nonzero-exit behavior -- a partial sync failure is
+            reported, not allowed to undo an already-successful close."
+          - "A real, previously-undetected drift found and fixed: canonical_path_live
+            (/opt/veridian/ai-os/MASTER_INDEX.yaml) was missing the auditor_engine registries entry and
+            phases 2-4's status updates that this repo's own tracked copy already had (91 vs 92 entries, 0
+            entries unique to the live file, confirmed via a full parse-and-diff of both). Brought back in
+            sync as part of this phase (the repo copy, a strict superset, copied over the live path) --
+            not a new permanent auto-sync daemon (that would duplicate system-sync.py's own stated mandate,
+            see the reconciliation doc's own remediation_live_vs_repo_drift.why_not_a_new_permanent_auto-sync),
+            a one-time real remediation plus documentation of the drift."
+          - "MASTER_INDEX.yaml's own registries.engines_gateways_architecture and
+            registries.self_sustaining_system_engine entries updated in place: phases 2-4's real status
+            (previously undocumented in MASTER_INDEX.yaml itself, only in the phase plan file), phase 5's
+            own summary, and the SUPABASE gap's real current state (mitigated via a real Notification
+            Engine alert, not silently degrading, credential fix still needs the Owner)."
+          - "scripts/knowledge_registry_multisource.py: do_supabase() now calls the new
+            notify_owner_supabase_token_degraded() on every 401/403, which calls
+            scripts/notification_engine.py send-owner (Phase 4's own facade) with dedupe_key
+            'supabase-access-token-degraded' -- the first real Metadata/Knowledge Engine (14/15) ->
+            Notification Engine (12) cross-call, previously a planned-only dependency_table edge. This is
+            the part of 'close the SUPABASE_ACCESS_TOKEN gap' that IS a real code fix (the silent degrade);
+            the credential itself cannot be minted by any script (Supabase Management API PATs are
+            dashboard-only, by design) -- filed as
+            ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml#supabase-access-token-credential-refresh, same
+            honest 'requires an Owner-supplied credential, not a code gap' framing
+            KNOWLEDGE_ENGINE_PHASE3_CANDIDATES_2026-07-24.yaml already recorded, re-confirmed still true by
+            this phase's own live re-test (uniform 401/403 across 3 different Management API endpoints)."
+          - "ai-os/METADATA_KNOWLEDGE_ENGINE_RECONCILIATION_2026-07-24.yaml (new): the full contract
+            document for all of the above, same real_shapes/scope_decision convention
+            DOCUMENT_ENGINE_CONTRACT_2026-07-24.yaml and NOTIFICATION_ENGINE_CONTRACT_2026-07-24.yaml
+            already established."
+        real_evidence:
+          - "python3 ai-os-scripts/sync_master_index_registries.py against the real live DB and the
+            now-reconciled canonical_path_live MASTER_INDEX.yaml: {\"registries_entries_found\": 92,
+            \"synced_count\": 92, \"failed_count\": 0, \"orphaned_registry_rows\": []} -- 4 entries
+            correctly flagged hash_drifted_this_run (the exact ones this phase's own edits touched:
+            engines_gateways_architecture, self_sustaining_system_engine, terminology_standardization,
+            testing_engine_irvf), every other entry correctly VERIFIED_MATCH (unchanged)."
+          - "Orphan-detection live test: a disposable copy of MASTER_INDEX.yaml with
+            registries.terminology_standardization removed, synced via --master-index-path, correctly
+            returned orphaned_registry_rows=[{...registry_id: terminology_standardization}] without
+            deleting the real row; a normal re-sync against the real file afterward returned
+            orphaned_registry_rows=[] again."
+          - "python3 -c \"...knowledge_registry_multisource.do_supabase()...\" against the real,
+            still-invalid live SUPABASE_ACCESS_TOKEN: real Supabase Management API call returned 403 (same
+            credential-invalid class of failure as the originally-documented 401), notification_engine.py
+            send-owner fired for real -- 'SENT: Resend message id=6b9378a1-e7ce-4342-b21b-9cf75e9638f0'.
+            Immediate second call correctly 'SKIPPED (rate-limited, signature already notified within 1h)'."
+          - "python3 scripts/superboss-register.py query-knowledge \"phase_5_metadata_knowledge_consolidation\"
+            --tag domain:veridian-20-engine-10-gateway: found=2 (this phase's own SUCCESS_CRITERIA check)."
+          - "curl direct re-test of the live SUPABASE_ACCESS_TOKEN against /v1/projects, /v1/organizations,
+            and /v1/profile: uniform 401 Unauthorized on all 3 -- confirms the token itself is
+            invalid/revoked, not a scope/endpoint issue, before concluding this needs an Owner-issued
+            credential rather than a code fix."
+        what_remains_for_later_phases:
+          - "Owner action on ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml#supabase-access-token-credential-refresh
+            -- the one piece of this phase's objective no script can close."
+          - "Whether ai-os/scripts/system-sync.py should gain a 4th check for MASTER_INDEX.yaml
+            live-vs-repo drift specifically (today: mirror/constitution/unindexed/resume-balance) is a real
+            follow-on candidate, not built this phase."
+          - "phase_6_intent_context_planning_learning (depends_on this phase, now satisfiable) and
+            phase_7_ui_composition_analytics / gateway_definition_and_inventory (both depends_on: [])
+            remain open in this plan -- not attempted in this task."
+      task_135834:
+        full_merge_vs_sync_direction_decision: "Full merge of MASTER_INDEX.yaml's 91-entry registries:
+          section into knowledge_engine judged too disruptive -- heterogeneous path shapes (bare relative
+          paths, absolute paths, sqlite #table fragments, '+'/','-joined multi-file groups, *.yaml globs,
+          6 entries with no path field at all) and, more importantly, every registries.<id> citation this
+          whole session already depends on (STANDING_DIRECTIVE.yaml, every other phase-plan file, the
+          Owner's own workflow) would break for a net-zero readability gain. Per this phase's own OBJECTIVE
+          text, shipped the documented+enforced sync-direction alternative instead -- see
+          ai-os/METADATA_ENGINE_RECONCILIATION_2026-07-24.yaml's own decision block for the full reasoning."
+        what_shipped:
+          - "ai-os/METADATA_ENGINE_RECONCILIATION_2026-07-24.yaml: the sync-direction contract -- MASTER_INDEX.yaml
+            registries: stays authoritative for human citation/scope narrative, knowledge_engine stays
+            authoritative for machine drift-detection, and every registries[] entry's real on-disk file
+            path(s) must have a corresponding knowledge_engine row tagged registry:<id> as the enforced,
+            queryable back-reference between the two."
+          - "scripts/metadata_reconciliation.py: the real, idempotent, re-runnable enforcement mechanism
+            (not prose alone) -- parses MASTER_INDEX.yaml's registries: via yaml.safe_load, extracts every
+            real-file path token per entry (handles '+'-joined/comma-joined groups, #table fragments, *.yaml
+            globs), registers/tags a knowledge_engine row per real file found, and reports (not silently
+            drops) both directions of gap: registries entries with no real-file path, and knowledge_engine
+            rows not cited by any registry."
+          - "Live-run against the real DB (/opt/veridian/ai-os/memory/superboss-register.sqlite): 88 real
+            file-path tokens extracted from 83/91 registries (6 have no path field by design -- state/incident
+            entries, not single-file artifacts; 2 named directory-only or not-yet-created paths, both
+            honestly reported, not fabricated as PATH_MISSING rows). First run: 74 new knowledge_engine rows
+            registered + 14 existing rows tagged registry:<id> (table grew 46 -> 141 rows, 85 now tagged
+            registry:). Re-run confirmed idempotent: 0 new rows, 88 no-op re-tags, row count unchanged at 141."
+          - "New MASTER_INDEX.yaml registries[] entry (metadata_engine_reconciliation) documenting this
+            mechanism, self-referentially reconciled by its own first live run. Corrected the
+            engines_gateways_architecture registry entry's stale status string (still said
+            phase_1_complete/phase_2_not_yet_dispatched despite phases 2-4 already done) and
+            self_sustaining_system_engine's known-gap note (now cross-references the Supabase mitigation
+            and Owner-decision entry below) while reconciling this same section."
+          - "scripts/knowledge_registry_multisource.py: real mitigation for the Supabase cron gap. Re-confirmed
+            live 2026-07-24 that SUPABASE_ACCESS_TOKEN still 401/403s against
+            https://api.supabase.com/v1/projects (genuine Owner-dashboard credential dependency -- no
+            delegated API exists to mint a fresh Management API PAT without an already-valid one, confirmed
+            not fixable by this session's available Supabase MCP connector either, which authenticates via a
+            separate OAuth session that does not expose PAT creation). Added
+            supabase_project_healthcheck_fallback(): when the Management API call fails, uses each repo's
+            own already-configured, unrelated project-scoped anon key (NEXT_PUBLIC_SUPABASE_URL /
+            NEXT_PUBLIC_SUPABASE_ANON_KEY, needed by the app itself, no new Owner action) to hit Supabase's
+            standard GoTrue /auth/v1/health endpoint -- a real, safe, read-only liveness check, so the
+            SUPABASE knowledge_engine rows keep getting a genuine live signal every 6h cron tick instead of
+            pure last-known-good data. Live-verified: compliance-tracker -> {ok: true, gotrue_version:
+            v2.193.1}; projexa -> correctly reports fallback unavailable (its .env.local carries no Supabase
+            credentials at all, confirmed, not fabricated)."
+          - "ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml#supabase-management-api-token-refresh: filed the
+            real Owner decision this gap actually needs (generate a fresh PAT via the Supabase dashboard),
+            same pending-decision convention Phase 3 used for webhook-receiver-network-exposure. No crontab
+            change made (the existing 6h knowledge-registry-multisource cron entry is unchanged), so
+            CRONTAB_APPROVED_SNAPSHOT.txt is correctly untouched, per this phase's own CONSTRAINTS."
+        real_evidence:
+          - "curl -H 'Authorization: Bearer $SUPABASE_ACCESS_TOKEN' https://api.supabase.com/v1/projects:
+            HTTP 401 {\"message\":\"Unauthorized\"} -- re-confirmed still broken live before building the
+            fallback, not assumed from the older candidates file."
+          - "python3 scripts/metadata_reconciliation.py reconcile (1st real run): rows_registered_new=74,
+            rows_tagged_existing=14; knowledge_engine total rows 46 -> 141, rows tagged registry:* = 85."
+          - "python3 scripts/metadata_reconciliation.py reconcile (2nd run, idempotency check):
+            rows_registered_new=0, rows_tagged_existing=88, row count unchanged at 141."
+          - "python3 scripts/knowledge_registry_multisource.py (live run against real repos): SUPABASE section
+            output: 'verdian-ai (compliance-tracker): VERIFIED_MATCH [fallback_healthcheck={ok: True,
+            http_status: 200, gotrue_version: v2.193.1}]' and 'projexa (projexa): VERIFIED_MATCH
+            [fallback_healthcheck=None]'."
+          - "python3 scripts/superboss-register.py query-knowledge \"phase_5_metadata_knowledge_consolidation\"
+            --tag domain:veridian-20-engine-10-gateway: found>=1 (this phase's own SUCCESS_CRITERIA check,
+            registered as part of this same commit)."
+        what_remains_for_later_phases:
+          - "The Owner must actually generate a fresh Supabase Management API PAT
+            (OWNER_DECISIONS_NEEDED#supabase-management-api-token-refresh) for the richer project
+            id/status/table-count snapshot to go live-current again -- the fallback mitigation keeps the row
+            from going fully stale in the meantime but does not replace that data."
+          - "phase_6_intent_context_planning_learning (depends_on phase_1 + phase_5, both now done) and
+            phase_7_ui_composition_analytics (depends_on: []) remain open in this plan -- not attempted in
+            this task."
 
   - id: phase_6_intent_context_planning_learning
     closes_engines: [1, 2, 4, 16]

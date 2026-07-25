@@ -230,6 +230,40 @@ decisions:
     ('do not install a full iPaaS like n8n without Owner confirmation') and the general 'network-exposure
     decisions need explicit sign-off' discipline, this is left pending rather than silently started.
   status: pending
+
+- id: supabase-access-token-credential-refresh
+  raised_by_task: task-20260724-033446-self-sustaining-system-engine-phase2-con
+  raised_ts: '2026-07-24T04:10:00+00:00'
+  re_confirmed_by_task: task-20260724-140008-phase5-reconcile-master-index-yaml-s-reg
+  re_confirmed_ts: '2026-07-24T14:20:00+00:00'
+  title: "Issue a fresh Supabase Management API personal access token (PAT) so the SUPABASE-source knowledge_engine cron refresh stops degrading"
+  what: "SUPABASE_ACCESS_TOKEN in /opt/veridian/shared/.env returns 401 Unauthorized from
+    https://api.supabase.com/v1/projects, first found 2026-07-24 (see
+    ai-os/KNOWLEDGE_ENGINE_PHASE3_CANDIDATES_2026-07-24.yaml#supabase_cron_credential_broken).
+    Phase 5 (this task) re-confirmed the diagnosis live: the SAME token returns a uniform
+    401/403 across /v1/projects, /v1/organizations, and /v1/profile alike -- meaning the token
+    itself is invalid/revoked, not a scope or endpoint-specific issue, and no other
+    SUPABASE_ACCESS_TOKEN-shaped credential exists anywhere in shared/.env, .env.bak, or
+    .env.template to fall back to. A Supabase Management API PAT can only be minted by the
+    Owner via the Supabase dashboard (Settings > Access Tokens) -- it is not creatable via the
+    Management API itself, and this session's own interactively-authenticated Supabase MCP
+    connector uses a separate OAuth grant, not a portable Bearer PAT a cron script could reuse
+    -- so no AI session can close this credential gap in code."
+  needed_action: "Owner signs in to supabase.com, generates a fresh personal access token
+    (project-read scope is sufficient), and gives it to an AI session to save into
+    /opt/veridian/shared/.env under the existing SUPABASE_ACCESS_TOKEN key -- no code change
+    needed, scripts/knowledge_registry_multisource.py already reads that key."
+  why_not_done_automatically: "Requires an Owner-held credential (a Supabase account login) that
+    no AI session has or can generate -- this is a real, external, human-in-the-loop dependency,
+    not a policy/automation-scope question like the other entries in this file."
+  mitigation_shipped_this_phase: "Until the Owner acts, the gap is no longer a silent degrade:
+    scripts/knowledge_registry_multisource.py's do_supabase() now calls
+    scripts/notification_engine.py send-owner on every 401/403, a real, rate-limited (1/hour)
+    plain-English Owner email explaining exactly what to do -- live-tested 2026-07-24 (real
+    Resend send, then correctly rate-limit-SKIPPED on an immediate second call). See
+    ai-os/METADATA_KNOWLEDGE_ENGINE_RECONCILIATION_2026-07-24.yaml#supabase_knowledge_engine_gap
+    for full detail."
+  status: pending
 - id: chatgpt-audit-openai-api-key
   raised_by_task: task-20260724-141323-chatgpt-audit-workspace-infrastructure
   raised_ts: '2026-07-24T14:23:04+00:00'

@@ -1,0 +1,143 @@
+meta:
+  title: "VERIDIAN Metadata/Knowledge Engine Reconciliation Contract -- Phase 5 (metadata_knowledge_consolidation) deliverable"
+  created: '2026-07-24'
+  produced_by_task: task-20260724-140008-phase5-reconcile-master-index-yaml-s-reg
+  parent_plan: ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml
+  parent_phase: phase_5_metadata_knowledge_consolidation
+  closes_engines: [14, 15]
+  objective_text: "Reconcile MASTER_INDEX.yaml's registries: section and knowledge_engine's rows into one
+    authoritative metadata store (or a documented, enforced sync direction between the two, if full merge
+    is too disruptive). Close the Knowledge Engine's one known operational gap: a working
+    SUPABASE_ACCESS_TOKEN so the SUPABASE-source cron refresh stops degrading."
+  scope_decision: "Full merge (deleting registries: prose and replacing every read site with a DB query)
+    is too disruptive -- MASTER_INDEX.yaml's own protocol field ('READ_THIS_FILE_FIRST') is cited by name
+    across dozens of scripts/docs/prior phases as the single human/AI-readable entrypoint; collapsing it
+    into rows in a sqlite file would break that entrypoint for the one consumer (a human, or an AI session
+    that hasn't yet learned to query knowledge_engine first) it exists for. This document instead
+    delivers the objective's own documented, enforced sync direction: MASTER_INDEX.yaml's registries:
+    list is the authored source of scope/status/mandatory_before narrative; knowledge_engine is the
+    queryable, drift-detecting layer kept current with it -- one-way, MASTER_INDEX.yaml -> knowledge_engine,
+    never the reverse."
+
+# ============================================================================
+# REAL SHAPES -- both real, live, but only loosely connected before this phase.
+# ============================================================================
+real_shapes:
+  - system: "MASTER_INDEX.yaml registries:"
+    location: "ai-os/MASTER_INDEX.yaml (this repo's own copy) + /opt/veridian/ai-os/MASTER_INDEX.yaml
+      (canonical_path_live, per this file's own header)"
+    real_shape: "91-92 hand-authored YAML list entries (id/type/path/scope/status/query_command/
+      mandatory_before, shape varies per entry -- no single enforced schema), one per registry/mechanism
+      on this server. Edited directly by whichever session/phase adds or updates a mechanism."
+    real_gap_found_this_phase: "canonical_path_live was missing the auditor_engine entry and phases
+      2-4 status updates present in this repo-tracked copy -- a real live-vs-repo drift, confirmed via a
+      full parse-and-diff of both files' registries: lists (91 vs 92 ids, only auditor_engine absent from
+      live, 0 entries unique to live). Fixed as part of this phase (see remediation below) -- not a
+      pre-existing intentional divergence, since MASTER_INDEX.yaml's own pass-2 audit note explicitly says
+      the 2 declared copies (live + compliance-tracker mirror) exist 'by design... not a collision', which
+      only holds if they're kept identical."
+  - system: knowledge_engine
+    location: "ai-os/memory/superboss-register.sqlite#knowledge_engine (scripts/superboss-register.py)"
+    real_shape: "artifact_id/artifact_path/content_hash/verification_status/tags/entity_relationships/
+      metadata_json per row, FTS5-indexed, drift-detecting (VERIFIED_MATCH/HASH_DRIFTED/PATH_MISSING/
+      UNVERIFIED) -- built for whole real files on disk (register-knowledge hashes bytes read from --path).
+      Before this phase: one row existed for MASTER_INDEX.yaml as a whole file; zero rows existed per
+      registries: entry -- querying knowledge_engine could tell you MASTER_INDEX.yaml as a file had
+      changed, never which registries: entry changed, or whether a given entry existed at all."
+
+# ============================================================================
+# THE FIX -- one knowledge_engine row per registries: entry, kept in sync.
+# ============================================================================
+sync_mechanism:
+  new_superboss_register_subcommands:
+    - name: upsert-knowledge-fragment
+      why_new: "register-knowledge/verify-knowledge both hash bytes read from a real file at --path --
+        wrong for a FRAGMENT of a larger file (one registries: entry has no file of its own to read).
+        This subcommand hashes caller-supplied --content instead, and is a true idempotent upsert
+        (SELECT latest row by artifact_path, UPDATE if found else INSERT) -- unlike register-knowledge,
+        which always INSERTs (would duplicate a row every sync run)."
+      semantics: "First sync of a given --path INSERTs (VERIFIED_MATCH). Every later sync UPDATEs the
+        same row in place: VERIFIED_MATCH if --content's hash is unchanged since the last sync,
+        HASH_DRIFTED for exactly the one sync run where it changed -- same one-time-flag-then-reset
+        semantics verify_knowledge already uses for whole-file rows."
+    - name: list-knowledge
+      why_new: "Enumeration/orphan-detection needs 'every row tagged X', not an FTS text match --
+        query_knowledge requires a non-empty MATCH query and FTS5's default tokenizer is not guaranteed
+        to split snake_case tags into matchable terms. list-knowledge is a plain SELECT with the same
+        Python-side --tag membership filter query_knowledge already uses, just without requiring a
+        query string first."
+  sync_script: "ai-os-scripts/sync_master_index_registries.py -- reads MASTER_INDEX.yaml's registries:
+    list (yaml.safe_load), computes artifact_path='ai-os/MASTER_INDEX.yaml#registries.<id>' and
+    content=json.dumps(entry, sort_keys=True) per entry, calls upsert-knowledge-fragment for each.
+    Forward drift: reports hash_drifted_this_run (entries whose content changed since the last sync).
+    Reverse drift: calls list-knowledge --tag type:master_index_registry_entry, reports
+    orphaned_registry_rows (existing rows whose registry-id: tag no longer matches any current
+    registries: entry) -- never auto-deletes an orphan, same PATH_MISSING-not-hidden discipline
+    knowledge_engine already uses elsewhere."
+  enforcement: "Wired into scripts/task-gateway.py's cmd_close via
+    sync_master_index_registries_if_touched() -- every task that closes having touched
+    ai-os/MASTER_INDEX.yaml in its own git diff automatically re-runs this sync, the same 'every close is
+    a real re-verify, not a one-off manual run' discipline Phase 2's
+    reverify_touched_knowledge_engine_rows() already established for whole-file rows. Also directly
+    runnable standalone (idempotent, cron-safe if a future phase wants a schedule -- not added to
+    crontab by this phase, since task-gateway.py close coverage is real and no unattended schedule gap
+    was identified)."
+  live_evidence: "python3 ai-os-scripts/sync_master_index_registries.py against the real live DB and the
+    now-reconciled canonical_path_live MASTER_INDEX.yaml: registries_entries_found=92, synced_count=92,
+    failed_count=0, orphaned_registry_rows=[] -- see
+    20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml phases[] phase_5 status_detail.real_evidence for
+    the full captured output."
+
+remediation_live_vs_repo_drift:
+  what: "canonical_path_live (/opt/veridian/ai-os/MASTER_INDEX.yaml) brought back in sync with this
+    repo's own ai-os/MASTER_INDEX.yaml (which already carried phases 1-5's real status plus the
+    auditor_engine entry from a separate, already-merged initiative) -- a direct copy, since a full
+    parse-and-diff confirmed the repo copy is a strict superset (0 lines/entries unique to the live
+    file)."
+  why_not_a_new_permanent_auto-sync: "Building a generic bidirectional live<->repo file-sync daemon for
+    MASTER_INDEX.yaml specifically is out of this phase's own scope (registries:<->knowledge_engine, not
+    live-file<->repo-file in general) and would duplicate ai-os/scripts/system-sync.py's own stated
+    mandate ('the single entrypoint for sync the whole system... do not build a new sync script' -- see
+    registries.system_sync_mechanism.do_not_build_a_new_sync_script). This phase performed the one-time
+    remediation and documents the drift; whether system-sync.py should gain a 4th check for this specific
+    file is a follow-on candidate (see this document's own what_remains_for_later_phases), not solved
+    here."
+
+supabase_knowledge_engine_gap:
+  real_diagnosis: "SUPABASE_ACCESS_TOKEN in /opt/veridian/shared/.env returns 401 Unauthorized from
+    https://api.supabase.com/v1/projects, /v1/organizations, and /v1/profile alike (re-confirmed live
+    2026-07-24 via direct curl) -- uniform 401 across every endpoint means the token itself is invalid/
+    revoked, not a scope or endpoint-specific issue. No other SUPABASE_ACCESS_TOKEN-shaped credential
+    exists anywhere in shared/.env, .env.bak, or .env.template to fall back to."
+  why_not_fixed_by_code: "A Supabase Management API personal access token can only be minted by the
+    Owner via the Supabase dashboard (Settings > Access Tokens) -- it is not creatable via the
+    Management API itself (by design, for security), and the interactively-authenticated Supabase MCP
+    connector available in this session uses a separate OAuth grant, not a portable Bearer PAT a cron
+    script could reuse. Filed as
+    ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml#supabase-access-token-credential-refresh, same
+    'real_blocker_if_any: requires an Owner-supplied credential' honesty
+    KNOWLEDGE_ENGINE_PHASE3_CANDIDATES_2026-07-24.yaml already recorded -- not re-litigated, confirmed
+    still true."
+  what_this_phase_shipped_instead: "The part of the objective that IS a real code gap: the degrade was
+    silent (a log line + a metadata_json note nobody actively reads, per notify-owner.py's own module
+    docstring precedent about ai-os/logs/ATTENTION.md). scripts/knowledge_registry_multisource.py's
+    do_supabase() now calls scripts/notification_engine.py send-owner with dedupe_key
+    'supabase-access-token-degraded' on every 401 -- a real, rate-limited (1/hour) Owner email, so the
+    gap is visible and actionable every cron cycle it's still broken, not buried. This is also the first
+    real Metadata/Knowledge Engine (14/15) -> Notification Engine (12) cross-call, a previously
+    unaddressed dependency_table edge."
+  live_evidence: "python3 scripts/knowledge_registry_multisource.py do_supabase (isolated call) with the
+    real, still-invalid live token: notification_engine.py send-owner invoked, real Resend send or a
+    correctly-SKIPPED rate-limited result (see phase plan phases[] phase_5 status_detail.real_evidence
+    for the exact captured output)."
+
+what_remains_for_later_phases:
+  - "Owner action on ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml#supabase-access-token-credential-refresh
+    -- once a fresh PAT is in shared/.env, the SUPABASE cron refresh resumes live data pulls; the new
+    notify-owner alert path stops firing (401 no longer occurs) with no further code change needed."
+  - "Whether ai-os/scripts/system-sync.py should gain a 4th check function for MASTER_INDEX.yaml
+    live-vs-repo drift specifically (today it checks mirror/constitution/unindexed/resume-balance) is a
+    real follow-on candidate, not built this phase (see remediation_live_vs_repo_drift above)."
+  - "phase_6_intent_context_planning_learning (depends_on this phase) and
+    phase_7_ui_composition_analytics / gateway_definition_and_inventory (both depends_on: []) remain
+    open in ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml -- not attempted in this task."

@@ -1147,6 +1147,85 @@ def add_tag(args):
     print(json.dumps({"artifact_id": row["artifact_id"], "path": args.path, "tags": tags}, indent=2, default=str))
 
 
+def upsert_knowledge_fragment(args):
+    """Idempotent register-or-update for a knowledge_engine row representing a
+    FRAGMENT of a larger file (e.g. one MASTER_INDEX.yaml registries: entry)
+    rather than a whole real file on disk -- register_knowledge/verify_knowledge
+    both hash bytes read from --path, which is wrong for a sub-document that
+    has no file of its own to read. Here --content is the caller-computed
+    canonical text for just that fragment (e.g. json.dumps(entry,
+    sort_keys=True)); its sha256 IS the content_hash, and --path is a stable
+    virtual identifier (e.g. 'ai-os/MASTER_INDEX.yaml#registries.<id>'), not a
+    real filesystem path. Same SELECT-latest-then-INSERT-or-UPDATE shape
+    verify_knowledge already uses (never a duplicate row for the same
+    artifact_path), so a recurring sync (cron or task-gateway.py close) is
+    always idempotent: first run INSERTs (VERIFIED_MATCH, freshly captured),
+    every later run UPDATEs in place and reports HASH_DRIFTED only for the one
+    run where the fragment's real content changed since the previous sync --
+    Phase 5 (metadata_knowledge_consolidation)'s enforced sync mechanism
+    between MASTER_INDEX.yaml's registries: section and this table."""
+    init_db_silent()
+    conn = _connect()
+    _ensure_knowledge_engine_table(conn)
+    now = _now_iso()
+    new_hash = hashlib.sha256(args.content.encode("utf-8")).hexdigest()
+    tags_list = [t.strip() for t in args.tags.split(",") if t.strip()] if args.tags else []
+
+    row = conn.execute(
+        "SELECT artifact_id, content_hash FROM knowledge_engine WHERE artifact_path = ? ORDER BY ts DESC LIMIT 1",
+        (args.path,),
+    ).fetchone()
+
+    if row:
+        status = "VERIFIED_MATCH" if new_hash == row["content_hash"] else "HASH_DRIFTED"
+        conn.execute(
+            "UPDATE knowledge_engine SET content_hash=?, secondary_path=?, purpose=?, tags=?, "
+            "last_verified_ts=?, verification_status=?, metadata_json=? WHERE artifact_id=?",
+            (new_hash, args.secondary_path, args.purpose, json.dumps(tags_list), now, status,
+             json.dumps(json.loads(args.metadata) if args.metadata else {}), row["artifact_id"]),
+        )
+        artifact_id = row["artifact_id"]
+        created = False
+    else:
+        artifact_id = _new_id("KE")
+        status = "VERIFIED_MATCH"
+        conn.execute(
+            "INSERT INTO knowledge_engine (artifact_id, ts, artifact_path, content_hash, artifact_type, "
+            "secondary_path, exists_on_disk, purpose, tags, entity_relationships, last_verified_ts, "
+            "verification_status, metadata_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            (artifact_id, now, args.path, new_hash, args.artifact_type, args.secondary_path, 1,
+             args.purpose, json.dumps(tags_list), "[]", now, status,
+             json.dumps(json.loads(args.metadata) if args.metadata else {})),
+        )
+        created = True
+
+    conn.commit()
+    conn.close()
+    print(json.dumps({
+        "artifact_id": artifact_id, "path": args.path, "created": created,
+        "verification_status": status,
+    }, indent=2, default=str))
+
+
+def list_knowledge(args):
+    """Lists knowledge_engine rows (newest first), optionally filtered to one
+    --tag (exact membership in the row's tags list, same Python-side check
+    query_knowledge's own --tag filter uses). No FTS query required -- used
+    for enumeration/orphan-detection (e.g. sync_master_index_registries.py
+    diffing 'every row tagged type:master_index_registry_entry' against
+    MASTER_INDEX.yaml's current registries: ids), the same role list_capabilities
+    plays for capability_registry."""
+    init_db_silent()
+    conn = _connect()
+    _ensure_knowledge_engine_table(conn)
+    rows = conn.execute("SELECT * FROM knowledge_engine ORDER BY ts DESC").fetchall()
+    conn.close()
+    matches = [dict(r) for r in rows]
+    if getattr(args, "tag", None):
+        matches = [r for r in matches if args.tag in json.loads(r["tags"] or "[]")]
+    print(json.dumps({"count": len(matches), "matches": matches}, indent=2, default=str))
+
+
 def _ensure_capability_registry_table(conn):
     """Standalone idempotent create, same defensiveness convention as
     _ensure_knowledge_engine_table -- works even if init_db() was never run
@@ -1619,6 +1698,21 @@ if __name__ == "__main__":
     p_tagk.add_argument("--path", required=True)
     p_tagk.add_argument("--tag", required=True)
 
+    p_upsertf = sub.add_parser("upsert-knowledge-fragment")
+    p_upsertf.add_argument("--path", required=True, help="stable virtual identifier, e.g. "
+                            "'ai-os/MASTER_INDEX.yaml#registries.<id>'")
+    p_upsertf.add_argument("--content", required=True, help="canonical text for just this fragment; its "
+                            "sha256 becomes content_hash")
+    p_upsertf.add_argument("--artifact-type", dest="artifact_type", default="derived", choices=["canonical", "derived"])
+    p_upsertf.add_argument("--secondary-path", dest="secondary_path", default=None,
+                            help="the real file this fragment lives inside")
+    p_upsertf.add_argument("--purpose", required=True)
+    p_upsertf.add_argument("--tags", default=None)
+    p_upsertf.add_argument("--metadata", default=None)
+
+    p_listk = sub.add_parser("list-knowledge")
+    p_listk.add_argument("--tag", default=None)
+
     p_regc = sub.add_parser("register-capability")
     p_regc.add_argument("--record-file", dest="record_file", required=True,
                          help="path to a JSON file matching CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml's capability_record_schema")
@@ -1705,6 +1799,11 @@ if __name__ == "__main__":
     elif args.cmd == "add-tag":
         with _write_lock():
             add_tag(args)
+    elif args.cmd == "upsert-knowledge-fragment":
+        with _write_lock():
+            upsert_knowledge_fragment(args)
+    elif args.cmd == "list-knowledge":
+        list_knowledge(args)
     elif args.cmd == "register-capability":
         with _write_lock():
             register_capability(args)
