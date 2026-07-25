@@ -16,6 +16,7 @@ from typing import Optional
 
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from config import CHAT_CATEGORIES
 from collections import Counter
 import document_engine
