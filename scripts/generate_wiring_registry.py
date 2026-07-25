@@ -52,7 +52,14 @@ VERIDIAN_ROOT = "/opt/veridian"
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(SCRIPT_DIR)
 REPO_AI_OS = os.path.join(REPO_ROOT, "ai-os")
-IS_GIT_CHECKOUT = os.path.isdir(os.path.join(REPO_ROOT, ".git"))
+# os.path.exists (not isdir) -- a git WORKTREE checkout (like this task's own
+# workspace) has .git as a FILE ("gitdir: ..."), not a directory. The isdir-only
+# check this used to be silently treated every worktree as a non-git deployment
+# and fell through to MIRROR_AI_OS below, so local, not-yet-merged edits made in
+# a worktree (e.g. this same phase's own ROUTE_REGISTRY_SCHEMA changes) were
+# invisible to this script even when run directly against that worktree -- a
+# real bug found and fixed by WIRING_ENGINE_PHASE_PLAN_2026-07-25.yaml phase_1.
+IS_GIT_CHECKOUT = os.path.exists(os.path.join(REPO_ROOT, ".git"))
 # The real, sync-repos.sh-kept-current (every 2h cron) git mirror -- same
 # second location scripts/auto_phase_continuation.py's own PLAN_DIRS already
 # reads. /opt/veridian/ai-os/ itself is NOT git-tracked and was confirmed this
@@ -178,6 +185,7 @@ def build_engines_and_gateways(reg, doc):
     whenever two engine/gateway entities cite the exact same real file."""
     path_owners = {}  # abs_path -> [ (entity_id, kind) ]
     engine_ids_by_no = {}
+    gateway_ids_by_id = {}
 
     for row in doc.get("engine_inventory", []):
         eid = f"engine-{row['engine_no']:02d}"
@@ -202,6 +210,7 @@ def build_engines_and_gateways(reg, doc):
 
     for row in doc.get("gateway_inventory", []):
         gid = f"gateway-{row['gateway_id']}"
+        gateway_ids_by_id[row["gateway_id"]] = gid
         rels = []
         for p in row.get("exists_as", []):
             fid = reg.get_or_create_file(p, "gateway_inventory")
@@ -241,7 +250,7 @@ def build_engines_and_gateways(reg, doc):
                 })
         shared_count += 1
 
-    return engine_ids_by_no
+    return engine_ids_by_no, gateway_ids_by_id
 
 
 def build_tables(reg):
@@ -349,7 +358,7 @@ def build_ai_roles(reg):
     return count
 
 
-def build_routes(reg, engine_ids_by_no, cap_by_name):
+def build_routes(reg, engine_ids_by_no, gateway_ids_by_id, cap_by_name):
     if not os.path.isfile(ROUTE_REGISTRY_SCHEMA):
         print(f"  ! {ROUTE_REGISTRY_SCHEMA} not found, skipping route entities", file=sys.stderr)
         return 0
@@ -367,6 +376,17 @@ def build_routes(reg, engine_ids_by_no, cap_by_name):
             if hop.get("engine_no"):
                 rels.append({
                     "target_entity_id": engine_ids_by_no.get(hop["engine_no"]),
+                    "relationship_type": "hops_through",
+                    "evidence": f"hop {hop['hop_no']}: {hop['hop_name']} ({hop['live_or_planned']}) via {hop['mechanism_path']}",
+                })
+            elif hop.get("gateway_id"):
+                # Same real, evidence-only convention as the engine_no branch above --
+                # previously MISSING entirely (a hop_type: gateway entry was silently
+                # dropped no matter what expected_path said), the literal reason this
+                # registry's hops_through relationships have never once targeted a
+                # gateway entity. See WIRING_ENGINE_PHASE_PLAN_2026-07-25.yaml phase_1.
+                rels.append({
+                    "target_entity_id": gateway_ids_by_id.get(hop["gateway_id"]),
                     "relationship_type": "hops_through",
                     "evidence": f"hop {hop['hop_no']}: {hop['hop_name']} ({hop['live_or_planned']}) via {hop['mechanism_path']}",
                 })
@@ -556,13 +576,13 @@ def main():
     reg = Registry()
 
     ge_doc = load_engines_gateways()
-    engine_ids_by_no = build_engines_and_gateways(reg, ge_doc)
+    engine_ids_by_no, gateway_ids_by_id = build_engines_and_gateways(reg, ge_doc)
 
     table_count = build_tables(reg)
     function_count = build_functions(reg, engine_ids_by_no, ge_doc.get("engine_inventory", []))
     ai_role_count = build_ai_roles(reg)
     cap_by_name = load_capability_registry()
-    route_count = build_routes(reg, engine_ids_by_no, cap_by_name)
+    route_count = build_routes(reg, engine_ids_by_no, gateway_ids_by_id, cap_by_name)
     script_count, cron_count = build_scripts_and_cron(reg)
     ke_count = build_from_knowledge_engine(reg)
 

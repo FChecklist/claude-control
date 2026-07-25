@@ -515,8 +515,27 @@ def dispatch(prompt_text, title, repo=DEFAULT_REPO):
                        "--title", title, "--repo", repo, "--instruction-id", str(instruction_id)],
                       timeout=120)
     if start_proc.returncode != 0:
-        return {"dispatched": False, "step": "start", "instruction_id": instruction_id,
-                "stdout": start_proc.stdout, "stderr": start_proc.stderr}
+        failure = {"dispatched": False, "step": "start", "instruction_id": instruction_id,
+                   "stdout": start_proc.stdout, "stderr": start_proc.stderr}
+        # already_dispatched() only recognizes real tasks/PRs, and a validation
+        # rejection here creates neither -- so this exact phase will be
+        # regenerated and re-rejected identically on every future cron tick
+        # with no other signal (the JSON below is otherwise only visible by
+        # reading this run's full report). Surface it plainly so a human
+        # scanning the next status check (or stderr/cron log) sees it fast.
+        try:
+            start_error = json.loads(start_proc.stdout)
+        except json.JSONDecodeError:
+            start_error = {}
+        if "tight_task_validation.py rejected" in str(start_error.get("error", "")):
+            failure["note"] = (
+                f"REJECTED BY tight_task_validation.py: {start_error.get('reason')} -- this phase's prompt "
+                "is regenerated deterministically from its own phase-plan content, so it will keep failing "
+                "the SAME way on every future cron tick until a human edits the phase-plan entry or the "
+                "validator; it is not silently marked done or skipped."
+            )
+            log(f"  REJECTED by tight_task_validation.py for {title}: {start_error.get('reason')}")
+        return failure
     try:
         start_result = json.loads(start_proc.stdout)
     except json.JSONDecodeError:
@@ -604,6 +623,12 @@ def main():
             entry["dispatch_result"] = result
             if result.get("dispatched"):
                 dispatched_count += 1
+            elif result.get("note"):
+                # Promoted out of the nested dispatch_result blob so a human
+                # (or a future automated status check) sees a rejected
+                # auto-dispatch without having to dig into stdout/stderr --
+                # this phase will otherwise re-fail identically every tick.
+                entry["note"] = result["note"]
 
         report.append(entry)
 

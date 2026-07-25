@@ -1,0 +1,2300 @@
+meta:
+  id: MODULE_GAP_AUDIT_MODULE_LIST
+  version: 1.0.0
+  generated_ts: '2026-07-25T06:47:19Z'
+  created_by_task: task-20260725-063204-module-scoped-zai-gap-audit
+  generated_by_script: scripts/generate_module_gap_audit_module_list.py
+  purpose: Real, mechanically-computed module list for the module-scoped ChatGPT/Z.AI gap audit covering
+    compliance-tracker and projexa. Every file/line/byte count and chunk_count_for_full_coverage below
+    comes from actually running scripts/module_gap_audit_lib.py's real file-discovery (filename substring
+    + `git grep -lI` content match, SQL narrowed to schema-defining migrations, monolithic shared files
+    excluded above the auto-discovery size ceiling) and chunk-packing (~400 lines / ~20KB reference ceiling
+    per request, whole files only, never truncated) against each repo's real git-tracked files at the
+    commit recorded per repo below -- nothing here is estimated or hand-typed. Re-run this script any
+    time to refresh against a newer commit (safe, idempotent, always overwrites with a fresh live scan).
+repos:
+  compliance-tracker:
+    module_source: compliance.module_registry (real Postgres module catalog, parsed from drizzle/*.sql
+      seed migrations)
+    commit_hash: c4d74e8766cec27c7a349aea627f574650dde241
+    repository_version: docs/cost-control-2026-07-20
+    module_count: 110
+    total_request_files_for_full_coverage: 653
+    modules:
+    - module_key: approval_workflows
+      display_name: Approval Workflows
+      table_name: approval_workflow_definitions
+      domain: platform
+      category: Governance
+      source_file: drizzle/0045_wave50_erp_periods_and_approval_workflow_engine.sql
+      file_count: 13
+      line_count: 2518
+      byte_count: 132932
+      chunk_count_for_full_coverage: 7
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: audit_engagements
+      display_name: Audit Engagements
+      table_name: audit_engagements
+      domain: compliance
+      category: AUDIT
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 9
+      line_count: 2055
+      byte_count: 98889
+      chunk_count_for_full_coverage: 6
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: audit_findings
+      display_name: Audit Findings
+      table_name: audit_findings
+      domain: compliance
+      category: AUDIT
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 12
+      line_count: 2061
+      byte_count: 104646
+      chunk_count_for_full_coverage: 7
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: audit_points
+      display_name: Audit Points
+      table_name: audit_points
+      domain: compliance
+      category: CORE
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 8
+      line_count: 2883
+      byte_count: 132901
+      chunk_count_for_full_coverage: 7
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: automation_rules
+      display_name: Automation Rules
+      table_name: automation_rules
+      domain: automation
+      category: TOOLS
+      source_file: drizzle/0023_wave29_31_kb_automation_reports.sql
+      file_count: 7
+      line_count: 692
+      byte_count: 33493
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: bcm_plans
+      display_name: BCM Plans
+      table_name: bcm_plans
+      domain: compliance
+      category: INTEGRITY
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 5
+      line_count: 941
+      byte_count: 48595
+      chunk_count_for_full_coverage: 3
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: board_evaluations
+      display_name: Board Evaluations
+      table_name: board_evaluations
+      domain: compliance
+      category: GOVERNANCE
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 4
+      line_count: 828
+      byte_count: 42087
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: board_meetings
+      display_name: Board Meetings
+      table_name: board_meetings
+      domain: compliance
+      category: GOVERNANCE
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 9
+      line_count: 1682
+      byte_count: 89085
+      chunk_count_for_full_coverage: 5
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: candidates
+      display_name: Candidates
+      table_name: candidates
+      domain: hr
+      category: TOOLS
+      source_file: drizzle/0055_wave62_recruitment_performance.sql
+      file_count: 41
+      line_count: 9314
+      byte_count: 487501
+      chunk_count_for_full_coverage: 28
+      used_fallback_docs: false
+      excluded_oversized_file_count: 2
+    - module_key: cap_table_entries
+      display_name: Cap Table Entries
+      table_name: cap_table_entries
+      domain: compliance
+      category: COMPANY_SECRETARIAL
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 5
+      line_count: 1048
+      byte_count: 57331
+      chunk_count_for_full_coverage: 3
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: cap_table_events
+      display_name: Cap Table Events
+      table_name: cap_table_events
+      domain: compliance
+      category: COMPANY_SECRETARIAL
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 3
+      line_count: 775
+      byte_count: 39477
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: challans
+      display_name: Challan Payments
+      table_name: challans
+      domain: compliance
+      category: CORE
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 8
+      line_count: 1952
+      byte_count: 98655
+      chunk_count_for_full_coverage: 6
+      used_fallback_docs: false
+      excluded_oversized_file_count: 2
+    - module_key: committees
+      display_name: Committees
+      table_name: committees
+      domain: compliance
+      category: GOVERNANCE
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 7
+      line_count: 1801
+      byte_count: 80956
+      chunk_count_for_full_coverage: 5
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: company_charges
+      display_name: Company Charges
+      table_name: company_charges
+      domain: compliance
+      category: COMPANY_SECRETARIAL
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 5
+      line_count: 1051
+      byte_count: 57417
+      chunk_count_for_full_coverage: 3
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: compliance_frameworks
+      display_name: Compliance Frameworks
+      table_name: compliance_frameworks
+      domain: compliance
+      category: AUDIT
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 3
+      line_count: 783
+      byte_count: 40051
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: compliance_items
+      display_name: Compliance Items
+      table_name: compliance_items
+      domain: compliance
+      category: CORE
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 46
+      line_count: 9620
+      byte_count: 443005
+      chunk_count_for_full_coverage: 27
+      used_fallback_docs: false
+      excluded_oversized_file_count: 4
+    - module_key: contract_compliance_items
+      display_name: Contract Compliance Items
+      table_name: contract_compliance_items
+      domain: compliance
+      category: INTEGRITY
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 4
+      line_count: 1143
+      byte_count: 62493
+      chunk_count_for_full_coverage: 4
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: crm_accounts
+      display_name: CRM Accounts
+      table_name: crm_accounts
+      domain: crm
+      category: TOOLS
+      source_file: drizzle/0219_wave_b_crm_accounts_contacts.sql
+      file_count: 13
+      line_count: 2562
+      byte_count: 123987
+      chunk_count_for_full_coverage: 7
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: crm_contacts
+      display_name: CRM Contacts
+      table_name: crm_contacts
+      domain: crm
+      category: TOOLS
+      source_file: drizzle/0219_wave_b_crm_accounts_contacts.sql
+      file_count: 4
+      line_count: 1545
+      byte_count: 76534
+      chunk_count_for_full_coverage: 3
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: crm_leads
+      display_name: CRM Leads
+      table_name: crm_leads
+      domain: crm
+      category: TOOLS
+      source_file: drizzle/0031_wave41_crm.sql
+      file_count: 10
+      line_count: 2722
+      byte_count: 157155
+      chunk_count_for_full_coverage: 9
+      used_fallback_docs: false
+      excluded_oversized_file_count: 2
+    - module_key: crm_opportunities
+      display_name: CRM Opportunities
+      table_name: crm_opportunities
+      domain: crm
+      category: TOOLS
+      source_file: drizzle/0031_wave41_crm.sql
+      file_count: 7
+      line_count: 2303
+      byte_count: 131903
+      chunk_count_for_full_coverage: 6
+      used_fallback_docs: false
+      excluded_oversized_file_count: 2
+    - module_key: custom_charts
+      display_name: Self-Serve Ad-Hoc BI / Chart Builder
+      table_name: custom_charts
+      domain: reporting
+      category: TOOLS
+      source_file: drizzle/0187_custom_charts.sql
+      file_count: 6
+      line_count: 590
+      byte_count: 28287
+      chunk_count_for_full_coverage: 3
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: delegation_of_authority
+      display_name: Delegation of Authority
+      table_name: delegation_of_authority
+      domain: compliance
+      category: GOVERNANCE
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 5
+      line_count: 1447
+      byte_count: 67414
+      chunk_count_for_full_coverage: 3
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: directors_kmp
+      display_name: Directors & KMP Register
+      table_name: directors_kmp
+      domain: compliance
+      category: GOVERNANCE
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 6
+      line_count: 1129
+      byte_count: 60887
+      chunk_count_for_full_coverage: 4
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: document_classification
+      display_name: Document Correspondent/Type Auto-Classification
+      table_name: document_matching_rules
+      domain: documents
+      category: TOOLS
+      source_file: drizzle/0186_document_classification.sql
+      file_count: 12
+      line_count: 1753
+      byte_count: 86090
+      chunk_count_for_full_coverage: 6
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: employee_profiles
+      display_name: Employee Directory
+      table_name: employee_profiles
+      domain: hr
+      category: TOOLS
+      source_file: drizzle/0030_wave40_hr.sql
+      file_count: 13
+      line_count: 2560
+      byte_count: 143254
+      chunk_count_for_full_coverage: 7
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: erp_accounting_periods
+      display_name: Accounting Periods
+      table_name: erp_accounting_periods
+      domain: erp
+      category: Accounting
+      source_file: drizzle/0045_wave50_erp_periods_and_approval_workflow_engine.sql
+      file_count: 3
+      line_count: 705
+      byte_count: 37978
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: erp_accounts
+      display_name: Chart of Accounts
+      table_name: erp_accounts
+      domain: erp
+      category: Accounting
+      source_file: drizzle/0041_wave49_erp_branch_and_accounting_schema.sql
+      file_count: 10
+      line_count: 3757
+      byte_count: 209242
+      chunk_count_for_full_coverage: 8
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: erp_assets
+      display_name: Fixed Assets
+      table_name: erp_fixed_assets
+      domain: erp
+      category: Assets
+      source_file: drizzle/0042_wave49_erp_assets_schema.sql
+      file_count: 21
+      line_count: 4283
+      byte_count: 224943
+      chunk_count_for_full_coverage: 11
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: erp_bank_reconciliation
+      display_name: Bank Reconciliation
+      table_name: erp_bank_statement_imports
+      domain: erp
+      category: Accounting
+      source_file: drizzle/0048_wave54_erp_bank_reconciliation.sql
+      file_count: 10
+      line_count: 736
+      byte_count: 40810
+      chunk_count_for_full_coverage: 3
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: erp_buying
+      display_name: Buying
+      table_name: erp_purchase_orders
+      domain: erp
+      category: Buying
+      source_file: drizzle/0043_wave49_erp_buying_selling_schema.sql
+      file_count: 19
+      line_count: 2048
+      byte_count: 108317
+      chunk_count_for_full_coverage: 7
+      used_fallback_docs: false
+      excluded_oversized_file_count: 2
+    - module_key: erp_cash_management
+      display_name: Cash Management
+      table_name: erp_cash_accounts
+      domain: erp
+      category: Accounting
+      source_file: drizzle/0046_wave52_erp_cost_centers_cash_credit_notes.sql
+      file_count: 2
+      line_count: 353
+      byte_count: 17993
+      chunk_count_for_full_coverage: 1
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: erp_cost_centers
+      display_name: Cost Centers
+      table_name: erp_cost_centers
+      domain: erp
+      category: Accounting
+      source_file: drizzle/0046_wave52_erp_cost_centers_cash_credit_notes.sql
+      file_count: 9
+      line_count: 2096
+      byte_count: 113905
+      chunk_count_for_full_coverage: 6
+      used_fallback_docs: false
+      excluded_oversized_file_count: 2
+    - module_key: erp_credit_notes
+      display_name: Credit Notes
+      table_name: erp_sales_credit_notes
+      domain: erp
+      category: Accounting
+      source_file: drizzle/0046_wave52_erp_cost_centers_cash_credit_notes.sql
+      file_count: 4
+      line_count: 716
+      byte_count: 39577
+      chunk_count_for_full_coverage: 3
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: erp_invoices
+      display_name: Sales & Purchase Invoices
+      table_name: erp_sales_invoices
+      domain: erp
+      category: Accounting
+      source_file: drizzle/0041_wave49_erp_branch_and_accounting_schema.sql
+      file_count: 16
+      line_count: 4422
+      byte_count: 270309
+      chunk_count_for_full_coverage: 11
+      used_fallback_docs: false
+      excluded_oversized_file_count: 2
+    - module_key: erp_journal_entries
+      display_name: Journal Entries
+      table_name: erp_journal_entries
+      domain: erp
+      category: Accounting
+      source_file: drizzle/0041_wave49_erp_branch_and_accounting_schema.sql
+      file_count: 12
+      line_count: 3760
+      byte_count: 210904
+      chunk_count_for_full_coverage: 10
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: erp_payments
+      display_name: Payment Entries
+      table_name: erp_payment_entries
+      domain: erp
+      category: Accounting
+      source_file: drizzle/0041_wave49_erp_branch_and_accounting_schema.sql
+      file_count: 15
+      line_count: 3663
+      byte_count: 212275
+      chunk_count_for_full_coverage: 9
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: erp_payroll
+      display_name: Statutory Payroll (PF/ESI/PT)
+      table_name: erp_payroll_runs
+      domain: erp
+      category: HR
+      source_file: drizzle/0050_wave56_erp_statutory_payroll.sql
+      file_count: 29
+      line_count: 2852
+      byte_count: 159044
+      chunk_count_for_full_coverage: 8
+      used_fallback_docs: false
+      excluded_oversized_file_count: 2
+    - module_key: erp_pricing_rules
+      display_name: Pricing Rules
+      table_name: erp_pricing_rules
+      domain: erp
+      category: Selling
+      source_file: drizzle/0053_wave60_erp_pricing_rules.sql
+      file_count: 2
+      line_count: 765
+      byte_count: 49174
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: erp_procurement_workflow
+      display_name: Procurement Workflow
+      table_name: erp_purchase_requisitions
+      domain: erp
+      category: Buying
+      source_file: drizzle/0049_wave55_erp_procurement_workflow.sql
+      file_count: 31
+      line_count: 4277
+      byte_count: 235571
+      chunk_count_for_full_coverage: 11
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: erp_purchase_returns
+      display_name: Purchase Returns (RMA)
+      table_name: erp_purchase_returns
+      domain: erp
+      category: Buying
+      source_file: drizzle/0056_wave63_erp_returns.sql
+      file_count: 3
+      line_count: 611
+      byte_count: 34313
+      chunk_count_for_full_coverage: 3
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: erp_sales_returns
+      display_name: Sales Returns (RMA)
+      table_name: erp_sales_returns
+      domain: erp
+      category: Selling
+      source_file: drizzle/0056_wave63_erp_returns.sql
+      file_count: 2
+      line_count: 358
+      byte_count: 20095
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: erp_selling
+      display_name: Selling
+      table_name: erp_sales_orders
+      domain: erp
+      category: Selling
+      source_file: drizzle/0043_wave49_erp_buying_selling_schema.sql
+      file_count: 22
+      line_count: 3695
+      byte_count: 209478
+      chunk_count_for_full_coverage: 10
+      used_fallback_docs: false
+      excluded_oversized_file_count: 2
+    - module_key: erp_stock
+      display_name: Stock & Inventory
+      table_name: erp_items
+      domain: erp
+      category: Stock
+      source_file: drizzle/0044_wave49_erp_stock_schema.sql
+      file_count: 19
+      line_count: 3391
+      byte_count: 202826
+      chunk_count_for_full_coverage: 11
+      used_fallback_docs: false
+      excluded_oversized_file_count: 2
+    - module_key: erp_stock_valuation
+      display_name: Stock Valuation (FIFO)
+      table_name: erp_stock_valuation_layers
+      domain: erp
+      category: Stock
+      source_file: drizzle/0047_wave53_erp_stock_valuation_layers.sql
+      file_count: 3
+      line_count: 588
+      byte_count: 31642
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: erp_uom_batch_serial
+      display_name: Multi-UOM & Batch/Serial Tracking
+      table_name: erp_item_uom_conversions
+      domain: erp
+      category: Stock
+      source_file: drizzle/0051_wave57_erp_uom_batch_serial.sql
+      file_count: 2
+      line_count: 250
+      byte_count: 13181
+      chunk_count_for_full_coverage: 1
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: esg_metrics
+      display_name: ESG / BRSR Metrics
+      table_name: esg_metrics
+      domain: compliance
+      category: ESG
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 3
+      line_count: 784
+      byte_count: 40255
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: fde_requests
+      display_name: VERI FDE
+      table_name: fde_requests
+      domain: ai_governance
+      category: TOOLS
+      source_file: drizzle/0032_wave42_fde.sql
+      file_count: 2
+      line_count: 532
+      byte_count: 30302
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: firm_client_service_lines
+      display_name: Client Service-Line Scoping
+      table_name: firm_client_service_lines
+      domain: the_firm
+      category: PRACTICE_MANAGEMENT
+      source_file: drizzle/0086_wave108_the_firm_practice_management.sql
+      file_count: 2
+      line_count: 354
+      byte_count: 17958
+      chunk_count_for_full_coverage: 1
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: firm_engagements
+      display_name: Firm Engagements
+      table_name: firm_engagements
+      domain: the_firm
+      category: PRACTICE_MANAGEMENT
+      source_file: drizzle/0086_wave108_the_firm_practice_management.sql
+      file_count: 3
+      line_count: 648
+      byte_count: 34081
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: firm_staff_assignments
+      display_name: Staff Assignment & Capacity
+      table_name: firm_staff_assignments
+      domain: the_firm
+      category: PRACTICE_MANAGEMENT
+      source_file: drizzle/0086_wave108_the_firm_practice_management.sql
+      file_count: 3
+      line_count: 540
+      byte_count: 28231
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: firm_tax_cases
+      display_name: Tax Case Workflow
+      table_name: firm_tax_cases
+      domain: the_firm
+      category: TAX_LITIGATION
+      source_file: drizzle/0086_wave108_the_firm_practice_management.sql
+      file_count: 3
+      line_count: 536
+      byte_count: 27166
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: firm_time_billing
+      display_name: Time Tracking & Billing
+      table_name: firm_time_entries
+      domain: the_firm
+      category: BILLING
+      source_file: drizzle/0086_wave108_the_firm_practice_management.sql
+      file_count: 5
+      line_count: 995
+      byte_count: 48358
+      chunk_count_for_full_coverage: 4
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: fm_amc_contracts
+      display_name: FM AMC Contracts
+      table_name: fm_amc_contracts
+      domain: facilities_management
+      category: VENDOR_MANAGEMENT
+      source_file: drizzle/0085_wave107_fm_asset_registry_ppm_visitor_mgmt.sql
+      file_count: 3
+      line_count: 638
+      byte_count: 34264
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: fm_asset_registry
+      display_name: FM Asset Registry
+      table_name: fm_assets
+      domain: facilities_management
+      category: ASSET_MANAGEMENT
+      source_file: drizzle/0085_wave107_fm_asset_registry_ppm_visitor_mgmt.sql
+      file_count: 6
+      line_count: 1269
+      byte_count: 64388
+      chunk_count_for_full_coverage: 4
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: fm_checklist_templates
+      display_name: FM Checklist Templates
+      table_name: fm_checklist_templates
+      domain: facilities_management
+      category: ASSET_MANAGEMENT
+      source_file: drizzle/0085_wave107_fm_asset_registry_ppm_visitor_mgmt.sql
+      file_count: 5
+      line_count: 865
+      byte_count: 43545
+      chunk_count_for_full_coverage: 3
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: fm_ppm_scheduling
+      display_name: FM PPM Scheduling
+      table_name: fm_ppm_schedules
+      domain: facilities_management
+      category: MAINTENANCE
+      source_file: drizzle/0085_wave107_fm_asset_registry_ppm_visitor_mgmt.sql
+      file_count: 3
+      line_count: 789
+      byte_count: 41012
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: fm_visitor_management
+      display_name: FM Visitor Management
+      table_name: fm_visitor_logs
+      domain: facilities_management
+      category: CORPORATE_SERVICES
+      source_file: drizzle/0085_wave107_fm_asset_registry_ppm_visitor_mgmt.sql
+      file_count: 2
+      line_count: 530
+      byte_count: 27886
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: framework_controls
+      display_name: Framework Controls
+      table_name: framework_controls
+      domain: compliance
+      category: AUDIT
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 6
+      line_count: 1465
+      byte_count: 76687
+      chunk_count_for_full_coverage: 4
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: holiday_list_filings
+      display_name: Holiday List Filings
+      table_name: holiday_list_filings
+      domain: compliance
+      category: HR
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 3
+      line_count: 787
+      byte_count: 40231
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: hr_attendance_records
+      display_name: Employee Attendance
+      table_name: hr_attendance_records
+      domain: hr
+      category: TOOLS
+      source_file: drizzle/0220_hr_attendance.sql
+      file_count: 2
+      line_count: 695
+      byte_count: 36560
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: hr_compliance_items
+      display_name: HR Compliance Items
+      table_name: hr_compliance_items
+      domain: compliance
+      category: HR
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 4
+      line_count: 806
+      byte_count: 41075
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: hr_holidays
+      display_name: Holiday Calendar
+      table_name: hr_holidays
+      domain: hr
+      category: TOOLS
+      source_file: drizzle/0220_hr_attendance.sql
+      file_count: 2
+      line_count: 695
+      byte_count: 36560
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: incidents
+      display_name: Incidents & Events
+      table_name: incidents
+      domain: compliance
+      category: INCIDENTS
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 17
+      line_count: 3943
+      byte_count: 196460
+      chunk_count_for_full_coverage: 12
+      used_fallback_docs: false
+      excluded_oversized_file_count: 2
+    - module_key: interview_feedback
+      display_name: Interview Feedback
+      table_name: interview_feedback
+      domain: hr
+      category: TOOLS
+      source_file: drizzle/0055_wave62_recruitment_performance.sql
+      file_count: 2
+      line_count: 377
+      byte_count: 20411
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: ip_portfolio
+      display_name: IP Portfolio
+      table_name: ip_portfolio
+      domain: compliance
+      category: LEGAL
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 8
+      line_count: 2014
+      byte_count: 98383
+      chunk_count_for_full_coverage: 6
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: irdai_compliance_items
+      display_name: IRDAI Compliance
+      table_name: irdai_compliance_items
+      domain: compliance
+      category: SECTOR_REGULATORS
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 3
+      line_count: 776
+      byte_count: 39562
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: job_applications
+      display_name: Job Applications
+      table_name: job_applications
+      domain: hr
+      category: TOOLS
+      source_file: drizzle/0055_wave62_recruitment_performance.sql
+      file_count: 2
+      line_count: 377
+      byte_count: 20411
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: job_openings
+      display_name: Job Openings
+      table_name: job_openings
+      domain: hr
+      category: TOOLS
+      source_file: drizzle/0055_wave62_recruitment_performance.sql
+      file_count: 7
+      line_count: 778
+      byte_count: 42372
+      chunk_count_for_full_coverage: 3
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: knowledge_base_pages
+      display_name: Knowledge Base
+      table_name: knowledge_base_pages
+      domain: knowledge_base
+      category: TOOLS
+      source_file: drizzle/0023_wave29_31_kb_automation_reports.sql
+      file_count: 2
+      line_count: 342
+      byte_count: 17743
+      chunk_count_for_full_coverage: 1
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: leave_balances
+      display_name: Leave Balances
+      table_name: leave_balances
+      domain: hr
+      category: TOOLS
+      source_file: drizzle/0030_wave40_hr.sql
+      file_count: 3
+      line_count: 357
+      byte_count: 18810
+      chunk_count_for_full_coverage: 1
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: leave_policy_entries
+      display_name: Leave Policy Entries
+      table_name: leave_policy_entries
+      domain: compliance
+      category: HR
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 4
+      line_count: 1011
+      byte_count: 52358
+      chunk_count_for_full_coverage: 3
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: leave_requests
+      display_name: Leave Requests
+      table_name: leave_requests
+      domain: hr
+      category: TOOLS
+      source_file: drizzle/0030_wave40_hr.sql
+      file_count: 9
+      line_count: 1459
+      byte_count: 74704
+      chunk_count_for_full_coverage: 5
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: legal_opinions
+      display_name: Legal Opinions
+      table_name: legal_opinions
+      domain: compliance
+      category: LEGAL
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 11
+      line_count: 2221
+      byte_count: 110915
+      chunk_count_for_full_coverage: 6
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: legal_vendors
+      display_name: External Legal Vendors
+      table_name: legal_vendors
+      domain: compliance
+      category: LEGAL
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 7
+      line_count: 1651
+      byte_count: 74708
+      chunk_count_for_full_coverage: 4
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: litigation_matters
+      display_name: Litigation Matters
+      table_name: litigation_matters
+      domain: compliance
+      category: LEGAL
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 6
+      line_count: 1292
+      byte_count: 70813
+      chunk_count_for_full_coverage: 4
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: mca_filings
+      display_name: MCA e-Filings
+      table_name: mca_filings
+      domain: compliance
+      category: COMPANY_SECRETARIAL
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 9
+      line_count: 1832
+      byte_count: 88459
+      chunk_count_for_full_coverage: 5
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: metric_alert_rules
+      display_name: Metric Alerts
+      table_name: metric_alert_rules
+      domain: reporting
+      category: TOOLS
+      source_file: drizzle/0028_wave38_metric_alert_rules.sql
+      file_count: 5
+      line_count: 510
+      byte_count: 24280
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: notices
+      display_name: Government Notices
+      table_name: notices
+      domain: compliance
+      category: CORE
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 42
+      line_count: 10395
+      byte_count: 491251
+      chunk_count_for_full_coverage: 29
+      used_fallback_docs: false
+      excluded_oversized_file_count: 4
+    - module_key: performance_review_cycles
+      display_name: Performance Review Cycles
+      table_name: performance_review_cycles
+      domain: hr
+      category: TOOLS
+      source_file: drizzle/0055_wave62_recruitment_performance.sql
+      file_count: 2
+      line_count: 318
+      byte_count: 18189
+      chunk_count_for_full_coverage: 1
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: performance_reviews
+      display_name: Performance Reviews
+      table_name: performance_reviews
+      domain: hr
+      category: TOOLS
+      source_file: drizzle/0055_wave62_recruitment_performance.sql
+      file_count: 13
+      line_count: 1547
+      byte_count: 72061
+      chunk_count_for_full_coverage: 5
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: pms_budgets
+      display_name: Budgeting
+      table_name: pms_budgets
+      domain: project_management
+      category: PMS
+      source_file: drizzle/0021_wave25_pms_enablement_and_core_issues.sql
+      file_count: 4
+      line_count: 897
+      byte_count: 48069
+      chunk_count_for_full_coverage: 3
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: pms_issues
+      display_name: Issue Tracking
+      table_name: pms_issues
+      domain: project_management
+      category: PMS
+      source_file: drizzle/0021_wave25_pms_enablement_and_core_issues.sql
+      file_count: 24
+      line_count: 4109
+      byte_count: 216663
+      chunk_count_for_full_coverage: 15
+      used_fallback_docs: false
+      excluded_oversized_file_count: 2
+    - module_key: pms_meetings
+      display_name: Meetings
+      table_name: pms_meetings
+      domain: project_management
+      category: PMS
+      source_file: drizzle/0021_wave25_pms_enablement_and_core_issues.sql
+      file_count: 6
+      line_count: 1244
+      byte_count: 66223
+      chunk_count_for_full_coverage: 4
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: pms_saved_views
+      display_name: Saved Views
+      table_name: pms_saved_views
+      domain: project_management
+      category: PMS
+      source_file: drizzle/0021_wave25_pms_enablement_and_core_issues.sql
+      file_count: 3
+      line_count: 725
+      byte_count: 38795
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: pms_sprints
+      display_name: Sprints
+      table_name: pms_sprints
+      domain: project_management
+      category: PMS
+      source_file: drizzle/0021_wave25_pms_enablement_and_core_issues.sql
+      file_count: 4
+      line_count: 815
+      byte_count: 43735
+      chunk_count_for_full_coverage: 3
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: pms_time_entries
+      display_name: Time Tracking
+      table_name: pms_time_entries
+      domain: project_management
+      category: PMS
+      source_file: drizzle/0021_wave25_pms_enablement_and_core_issues.sql
+      file_count: 6
+      line_count: 1302
+      byte_count: 70909
+      chunk_count_for_full_coverage: 4
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: pms_wiki_pages
+      display_name: Project Wiki
+      table_name: pms_wiki_pages
+      domain: project_management
+      category: PMS
+      source_file: drizzle/0021_wave25_pms_enablement_and_core_issues.sql
+      file_count: 6
+      line_count: 1035
+      byte_count: 54148
+      chunk_count_for_full_coverage: 3
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: policies
+      display_name: Policy Management
+      table_name: policies
+      domain: compliance
+      category: GOVERNANCE
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 26
+      line_count: 6067
+      byte_count: 303150
+      chunk_count_for_full_coverage: 16
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: posh_annual_reports
+      display_name: POSH Annual Reports
+      table_name: posh_annual_reports
+      domain: compliance
+      category: HR
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 3
+      line_count: 807
+      byte_count: 41763
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: posh_committee
+      display_name: POSH Committee
+      table_name: posh_committee
+      domain: compliance
+      category: HR
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 4
+      line_count: 915
+      byte_count: 48249
+      chunk_count_for_full_coverage: 3
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: posh_complaints
+      display_name: POSH Complaints
+      table_name: posh_complaints
+      domain: compliance
+      category: HR
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 5
+      line_count: 1179
+      byte_count: 61917
+      chunk_count_for_full_coverage: 3
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: rbi_compliance_items
+      display_name: RBI Compliance
+      table_name: rbi_compliance_items
+      domain: compliance
+      category: SECTOR_REGULATORS
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 3
+      line_count: 776
+      byte_count: 39528
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: related_party_transactions
+      display_name: Related Party Transactions
+      table_name: related_party_transactions
+      domain: compliance
+      category: GOVERNANCE
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 4
+      line_count: 1434
+      byte_count: 67296
+      chunk_count_for_full_coverage: 3
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: report_definitions
+      display_name: Report & Analysis Engine Definitions
+      table_name: report_definitions
+      domain: reporting
+      category: TOOLS
+      source_file: drizzle/0180_report_engine_taxonomy.sql
+      file_count: 15
+      line_count: 1727
+      byte_count: 91235
+      chunk_count_for_full_coverage: 6
+      used_fallback_docs: false
+      excluded_oversized_file_count: 3
+    - module_key: report_item_actions
+      display_name: Report Item Actions
+      table_name: report_item_actions
+      domain: reporting
+      category: TOOLS
+      source_file: drizzle/0177_report_schedules_and_item_actions.sql
+      file_count: 2
+      line_count: 142
+      byte_count: 7354
+      chunk_count_for_full_coverage: 1
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: report_schedules
+      display_name: Report Schedules
+      table_name: report_schedules
+      domain: reporting
+      category: TOOLS
+      source_file: drizzle/0177_report_schedules_and_item_actions.sql
+      file_count: 3
+      line_count: 375
+      byte_count: 19976
+      chunk_count_for_full_coverage: 1
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: risks
+      display_name: Risk Register
+      table_name: risks
+      domain: compliance
+      category: RISK
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 24
+      line_count: 5705
+      byte_count: 292334
+      chunk_count_for_full_coverage: 15
+      used_fallback_docs: false
+      excluded_oversized_file_count: 2
+    - module_key: saved_reports
+      display_name: Custom Reports
+      table_name: saved_reports
+      domain: reporting
+      category: TOOLS
+      source_file: drizzle/0023_wave29_31_kb_automation_reports.sql
+      file_count: 9
+      line_count: 2255
+      byte_count: 112595
+      chunk_count_for_full_coverage: 8
+      used_fallback_docs: false
+      excluded_oversized_file_count: 3
+    - module_key: sebi_compliance_items
+      display_name: SEBI Compliance
+      table_name: sebi_compliance_items
+      domain: compliance
+      category: SECTOR_REGULATORS
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 3
+      line_count: 778
+      byte_count: 39781
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: secretarial_audits
+      display_name: Secretarial Audits
+      table_name: secretarial_audits
+      domain: compliance
+      category: COMPANY_SECRETARIAL
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 3
+      line_count: 772
+      byte_count: 39363
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: sso_saml
+      display_name: SAML SSO
+      table_name: sso_configurations
+      domain: platform
+      category: Security
+      source_file: drizzle/0052_wave59_sso_configurations.sql
+      file_count: 2
+      line_count: 157
+      byte_count: 8064
+      chunk_count_for_full_coverage: 1
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: tickets
+      display_name: Ticketing
+      table_name: tickets
+      domain: ticketing
+      category: TOOLS
+      source_file: drizzle/0029_wave39_ticketing.sql
+      file_count: 35
+      line_count: 5376
+      byte_count: 264361
+      chunk_count_for_full_coverage: 16
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: training_courses
+      display_name: Training Courses
+      table_name: training_courses
+      domain: hr
+      category: TOOLS
+      source_file: drizzle/0222_training_lms_module.sql
+      file_count: 2
+      line_count: 974
+      byte_count: 59315
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: training_paths
+      display_name: Training Learning Paths
+      table_name: training_paths
+      domain: hr
+      category: TOOLS
+      source_file: drizzle/0222_training_lms_module.sql
+      file_count: 2
+      line_count: 974
+      byte_count: 59315
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: vendor_risk_profiles
+      display_name: Vendor Risk Profiles
+      table_name: vendor_risk_profiles
+      domain: compliance
+      category: ESG
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 5
+      line_count: 1478
+      byte_count: 79348
+      chunk_count_for_full_coverage: 4
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+    - module_key: veri_chat
+      display_name: VERI Chat
+      table_name: conversations
+      domain: communication
+      category: TOOLS
+      source_file: drizzle/0024_wave32_34_veri_chat_todo_mom.sql
+      file_count: 72
+      line_count: 12218
+      byte_count: 615048
+      chunk_count_for_full_coverage: 35
+      used_fallback_docs: false
+      excluded_oversized_file_count: 3
+    - module_key: veri_meetings
+      display_name: VERI Minutes of Meetings
+      table_name: veri_meetings
+      domain: communication
+      category: TOOLS
+      source_file: drizzle/0024_wave32_34_veri_chat_todo_mom.sql
+      file_count: 28
+      line_count: 4115
+      byte_count: 201263
+      chunk_count_for_full_coverage: 12
+      used_fallback_docs: false
+      excluded_oversized_file_count: 2
+    - module_key: veri_todo
+      display_name: VERI To Do
+      table_name: tasks
+      domain: communication
+      category: TOOLS
+      source_file: drizzle/0024_wave32_34_veri_chat_todo_mom.sql
+      file_count: 105
+      line_count: 21792
+      byte_count: 1128274
+      chunk_count_for_full_coverage: 60
+      used_fallback_docs: false
+      excluded_oversized_file_count: 5
+    - module_key: whistleblower_cases
+      display_name: Whistleblower Cases
+      table_name: whistleblower_cases
+      domain: compliance
+      category: INTEGRITY
+      source_file: drizzle/0017_wave20_module_registry_and_product_branches.sql
+      file_count: 3
+      line_count: 802
+      byte_count: 41065
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 1
+  projexa:
+    module_source: src/app/api/<x>/ directory structure (no module_registry-equivalent table exists in
+      this repo -- confirmed live)
+    commit_hash: 71de8195e1ddc0f6612d91a682d9b4d6e6348650
+    repository_version: docs/database-function-catalogs-2026-07-20
+    module_count: 79
+    total_request_files_for_full_coverage: 542
+    modules:
+    - module_key: access-review
+      display_name: access-review
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/access-review/
+      file_count: 4
+      line_count: 1159
+      byte_count: 57954
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: accounts
+      display_name: accounts
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/accounts/
+      file_count: 8
+      line_count: 2007
+      byte_count: 109729
+      chunk_count_for_full_coverage: 6
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: ar-aging
+      display_name: ar-aging
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/ar-aging/
+      file_count: 2
+      line_count: 477
+      byte_count: 24963
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: assistant
+      display_name: assistant
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/assistant/
+      file_count: 8
+      line_count: 1530
+      byte_count: 70367
+      chunk_count_for_full_coverage: 5
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: attendance
+      display_name: attendance
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/attendance/
+      file_count: 6
+      line_count: 621
+      byte_count: 31570
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: audit-engagements
+      display_name: audit-engagements
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/audit-engagements/
+      file_count: 2
+      line_count: 1023
+      byte_count: 50417
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: audit-findings
+      display_name: audit-findings
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/audit-findings/
+      file_count: 3
+      line_count: 1029
+      byte_count: 50800
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: balance-sheet
+      display_name: balance-sheet
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/balance-sheet/
+      file_count: 2
+      line_count: 773
+      byte_count: 44783
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: bank-reconciliation
+      display_name: bank-reconciliation
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/bank-reconciliation/
+      file_count: 2
+      line_count: 774
+      byte_count: 44883
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: board
+      display_name: board
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/board/
+      file_count: 48
+      line_count: 7176
+      byte_count: 330195
+      chunk_count_for_full_coverage: 19
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: capability-tree
+      display_name: capability-tree
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/capability-tree/
+      file_count: 4
+      line_count: 735
+      byte_count: 33614
+      chunk_count_for_full_coverage: 3
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: change-orders
+      display_name: change-orders
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/change-orders/
+      file_count: 10
+      line_count: 1126
+      byte_count: 51822
+      chunk_count_for_full_coverage: 4
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: companies
+      display_name: companies
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/companies/
+      file_count: 14
+      line_count: 3659
+      byte_count: 190264
+      chunk_count_for_full_coverage: 10
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: compliance-register
+      display_name: compliance-register
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/compliance-register/
+      file_count: 3
+      line_count: 1140
+      byte_count: 57014
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: contact
+      display_name: contact
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/contact/
+      file_count: 10
+      line_count: 1238
+      byte_count: 55887
+      chunk_count_for_full_coverage: 5
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: conversations
+      display_name: conversations
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/conversations/
+      file_count: 5
+      line_count: 690
+      byte_count: 30894
+      chunk_count_for_full_coverage: 3
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: cost-centers
+      display_name: cost-centers
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/cost-centers/
+      file_count: 4
+      line_count: 302
+      byte_count: 14786
+      chunk_count_for_full_coverage: 1
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: credit-notes
+      display_name: credit-notes
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/credit-notes/
+      file_count: 2
+      line_count: 489
+      byte_count: 25483
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: currencies
+      display_name: currencies
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/currencies/
+      file_count: 18
+      line_count: 5433
+      byte_count: 284640
+      chunk_count_for_full_coverage: 13
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: customers
+      display_name: customers
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/customers/
+      file_count: 16
+      line_count: 2910
+      byte_count: 149749
+      chunk_count_for_full_coverage: 10
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: design-materials
+      display_name: design-materials
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/design-materials/
+      file_count: 2
+      line_count: 391
+      byte_count: 17914
+      chunk_count_for_full_coverage: 1
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: discuss
+      display_name: discuss
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/discuss/
+      file_count: 6
+      line_count: 956
+      byte_count: 44384
+      chunk_count_for_full_coverage: 4
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: documents
+      display_name: documents
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/documents/
+      file_count: 19
+      line_count: 2208
+      byte_count: 107774
+      chunk_count_for_full_coverage: 8
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: employees
+      display_name: employees
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/employees/
+      file_count: 14
+      line_count: 3270
+      byte_count: 172933
+      chunk_count_for_full_coverage: 8
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: expenses
+      display_name: expenses
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/expenses/
+      file_count: 8
+      line_count: 1034
+      byte_count: 48704
+      chunk_count_for_full_coverage: 4
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: ffe
+      display_name: ffe
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/ffe/
+      file_count: 89
+      line_count: 17912
+      byte_count: 841322
+      chunk_count_for_full_coverage: 51
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: finance-dashboard
+      display_name: finance-dashboard
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/finance-dashboard/
+      file_count: 2
+      line_count: 775
+      byte_count: 44818
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: fiscal-years
+      display_name: fiscal-years
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/fiscal-years/
+      file_count: 6
+      line_count: 422
+      byte_count: 21140
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: floor-plans
+      display_name: floor-plans
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/floor-plans/
+      file_count: 18
+      line_count: 1414
+      byte_count: 66494
+      chunk_count_for_full_coverage: 4
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: fraud-cases
+      display_name: fraud-cases
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/fraud-cases/
+      file_count: 4
+      line_count: 1160
+      byte_count: 57895
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: grc-dashboard
+      display_name: grc-dashboard
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/grc-dashboard/
+      file_count: 3
+      line_count: 1128
+      byte_count: 56358
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: hr
+      display_name: hr
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/hr/
+      file_count: 131
+      line_count: 22111
+      byte_count: 999575
+      chunk_count_for_full_coverage: 63
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: inventory
+      display_name: inventory
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/inventory/
+      file_count: 15
+      line_count: 2056
+      byte_count: 102136
+      chunk_count_for_full_coverage: 7
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: journal-entries
+      display_name: journal-entries
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/journal-entries/
+      file_count: 4
+      line_count: 907
+      byte_count: 51822
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: knowledge-base
+      display_name: knowledge-base
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/knowledge-base/
+      file_count: 7
+      line_count: 618
+      byte_count: 28889
+      chunk_count_for_full_coverage: 3
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: kpi-entries
+      display_name: kpi-entries
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/kpi-entries/
+      file_count: 2
+      line_count: 232
+      byte_count: 11147
+      chunk_count_for_full_coverage: 1
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: kpis
+      display_name: kpis
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/kpis/
+      file_count: 9
+      line_count: 1046
+      byte_count: 49592
+      chunk_count_for_full_coverage: 4
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: labour-roster
+      display_name: labour-roster
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/labour-roster/
+      file_count: 6
+      line_count: 607
+      byte_count: 30165
+      chunk_count_for_full_coverage: 3
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: leads
+      display_name: leads
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/leads/
+      file_count: 10
+      line_count: 1067
+      byte_count: 50295
+      chunk_count_for_full_coverage: 4
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: leave
+      display_name: leave
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/leave/
+      file_count: 13
+      line_count: 2250
+      byte_count: 113014
+      chunk_count_for_full_coverage: 8
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: materials
+      display_name: materials
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/materials/
+      file_count: 13
+      line_count: 1676
+      byte_count: 81275
+      chunk_count_for_full_coverage: 6
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: meetings
+      display_name: meetings
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/meetings/
+      file_count: 7
+      line_count: 734
+      byte_count: 33307
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: mood-boards
+      display_name: mood-boards
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/mood-boards/
+      file_count: 9
+      line_count: 909
+      byte_count: 44246
+      chunk_count_for_full_coverage: 3
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: notifications
+      display_name: notifications
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/notifications/
+      file_count: 5
+      line_count: 438
+      byte_count: 17700
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: opportunities
+      display_name: opportunities
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/opportunities/
+      file_count: 11
+      line_count: 1152
+      byte_count: 56331
+      chunk_count_for_full_coverage: 4
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: org
+      display_name: org
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/org/
+      file_count: 242
+      line_count: 15517
+      byte_count: 767094
+      chunk_count_for_full_coverage: 45
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: org-members
+      display_name: org-members
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/org-members/
+      file_count: 5
+      line_count: 611
+      byte_count: 26686
+      chunk_count_for_full_coverage: 3
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: organization
+      display_name: organization
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/organization/
+      file_count: 201
+      line_count: 7938
+      byte_count: 380517
+      chunk_count_for_full_coverage: 21
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: payroll
+      display_name: payroll
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/payroll/
+      file_count: 21
+      line_count: 3144
+      byte_count: 162431
+      chunk_count_for_full_coverage: 8
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: permits
+      display_name: permits
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/permits/
+      file_count: 9
+      line_count: 892
+      byte_count: 40890
+      chunk_count_for_full_coverage: 3
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: policies
+      display_name: policies
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/policies/
+      file_count: 6
+      line_count: 1432
+      byte_count: 69547
+      chunk_count_for_full_coverage: 3
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: procurement
+      display_name: procurement
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/procurement/
+      file_count: 20
+      line_count: 2810
+      byte_count: 139957
+      chunk_count_for_full_coverage: 6
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: products
+      display_name: products
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/products/
+      file_count: 2
+      line_count: 132
+      byte_count: 5894
+      chunk_count_for_full_coverage: 1
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: profit-and-loss
+      display_name: profit-and-loss
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/profit-and-loss/
+      file_count: 3
+      line_count: 791
+      byte_count: 45688
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: profit-and-loss-by-project
+      display_name: profit-and-loss-by-project
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/profit-and-loss-by-project/
+      file_count: 2
+      line_count: 775
+      byte_count: 44928
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: project-budgets
+      display_name: project-budgets
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/project-budgets/
+      file_count: 3
+      line_count: 352
+      byte_count: 17840
+      chunk_count_for_full_coverage: 1
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: projects
+      display_name: projects
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/projects/
+      file_count: 41
+      line_count: 5215
+      byte_count: 260231
+      chunk_count_for_full_coverage: 14
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: punch-list
+      display_name: punch-list
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/punch-list/
+      file_count: 10
+      line_count: 1144
+      byte_count: 49749
+      chunk_count_for_full_coverage: 4
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: purchase-orders
+      display_name: purchase-orders
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/purchase-orders/
+      file_count: 10
+      line_count: 1669
+      byte_count: 87259
+      chunk_count_for_full_coverage: 5
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: quotations
+      display_name: quotations
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/quotations/
+      file_count: 18
+      line_count: 2465
+      byte_count: 127654
+      chunk_count_for_full_coverage: 7
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: recruitment
+      display_name: recruitment
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/recruitment/
+      file_count: 15
+      line_count: 1779
+      byte_count: 91284
+      chunk_count_for_full_coverage: 6
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: reports
+      display_name: reports
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/reports/
+      file_count: 16
+      line_count: 2514
+      byte_count: 125116
+      chunk_count_for_full_coverage: 7
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: rfis
+      display_name: rfis
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/rfis/
+      file_count: 12
+      line_count: 1453
+      byte_count: 63035
+      chunk_count_for_full_coverage: 5
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: risks
+      display_name: risks
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/risks/
+      file_count: 4
+      line_count: 1159
+      byte_count: 57803
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: sales-invoices
+      display_name: sales-invoices
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/sales-invoices/
+      file_count: 6
+      line_count: 820
+      byte_count: 42467
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: sales-orders
+      display_name: sales-orders
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/sales-orders/
+      file_count: 9
+      line_count: 1263
+      byte_count: 66085
+      chunk_count_for_full_coverage: 4
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: sales-pipeline
+      display_name: sales-pipeline
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/sales-pipeline/
+      file_count: 3
+      line_count: 293
+      byte_count: 14975
+      chunk_count_for_full_coverage: 1
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: schedule
+      display_name: schedule
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/schedule/
+      file_count: 25
+      line_count: 3413
+      byte_count: 165411
+      chunk_count_for_full_coverage: 10
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: scope
+      display_name: scope
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/scope/
+      file_count: 50
+      line_count: 7811
+      byte_count: 384342
+      chunk_count_for_full_coverage: 24
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: search
+      display_name: search
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/search/
+      file_count: 112
+      line_count: 10597
+      byte_count: 528824
+      chunk_count_for_full_coverage: 29
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: site-diary
+      display_name: site-diary
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/site-diary/
+      file_count: 5
+      line_count: 592
+      byte_count: 27545
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: submittals
+      display_name: submittals
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/submittals/
+      file_count: 10
+      line_count: 1174
+      byte_count: 51622
+      chunk_count_for_full_coverage: 4
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: timesheets
+      display_name: timesheets
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/timesheets/
+      file_count: 5
+      line_count: 751
+      byte_count: 34678
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: todos
+      display_name: todos
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/todos/
+      file_count: 8
+      line_count: 1050
+      byte_count: 44614
+      chunk_count_for_full_coverage: 3
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: trial-balance
+      display_name: trial-balance
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/trial-balance/
+      file_count: 2
+      line_count: 773
+      byte_count: 44783
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: vendor-risk
+      display_name: vendor-risk
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/vendor-risk/
+      file_count: 4
+      line_count: 1157
+      byte_count: 57661
+      chunk_count_for_full_coverage: 2
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: vendors
+      display_name: vendors
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/vendors/
+      file_count: 15
+      line_count: 3236
+      byte_count: 161453
+      chunk_count_for_full_coverage: 8
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: wiki
+      display_name: wiki
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/wiki/
+      file_count: 10
+      line_count: 986
+      byte_count: 45002
+      chunk_count_for_full_coverage: 4
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+    - module_key: work-progress
+      display_name: work-progress
+      table_name: null
+      domain: null
+      category: null
+      source_file: src/app/api/work-progress/
+      file_count: 7
+      line_count: 888
+      byte_count: 42204
+      chunk_count_for_full_coverage: 3
+      used_fallback_docs: false
+      excluded_oversized_file_count: 0
+grand_total_request_files_for_full_coverage: 1195
