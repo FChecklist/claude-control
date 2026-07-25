@@ -2564,6 +2564,50 @@ registries:
     materializes later, fixing and installing the systemd unit (correct User=rajat, correct
     ExecStart path, a real tmpfiles-managed pipe or a per-invocation design) should be its own
     scoped follow-on task, not retrofitted here.
+- id: owner_engine_mandatory_gate
+  type: mandatory_gate_wiring_and_machine_language_contract
+  path: scripts/task-gateway.py (run_owner_engine_gate, call_machine_contract) + scripts/prompt_gateway/query.py
+    + ai-os/OWNER_ENGINE_MACHINE_LANGUAGE_CONTRACT_2026-07-25.yaml + ai-os/OWNER_ENGINE_MANDATORY_GATE_IMPLEMENTATION_2026-07-25.yaml
+  scope: 'Task task-20260725-080900-owner-engine-mandatory-gate-implementati implements the
+    Owner''s 19-point mandatory-gate protocol (KE-20260725-061008-8423,
+    ai-os/OWNER_DIRECTIVES/OWNER_ENGINE_MANDATORY_GATE_2026-07-25.txt) on top of the already-built
+    registries.prompt_gateway (OWNER_ENGINE software, not rebuilt). Real changes: (1)
+    scripts/task-gateway.py submit now pipes every --source owner raw text through
+    scripts/prompt_gateway/gateway.py by default (not opt-in) via run_owner_engine_gate(), and
+    every downstream call (keyword extraction, log-instruction, check-duplicate, search,
+    query-knowledge, lookup-capability) operates on gateway.py''s final_output, not the raw
+    text -- the raw text survives only in log-instruction''s --metadata for audit. (2) a new
+    machine-language query interface, scripts/prompt_gateway/query.py, answers 9 close-ended
+    question codes about an already-processed chat (by chat_id) from its saved record, with a
+    real NEEDS_OWNER_CLARIFICATION decision procedure (confidence < 0.15 OR intent ==
+    "UNKNOWN") that is the system''s one real "software could not tell -> ask the Owner"
+    trigger. (3) ai-os/OWNER_ENGINE_MACHINE_LANGUAGE_CONTRACT_2026-07-25.yaml defines a
+    close-ended request/response envelope, proven usable by query.py and by a real retrofit of
+    task-gateway.py''s pre-existing lookup-capability call (underlying superboss-register.py
+    command unchanged). Full 19-point honesty breakdown (2 fully code-enforced, 6
+    partially/proof-of-concept code-enforced, 11 discipline-only) and all real command
+    evidence are in ai-os/OWNER_ENGINE_MANDATORY_GATE_IMPLEMENTATION_2026-07-25.yaml -- most
+    of the 19 points (AI<->AI machine language, AI<->its-own-model machine language, 1-line
+    Owner English, token-discipline-in-general) have no reachable code boundary from this
+    task''s scope and are honestly left as discipline-only, not claimed as enforced.'
+  status: live
+  query_command: python3 scripts/superboss-register.py query-knowledge "owner_engine_mandatory_gate"
+    --tag domain:owner_engine_mandatory_gate
+  real_verification: 'python3 scripts/task-gateway.py submit --text "<raw owner text>" --source
+    owner --session-id <id> (exit 0, owner_engine_gate.applied=true, real VD- chat_id, real
+    gateway.py log lines in /opt/veridian/data/prompt_gateway/logs/veridian_20260725.log,
+    sqlite instructions.raw_text column holds the gated output not the raw text) and python3
+    scripts/prompt_gateway/query.py --chat-id <that chat_id> --q NEEDS_OWNER_CLARIFICATION
+    (exit 0, real structured JSON) -- both real command outputs pasted verbatim in
+    ai-os/OWNER_ENGINE_MANDATORY_GATE_IMPLEMENTATION_2026-07-25.yaml, not paraphrased.'
+  owner_trigger_phrase: 'Drafted and real-world tested (see implementation doc
+    owner_trigger_phrase + real_test_evidence.trigger_phrase_test) but NOT handed to the Owner
+    by this task -- final handoff happens separately per this task''s own KNOWN_CONTEXT.'
+  next_phase: 'Full-codebase retrofit of the machine-language contract across the remaining
+    AI<->software call sites (task-gateway.py''s own log-instruction/check-duplicate/search/
+    query-knowledge calls, automation_rule_engine.py, auto_phase_continuation.py, etc.) and,
+    if a real AI<->AI call site is ever built, wiring point 16 to it -- both real, separate,
+    unscoped follow-ons, not attempted here.'
 tree_lineage:
   tree1_audit_tree:
     path: /opt/veridian/repos/compliance-tracker/ai-os/audit-tree/
