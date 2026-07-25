@@ -5263,3 +5263,100 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260724-230014-phase2-distributed-trace-verification-wi/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/57'
     last_touched: '2026-07-24'
+
+  - id: WORKER-20260725-032718-wiring-engine-phase0-schema-registry
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''wiring-engine-phase0-schema-registry'' on claude-control
+      reached status=completed. tier1, Superboss-approved, merged autonomously: https://github.com/FChecklist/claude-control/pull/58'
+    where: '/opt/veridian/ai-os/tasks/task-20260725-032718-wiring-engine-phase0-schema-registry/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/58'
+    last_touched: '2026-07-25'
+
+  - id: WORKER-20260725-041130-security-audit-evaluation-and-implementa
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''security-audit-evaluation-and-implementation-plan''
+      on claude-control reached status=completed. Re-review approved (tier2). Real merge
+      conflict against master (5 other PRs merged in the meantime) resolved manually.
+      gh pr view confirms state=MERGED, PR #59.'
+    where: '/opt/veridian/ai-os/tasks/task-20260725-041130-security-audit-evaluation-and-implementa/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/59'
+    last_touched: '2026-07-25'
+
+  - id: WORKER-20260725-053025-zai-prompt-gateway-integration
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''zai-prompt-gateway-integration'' on claude-control
+      reached status=completed. tier1, Superboss-approved, merged autonomously: https://github.com/FChecklist/claude-control/pull/60'
+    where: '/opt/veridian/ai-os/tasks/task-20260725-053025-zai-prompt-gateway-integration/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/60'
+    last_touched: '2026-07-25'
+
+  - id: WORKER-20260725-053540-chrome-browser-persistent-profile
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''chrome-browser-persistent-profile'' on claude-control
+      reached status=completed. PR #61 had a real merge conflict against master (MASTER_INDEX.yaml
+      registries list, 5 other PRs merged concurrently) despite tier1 AUDIT:PASS approval
+      -- resolved manually via clone/merge/union-resolve/push, verified 99 registries
+      intact including browser_automation_profile, merged for real: gh pr view confirms
+      state=MERGED.'
+    where: '/opt/veridian/ai-os/tasks/task-20260725-053540-chrome-browser-persistent-profile/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/61'
+    last_touched: '2026-07-25'
+
+  - id: WORKER-20260725-055316-auditor-engine-phase8-master-orchestrati
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''auditor-engine-phase8-master-orchestration'' on claude-control
+      reached status=completed. tier1, Superboss-approved, merged autonomously: https://github.com/FChecklist/claude-control/pull/64'
+    where: '/opt/veridian/ai-os/tasks/task-20260725-055316-auditor-engine-phase8-master-orchestrati/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/64'
+    last_touched: '2026-07-25'
+
+  - id: WORKER-20260725-055333-wiring-engine-phase1-e2e-gateway-verific
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''wiring-engine-phase1-e2e-gateway-verification'' on
+      claude-control reached status=completed. tier1, Superboss-approved, merged autonomously:
+      https://github.com/FChecklist/claude-control/pull/62'
+    where: '/opt/veridian/ai-os/tasks/task-20260725-055333-wiring-engine-phase1-e2e-gateway-verific/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/62'
+    last_touched: '2026-07-25'
+
+  - id: WORKER-20260725-055456-fix-contradiction-detector-false-positiv
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''fix-contradiction-detector-false-positives'' on claude-control
+      reached status=completed. tier1, Superboss-approved, merged autonomously: https://github.com/FChecklist/claude-control/pull/63'
+    where: '/opt/veridian/ai-os/tasks/task-20260725-055456-fix-contradiction-detector-false-positiv/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/63'
+    last_touched: '2026-07-25'
+
+  - id: WORKER-20260725-063204-module-scoped-zai-gap-audit
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''module-scoped-zai-gap-audit'' on claude-control reached
+      status=completed. tier1, Superboss-approved, merged autonomously: https://github.com/FChecklist/claude-control/pull/65'
+    where: '/opt/veridian/ai-os/tasks/task-20260725-063204-module-scoped-zai-gap-audit/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/65'
+    last_touched: '2026-07-25'
+
+  - id: WORKER-20260725-080900-owner-engine-mandatory-gate-implementati
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''owner-engine-mandatory-gate-implementation'' on claude-control
+      reached status=completed. tier1, Superboss-approved, merged autonomously: https://github.com/FChecklist/claude-control/pull/66'
+    where: '/opt/veridian/ai-os/tasks/task-20260725-080900-owner-engine-mandatory-gate-implementati/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/66'
+    last_touched: '2026-07-25'
