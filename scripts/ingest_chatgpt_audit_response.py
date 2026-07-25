@@ -22,9 +22,17 @@ the reply to a file (or pipes it via stdin), and this script:
 No LLM API call happens here -- this is a pure parse/validate/write script
 over content the Owner already obtained manually.
 
-Run:
+Run (domain mode, unchanged):
   python3 scripts/ingest_chatgpt_audit_response.py --domain Security --file /tmp/chatgpt_reply.yaml
   cat /tmp/chatgpt_reply.yaml | python3 scripts/ingest_chatgpt_audit_response.py --domain Security
+
+Run (module mode, task-20260725-063204-module-scoped-zai-gap-audit): files a
+module-scoped response produced by generate_chatgpt_audit_request.py --module
+into the schema's existing 'Modules' domain subfolder, linked to its real
+module/repo via the schema's own modules_analysed + files_analysed fields
+(no new linkage fields added):
+  python3 scripts/ingest_chatgpt_audit_response.py --module board_evaluations --repo compliance-tracker --file /tmp/zai_reply.yaml
+
 Exit code: 0 on a successful, validated write; 1 if parsing/validation fails
 (nothing is written in that case) or the catalogue refresh fails.
 """
@@ -60,10 +68,14 @@ def load_schema():
         return yaml.safe_load(f)
 
 
-def validate_record(doc, schema):
+def validate_record(doc, schema, module=None, repo=None):
     """Returns (errors, warnings). errors block the write; warnings are
     surfaced but non-fatal (e.g. a files_analysed path this server can't
-    independently confirm)."""
+    independently confirm). module/repo are only passed in module mode
+    (task-20260725-063204) -- when present, this also sanity-checks the
+    response actually links back to the real module/repo it was requested
+    for, via the schema's existing modules_analysed/files_analysed fields
+    (no new linkage fields)."""
     errors = []
     warnings = []
 
@@ -114,15 +126,41 @@ def validate_record(doc, schema):
         if not os.path.isfile(candidate):
             warnings.append(f"files_analysed entry not found on disk (not fatal): {path}")
 
+    if module:
+        modules_analysed = [str(m).lower().replace("-", "_") for m in (doc.get("modules_analysed") or [])]
+        if module.lower().replace("-", "_") not in modules_analysed:
+            warnings.append(
+                f"modules_analysed {doc.get('modules_analysed')} does not contain the requested "
+                f"module '{module}' (not fatal, but check the response actually covers this module)"
+            )
+    if repo:
+        files_analysed = doc.get("files_analysed") or []
+        prefix = f"repos/{repo}/"
+        mismatched = [p for p in files_analysed if not str(p).startswith(prefix)]
+        if mismatched:
+            warnings.append(
+                f"files_analysed entries not prefixed 'repos/{repo}/' (not fatal, but check repo linkage): "
+                f"{mismatched}"
+            )
+
     return errors, warnings
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--domain", required=True, choices=VALID_SUBFOLDERS,
-                         help="target chatgpt-audit subfolder this record belongs to")
-    parser.add_argument("--file", default=None, help="path to ChatGPT's saved response; omit to read stdin")
+    mode_group = parser.add_mutually_exclusive_group(required=True)
+    mode_group.add_argument("--domain", choices=VALID_SUBFOLDERS,
+                             help="domain-scoped mode (original) -- target chatgpt-audit subfolder this record belongs to")
+    mode_group.add_argument("--module", help="module-scoped mode (task-20260725-063204): real module_key/directory name")
+    parser.add_argument("--repo", default=None, help="module mode only: repo name under /opt/veridian/repos/")
+    parser.add_argument("--file", default=None, help="path to the saved response; omit to read stdin")
     args = parser.parse_args()
+
+    if args.module and not args.repo:
+        print(json.dumps({"ok": False, "error": "--module requires --repo"}, indent=2))
+        sys.exit(1)
+
+    subfolder = args.domain or "Modules"
 
     if args.file:
         if not os.path.isfile(args.file):
@@ -152,12 +190,12 @@ def main():
         sys.exit(1)
 
     schema = load_schema()
-    errors, warnings = validate_record(doc, schema)
+    errors, warnings = validate_record(doc, schema, module=args.module, repo=args.repo)
     if errors:
         print(json.dumps({"ok": False, "error": "validation_failed", "errors": errors, "warnings": warnings}, indent=2))
         sys.exit(1)
 
-    allocation = allocate(args.domain)
+    allocation = allocate(subfolder)
     # allocation["timestamp"] is the compact form used in the filename
     # (YYYYMMDDTHHMMSSZ) -- the schema requires full ISO 8601 in the record
     # body, so convert rather than reuse the same string in both places.
@@ -196,7 +234,10 @@ def main():
         "ok": True,
         "audit_id": allocation["audit_id"],
         "path": allocation["path"],
+        "subfolder": subfolder,
         "domain": args.domain,
+        "module": args.module,
+        "repo": args.repo,
         "warnings": warnings,
         "catalogue_refreshed": True,
     }, indent=2))
