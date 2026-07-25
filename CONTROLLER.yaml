@@ -5474,3 +5474,14 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260725-180624-end-user-prompt-library-generation/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/73'
     last_touched: '2026-07-25'
+
+  - id: WORKER-20260725-184840-veridian-architecture-v2-ux-amendment-co
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''veridian-architecture-v2-ux-amendment-corrected''
+      on claude-control reached status=completed. tier1, Superboss-approved, merged
+      autonomously: https://github.com/FChecklist/claude-control/pull/74'
+    where: '/opt/veridian/ai-os/tasks/task-20260725-184840-veridian-architecture-v2-ux-amendment-co/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/74'
+    last_touched: '2026-07-25'
