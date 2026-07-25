@@ -20,14 +20,19 @@ meta:
     builds_on_not_replaces for that detail). This schema adds the ROUTE dimension those two mechanisms do not
     carry: which named engines/gateways a request actually passes through, in what order, and whether that
     path has been test-exercised, trace-verified, and replay-captured.'
-  honest_limitation: 'ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml''s own gateways.gateway_naming_gap
-    finding applies here unchanged: only Task Gateway (scripts/task-gateway.py) is a confirmed-real gateway
-    today. None of the 5 populated routes below actually pass through it (they are in-app VCEL
-    calculation/dedup dispatch, not server-side AI task dispatch) -- so no expected_path hop below cites
-    "gateway" for any of these 5 routes; every hop is a named ENGINE from engine_inventory. This is the honest
-    state of the real system, not an omission: a route that genuinely passes through Task Gateway will be
-    added the first time one is registered (see TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml phase_1 for where
-    new capabilities/routes get auto-registered going forward).'
+  honest_limitation: 'UPDATED by WIRING_ENGINE_PHASE_PLAN_2026-07-25.yaml phase_1 (2026-07-25): this note
+    originally said (and, for 4 of the 5 populated routes below, still honestly says) that no expected_path
+    hop cites hop_type: gateway anywhere, since the only gateway ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml
+    confirmed real at the time (Task Gateway, scripts/task-gateway.py) is not on any in-app VCEL
+    calculation/dedup route''s real path. That finding stands unchanged for RT-commission_calculator-001,
+    RT-gst_calculation_engine-001, RT-trend_analysis_engine-001, and RT-capability_registry_dedup-001. It no
+    longer holds for RT-gratuity_calculator-001: phase_1''s own real, grepped call-chain trace against the
+    live compliance-tracker checkout found this route genuinely crosses gateway G04 (UserChannel, via
+    auth-guard.ts requireAuth()) and gateway G03 (Organization, via context.ts ServiceContext.orgId) --
+    the canonical 10-gateway list (G01-G10) confirmed by gateway_definition_and_inventory, not the earlier
+    Task-Gateway-only candidate this note originally referred to. See that route''s own expected_path hops
+    3-4 and notes field for the full file:line evidence, and WIRING_ENGINE_PHASE_PLAN_2026-07-25.yaml
+    phase_1 status_detail for the corresponding wiring-registry before/after diff.'
 
 # ============================================================================
 # FIELD SCHEMA -- one record per registered route.
@@ -57,9 +62,10 @@ route_record_schema:
       logic (e.g. a VCEL domain engine file). Must exist on disk, same verification discipline as source.'
   expected_path:
     type: array
-    item_schema: '{ hop_no: int, hop_type: gateway|engine, hop_name: string (engine_name or gateway_candidate
-      from ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml), engine_no: int|null, mechanism_path:
-      string, live_or_planned: live|planned }'
+    item_schema: '{ hop_no: int, hop_type: gateway|engine, hop_name: string (engine_name or gateway_name
+      from ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml), engine_no: int|null, gateway_id:
+      string|null (e.g. "G04" -- set only when hop_type: gateway, matches gateway_inventory[].gateway_id
+      verbatim; null when hop_type: engine), mechanism_path: string, live_or_planned: live|planned }'
     required: true
     description: 'Ordered list of real hops between source and destination, named against
       ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml''s engine_inventory/gateways so route coverage
@@ -67,7 +73,12 @@ route_record_schema:
       service_matrix). live_or_planned mirrors that file''s own dependency_table status vocabulary -- a hop
       whose mechanism_path exists and is actually called today is "live"; a hop this route SHOULD eventually
       pass through once a later 20-Engines phase wires it (e.g. Policy Engine gating) is "planned" and does
-      not count toward test_status readiness.'
+      not count toward test_status readiness. gateway_id added by WIRING_ENGINE_PHASE_PLAN_2026-07-25.yaml
+      phase_1 -- scripts/generate_wiring_registry.py''s build_routes() resolves it to a real gateway-<ID>
+      entity_id the same way engine_no already resolves to engine-<NN> (see that script''s own hops_through
+      handling for both branches); previously a hop_type: gateway entry had no field a generator could key
+      off of, which is the literal, structural reason no route''s hops_through ever targeted a gateway
+      entity before phase_1.'
   test_status:
     type: enum
     values: [not_yet_tested, passing, failing, flaking, quarantined]
@@ -130,30 +141,62 @@ populated_routes:
   - route_id: RT-gratuity_calculator-001
     capability_name: gratuity_calculator
     source: repos/compliance-tracker/src/components/veri-chat/ChainSelector.tsx
-    destination: repos/compliance-tracker/src/lib/engines/hr-engine.ts
+    destination: repos/compliance-tracker/src/lib/engines/payroll-engine.ts
     expected_path:
       - hop_no: 1
         hop_type: engine
-        hop_name: "UI Composition Engine"
-        engine_no: 17
+        hop_name: "Intent Engine"
+        engine_no: 1
+        gateway_id: null
         mechanism_path: repos/compliance-tracker/src/components/veri-chat/ChainSelector.tsx
         live_or_planned: live
       - hop_no: 2
         hop_type: engine
-        hop_name: "Capability Registry Engine"
-        engine_no: 3
-        mechanism_path: repos/compliance-tracker/src/lib/services/capability-tree-service.ts
+        hop_name: "UI Composition Engine"
+        engine_no: 17
+        gateway_id: null
+        mechanism_path: repos/compliance-tracker/src/components/veri-chat/ChainSelector.tsx
         live_or_planned: live
       - hop_no: 3
+        hop_type: gateway
+        hop_name: "UserChannel"
+        engine_no: null
+        gateway_id: "G04"
+        mechanism_path: repos/compliance-tracker/src/lib/supabase/auth-guard.ts
+        live_or_planned: live
+      - hop_no: 4
+        hop_type: gateway
+        hop_name: "Organization"
+        engine_no: null
+        gateway_id: "G03"
+        mechanism_path: repos/compliance-tracker/src/lib/services/context.ts
+        live_or_planned: live
+      - hop_no: 5
+        hop_type: engine
+        hop_name: "Context Engine"
+        engine_no: 2
+        gateway_id: null
+        mechanism_path: repos/compliance-tracker/src/lib/services/context.ts
+        live_or_planned: live
+      - hop_no: 6
+        hop_type: engine
+        hop_name: "Capability Registry Engine"
+        engine_no: 3
+        gateway_id: null
+        mechanism_path: repos/compliance-tracker/src/lib/services/capability-tree-service.ts
+        live_or_planned: live
+      - hop_no: 7
         hop_type: engine
         hop_name: "Workflow Engine"
         engine_no: 8
+        gateway_id: null
         mechanism_path: repos/compliance-tracker/src/lib/task-execution-engine.ts
         live_or_planned: live
-      - hop_no: 4
+      - hop_no: 8
         hop_type: engine
         hop_name: "Rule Engine"
         engine_no: 6
+        gateway_id: null
         mechanism_path: repos/compliance-tracker/src/lib/guardrail-registrations.ts
         live_or_planned: live
     test_status: passing
@@ -161,7 +204,39 @@ populated_routes:
     replay_status: replayed_match
     dependency_validation_status: validated_match
     confidence: 1.0
-    notes: "Phase 1 route-test auto-generation: real dispatch target @/lib/engines/payroll-engine::calculateGratuity() (dispatchEngine() switch case \"gratuity_calculator\" in task-execution-engine.ts), executed via `bunx bun test` against compliance-tracker's real checkout, exit_code=0. Evidence: ai-os/testing_engine_evidence/phase1/RT-gratuity_calculator-001/."
+    notes: "WIRING_ENGINE_PHASE_PLAN_2026-07-25.yaml phase_1 (end-to-end gateway verification) real, grepped
+      call-chain trace against the live /opt/veridian/repos/compliance-tracker checkout (read-only -- no edits
+      to that repo, same boundary phases 1-7 of 20_ENGINES_10_GATEWAYS_PHASE_PLAN already established), 2026-07-25:
+      ChainSelector.tsx confirmWithChain() (295-315, real recency/frequency chain-path recall = hop 1 Intent
+      Engine) -> VeriComposer.tsx dispatchInstruction() (306, POST /api/tasks) -> app/api/tasks/route.ts POST()
+      (21-39) calls requireAuthOrApiKey() -> auth-guard.ts requireAuth() (264-375, real Supabase
+      session/seat/session-limit checks -- hop 3, gateway G04 UserChannel, the first real G01-G10 boundary this
+      route has ever cited) -> createTask({orgId, actor}, ...) built at route.ts:32 from ServiceContext/
+      ReadContext (context.ts:12-24) and consumed at task-service.ts:133/163 (hop 4, gateway G03 Organization
+      LoadOrgContext, and hop 5, Context Engine -- same real context.ts file, two real relationships: it is
+      both a gateway's own exists_as path and an engine's) -> executeTask() (task-execution-engine.ts:2073) ->
+      executeEngineDispatch() (1791-1833) -> dispatchEngine() (383) -> assertBusinessRulesBeforeExecution()
+      (384, hop 8 Rule Engine) -> case \"gratuity_calculator\" (792-800) -> calculateGratuity() in
+      payroll-engine.ts:29 (destination corrected this phase -- hr-engine.ts, the prior destination value, has
+      no calculateGratuity export; confirmed by grep, a real factual error in the pre-phase_1 row).
+      HONEST GAPS (confirmed absent from this exact call chain by grep against the same real checkout, not
+      assumed, and NOT added to expected_path as a result -- see WIRING_ENGINE_PHASE_PLAN_2026-07-25.yaml
+      phase_1 status_detail for the full per-stage citation): Planning Engine (dynamic-chain-directory-service.ts
+      is never called by ChainSelector.tsx/ChainSelectorDialog); Policy Engine (enforcePolicy() exists in
+      task-execution-engine.ts but is only wired into executePackageDispatch(), an LLM-package-dispatch path,
+      at lines 1932/2140 -- never into executeEngineDispatch()/dispatchEngine(), the path this route actually
+      takes); Decision Engine (risk-tier.py/ai-decision-explanation.ts are not on this deterministic-dispatch
+      path); Automation Engine (automation-rule-service.ts appears only in a code comment in task-service.ts,
+      never an actual import/call); Integration Engine (webhook-deliver.ts is not called on dispatch
+      completion); Data Engine (data-quality-engine.ts is imported for other dispatchEngine() switch cases --
+      GSTIN/PAN/IFSC/etc validation -- but not the gratuity_calculator case); Notification Engine (the one real
+      `db.insert(notifications)` call in task-service.ts lives inside checkTaskOverdue(), a separate cron-job
+      function, never reached by createTask()/executeTask()); Audit Engine (zero logActivity() call anywhere
+      in this chain -- confirmed the whole chain produces no audit log entry); Observability Engine (no
+      per-request trace/span exists; trace_verification_status below stays instrumented_unverified, honestly
+      unchanged). These 9 stages are reported here as named, honest gaps per phase_1's own SCOPE instruction,
+      not marked live by assumption -- closing them for real is phase_4's job (extend beyond this one proven
+      path), not re-litigated here."
   - route_id: RT-commission_calculator-001
     capability_name: commission_calculator
     source: repos/compliance-tracker/src/components/veri-chat/ChainSelector.tsx
