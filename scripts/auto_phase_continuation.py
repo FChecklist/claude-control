@@ -73,7 +73,10 @@ PLAN_DIRS = [
     "/opt/veridian/ai-os",
     "/opt/veridian/repos/claude-control/ai-os",
 ]
-PLAN_GLOB = "*_PHASE_PLAN_2026-07-24.yaml"
+PLAN_GLOB = "*_PHASE_PLAN_*.yaml"  # was hardcoded to 2026-07-24 only; widened 2026-07-25 (Wiring Engine
+# Phase 0, task-20260725-032718) so a newly-dated plan (e.g. WIRING_ENGINE_PHASE_PLAN_2026-07-25.yaml) is
+# discovered without a further hardcoded-date edit every time a new initiative starts a day later. Still
+# matches every existing *_PHASE_PLAN_2026-07-24.yaml file unchanged.
 
 TASK_ID_RE = re.compile(r"task-20\d{6}-[a-z0-9-]+")
 

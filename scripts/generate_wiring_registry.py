@@ -52,23 +52,39 @@ VERIDIAN_ROOT = "/opt/veridian"
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(SCRIPT_DIR)
 REPO_AI_OS = os.path.join(REPO_ROOT, "ai-os")
+IS_GIT_CHECKOUT = os.path.isdir(os.path.join(REPO_ROOT, ".git"))
+# The real, sync-repos.sh-kept-current (every 2h cron) git mirror -- same
+# second location scripts/auto_phase_continuation.py's own PLAN_DIRS already
+# reads. /opt/veridian/ai-os/ itself is NOT git-tracked and was confirmed this
+# run to drift from it (its 20_ENGINES_10_GATEWAYS_PHASE_PLAN copy still lacks
+# the gateway_inventory block a later, already-merged phase added).
+MIRROR_AI_OS = f"{VERIDIAN_ROOT}/repos/claude-control/ai-os"
+
+
+def resolve_doc_path(filename):
+    """When run from an actual git checkout (this task's own workspace,
+    possibly with not-yet-merged local changes), that checkout's own ai-os/
+    is authoritative. When run from a flat, non-git deployment (this
+    script's own live cron copy at /opt/veridian/scripts/), prefer the real
+    git mirror over the drifted, non-git-tracked /opt/veridian/ai-os/."""
+    if IS_GIT_CHECKOUT:
+        return os.path.join(REPO_AI_OS, filename)
+    mirror_path = os.path.join(MIRROR_AI_OS, filename)
+    if os.path.isfile(mirror_path):
+        return mirror_path
+    return os.path.join(REPO_AI_OS, filename)
+
 
 # The 3 huge catalogs are machine-generated live artifacts, never committed to
 # git (too large, regenerated from live app code) -- only reachable at their
 # real absolute /opt/veridian path. The knowledge_engine/capability_registry
-# tables are likewise only real as the one live SQLite DB. But
-# 20_ENGINES_10_GATEWAYS_PHASE_PLAN / ROUTE_REGISTRY_SCHEMA / SOFTWARE_CATALOG
-# are read from THIS REPO'S OWN tracked copy, not /opt/veridian/ai-os/'s --
-# confirmed this run that the two drift (the live copy at /opt/veridian/ai-os/
-# still lacks the gateway_inventory block a later phase added to the repo
-# copy), and the repo copy is the one this task's own PR is actually
-# committing/testing against.
+# tables are likewise only real as the one live SQLite DB.
 DATABASE_CATALOG = f"{VERIDIAN_ROOT}/ai-os/DATABASE_CATALOG.json"
 FUNCTION_CATALOG = f"{VERIDIAN_ROOT}/ai-os/FUNCTION_CATALOG.json"
 AI_ROSTER_CATALOG = f"{VERIDIAN_ROOT}/ai-os/AI_ROSTER_CATALOG.json"
-ENGINES_GATEWAYS_PLAN = os.path.join(REPO_AI_OS, "20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml")
-ROUTE_REGISTRY_SCHEMA = os.path.join(REPO_AI_OS, "ROUTE_REGISTRY_SCHEMA_2026-07-24.yaml")
-SOFTWARE_CATALOG = os.path.join(REPO_AI_OS, "SOFTWARE_CATALOG.yaml")
+ENGINES_GATEWAYS_PLAN = resolve_doc_path("20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml")
+ROUTE_REGISTRY_SCHEMA = resolve_doc_path("ROUTE_REGISTRY_SCHEMA_2026-07-24.yaml")
+SOFTWARE_CATALOG = resolve_doc_path("SOFTWARE_CATALOG.yaml")
 DB_PATH = f"{VERIDIAN_ROOT}/ai-os/memory/superboss-register.sqlite"
 
 DEFAULT_OUT = os.path.join(REPO_AI_OS, "WIRING_ENGINE_REGISTRY_2026-07-25.json")
