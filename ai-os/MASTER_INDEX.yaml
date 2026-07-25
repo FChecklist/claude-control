@@ -2431,8 +2431,8 @@ registries:
     src/app/api/auth/) against each other and against the real current source, including the 3
     service-layer files (passcode-login-service.ts, auth-failure-service.ts, sso-service.ts) the
     routes delegate to but neither audit''s files_analysed list names. Real result: 19 distinct
-    findings, 15 confirmed/partially_confirmed (2 raised by both audits independently, 3 by
-    ChatGPT only, 10 by Z.AI only) and each assigned to one of 7 real implementation phases in
+    findings, 15 confirmed/partially_confirmed (3 raised by both audits independently, 4 by
+    ChatGPT only, 12 by Z.AI only) and each assigned to one of 7 real implementation phases in
     the companion plan (shared IP-extraction + Supabase-admin-client utils; a new drizzle
     migration closing the Wave 143 interior-schema FK/CHECK/updated_at gaps; email input
     validation reusing the codebase''s own existing isValidEmail(); failure-event rate-limiting +

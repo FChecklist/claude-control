@@ -311,7 +311,7 @@ def external_deps_satisfied(phase_raw, all_done_maps):
     ext = phase_raw.get("external_depends_on")
     if not ext:
         return True, None
-    file_re = re.compile(r"([A-Z0-9_]+_PHASE_PLAN_2026-07-24\.yaml)")
+    file_re = re.compile(r"([A-Z0-9_]+_(?:PHASE_PLAN|IMPLEMENTATION_PLAN)_[0-9]{4}-[0-9]{2}-[0-9]{2}\.yaml)")
     num_re = re.compile(r"[Pp]hase[ _]?(\d+)")
     for entry in ext:
         text = entry if isinstance(entry, str) else str(entry)
@@ -544,7 +544,7 @@ def main():
 
     by_name = discover_plan_paths()
     if not by_name:
-        print(json.dumps({"error": "no *_PHASE_PLAN_2026-07-24.yaml files found in any scanned dir",
+        print(json.dumps({"error": "no plan files matching PLAN_GLOBS found in any scanned dir",
                            "scanned_dirs": PLAN_DIRS}))
         sys.exit(1)
 

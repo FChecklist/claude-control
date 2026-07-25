@@ -43,10 +43,11 @@ meta:
     independent verdict and evidence citation.'
 
 cross_reference_summary:
-  raised_by_both_audits: 2
-  raised_by_chatgpt_only: 3
-  raised_by_zai_only: 11
-  confirmed: 15
+  raised_by_both_audits: 3
+  raised_by_chatgpt_only: 4
+  raised_by_zai_only: 12
+  confirmed: 14
+  partially_confirmed: 1
   confirmed_but_deferred_out_of_scope: 2
   refuted: 2
   total_distinct_findings_evaluated: 19
@@ -370,8 +371,10 @@ audit_quality_assessment:
     confirmed-but-out-of-scope (SEC-18). Its implementation_suggestion field already named the exact
     file paths (src/lib/utils/request-ip.ts, src/lib/supabase/admin-client.ts) used verbatim in this
     evaluation''s companion implementation plan. No refuted claims from this audit.'
-  net_assessment: 'The two audits are complementary, not redundant -- only 2 of 19 distinct findings
-    (SEC-06''s admin-client duplication, and SEC-02''s polygon CHECK constraint) were raised by both.
+  net_assessment: 'The two audits are complementary, not redundant -- 3 of 19 distinct findings
+    (SEC-02''s polygon CHECK constraint, SEC-06''s admin-client duplication, and SEC-08''s
+    failure-event rate-limiting gap -- the single highest-severity finding in the evaluation) were
+    raised by both.
     Treating either audit alone as complete would have missed real findings the other one caught
     (ChatGPT''s room_id FK gap; Z.AI''s rate-limiting/body-size/headers/audit-trail findings). Z.AI''s
     lower self-reported confidence_pct (78 vs ChatGPT''s 88) does not track its actual hit rate here,
