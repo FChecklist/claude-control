@@ -77,7 +77,29 @@ phases:
       - "Add/update unit tests alongside passcode-login-service.test.ts's existing convention for the
         two new modules."
     depends_on: []
-    status: not_started
+    status: done
+    status_detail: 'Real, pushed PR: https://github.com/FChecklist/compliance-tracker/pull/558
+      (branch worker/task-20260725-100015-phase1-extract-duplicated-ip-extraction). Adds
+      compliance-tracker/src/lib/utils/request-ip.ts (getRequestIp(request), preserving each call
+      site''s own fallback -- undefined for failure-event, "unknown" for passcode-login) and
+      compliance-tracker/src/lib/supabase/admin-client.ts (getSupabaseAdmin(), a cached singleton
+      that throws a named SupabaseAdminConfigError instead of the prior bare ''!'' assertion).
+      Wired into failure-event/route.ts, passcode-login/route.ts, and sso/[orgSlug]/acs/route.ts,
+      replacing every duplicated block scope called out. Unit tests added for both new modules
+      (request-ip.test.ts, admin-client.test.ts) alongside passcode-login-service.test.ts''s own
+      convention. Deliberate deviation from the objective''s literal "validates...at module load"
+      wording: getSupabaseAdmin() validates lazily on first call (cached thereafter), matching this
+      same codebase''s own src/lib/db/index.ts getClient()/getDb() precedent and for the identical
+      documented reason -- eager module-load validation would crash on merely importing the module
+      (a test file, or Next''s build-time route tracing) rather than on first real use. Verified
+      this doesn''t regress CI without any .github/workflows/ci.yml change (also not possible here:
+      the push token lacks the workflow scope needed to modify that file) -- ran `bun test` with only
+      DATABASE_URL/APP_RUNTIME_DATABASE_URL set (CI''s unit-tests job env, no Supabase vars): 1909
+      pass/0 fail. Ran `bun run build` with only DATABASE_URL/NEXT_PUBLIC_SUPABASE_URL/
+      NEXT_PUBLIC_SUPABASE_ANON_KEY set (CI''s build job env, no service-role key): succeeds.
+      `bunx tsc --noEmit` and `eslint` on all changed/new files: clean. Registered in the knowledge
+      engine: KE-20260725-101604-54e8 (query: `python3 scripts/superboss-register.py query-knowledge
+      "phase_1_shared_auth_utils" --tag domain:security-domain-chatgpt-z-ai`).'
 
   - id: phase_2_interior_schema_integrity_migration
     name: "Add missing FK constraints, polygon CHECK constraint, and updated_at columns via a new drizzle migration"
