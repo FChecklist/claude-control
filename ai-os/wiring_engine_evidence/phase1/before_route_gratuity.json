@@ -1,0 +1,54 @@
+{
+  "entity_id": "route-RT-gratuity_calculator-001",
+  "entity_type": "route",
+  "source_system": "github",
+  "path": "repos/compliance-tracker/src/components/veri-chat/ChainSelector.tsx -> repos/compliance-tracker/src/lib/engines/hr-engine.ts",
+  "relationships": [
+    {
+      "target_entity_id": "file-3d5cbfced750",
+      "relationship_type": "originates_at",
+      "evidence": "repos/compliance-tracker/src/components/veri-chat/ChainSelector.tsx"
+    },
+    {
+      "target_entity_id": "file-35bbeb285ce0",
+      "relationship_type": "terminates_at",
+      "evidence": "repos/compliance-tracker/src/lib/engines/hr-engine.ts"
+    },
+    {
+      "target_entity_id": "engine-17",
+      "relationship_type": "hops_through",
+      "evidence": "hop 1: UI Composition Engine (live) via repos/compliance-tracker/src/components/veri-chat/ChainSelector.tsx"
+    },
+    {
+      "target_entity_id": "engine-03",
+      "relationship_type": "hops_through",
+      "evidence": "hop 2: Capability Registry Engine (live) via repos/compliance-tracker/src/lib/services/capability-tree-service.ts"
+    },
+    {
+      "target_entity_id": "engine-08",
+      "relationship_type": "hops_through",
+      "evidence": "hop 3: Workflow Engine (live) via repos/compliance-tracker/src/lib/task-execution-engine.ts"
+    },
+    {
+      "target_entity_id": "engine-06",
+      "relationship_type": "hops_through",
+      "evidence": "hop 4: Rule Engine (live) via repos/compliance-tracker/src/lib/guardrail-registrations.ts"
+    },
+    {
+      "target_entity_id": null,
+      "relationship_type": "registered_capability_match",
+      "evidence": "capability_registry row found live (confidence=1.0, ai_required=False)"
+    }
+  ],
+  "last_verified_ts": "2026-07-25T03:49:08.669201+00:00",
+  "verification_status": "VERIFIED_MATCH",
+  "source_ref": [
+    "route_registry_schema",
+    "capability_registry"
+  ],
+  "metadata": {
+    "capability_name": "gratuity_calculator",
+    "test_status": "passing",
+    "trace_verification_status": "instrumented_unverified"
+  }
+}

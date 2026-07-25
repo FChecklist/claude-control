@@ -71,7 +71,109 @@ phases:
       - "Update this phase''s own status/status_detail in this file in place with what shipped and real
         evidence, per scripts/auto_phase_continuation.py''s own expectation."
     depends_on: []
-    status: not_started
+    status: done
+    status_detail:
+      produced_by_task: task-20260725-055333-wiring-engine-phase1-e2e-gateway-verific
+      completed_on: '2026-07-25'
+      route_chosen: "route-RT-gratuity_calculator-001 (the single strongest existing candidate per this
+        plan's own real_gap_this_plan_targets, unchanged since Phase 0 -- no stronger route was found among
+        the now-10 live capability_registry rows; the other 4 phase-4/document_engine capability rows added
+        since Phase 0 have no populated_routes entry yet, so they are not eligible candidates for this
+        phase's own SCOPE, which requires picking among ai-os/ROUTE_REGISTRY_SCHEMA_2026-07-24.yaml's
+        existing 5 populated_routes)."
+      root_causes_found_and_fixed: "Two real, confirmed bugs in scripts/generate_wiring_registry.py, not
+        pre-existing knowledge -- found while tracing this route: (1) build_routes() only ever emitted a
+        hops_through relationship for hop.get(\"engine_no\") -- a hop_type: gateway entry in a route's
+        expected_path was silently dropped no matter what, the literal, structural reason 0 of 19
+        hops_through relationships across all 5 routes had ever targeted a gateway entity, mechanically
+        guaranteeing the '0 gateway hops' finding this plan's own meta.real_gap_this_plan_targets measured
+        at Phase 0 -- not a missing route, a missing code path. (2) IS_GIT_CHECKOUT used os.path.isdir on
+        .git, false for a git WORKTREE (.git is a file there, e.g. this task's own workspace), so running
+        the script from a worktree silently fell back to reading the stale
+        /opt/veridian/repos/claude-control/ai-os/ mirror instead of local, uncommitted edits -- this task's
+        own ROUTE_REGISTRY_SCHEMA edits were invisible to a first re-run until this was fixed too."
+      what_shipped:
+        - "scripts/generate_wiring_registry.py: build_engines_and_gateways() now also returns
+          gateway_ids_by_id (same shape as the existing engine_ids_by_no); build_routes() resolves
+          hop.gateway_id to a real gateway-<ID> entity_id the same way it already resolved hop.engine_no to
+          engine-<NN>. IS_GIT_CHECKOUT switched from os.path.isdir to os.path.exists on .git."
+        - "ai-os/ROUTE_REGISTRY_SCHEMA_2026-07-24.yaml: extended the expected_path hop item_schema with a
+          gateway_id field (string|null, matches gateway_inventory[].gateway_id verbatim). For
+          RT-gratuity_calculator-001: corrected destination from hr-engine.ts (a real factual error --
+          confirmed by grep that file has no calculateGratuity export) to payroll-engine.ts (the real file,
+          calculateGratuity() at line 29); added 2 new real engine hops (Intent -- engine_no 1, Context --
+          engine_no 2) and 2 new real gateway hops (G04 UserChannel, G03 Organization), all 4 with real
+          file:line evidence in the route's own notes field from a live-grepped call-chain trace against
+          /opt/veridian/repos/compliance-tracker (read-only -- no edits to that repo, same boundary phases
+          1-7 of 20_ENGINES_10_GATEWAYS_PHASE_PLAN already established). Also named, in the same notes
+          field, the 9 pipeline stages confirmed ABSENT from this exact call chain by the same grep method
+          (Planning/Policy/Decision/Automation/Integration/Data/Notification/Audit/Observability) -- none
+          added to expected_path, none marked live, per this phase's own SCOPE instruction to report a gap
+          honestly rather than assume one closed. Updated the file's top-level honest_limitation note, which
+          previously (and still, for the other 4 routes) said no route cites hop_type: gateway anywhere."
+        - "ai-os/wiring_engine_evidence/phase1/{before,after}_route_gratuity.json: the real before/after
+          snapshot of route-RT-gratuity_calculator-001's own entity relationships in
+          ai-os/WIRING_ENGINE_REGISTRY_2026-07-25.json, captured by re-running
+          scripts/generate_wiring_registry.py per this phase's own SCOPE instruction."
+      per_stage_disposition_all_14_named_stages:
+        already_real_before_this_phase_out_of_scope_to_reverify: ["Capability Registry (hop via
+          capability-tree-service.ts)", "Workflow (hop via task-execution-engine.ts)", "Rule (hop via
+          guardrail-registrations.ts, assertBusinessRulesBeforeExecution())"]
+        made_real_by_this_phase: ["Intent (ChainSelector.tsx confirmWithChain(), lines 295-315 -- real
+          recency/frequency chain-path recall, engine_inventory row 1's own exists_as file)", "Context
+          (context.ts ServiceContext/ReadContext, task-service.ts:133/163, constructed at
+          app/api/tasks/route.ts:32)"]
+        honest_named_gaps_confirmed_absent_by_grep_not_assumed: ["Planning (dynamic-chain-directory-service.ts
+          never called by ChainSelector.tsx/ChainSelectorDialog)", "Policy (enforcePolicy() exists in
+          task-execution-engine.ts but is only wired into executePackageDispatch(), an LLM-package-dispatch
+          path, at lines 1932/2140 -- never into executeEngineDispatch()/dispatchEngine(), the path this
+          route actually takes)", "Decision (risk-tier.py/ai-decision-explanation.ts not on this
+          deterministic-dispatch path)", "Automation (automation-rule-service.ts appears only in a code
+          comment in task-service.ts, never an actual import/call)", "Integration (webhook-deliver.ts not
+          called on dispatch completion)", "Data (data-quality-engine.ts imported for other dispatchEngine()
+          switch cases -- GSTIN/PAN/IFSC/etc validation -- not gratuity_calculator's)", "Notification (the
+          one real db.insert(notifications) call in task-service.ts lives inside checkTaskOverdue(), a
+          separate cron-job function, never reached by createTask()/executeTask())", "Audit (zero
+          logActivity() call anywhere in this chain, confirmed by reading the whole call path)",
+          "Observability (no per-request trace/span exists; trace_verification_status honestly stays
+          instrumented_unverified)"]
+        acceptance_bar_met: "gateway boundary (G01-G10) crossed with a real, citable mechanism -- gateway
+          G04 (UserChannel, auth-guard.ts requireAuth(), lines 264-375, called via requireAuthOrApiKey() at
+          app/api/tasks/route.ts:22) and gateway G03 (Organization, context.ts ServiceContext.orgId,
+          confirmed threaded through this exact route). Neither was fabricated: both gateways' own
+          gateway_inventory exists_as lists (ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml) already
+          named these exact files before this phase started -- this phase's contribution was confirming
+          (by grep) that THIS route's real request genuinely passes through them, then wiring the generator
+          to represent that as a hops_through relationship at all."
+      real_evidence:
+        - "python3 scripts/generate_wiring_registry.py (re-run after the fix): route-RT-gratuity_calculator-001's
+          hops_through relationships now include target_entity_id=gateway-G04 (evidence: 'hop 3: UserChannel
+          (live) via repos/compliance-tracker/src/lib/supabase/auth-guard.ts') and
+          target_entity_id=gateway-G03 (evidence: 'hop 4: Organization (live) via
+          repos/compliance-tracker/src/lib/services/context.ts'), both verification_status=VERIFIED_MATCH --
+          see ai-os/wiring_engine_evidence/phase1/after_route_gratuity.json, diffed against
+          before_route_gratuity.json (0 gateway hops, same as this plan's own Phase-0 baseline)."
+        - "terminates_at relationship's target file corrected from hr-engine.ts to payroll-engine.ts,
+          confirmed VERIFIED_MATCH (file exists on disk at generation time)."
+        - "python3 scripts/superboss-register.py query-knowledge \"phase_1_end_to_end_gateway_verification\"
+          --tag domain:veridian-wiring-engine-phased-plan: found=1 (this phase's own SUCCESS_CRITERIA
+          check)."
+      what_remains_for_later_phases:
+        - "The 9 named honest gaps above (Planning/Policy/Decision/Automation/Integration/Data/Notification/
+          Audit/Observability) are real, confirmed-absent stages for THIS route today -- closing them for
+          real (either finding a genuinely-real call site this investigation missed, or building the
+          minimal wiring, within compliance-tracker's own repo boundary since none of these stages'
+          mechanisms can be made real for an in-app HTTP request from claude-control-side Python scripts
+          alone) is compliance-tracker's own future PR, same deferral posture phases 1-7 of
+          20_ENGINES_10_GATEWAYS_PHASE_PLAN used throughout for their own TS-side gaps."
+        - "phase_4_extend_gateway_coverage_beyond_first_proven_path (depends_on: [phase_1...], now satisfied)
+          is the real next phase per this plan's own dependency graph -- applying this same method to the
+          other 4 populated_routes and any new capability_registry rows without a route yet. Not attempted
+          in this task, per this phase's own SCOPE (prove ONE route, never batch-mark multiple '''proven'''
+          from one route's own evidence)."
+        - "phase_2_wiring_registry_knowledge_engine_drift_remediation and
+          phase_3_wiring_registry_live_wiring (both depends_on: []) remain open in this plan -- not
+          attempted in this task."
 
   - id: phase_2_wiring_registry_knowledge_engine_drift_remediation
     name: "Re-verify the 7 knowledge_engine-sourced file rows this run's registry carries as PATH_MISSING/HASH_DRIFTED"
