@@ -589,3 +589,24 @@ decisions:
     check gap analysis correctness and zero duplication before implementing Task 2
     -- pausing the auto-dispatch cron until that check completes is the direct, necessary
     mechanism for honoring that instruction, not a fresh case-by-case confirmation.'
+- id: task2-auto-continuation-resume-2026-07-25
+  raised_by_task: direct-session-action-2026-07-25
+  raised_ts: '2026-07-25T17:38:44.467604+00:00'
+  title: Re-enable the auto-phase-continuation crontab entry -- gap analysis re-verification
+    complete
+  what: 'task-20260725-160908-task2-dedup-integration-audit (PR #71, merged) independently
+    re-verified the VERIDIAN_ARCHITECTURE_V2 gap analysis: 105 items re-checked, 12
+    verdicts corrected via real prior-art discovery, every surviving phase now has
+    a real integration_point into existing infrastructure (Wiring Engine registry,
+    Gateways G05/G09, or an honest standalone justification for phase_10). Uncommenting
+    the auto-phase-continuation crontab line paused earlier today.'
+  needed_action: Owner acceptance of restoring the crontab to its normal always-on
+    state.
+  why_not_done_automatically: Same standing AI_ENGINEERING_POLICY.yaml requirement
+    as every other crontab-item entry in this file.
+  status: approved
+  approved_ts: '2026-07-25T17:38:44.467604+00:00'
+  approved_via: 'Owner directly instructed in chat 2026-07-25: do not stop, finish
+    this, auto-move phase to phase -- resuming the auto-continuation mechanism is
+    the direct execution of that instruction now that the precondition (gap re-verification)
+    it was paused for is genuinely met.'
