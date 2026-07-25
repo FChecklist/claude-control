@@ -2650,6 +2650,48 @@ registries:
     query-knowledge calls, automation_rule_engine.py, auto_phase_continuation.py, etc.) and,
     if a real AI<->AI call site is ever built, wiring point 16 to it -- both real, separate,
     unscoped follow-ons, not attempted here.'
+- id: scripts_drift_audit_and_system_integration_confirmation
+  type: live_vs_repo_deploy_gap_audit_and_owner_confirmation_answer
+  path: ai-os/SCRIPTS_LIVE_VS_REPO_DRIFT_AUDIT_2026-07-25.yaml + ai-os/SYSTEM_INTEGRATION_CONFIRMATION_2026-07-25.yaml
+    + scripts/deploy-live-scripts.sh + scripts/sync-repos.sh
+  scope: 'task-20260725-092256-fix-live-repo-scripts-drift-and-system-i: confirmed, real,
+    previously-undetected finding -- /opt/veridian/scripts/ (the path every cron job and
+    every direct `python3 /opt/veridian/scripts/X.py` invocation actually runs) had
+    drifted from claude-control''s scripts/ (this session''s own PR merge target) because
+    no automatic mechanism ever connected them; sync-repos.sh (every 2h) only ran
+    `git pull --ff-only` inside repos/<repo>/ checkouts. A full diff -rq inventory
+    classified every entry (operational_only / undeployed_real_feature / stale_live_copy
+    / needs_owner_decision, see the drift audit doc) -- 9 stale_live_copy files
+    (incl. task-gateway.py, which was missing PR #66''s OWNER_ENGINE gate entirely, and
+    veridian-task-watchdog.py, missing 3 governance-mandated monitoring functions never
+    actually running) and 25 undeployed_real_feature files (incl. policy_decision.py,
+    prompt_gateway/query.py, and the ai-os/20_ENGINES_10_GATEWAYS engines
+    context_engine.py/document_engine.py/decision-service.py/automation_rule_engine.py/etc.)
+    were deployed live, each verified with a real smoke invocation, not just a file copy.
+    Root cause closed permanently: scripts/deploy-live-scripts.sh (new, copies only
+    git-tracked scripts/ files repo->live, so operational-only live files -- crontab
+    backups, cost/credit scripts, the OpenRouter proxy -- are structurally never touched,
+    not excluded via a hand-maintained list) is now called from the end of
+    scripts/sync-repos.sh (itself newly git-tracked -- it had 0 prior commits despite
+    being the only related cron job). Regenerated ai-os/WIRING_ENGINE_REGISTRY_2026-07-25.json
+    fresh from the corrected live copy (7658 entities, 75.95% wired) and answered all 6
+    of the Owner''s confirmation points with real command-output evidence, including 2
+    concrete zero-duplication findings (one resolved, one still open) and naming ~24
+    core orchestration scripts that remain outside version control entirely (left alone,
+    out of this task''s scope, flagged for a dedicated follow-up).'
+  status: live
+  query_command: python3 scripts/superboss-register.py query-knowledge "scripts_drift_audit"
+    --tag domain:scripts_drift_audit_and_system_integration_confirmation
+  real_verification: 'diff -q /opt/veridian/scripts/task-gateway.py
+    /opt/veridian/repos/claude-control/scripts/task-gateway.py (no difference);
+    grep -c owner_engine_gate /opt/veridian/scripts/task-gateway.py (16); a real
+    /opt/veridian/scripts/deploy-live-scripts.sh run (log: deployed=35 unchanged=17
+    failed=0 on first run, deployed=0 unchanged=52 failed=0 on the immediate re-run,
+    confirming idempotency and that credit-accountant.py -- an operational-only file --
+    was untouched, same sha256 before/after).'
+  next_phase: 'Owner decision needed on the ~24 untracked core orchestration scripts
+    (see drift audit doc needs_owner_decision_summary + the operational_only entry
+    flagging them) -- whether/when to onboard them into git, not attempted here.'
 tree_lineage:
   tree1_audit_tree:
     path: /opt/veridian/repos/compliance-tracker/ai-os/audit-tree/

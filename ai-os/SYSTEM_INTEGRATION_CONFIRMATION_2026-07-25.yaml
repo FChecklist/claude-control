@@ -1,0 +1,192 @@
+meta:
+  title: System integration confirmation -- answering the Owner's 6-point confirmation request
+  generated_by: task-20260725-092256-fix-live-repo-scripts-drift-and-system-i
+  generated_ts: "2026-07-25T09:45:00Z"
+  method: real command output cited inline, no self-reported/summarized claims
+  companion_doc: ai-os/SCRIPTS_LIVE_VS_REPO_DRIFT_AUDIT_2026-07-25.yaml
+
+point_1_integrated_system:
+  question: "GitHub+Vercel+Supabase+Server form one integrated system?"
+  verdict: PARTIALLY_TRUE_WITH_NAMED_GAPS
+  evidence:
+    github:
+      status: TRUE
+      cite: >
+        `git remote -v` on both this workspace and /opt/veridian/repos/claude-control
+        -> origin https://github.com/FChecklist/claude-control.git (fetch+push).
+        This session's own work is the evidence: commit e31e8f3 (HEAD) is
+        "Merge pull request #42", 9991e4c is "Merge pull request #66" -- real
+        merged PRs, not just stored credentials.
+    vercel:
+      status: PARTIAL -- 2 of 3 linked projects genuinely connected, 1 is not
+      cite: >
+        /opt/veridian/logs/sync-vercel-env-20260725-080501.log (real cron run,
+        08:05:01 UTC today): compliance-tracker and projexa both show
+        "+ VERCEL_OIDC_TOKEN (Updated)" / "Updated .env.local file" -- a real,
+        current, working `vercel env pull` against real Vercel projects, not a
+        stored credential going unused. veda-advisors in the SAME run: "Error:
+        Your codebase isn't linked to a project on Vercel. Run `vercel link`
+        to begin." -- a real, current, unresolved gap.
+    supabase:
+      status: TRUE for 2 real projects, PARTIAL for verified deployed-code linkage
+      cite: >
+        mcp__claude_ai_Supabase__list_projects (called live this task, not cached):
+        2 projects, "projexa" (id evpckeuxgvahguwsaeul) and "verdian-ai" (id
+        pcrjmlpuqsbocqfwoxod), both status=ACTIVE_HEALTHY, region ap-south-1,
+        Postgres 17.6.1, reachable right now via the MCP connection. Real deployed
+        code linkage confirmed for compliance-tracker (`grep -rl supabase.co
+        /opt/veridian/repos/compliance-tracker/.env.local` matched); projexa's
+        .env.local does not expose a SUPABASE_* var under that name (not
+        independently confirmed which project it points at in this pass).
+        Separately, /opt/veridian/scripts/sync-verdian-ai-data.sh (real cron,
+        daily 03:00) runs a genuine `pg_dump` against the real remote verdian-ai
+        Supabase Postgres into a local mirror -- a real, working, non-credential-only
+        connection.
+    server:
+      status: TRUE
+      cite: >
+        `crontab -l` (this session, real output) lists 19 real cron lines, all
+        invoking /opt/veridian/scripts/*.py|*.sh via run-logged.sh. This
+        server's relationship to GitHub is sync-repos.sh (`git pull --ff-only`,
+        every 2h) plus, as of this task, the new deploy-live-scripts.sh call
+        appended to it -- so the server now has a real, automatic, confirmed-working
+        path from a GitHub-merged commit to the code that actually executes here
+        (see ai-os/SCRIPTS_LIVE_VS_REPO_DRIFT_AUDIT_2026-07-25.yaml for the deploy
+        run's own log: 35 deployed, 17 unchanged, 0 failed).
+  named_gaps:
+    - veda-advisors has no real Vercel link (`vercel link` never run)
+    - "projexa's Supabase project linkage not independently confirmed via its own .env.local (only verdian-ai's DB mirror and compliance-tracker's env were directly checked)"
+
+point_2_engines_wired:
+  question: "All engines are connected and wired -- use the real Wiring Engine registry as the measurement tool, regenerate fresh, report real current coverage."
+  verdict: MEASURED_PARTIAL_COVERAGE_NOT_FULL
+  evidence:
+    before_this_task: >
+      /opt/veridian/ai-os/WIRING_ENGINE_REGISTRY_2026-07-25.json.bak-pre-rerun-093200
+      (preserved) -- generated 06:00:02 UTC by the STALE live copy of
+      generate_wiring_registry.py (itself one of this task's 9 "differ" files):
+      7650 entities, 5811 wired (75.96%). By type: function 100% (5019/5019),
+      table 100% (444/444), ai_role 100% (195/195), engine 100% (20/20),
+      gateway 100% (10/10), route 100% (5/5), cron_job 78.6% (11/14),
+      script 27.5% (11/40), file 5.0% (96/1903).
+    after_this_task: >
+      Regenerated for real 2026-07-25T09:31:40Z from the now-correctly-deployed
+      live scripts/generate_wiring_registry.py (`time python3
+      generate_wiring_registry.py`, real run, 0.883s). 7658 entities, 5816 wired
+      (75.95%). By type: function 100% (5019/5019), table 100% (444/444),
+      ai_role 100% (195/195), engine 100% (20/20), gateway 100% (10/10), route
+      100% (5/5), cron_job 78.6% (11/14), script 27.5% (11/40), file 5.3%
+      (101/1911).
+    interpretation: >
+      Coverage is essentially unchanged (75.96% -> 75.95%, +8 entities) --
+      generate_wiring_registry.py's own drift (stale_live_copy) was a minor
+      version behind, not itself a coverage-affecting bug. The REAL, MEASURED
+      finding here is that overall wiring is NOT complete: script (27.5%) and
+      file (5.3%) entity types are the true weak points -- most scripts and
+      files in this system are not yet linked into any relationship the wiring
+      engine can see. engine/gateway/table/function/ai_role/route are all 100%
+      wired.
+  named_gaps:
+    - "script entities: only 11/40 (27.5%) wired -- most scripts, including several this task just deployed, have no recorded relationship yet"
+    - "file entities: only 101/1911 (5.3%) wired -- the large majority of catalogued files are unlinked"
+
+point_3_software_before_ai:
+  question: "Software runs before AI uses it (the OWNER_ENGINE gate)."
+  verdict: NOW_TRUE_IN_PRODUCTION -- was FALSE until this task's deploy
+  evidence:
+    before: >
+      /opt/veridian/scripts/task-gateway.py.bak-predeploy-20260725-093040
+      (preserved, this task's own pre-deploy backup) has 0 occurrences of
+      owner_engine_gate -- confirmed by this task's initial investigation
+      (dated Jul 24 14:16, matching git blob 64471f2b, which PREDATES PR #66's
+      merge). Every direct `python3 /opt/veridian/scripts/task-gateway.py`
+      invocation prior to this task's deploy ran WITHOUT the gate, regardless
+      of PR #66 having merged into claude-control hours earlier.
+    after: >
+      `diff -q /opt/veridian/scripts/task-gateway.py
+      /opt/veridian/repos/claude-control/scripts/task-gateway.py` -> no
+      difference. `grep -c owner_engine_gate /opt/veridian/scripts/task-gateway.py`
+      -> 16. `python3 task-gateway.py --help` runs cleanly post-deploy, listing
+      all real subcommands (submit/start/log/close/register-automation/status).
+  caveat: >
+    This confirms the gate is now present and importable in the file that
+    actually runs. It does not re-verify the gate's own internal logic (that
+    was PR #66's own scope, not re-audited here) -- only that live now matches
+    the merged, presumably-already-reviewed repo version.
+
+point_4_fast_and_efficient:
+  question: "System is fast and efficient."
+  verdict: PARTIALLY_TRUE_WITH_ONE_NAMED_BOTTLENECK
+  evidence:
+    cite: >
+      Real durations pulled from the live superboss-register.sqlite `actions`
+      table (run-logged.sh's own job_end log entries), most recent same-day
+      samples: queue-dispatcher 0s, security-check 0-1s, veridian-self-check
+      0-1s, file-inventory 0s, supervisor-sweep 26-28s, auto-phase-continuation
+      12s. health-check-15min.py: duration_s=738 and duration_s=737 on its two
+      most recent runs (09:12:18 and 09:27:19 UTC today) -- against a 15-minute
+      (900s) cron interval, that is ~82% of its own scheduling window spent
+      running. sync-controller-back (30-min cron): most recent sampled run
+      status=failed, exit_code=1, duration_s=8 (2026-07-25T09:30:09Z) -- a
+      real, current failure, unrelated to this task's scope, not investigated
+      further here.
+  named_gaps:
+    - "health-check-15min.py takes ~12.3 minutes to run on a 15-minute schedule -- a real, measured efficiency problem, not a hypothetical one"
+    - "sync-controller-back.py failed on its most recent sampled run (exit_code=1) -- flagged, not diagnosed (out of this task's scope)"
+
+point_5_zero_duplication:
+  question: "Zero duplication."
+  verdict: FALSE -- 2 concrete instances found, 1 resolved by this task, 1 pre-existing and unresolved
+  evidence:
+    resolved_by_this_task: >
+      Before this task's deploy, live preflight-guard.py and risk-tier.py each
+      carried their OWN inline copy of risk/decision classification logic,
+      while claude-control's repo had already refactored both to call a single
+      shared scripts/policy_decision.py (never deployed live). That was a real,
+      currently-running duplication of decision logic in two places -- exactly
+      the kind of drift-produced duplication this task's SCOPE flagged as
+      likely. Deploying policy_decision.py + the refactored preflight-guard.py/
+      risk-tier.py (this task's own action, see drift audit doc) collapses it
+      back to one copy.
+    still_open: >
+      /opt/veridian/scripts/anthropic_openrouter_proxy.py and
+      anthropic_openrouter_proxy_v2.py are two live, distinct files (`diff -q`
+      confirms they differ). worker-entrypoint.sh's own comment references
+      "anthropic_openrouter_proxy_v2.py's glm-response-cache" -- v2 is the one
+      actually referenced by name in live orchestration code, but v1
+      (anthropic_openrouter_proxy.py, no "_v2" suffix) still sits in
+      /opt/veridian/scripts/ alongside it, undifferentiated from a live,
+      in-use script by filename alone. Not resolved by this task (operational-only,
+      out of SCOPE) -- flagged plainly per the Owner's own "do not undersell it"
+      instruction.
+
+point_6_zero_gaps:
+  question: "Zero gaps."
+  verdict: FALSE -- this task's own headline finding, plus 3 smaller gaps surfaced along the way
+  evidence:
+    headline: >
+      See ai-os/SCRIPTS_LIVE_VS_REPO_DRIFT_AUDIT_2026-07-25.yaml in full: no
+      automatic deploy mechanism ever connected claude-control's scripts/ to
+      /opt/veridian/scripts/. 9 files were stale-live-copies (including
+      task-gateway.py missing the OWNER_ENGINE gate and veridian-task-watchdog.py
+      missing 3 governance-mandated monitoring functions that were reported
+      built but never actually ran on the server), 25 real repo features were
+      never deployed live at all. This task deployed all 34, verified each with
+      a real smoke invocation, and built + deployed a permanent fix
+      (scripts/deploy-live-scripts.sh, called from scripts/sync-repos.sh, git-tracked-files-only
+      copy so operational-only live files are structurally never touched).
+    secondary_gaps_surfaced:
+      - "~24 core orchestration scripts (queue-dispatcher.py, worker-entrypoint.sh, master-decompose.py, system-sync.py, veridian-task.py, supervisor-entrypoint.sh/sweep.sh, recover-failed-workers.py, repair_controller.py, and others) have 0 or partial git history -- load-bearing production code with no real version control. Left alone (out of this task's SCOPE), listed plainly in the drift audit's needs_owner_decision / operational_only-with-caveat entries."
+      - "/opt/veridian/repos/claude-control (the git checkout used for reads in this task) was itself 2 commits behind origin/master at the start of this session -- sync-repos.sh's own uncommitted-changes safety check had skipped it on its 08:00 run. Self-resolved by the time this task ran its own comparisons; noted as a related, non-blocking observation."
+      - "root/system crontab could not be read this session (no sudo password available) -- this audit's 'no other deploy mechanism exists' conclusion is not a direct read of root's crontab, only of every user-level and filesystem-visible mechanism. Flagged, not asserted away."
+
+closing_checkpoint:
+  genuinely_true_now:
+    - "Point 3 (software runs before AI / OWNER_ENGINE gate) -- was false, now true in production: task-gateway.py live now has the gate (grep -c owner_engine_gate = 16), verified by diff -q showing zero difference from the merged repo version."
+    - "The specific stale-live-copy/undeployed-feature drift found at task start -- closed: 34 files deployed, 0 failed, each smoke-tested."
+  partially_true_named_reason:
+    - "Point 1 (integration) -- GitHub and server legs fully confirmed; Vercel confirmed for 2/3 projects (veda-advisors not linked); Supabase confirmed for 2 real active projects but deployed-code linkage only directly re-verified for compliance-tracker."
+    - "Point 2 (engines wired) -- wiring registry regenerated fresh (75.95% overall), but script (27.5%) and file (5.3%) entity types are measurably under-wired; this was true before this task and remains true after (the drift fix did not change wiring coverage, only which script bytes run)."
+    - "Point 4 (fast/efficient) -- true for the large majority of cron jobs (0-30s), false for health-check-15min.py specifically (~738s runtime on a 900s schedule, real and current)."
+    - "Point 5 (zero duplication) -- one real instance (preflight-guard.py/risk-tier.py inline logic vs shared policy_decision.py) resolved by this task; one real instance (anthropic_openrouter_proxy.py vs _v2.py) remains open, unresolved, operational-only."
+    - "Point 6 (zero gaps) -- the headline drift gap is closed by this task, but 3 secondary gaps (untracked core orchestration scripts, the transient repo-checkout lag, and the unread-root-crontab caveat) are surfaced honestly rather than closed, per this task's own SCOPE (not all were in scope to fix)."
