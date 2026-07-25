@@ -5360,3 +5360,75 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260725-080900-owner-engine-mandatory-gate-implementati/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/66'
     last_touched: '2026-07-25'
+
+  - id: WORKER-20260725-091243-fix-pr42-stale-merge-conflict
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''fix-pr42-stale-merge-conflict'' on claude-control
+      reached status=completed. tier1, Superboss-approved, merged autonomously: '
+    where: /opt/veridian/ai-os/tasks/task-20260725-091243-fix-pr42-stale-merge-conflict/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-25'
+
+  - id: WORKER-20260725-092256-fix-live-repo-scripts-drift-and-system-i
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''fix-live-repo-scripts-drift-and-system-integration-audit''
+      on claude-control reached status=completed. tier1, Superboss-approved, merged
+      autonomously: https://github.com/FChecklist/claude-control/pull/67'
+    where: '/opt/veridian/ai-os/tasks/task-20260725-092256-fix-live-repo-scripts-drift-and-system-i/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/67'
+    last_touched: '2026-07-25'
+
+  - id: WORKER-20260725-100015-phase1-extract-duplicated-ip-extraction
+    project: veridian
+    type: worker-task
+    status: in-progress
+    summary: 'Server-worker task ''phase1-extract-duplicated-ip-extraction-supabase-admin''
+      on claude-control reached status=awaiting_human_approval. tier2, Superboss-approved,
+      held for human merge: https://github.com/FChecklist/claude-control/pull/68'
+    where: '/opt/veridian/ai-os/tasks/task-20260725-100015-phase1-extract-duplicated-ip-extraction/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/68'
+    last_touched: '2026-07-25'
+
+  - id: WORKER-20260725-104606-owner-engine-document-accuracy-convergen
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''owner-engine-document-accuracy-convergence-task1''
+      on claude-control reached status=completed. tier1, Superboss-approved, merged
+      autonomously: https://github.com/FChecklist/claude-control/pull/69'
+    where: '/opt/veridian/ai-os/tasks/task-20260725-104606-owner-engine-document-accuracy-convergen/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/69'
+    last_touched: '2026-07-25'
+
+  - id: WORKER-20260725-112909-veridian-architecture-v2-task2-phase0-ga
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''veridian-architecture-v2-task2-phase0-gap-analysis-plan''
+      on claude-control reached status=completed. tier1, Superboss-approved, merged
+      autonomously: https://github.com/FChecklist/claude-control/pull/70'
+    where: '/opt/veridian/ai-os/tasks/task-20260725-112909-veridian-architecture-v2-task2-phase0-ga/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/70'
+    last_touched: '2026-07-25'
+
+  - id: WORKER-20260725-131506-task2-dedup-integration-audit
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''task2-dedup-integration-audit'' on claude-control
+      reached status=failed. PRE-FLIGHT REJECTED (crontab_unauthorized_change, transient):
+      live crontab differs from the last-known-approved snapshot at /opt/veridian/ai-os/CRONTAB_APPROVED_SNAPSHOT.txt,
+      and prompt.txt does not cite a verified-approved OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      entry for this exact change. Per AI_ENGINEERING_POLICY.yaml''s genuinely_irreversible_actions
+      standing exception, crontab modifications require explicit Owner confirmation
+      before execution -- this is not a code bug, it is the policy working as designed.
+      If this change was Owner-approved, cite it in prompt.txt as: ''OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      entry id=<id> status=approved'' and ensure that entry''s status is actually ''approved''
+      in the live decisions file. -- no model call made, no cost incurred'
+    where: /opt/veridian/ai-os/tasks/task-20260725-131506-task2-dedup-integration-audit/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-25'
