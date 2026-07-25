@@ -21,10 +21,20 @@ itself, under /opt/veridian/chatgpt-audit/_pending_requests/, still routed
 through scripts/chatgpt_audit_guard.py's guarded_write (same mechanical
 write-scope guarantee as every other write in this workspace).
 
-Run:
+Run (domain mode, unchanged):
   python3 scripts/generate_chatgpt_audit_request.py --domain Security
   python3 scripts/generate_chatgpt_audit_request.py --domain Security --files src/lib/engines/security-engine.ts,src/lib/supabase/auth-guard.ts
   python3 scripts/generate_chatgpt_audit_request.py --domain Security --repo compliance-tracker --max-files 6
+
+Run (module mode, task-20260725-063204-module-scoped-zai-gap-audit): real
+MODULE-scoped requests instead of domain-scoped ones, using
+scripts/module_gap_audit_lib.py to resolve real module boundaries (see that
+module's own header for the module_registry vs directory-structure source
+per repo) and to chunk a module's real files into ceiling-bounded request
+files (~400 lines / ~20KB per request, never truncating a file -- splitting
+into numbered part files instead):
+  python3 scripts/generate_chatgpt_audit_request.py --module board_meetings --repo compliance-tracker
+  python3 scripts/generate_chatgpt_audit_request.py --module access-review --repo projexa
 """
 import argparse
 import json
@@ -37,6 +47,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, SCRIPT_DIR)
 from chatgpt_audit_guard import ALLOWED_ROOT, guarded_write  # noqa: E402
 from chatgpt_audit_versioning import VALID_SUBFOLDERS  # noqa: E402
+import module_gap_audit_lib as mgal  # noqa: E402
 
 import yaml  # noqa: E402
 
@@ -236,13 +247,155 @@ def build_request_text(domain, repo, repo_path, files_analysed, used_fallback, m
     return "\n".join(parts)
 
 
+def build_module_request_text(repo, module, files_analysed, used_fallback, discovery_method,
+                               standards_used, repository_version, commit_hash, schema, chunk_index, chunk_count):
+    field_contract = render_field_contract(schema)
+
+    file_sections = []
+    for rel in files_analysed:
+        abs_path = os.path.join(REPOS_ROOT, repo, rel)
+        try:
+            with open(abs_path, encoding="utf-8", errors="replace") as f:
+                content = f.read()
+        except OSError as e:
+            content = f"<< could not read file: {e} >>"
+        file_sections.append(f"### repos/{repo}/{rel}\n```\n{content}\n```")
+
+    fallback_note = (
+        "\nNOTE: no keyword match (filename substring or content grep) found this module's identifier "
+        "in this repo, so the files below are real repo-overview docs instead -- treat this as a "
+        "starter/partial scope, not a full module audit.\n" if used_fallback else ""
+    )
+    part_note = (
+        f"\nThis is PART {chunk_index} of {chunk_count} for this module -- the module's real content "
+        f"exceeded the ~400-line/~20KB single-request reference ceiling, so it was split across "
+        f"{chunk_count} numbered request files rather than truncated. Audit only the files pasted below; "
+        f"the other parts cover the module's remaining real files.\n" if chunk_count > 1 else ""
+    )
+
+    parts = [
+        "SYSTEM: You are auditing one real VERIDIAN AI OS MODULE for gaps, duplication, and "
+        "incompleteness against the standards listed below. You have READ-ONLY access to the file "
+        "contents pasted below (READ_SCOPE) -- you do not have write access to any production "
+        "source, and your output is a single YAML document, nothing else.",
+        "",
+        "For EACH real file/function pasted below, identify: (a) what it does (its function), "
+        "(b) the business logic/rule it implements, (c) its real inputs and outputs, and (d) any gap "
+        "between what it actually does and what this module's own apparent purpose requires. Report "
+        "(a)-(c) as grounding inside your recommendation/implementation_suggestion text, and report "
+        "(d) using missing_items (required behaviour absent), duplicate_items (redundant "
+        "implementations), and incomplete_items (partially-implemented items) -- exactly the existing "
+        "schema fields below, no new fields.",
+        "",
+        f"Output MUST match ai-os/CHATGPT_AUDIT_RECORD_SCHEMA_2026-07-24.yaml exactly: every "
+        f"required field populated, no fabricated file paths, no fabricated linkage ids. Do not "
+        f"include audit_id or timestamp -- those are allocated separately once you respond; if you "
+        f"include them anyway they will be ignored and replaced. Required/optional fields:",
+        field_contract,
+        "",
+        f"STANDARDS_USED: {standards_used}",
+        f"MODULES_ANALYSED: {[module['module_key']]}",
+        f"REPOSITORY_VERSION: {repository_version}",
+        f"COMMIT_HASH: {commit_hash}",
+        f"MODULE (real module boundary -- target chatgpt-audit subfolder is 'Modules'): "
+        f"{module['module_key']} (repo: {repo}, display_name: {module.get('display_name')}, "
+        f"table_name: {module.get('table_name')}, boundary_source: {discovery_method})",
+        fallback_note,
+        part_note,
+        "USER: Here is the real file content for each path in READ_SCOPE, concatenated with a path "
+        "header per file. Analyse these against the standards above and produce your audit findings "
+        "as a single YAML document matching the schema.",
+        "",
+        "\n\n".join(file_sections),
+        "",
+        "Respond with ONLY the YAML document -- no prose before or after, no markdown code fence.",
+    ]
+    return "\n".join(parts)
+
+
+def _write_module_requests(args, module, source, repo_path, commit_hash, branch, schema, standards_used):
+    files_analysed, used_fallback, discovery_method, excluded_oversized = mgal.find_module_files(
+        repo_path, module, explicit_files=[f.strip() for f in args.files.split(",")] if args.files else None,
+    )
+    if not files_analysed:
+        print(json.dumps({
+            "ok": False,
+            "error": f"no real files found for module '{module['module_key']}' in {repo_path} (keyword "
+                     f"search and fallback docs both empty) -- pass --files explicitly",
+        }, indent=2))
+        sys.exit(1)
+
+    chunks = mgal.pack_into_chunks(repo_path, files_analysed, args.max_request_lines, args.max_request_bytes)
+    ts = _now_compact()
+    request_paths = []
+
+    for idx, chunk_files in enumerate(chunks, start=1):
+        request_text = build_module_request_text(
+            repo=args.repo, module=module, files_analysed=chunk_files, used_fallback=used_fallback,
+            discovery_method=discovery_method, standards_used=standards_used, repository_version=branch,
+            commit_hash=commit_hash, schema=schema, chunk_index=idx, chunk_count=len(chunks),
+        )
+        part_suffix = f"-part{idx}of{len(chunks)}" if len(chunks) > 1 else ""
+        request_filename = f"Module-{args.repo}-{module['module_key']}-request-{ts}{part_suffix}.txt"
+        request_path = os.path.join(PENDING_REQUESTS_DIR, request_filename)
+
+        ingest_cmd = (f"python3 scripts/ingest_chatgpt_audit_response.py --module {module['module_key']} "
+                       f"--repo {args.repo} --file <response-file>")
+        header = (
+            "=== VERIDIAN ChatGPT/Z.AI Audit Request (manual-bridge, module-scoped) ===\n"
+            f"Module: {module['module_key']} ({args.repo})\n"
+            f"Part: {idx} of {len(chunks)}\n"
+            f"Generated: {datetime.now(timezone.utc).isoformat()}\n"
+            "Generated by: scripts/generate_chatgpt_audit_request.py --module "
+            "(task-20260725-063204-module-scoped-zai-gap-audit)\n"
+            "\n"
+            "INSTRUCTIONS FOR THE OWNER:\n"
+            "  1. Copy everything below the '===== COPY BELOW THIS LINE =====' marker into a new,\n"
+            "     free ChatGPT or Z.AI web chat session (no API key needed).\n"
+            "  2. Save the model's full response (YAML only) to a file.\n"
+            f"  3. Run: {ingest_cmd}\n"
+            "\n"
+            "===== COPY BELOW THIS LINE =====\n"
+        )
+        guarded_write(request_path, header + request_text)
+        request_paths.append({
+            "path": request_path, "part": idx, "of": len(chunks), "files": chunk_files,
+            "lines": sum(mgal.file_stats(repo_path, f)[0] for f in chunk_files),
+            "bytes": sum(mgal.file_stats(repo_path, f)[1] for f in chunk_files),
+        })
+
+    print(json.dumps({
+        "ok": True,
+        "mode": "module",
+        "module": module["module_key"],
+        "repo": args.repo,
+        "module_source": source,
+        "files_analysed": files_analysed,
+        "excluded_oversized": excluded_oversized,
+        "used_fallback_docs": used_fallback,
+        "discovery_method": discovery_method,
+        "standards_used": standards_used,
+        "repository_version": branch,
+        "commit_hash": commit_hash,
+        "chunk_count": len(chunks),
+        "request_paths": request_paths,
+        "next_step": (f"python3 scripts/ingest_chatgpt_audit_response.py --module {module['module_key']} "
+                      f"--repo {args.repo} --file <response-file> (once per generated part)"),
+    }, indent=2))
+    sys.exit(0)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--domain", required=True, choices=VALID_SUBFOLDERS)
+    mode_group = parser.add_mutually_exclusive_group(required=True)
+    mode_group.add_argument("--domain", choices=VALID_SUBFOLDERS, help="domain-scoped mode (original)")
+    mode_group.add_argument("--module", help="module-scoped mode (task-20260725-063204): real module_key/directory name")
     parser.add_argument("--repo", default="compliance-tracker", help="repo name under /opt/veridian/repos/")
     parser.add_argument("--files", default=None, help="comma-separated repo-relative paths to override auto-discovery")
-    parser.add_argument("--max-files", type=int, default=DEFAULT_MAX_FILES)
-    parser.add_argument("--max-file-bytes", type=int, default=DEFAULT_MAX_FILE_BYTES)
+    parser.add_argument("--max-files", type=int, default=DEFAULT_MAX_FILES, help="domain mode only")
+    parser.add_argument("--max-file-bytes", type=int, default=DEFAULT_MAX_FILE_BYTES, help="domain mode only")
+    parser.add_argument("--max-request-lines", type=int, default=mgal.DEFAULT_MAX_REQUEST_LINES, help="module mode only")
+    parser.add_argument("--max-request-bytes", type=int, default=mgal.DEFAULT_MAX_REQUEST_BYTES, help="module mode only")
     parser.add_argument("--standards", default=None, help="comma-separated standards_used override")
     args = parser.parse_args()
 
@@ -251,12 +404,38 @@ def main():
         print(json.dumps({"ok": False, "error": f"repo not found: {repo_path}"}, indent=2))
         sys.exit(1)
 
+    try:
+        commit_hash = _run_git(repo_path, "rev-parse", "HEAD")
+        branch = _run_git(repo_path, "rev-parse", "--abbrev-ref", "HEAD")
+    except RuntimeError as e:
+        print(json.dumps({"ok": False, "error": str(e)}, indent=2))
+        sys.exit(1)
+
+    schema = load_schema()
+    standards_used = resolve_standards(repo_path, [s.strip() for s in args.standards.split(",")] if args.standards else None)
+
+    if args.module:
+        try:
+            module, source, all_modules = mgal.find_module(args.repo, repo_path, args.module)
+        except ValueError as e:
+            print(json.dumps({"ok": False, "error": str(e)}, indent=2))
+            sys.exit(1)
+        if module is None:
+            print(json.dumps({
+                "ok": False,
+                "error": f"module '{args.module}' not found for repo '{args.repo}'",
+                "module_source": source,
+                "available_modules_count": len(all_modules),
+                "available_modules_sample": [m["module_key"] for m in all_modules[:20]],
+            }, indent=2))
+            sys.exit(1)
+        _write_module_requests(args, module, source, repo_path, commit_hash, branch, schema, standards_used)
+        return
+
     explicit_files = [f.strip() for f in args.files.split(",")] if args.files else None
 
     try:
         files_analysed, used_fallback = discover_files(repo_path, args.domain, args.max_files, explicit_files)
-        commit_hash = _run_git(repo_path, "rev-parse", "HEAD")
-        branch = _run_git(repo_path, "rev-parse", "--abbrev-ref", "HEAD")
     except (RuntimeError, FileNotFoundError) as e:
         print(json.dumps({"ok": False, "error": str(e)}, indent=2))
         sys.exit(1)
@@ -270,8 +449,6 @@ def main():
         sys.exit(1)
 
     modules_analysed = sorted({os.path.dirname(f).split("/")[-1] or f for f in files_analysed})
-    standards_used = resolve_standards(repo_path, [s.strip() for s in args.standards.split(",")] if args.standards else None)
-    schema = load_schema()
 
     request_text = build_request_text(
         domain=args.domain, repo=args.repo, repo_path=repo_path, files_analysed=files_analysed,
@@ -304,6 +481,7 @@ def main():
 
     print(json.dumps({
         "ok": True,
+        "mode": "domain",
         "request_path": request_path,
         "domain": args.domain,
         "repo": args.repo,

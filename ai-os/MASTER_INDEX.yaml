@@ -2354,6 +2354,46 @@ registries:
   next_phase: 'Once the Owner supplies OPENAI_API_KEY and names the model (see owner_decision above), a
     future task wires the real ChatGPT call using ai-os/CHATGPT_AUDIT_BLOCKER_2026-07-24.yaml''s
     exact_call_shape_once_key_exists -- not part of this registry entry''s own scope.'
+- id: module_gap_audit
+  type: module_scoped_manual_bridge_audit_extension
+  path: ai-os/MODULE_GAP_AUDIT_2026-07-25.yaml + ai-os/MODULE_GAP_AUDIT_MODULE_LIST_2026-07-25.yaml
+    + scripts/module_gap_audit_lib.py + scripts/generate_module_gap_audit_module_list.py
+    (extends registries.chatgpt_audit_workspace''s scripts/generate_chatgpt_audit_request.py
+    and scripts/ingest_chatgpt_audit_response.py with a --module/--repo mode -- same files, no
+    parallel scripts)
+  scope: 'task-20260725-063204-module-scoped-zai-gap-audit: extends the domain-scoped
+    ChatGPT/Z.AI manual-bridge audit (proven live for the Security domain, both ChatGPT and
+    Z.AI -- AUDIT-000008/9/10) to real MODULE-scoped requests covering compliance-tracker and
+    projexa, so the Owner can have Z.AI''s free chat engine analyze every real module''s
+    function, business logic, and input/output for gaps. Zero schema/guard/versioning changes
+    -- reuses ai-os/CHATGPT_AUDIT_RECORD_SCHEMA_2026-07-24.yaml, scripts/chatgpt_audit_guard.py,
+    scripts/chatgpt_audit_versioning.py, and the schema''s existing ''Modules'' domain subfolder
+    exactly as-is. Module boundaries checked for an existing registry first per KNOWN_CONTEXT:
+    compliance-tracker has one (compliance.module_registry, a real Postgres table seeded via
+    ~30 drizzle/*.sql migrations, 110 real modules, parsed mechanically -- not hand-typed);
+    projexa does not (confirmed live), so its modules are mechanically derived from
+    src/app/api/<x>/ directory structure (79 real directories) per KNOWN_CONTEXT''s sanctioned
+    fallback. File discovery per module unions filename-substring + `git grep -lI` content
+    match on snake/kebab/camelCase identifier variants, narrows SQL matches to schema-defining
+    migrations, and excludes monolithic shared files (e.g. the 10709-line src/lib/db/schema.ts)
+    from auto-discovery. Requests are chunked to a ~400-line/~20KB reference ceiling (whole
+    files only, never truncated -- oversized modules split into numbered part files instead).
+    First real batch generated this task: 5 request files across 5 real modules (3
+    compliance-tracker, 2 projexa) under /opt/veridian/chatgpt-audit/_pending_requests/.
+    MODULE_GAP_AUDIT_MODULE_LIST_2026-07-25.yaml (machine-generated, re-run
+    scripts/generate_module_gap_audit_module_list.py to refresh) records the real, mechanically-
+    computed totals: 189 real modules across both repos, 1195 real request files needed for
+    full coverage -- 1190 still remaining after this task''s 5-file first batch.'
+  status: infrastructure_live_first_5_modules_generated_1190_of_1195_request_files_remaining
+  query_command: 'python3 scripts/generate_chatgpt_audit_request.py --module <module_key> --repo
+    <compliance-tracker|projexa> ; python3 scripts/ingest_chatgpt_audit_response.py --module
+    <module_key> --repo <repo> --file <response-file> ; python3 scripts/superboss-register.py
+    query-knowledge "module_gap_audit" --tag domain:module_gap_audit'
+  next_phase: 'Owner works through the first 5 generated request files (see
+    MODULE_GAP_AUDIT_2026-07-25.yaml owner_procedure), or a future task batch-generates more of
+    the 1190-request-file remaining backlog listed per-module in
+    MODULE_GAP_AUDIT_MODULE_LIST_2026-07-25.yaml -- not part of this registry entry''s own
+    scope (CONSTRAINTS explicitly caps this task''s batch size).'
 - id: chatgpt_prompt_library
   type: sandbox_workspace_schema_and_coverage_tooling
   path: ai-os/CHATGPT_PROMPT_SCHEMA_2026-07-24.yaml + ai-os/CHATGPT_PROMPTLIB_BLOCKER_2026-07-24.yaml
