@@ -1,0 +1,106 @@
+meta:
+  title: "VERIDIAN Machine-Language Contract -- AI<->AI and AI<->software calls"
+  created: '2026-07-25'
+  produced_by_task: task-20260725-080900-owner-engine-mandatory-gate-implementati
+  source_directive: KE-20260725-061008-8423 (ai-os/OWNER_DIRECTIVES/OWNER_ENGINE_MANDATORY_GATE_2026-07-25.txt)
+  addresses_points: [4, 5, 9, 10, 11, 12, 13, 14, 15, 16, 17]
+  scope_decision: >
+    This schema defines the close-ended envelope every new AI<->software (and, when one
+    exists, AI<->AI) machine-language call in this system should use. It is proven usable
+    by two real call sites this task actually built/retrofitted to it -- it is NOT applied
+    retroactively to every existing subprocess JSON call in this codebase (dozens exist
+    across scripts/*.py); that full retrofit is out of this task's scope and is named
+    honestly as a gap in ai-os/OWNER_ENGINE_MANDATORY_GATE_IMPLEMENTATION_2026-07-25.yaml's
+    19-point breakdown rather than claimed as done.
+
+# ============================================================================
+# REQUEST ENVELOPE -- what an AI (or another software module) sends to a
+# software engine. Every field is a scalar, enum, or flat object. No prose.
+# ============================================================================
+request_envelope:
+  fields:
+    - {name: query, type: "enum, engine-specific closed vocabulary", required: true,
+       description: "the close-ended question code, e.g. GET_CATEGORY, LOOKUP_CAPABILITY.
+         Never a free-text question."}
+    - {name: chat_id, type: "str (VD- namespace) or null", required: false,
+       description: "set when the query concerns a chat already processed by
+         scripts/prompt_gateway/gateway.py; null for queries that address a different
+         registry (e.g. LOOKUP_CAPABILITY has its own params instead)."}
+    - {name: params, type: "flat object, string/number/bool/null values only", required: true,
+       description: "engine-specific structured arguments. Never a raw sentence -- e.g.
+         {\"intent_text\": \"fix login bug\"} is params for keyword lookup, not a question."}
+
+# ============================================================================
+# RESPONSE ENVELOPE -- what the software engine returns. status is always
+# one of the 4 enum values below; answer is always scalar/list/flat-object,
+# never an English explanation.
+# ============================================================================
+response_envelope:
+  fields:
+    - {name: status, type: "enum: OK | INSUFFICIENT_INFO | NOT_FOUND | ERROR", required: true,
+       description: "OK = real answer in `answer`. INSUFFICIENT_INFO = software's own
+         concrete uncertainty signal (see step_3_insufficient_info_conditions below) --
+         this, and only this, is what should trigger an Owner-facing question per OWNER
+         DIRECTIVE point 3. NOT_FOUND = the referenced chat_id/entity does not exist.
+         ERROR = malformed request or subprocess failure."}
+    - {name: answer, type: "scalar, list, or flat object, or null", required: true,
+       description: "the structured answer. null when status is not OK/INSUFFICIENT_INFO,
+         or when INSUFFICIENT_INFO carries no partial data worth returning."}
+    - {name: reason_code, type: "enum, engine-specific closed vocabulary, or null", required: true,
+       description: "machine-readable reason for a non-OK status, e.g.
+         LOW_CLASSIFICATION_CONFIDENCE, INTENT_UNKNOWN, CHAT_ID_NOT_FOUND,
+         NO_MATCH_FOUND. Never a prose sentence."}
+
+step_3_insufficient_info_conditions:
+  description: >
+    The real, concrete, code-level conditions under which a response's status is
+    INSUFFICIENT_INFO -- i.e. "software is not able to tell", the ONLY trigger for
+    an AI to escalate to an Owner-facing question per OWNER DIRECTIVE point 3.
+  implementations:
+    - engine: scripts/prompt_gateway/query.py
+      conditions:
+        - "classification.confidence < LOW_CONFIDENCE_THRESHOLD (0.15) -- for
+           GET_CATEGORY / GET_MACHINE_PROMPT queries"
+        - "classification.intent == 'UNKNOWN' -- for GET_INTENT queries"
+        - "NEEDS_OWNER_CLARIFICATION composes both checks: needs_owner_clarification=true
+           iff either condition holds, with `reasons` listing which"
+      real_test_evidence: see ai-os/OWNER_ENGINE_MANDATORY_GATE_IMPLEMENTATION_2026-07-25.yaml
+        real_test_evidence.query_interface_test
+    - engine: scripts/task-gateway.py call_machine_contract() (lookup-capability retrofit)
+      conditions:
+        - "superboss-register.py lookup-capability's own `found` field is false ->
+           status INSUFFICIENT_INFO, reason_code NO_MATCH_FOUND"
+
+# ============================================================================
+# REAL CALL SITES using this envelope (proof it is usable, not just specified).
+# ============================================================================
+real_call_sites:
+  - id: prompt_gateway_query_interface
+    caller: "any AI session or headless worker"
+    callee: scripts/prompt_gateway/query.py
+    call: "python3 scripts/prompt_gateway/query.py --chat-id <VD-id> --q <QUERY_CODE>"
+    query_codes: [GET_CATEGORY, GET_INTENT, GET_CONFIDENCE, GET_ENTITIES, GET_MACHINE_PROMPT,
+                  GET_SNIPPETS, GET_TOKEN_REDUCTION_PCT, IS_CONFIDENT, NEEDS_OWNER_CLARIFICATION]
+    built_this_task: true
+  - id: capability_lookup_retrofit
+    caller: scripts/task-gateway.py cmd_submit
+    callee: "scripts/superboss-register.py lookup-capability (pre-existing, task-20260724-083420)"
+    call: >-
+      call_machine_contract("LOOKUP_CAPABILITY", ["python3", SUPERBOSS, "lookup-capability",
+      "--intent-text", keyword_str], {"intent_text": keyword_str})
+    retrofit_this_task: true
+    note: >
+      The underlying command and superboss-register.py implementation are UNCHANGED --
+      only task-gateway.py's handling of the call (request construction + response
+      normalization) was retrofitted to this envelope. Verified real invocation
+      before/after in ai-os/OWNER_ENGINE_MANDATORY_GATE_IMPLEMENTATION_2026-07-25.yaml
+      real_test_evidence.retrofit_before_after.
+
+not_yet_retrofitted:
+  description: >
+    Every other existing AI<->software subprocess call in this codebase (e.g.
+    task-gateway.py's own log-instruction/check-duplicate/search/query-knowledge calls,
+    automation_rule_engine.py's calls into notify-owner.py, auto_phase_continuation.py's
+    calls into task-gateway.py itself) still uses its own ad hoc JSON shape, not this
+    envelope. Retrofitting all of them is a real, separate, unscoped follow-on -- not
+    silently claimed as done by this schema's existence.
