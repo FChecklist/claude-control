@@ -5442,3 +5442,35 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260725-160908-task2-dedup-integration-audit/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/71'
     last_touched: '2026-07-25'
+
+  - id: WORKER-20260725-174858-phase1-prompt-registry-version-lifecycle
+    project: veridian
+    type: worker-task
+    status: in-progress
+    summary: 'Server-worker task ''phase1-prompt-registry-version-lifecycle-validation-engines''
+      on compliance-tracker reached status=awaiting_human_approval. tier2, Superboss-approved,
+      held for human merge: https://github.com/FChecklist/compliance-tracker/pull/559'
+    where: '/opt/veridian/ai-os/tasks/task-20260725-174858-phase1-prompt-registry-version-lifecycle/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/559'
+    last_touched: '2026-07-25'
+
+  - id: WORKER-20260725-175525-veridian-architecture-v2-ux-two-stage-am
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''veridian-architecture-v2-ux-two-stage-amendment''
+      on claude-control reached status=blocked. Superboss rejected: https://github.com/FChecklist/claude-control/pull/72
+      — see review.json for issues'
+    where: '/opt/veridian/ai-os/tasks/task-20260725-175525-veridian-architecture-v2-ux-two-stage-am/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/72'
+    last_touched: '2026-07-25'
+
+  - id: WORKER-20260725-180624-end-user-prompt-library-generation
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''end-user-prompt-library-generation'' on claude-control
+      reached status=completed. tier1, Superboss-approved, merged autonomously: https://github.com/FChecklist/claude-control/pull/73'
+    where: '/opt/veridian/ai-os/tasks/task-20260725-180624-end-user-prompt-library-generation/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/73'
+    last_touched: '2026-07-25'
