@@ -1,0 +1,752 @@
+{
+  "evalId": "eval-7l0-2026-07-24T19:20:37",
+  "results": {
+    "version": 3,
+    "timestamp": "2026-07-24T19:20:37.260Z",
+    "prompts": [
+      {
+        "id": "036b755679bd6331018a8a430571c00a4fb9b9f46bd5a41b560477e4ae69e84e",
+        "raw": "[{\"role\":\"system\",\"content\":\"{{system_prompt}}\"},{\"role\":\"user\",\"content\":\"{{user_message}}\"}]",
+        "label": "[{\"role\":\"system\",\"content\":\"{{system_prompt}}\"},{\"role\":\"user\",\"content\":\"{{user_message}}\"}]",
+        "provider": "groq:llama-3.3-70b-versatile",
+        "metrics": {
+          "score": 1.35,
+          "testPassCount": 0,
+          "testFailCount": 2,
+          "testErrorCount": 0,
+          "assertPassCount": 6,
+          "assertFailCount": 3,
+          "totalLatencyMs": 831,
+          "tokenUsage": {
+            "prompt": 0,
+            "completion": 0,
+            "cached": 599,
+            "total": 599,
+            "numRequests": 2,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            },
+            "assertions": {
+              "total": 0,
+              "prompt": 0,
+              "completion": 0,
+              "cached": 0,
+              "numRequests": 0,
+              "completionDetails": {
+                "reasoning": 0,
+                "acceptedPrediction": 0,
+                "rejectedPrediction": 0,
+                "cacheReadInputTokens": 0,
+                "cacheCreationInputTokens": 0
+              }
+            }
+          },
+          "namedScores": {},
+          "namedScoresCount": {},
+          "namedScoreWeights": {},
+          "cost": 0
+        }
+      }
+    ],
+    "results": [
+      {
+        "cost": 0,
+        "error": "output states number(s) not present in the real input given: [230000,73] (input numbers were: [850000,620000,65,3])",
+        "gradingResult": {
+          "pass": false,
+          "score": 0.75,
+          "reason": "output states number(s) not present in the real input given: [230000,73] (input numbers were: [850000,620000,65,3])",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains-json",
+                "value": {
+                  "type": "object",
+                  "required": [
+                    "summary",
+                    "highlights",
+                    "concerns"
+                  ],
+                  "properties": {
+                    "summary": {
+                      "type": "string"
+                    },
+                    "highlights": {
+                      "type": "array"
+                    },
+                    "concerns": {
+                      "type": "array"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "parses via production's stripJsonFence()+JSON.parse",
+              "data": {
+                "summary": "The project is 65% complete, with expenses totaling $620,000 to date, leaving $230,000 remaining from the original $850,000 budget.",
+                "highlights": [
+                  "Project is 65% complete"
+                ],
+                "concerns": [
+                  "3 tasks are currently delayed",
+                  "Expenses are $620,000, which is 73% of the total budget, with no information on revenue"
+                ]
+              },
+              "assertion": {
+                "type": "javascript",
+                "value": "file://assertions.js:parses"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "summary/highlights/concerns present with the right types",
+              "assertion": {
+                "type": "javascript",
+                "value": "file://assertions.js:shapeIsValid"
+              }
+            },
+            {
+              "pass": false,
+              "score": 0,
+              "reason": "output states number(s) not present in the real input given: [230000,73] (input numbers were: [850000,620000,65,3])",
+              "assertion": {
+                "type": "javascript",
+                "value": "file://assertions.js:noInventedNumbers"
+              }
+            }
+          ]
+        },
+        "id": "e508bc16-11ff-46ba-b3a8-5d863111820d",
+        "latencyMs": 413,
+        "namedScores": {},
+        "prompt": {
+          "raw": "[{\"role\":\"system\",\"content\":\"You write weekly/monthly construction project progress summaries for site management. You will be given real, already-computed numbers for one project (budget, revenue, expenses, completion percentage, delayed task count, attendance/labour data, etc.) as JSON. Write a concise narrative summary (3-6 sentences) a project manager could read in 10 seconds. CRITICAL: only ever state numbers that appear in the JSON you were given -- never estimate, round dramatically, or invent a figure that isn't present in the input. If a number needed for a complete picture is missing from the input, say so explicitly rather than guessing it. Respond with ONLY JSON matching: { \\\"summary\\\": string, \\\"highlights\\\": string[], \\\"concerns\\\": string[] }.\"},{\"role\":\"user\",\"content\":\"{\\\"budget\\\":850000,\\\"expenses\\\":620000,\\\"completionPercentage\\\":65,\\\"delayedTaskCount\\\":3}\"}]",
+          "label": "[{\"role\":\"system\",\"content\":\"{{system_prompt}}\"},{\"role\":\"user\",\"content\":\"{{user_message}}\"}]",
+          "config": {}
+        },
+        "promptId": "036b755679bd6331018a8a430571c00a4fb9b9f46bd5a41b560477e4ae69e84e",
+        "promptIdx": 0,
+        "provider": {
+          "id": "groq:llama-3.3-70b-versatile",
+          "label": ""
+        },
+        "response": {
+          "output": "{\n  \"summary\": \"The project is 65% complete, with expenses totaling $620,000 to date, leaving $230,000 remaining from the original $850,000 budget.\",\n  \"highlights\": [\"Project is 65% complete\"],\n  \"concerns\": [\"3 tasks are currently delayed\", \"Expenses are $620,000, which is 73% of the total budget, with no information on revenue\"]\n}",
+          "tokenUsage": {
+            "cached": 310,
+            "total": 310
+          },
+          "cached": true,
+          "latencyMs": 413,
+          "finishReason": "stop",
+          "guardrails": {
+            "flagged": false
+          },
+          "metadata": {
+            "http": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                "alt-svc": "h3=\":443\"; ma=86400",
+                "cache-control": "private, max-age=0, no-store, no-cache, must-revalidate",
+                "cf-cache-status": "[REDACTED]",
+                "cf-ray": "[REDACTED]",
+                "connection": "keep-alive",
+                "content-type": "application/json",
+                "date": "Fri, 24 Jul 2026 19:18:34 GMT",
+                "server": "cloudflare",
+                "set-cookie": "[REDACTED]",
+                "strict-transport-security": "max-age=15552000",
+                "transfer-encoding": "chunked",
+                "vary": "Origin",
+                "via": "[REDACTED]",
+                "x-groq-region": "fra",
+                "x-ratelimit-limit-requests": "[REDACTED]",
+                "x-ratelimit-limit-tokens": "[REDACTED]",
+                "x-ratelimit-remaining-requests": "[REDACTED]",
+                "x-ratelimit-remaining-tokens": "[REDACTED]",
+                "x-ratelimit-reset-requests": "[REDACTED]",
+                "x-ratelimit-reset-tokens": "[REDACTED]",
+                "x-request-id": "[REDACTED]"
+              }
+            }
+          }
+        },
+        "score": 0.75,
+        "success": false,
+        "testCase": {
+          "description": "complete real numbers -- no-invented-numbers hallucination check",
+          "vars": {
+            "system_prompt": "file://../prompts/construction_generate_progress_summary.txt",
+            "input_numbers": [
+              850000,
+              620000,
+              65,
+              3
+            ],
+            "user_message": "{\"budget\":850000,\"expenses\":620000,\"completionPercentage\":65,\"delayedTaskCount\":3}"
+          },
+          "assert": [
+            {
+              "type": "contains-json",
+              "value": {
+                "type": "object",
+                "required": [
+                  "summary",
+                  "highlights",
+                  "concerns"
+                ],
+                "properties": {
+                  "summary": {
+                    "type": "string"
+                  },
+                  "highlights": {
+                    "type": "array"
+                  },
+                  "concerns": {
+                    "type": "array"
+                  }
+                }
+              }
+            },
+            {
+              "type": "javascript",
+              "value": "file://assertions.js:parses"
+            },
+            {
+              "type": "javascript",
+              "value": "file://assertions.js:shapeIsValid"
+            },
+            {
+              "type": "javascript",
+              "value": "file://assertions.js:noInventedNumbers"
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 0,
+        "tokenUsage": {
+          "prompt": 0,
+          "completion": 0,
+          "cached": 310,
+          "total": 310,
+          "numRequests": 1,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0
+          },
+          "assertions": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            }
+          }
+        },
+        "vars": {
+          "system_prompt": "file://../prompts/construction_generate_progress_summary.txt",
+          "input_numbers": [
+            850000,
+            620000,
+            65,
+            3
+          ],
+          "user_message": "{\"budget\":850000,\"expenses\":620000,\"completionPercentage\":65,\"delayedTaskCount\":3}"
+        },
+        "metadata": {
+          "http": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+              "alt-svc": "h3=\":443\"; ma=86400",
+              "cache-control": "private, max-age=0, no-store, no-cache, must-revalidate",
+              "cf-cache-status": "[REDACTED]",
+              "cf-ray": "[REDACTED]",
+              "connection": "keep-alive",
+              "content-type": "application/json",
+              "date": "Fri, 24 Jul 2026 19:18:34 GMT",
+              "server": "cloudflare",
+              "set-cookie": "[REDACTED]",
+              "strict-transport-security": "max-age=15552000",
+              "transfer-encoding": "chunked",
+              "vary": "Origin",
+              "via": "[REDACTED]",
+              "x-groq-region": "fra",
+              "x-ratelimit-limit-requests": "[REDACTED]",
+              "x-ratelimit-limit-tokens": "[REDACTED]",
+              "x-ratelimit-remaining-requests": "[REDACTED]",
+              "x-ratelimit-remaining-tokens": "[REDACTED]",
+              "x-ratelimit-reset-requests": "[REDACTED]",
+              "x-ratelimit-reset-tokens": "[REDACTED]",
+              "x-request-id": "[REDACTED]"
+            }
+          },
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 1
+      },
+      {
+        "cost": 0,
+        "error": "attendance/labour data was omitted from the input, but the output never acknowledges the gap (prompt's own instruction: \"say so explicitly rather than guessing it\") -- output: {\"summary\":\"The project is currently 40% complete, with expenses totaling $300,000 to date, leaving $200,000 remaining in the budget.\",\"highlights\":[\"Expenses are currently $300,000\"],\"concerns\":[\"Only 40% completion with $300,000 expenses\",\"No information on revenue or labour data\"]}",
+        "gradingResult": {
+          "pass": false,
+          "score": 0.6,
+          "reason": "attendance/labour data was omitted from the input, but the output never acknowledges the gap (prompt's own instruction: \"say so explicitly rather than guessing it\") -- output: {\"summary\":\"The project is currently 40% complete, with expenses totaling $300,000 to date, leaving $200,000 remaining in the budget.\",\"highlights\":[\"Expenses are currently $300,000\"],\"concerns\":[\"Only 40% completion with $300,000 expenses\",\"No information on revenue or labour data\"]}",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains-json",
+                "value": {
+                  "type": "object",
+                  "required": [
+                    "summary",
+                    "highlights",
+                    "concerns"
+                  ],
+                  "properties": {
+                    "summary": {
+                      "type": "string"
+                    },
+                    "highlights": {
+                      "type": "array"
+                    },
+                    "concerns": {
+                      "type": "array"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "parses via production's stripJsonFence()+JSON.parse",
+              "data": {
+                "summary": "The project is currently 40% complete, with expenses totaling $300,000 to date, leaving $200,000 remaining in the budget.",
+                "highlights": [
+                  "Expenses are currently $300,000"
+                ],
+                "concerns": [
+                  "Only 40% completion with $300,000 expenses",
+                  "No information on revenue or labour data"
+                ]
+              },
+              "assertion": {
+                "type": "javascript",
+                "value": "file://assertions.js:parses"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "summary/highlights/concerns present with the right types",
+              "assertion": {
+                "type": "javascript",
+                "value": "file://assertions.js:shapeIsValid"
+              }
+            },
+            {
+              "pass": false,
+              "score": 0,
+              "reason": "output states number(s) not present in the real input given: [200000] (input numbers were: [500000,300000,40])",
+              "assertion": {
+                "type": "javascript",
+                "value": "file://assertions.js:noInventedNumbers"
+              }
+            },
+            {
+              "pass": false,
+              "score": 0,
+              "reason": "attendance/labour data was omitted from the input, but the output never acknowledges the gap (prompt's own instruction: \"say so explicitly rather than guessing it\") -- output: {\"summary\":\"The project is currently 40% complete, with expenses totaling $300,000 to date, leaving $200,000 remaining in the budget.\",\"highlights\":[\"Expenses are currently $300,000\"],\"concerns\":[\"Only 40% completion with $300,000 expenses\",\"No information on revenue or labour data\"]}",
+              "assertion": {
+                "type": "javascript",
+                "value": "file://assertions.js:acknowledgesMissingData"
+              }
+            }
+          ]
+        },
+        "id": "26b5a9ac-aab0-4009-8ccc-e89076355907",
+        "latencyMs": 418,
+        "namedScores": {},
+        "prompt": {
+          "raw": "[{\"role\":\"system\",\"content\":\"You write weekly/monthly construction project progress summaries for site management. You will be given real, already-computed numbers for one project (budget, revenue, expenses, completion percentage, delayed task count, attendance/labour data, etc.) as JSON. Write a concise narrative summary (3-6 sentences) a project manager could read in 10 seconds. CRITICAL: only ever state numbers that appear in the JSON you were given -- never estimate, round dramatically, or invent a figure that isn't present in the input. If a number needed for a complete picture is missing from the input, say so explicitly rather than guessing it. Respond with ONLY JSON matching: { \\\"summary\\\": string, \\\"highlights\\\": string[], \\\"concerns\\\": string[] }.\"},{\"role\":\"user\",\"content\":\"{\\\"budget\\\":500000,\\\"expenses\\\":300000,\\\"completionPercentage\\\":40}\"}]",
+          "label": "[{\"role\":\"system\",\"content\":\"{{system_prompt}}\"},{\"role\":\"user\",\"content\":\"{{user_message}}\"}]",
+          "config": {}
+        },
+        "promptId": "036b755679bd6331018a8a430571c00a4fb9b9f46bd5a41b560477e4ae69e84e",
+        "promptIdx": 0,
+        "provider": {
+          "id": "groq:llama-3.3-70b-versatile",
+          "label": ""
+        },
+        "response": {
+          "output": "{\n  \"summary\": \"The project is currently 40% complete, with expenses totaling $300,000 to date, leaving $200,000 remaining in the budget.\",\n  \"highlights\": [\"Expenses are currently $300,000\"],\n  \"concerns\": [\"Only 40% completion with $300,000 expenses\", \"No information on revenue or labour data\"]\n}",
+          "tokenUsage": {
+            "cached": 289,
+            "total": 289
+          },
+          "cached": true,
+          "latencyMs": 418,
+          "finishReason": "stop",
+          "guardrails": {
+            "flagged": false
+          },
+          "metadata": {
+            "http": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                "alt-svc": "h3=\":443\"; ma=86400",
+                "cache-control": "private, max-age=0, no-store, no-cache, must-revalidate",
+                "cf-cache-status": "[REDACTED]",
+                "cf-ray": "[REDACTED]",
+                "connection": "keep-alive",
+                "content-type": "application/json",
+                "date": "Fri, 24 Jul 2026 19:18:34 GMT",
+                "server": "cloudflare",
+                "set-cookie": "[REDACTED]",
+                "strict-transport-security": "max-age=15552000",
+                "transfer-encoding": "chunked",
+                "vary": "Origin",
+                "via": "[REDACTED]",
+                "x-groq-region": "fra",
+                "x-ratelimit-limit-requests": "[REDACTED]",
+                "x-ratelimit-limit-tokens": "[REDACTED]",
+                "x-ratelimit-remaining-requests": "[REDACTED]",
+                "x-ratelimit-remaining-tokens": "[REDACTED]",
+                "x-ratelimit-reset-requests": "[REDACTED]",
+                "x-ratelimit-reset-tokens": "[REDACTED]",
+                "x-request-id": "[REDACTED]"
+              }
+            }
+          }
+        },
+        "score": 0.6,
+        "success": false,
+        "testCase": {
+          "description": "attendance/labour data omitted from input -- prompt's own explicit missing-data instruction",
+          "vars": {
+            "system_prompt": "file://../prompts/construction_generate_progress_summary.txt",
+            "input_numbers": [
+              500000,
+              300000,
+              40
+            ],
+            "user_message": "{\"budget\":500000,\"expenses\":300000,\"completionPercentage\":40}"
+          },
+          "assert": [
+            {
+              "type": "contains-json",
+              "value": {
+                "type": "object",
+                "required": [
+                  "summary",
+                  "highlights",
+                  "concerns"
+                ],
+                "properties": {
+                  "summary": {
+                    "type": "string"
+                  },
+                  "highlights": {
+                    "type": "array"
+                  },
+                  "concerns": {
+                    "type": "array"
+                  }
+                }
+              }
+            },
+            {
+              "type": "javascript",
+              "value": "file://assertions.js:parses"
+            },
+            {
+              "type": "javascript",
+              "value": "file://assertions.js:shapeIsValid"
+            },
+            {
+              "type": "javascript",
+              "value": "file://assertions.js:noInventedNumbers"
+            },
+            {
+              "type": "javascript",
+              "value": "file://assertions.js:acknowledgesMissingData"
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 1,
+        "tokenUsage": {
+          "prompt": 0,
+          "completion": 0,
+          "cached": 289,
+          "total": 289,
+          "numRequests": 1,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0
+          },
+          "assertions": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            }
+          }
+        },
+        "vars": {
+          "system_prompt": "file://../prompts/construction_generate_progress_summary.txt",
+          "input_numbers": [
+            500000,
+            300000,
+            40
+          ],
+          "user_message": "{\"budget\":500000,\"expenses\":300000,\"completionPercentage\":40}"
+        },
+        "metadata": {
+          "http": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+              "alt-svc": "h3=\":443\"; ma=86400",
+              "cache-control": "private, max-age=0, no-store, no-cache, must-revalidate",
+              "cf-cache-status": "[REDACTED]",
+              "cf-ray": "[REDACTED]",
+              "connection": "keep-alive",
+              "content-type": "application/json",
+              "date": "Fri, 24 Jul 2026 19:18:34 GMT",
+              "server": "cloudflare",
+              "set-cookie": "[REDACTED]",
+              "strict-transport-security": "max-age=15552000",
+              "transfer-encoding": "chunked",
+              "vary": "Origin",
+              "via": "[REDACTED]",
+              "x-groq-region": "fra",
+              "x-ratelimit-limit-requests": "[REDACTED]",
+              "x-ratelimit-limit-tokens": "[REDACTED]",
+              "x-ratelimit-remaining-requests": "[REDACTED]",
+              "x-ratelimit-remaining-tokens": "[REDACTED]",
+              "x-ratelimit-reset-requests": "[REDACTED]",
+              "x-ratelimit-reset-tokens": "[REDACTED]",
+              "x-request-id": "[REDACTED]"
+            }
+          },
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 1
+      }
+    ],
+    "stats": {
+      "successes": 0,
+      "failures": 2,
+      "errors": 0,
+      "tokenUsage": {
+        "prompt": 0,
+        "completion": 0,
+        "cached": 599,
+        "total": 599,
+        "numRequests": 2,
+        "completionDetails": {
+          "reasoning": 0,
+          "acceptedPrediction": 0,
+          "rejectedPrediction": 0,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0
+        },
+        "assertions": {
+          "total": 0,
+          "prompt": 0,
+          "completion": 0,
+          "cached": 0,
+          "numRequests": 0,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0
+          }
+        }
+      },
+      "durationMs": 85,
+      "evaluationDurationMs": 85
+    }
+  },
+  "config": {
+    "tags": {},
+    "description": "construction.generate_progress_summary -- production prompt regression suite (no-invented-numbers, missing-data acknowledgement)",
+    "prompts": [
+      "[{\"role\":\"system\",\"content\":\"{{system_prompt}}\"},{\"role\":\"user\",\"content\":\"{{user_message}}\"}]"
+    ],
+    "providers": [
+      {
+        "id": "groq:llama-3.3-70b-versatile",
+        "config": {
+          "temperature": 0.2,
+          "max_tokens": 500
+        }
+      }
+    ],
+    "tests": [
+      {
+        "description": "complete real numbers -- no-invented-numbers hallucination check",
+        "vars": {
+          "input_numbers": [
+            850000,
+            620000,
+            65,
+            3
+          ],
+          "user_message": "{\"budget\":850000,\"expenses\":620000,\"completionPercentage\":65,\"delayedTaskCount\":3}"
+        },
+        "assert": [
+          {
+            "type": "javascript",
+            "value": "file://assertions.js:noInventedNumbers"
+          }
+        ]
+      },
+      {
+        "description": "attendance/labour data omitted from input -- prompt's own explicit missing-data instruction",
+        "vars": {
+          "input_numbers": [
+            500000,
+            300000,
+            40
+          ],
+          "user_message": "{\"budget\":500000,\"expenses\":300000,\"completionPercentage\":40}"
+        },
+        "assert": [
+          {
+            "type": "javascript",
+            "value": "file://assertions.js:noInventedNumbers"
+          },
+          {
+            "type": "javascript",
+            "value": "file://assertions.js:acknowledgesMissingData"
+          }
+        ]
+      }
+    ],
+    "env": {},
+    "defaultTest": {
+      "vars": {
+        "system_prompt": "file://../prompts/construction_generate_progress_summary.txt"
+      },
+      "assert": [
+        {
+          "type": "contains-json",
+          "value": {
+            "type": "object",
+            "required": [
+              "summary",
+              "highlights",
+              "concerns"
+            ],
+            "properties": {
+              "summary": {
+                "type": "string"
+              },
+              "highlights": {
+                "type": "array"
+              },
+              "concerns": {
+                "type": "array"
+              }
+            }
+          }
+        },
+        {
+          "type": "javascript",
+          "value": "file://assertions.js:parses"
+        },
+        {
+          "type": "javascript",
+          "value": "file://assertions.js:shapeIsValid"
+        }
+      ],
+      "options": {},
+      "metadata": {}
+    },
+    "outputPath": [
+      ".last_result.json"
+    ],
+    "extensions": [],
+    "metadata": {},
+    "evaluateOptions": {}
+  },
+  "shareableUrl": null,
+  "metadata": {
+    "promptfooVersion": "0.121.19",
+    "nodeVersion": "v24.18.0",
+    "platform": "linux",
+    "arch": "x64",
+    "exportedAt": "2026-07-24T19:20:37.374Z",
+    "evaluationCreatedAt": "2026-07-24T19:20:37.260Z"
+  },
+  "vars": [
+    "system_prompt",
+    "input_numbers",
+    "user_message"
+  ],
+  "runtimeOptions": {
+    "eventSource": "cli",
+    "showProgressBar": false,
+    "repeat": 1,
+    "maxConcurrency": 4,
+    "cache": true
+  }
+}

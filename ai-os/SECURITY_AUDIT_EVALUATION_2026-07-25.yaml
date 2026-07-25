@@ -1,0 +1,381 @@
+meta:
+  title: Security-domain ChatGPT-manual-bridge audit evaluation -- AUDIT-000009 (ChatGPT) vs AUDIT-000010 (Z.AI)
+  created: '2026-07-25'
+  produced_by_task: task-20260725-041130-security-audit-evaluation-and-implementa
+  owner_directive: 'Given directly in chat 2026-07-25: "EVALUATE AUDIT BY BOTH CHATGPT AND Z.AI. MAKE
+    IMPLEMENTATION PLAN. ALL DOCUMENTATION TO BE SAVED."'
+  audits_evaluated:
+    - audit_id: AUDIT-000009
+      producer: ChatGPT
+      path: /opt/veridian/chatgpt-audit/Security/AUDIT-000009-20260725T035927Z.yaml
+      timestamp: '2026-07-25T03:59:27Z'
+      commit_hash: c4d74e8766cec27c7a349aea627f574650dde241
+      risk_score: 34
+      priority: medium
+      confidence_pct: 88
+    - audit_id: AUDIT-000010
+      producer: Z.AI
+      path: /opt/veridian/chatgpt-audit/Security/AUDIT-000010-20260725T040827Z.yaml
+      timestamp: '2026-07-25T04:08:27Z'
+      commit_hash: c4d74e8766cec27c7a349aea627f574650dde241
+      risk_score: 42
+      priority: medium
+      confidence_pct: 78
+  source_files_analysed_by_both_audits:
+    - repos/compliance-tracker/drizzle/0007_wave9_unified_api_key_auth.sql
+    - repos/compliance-tracker/drizzle/0126_wave143_visual_design_authoring.sql
+    - repos/compliance-tracker/src/app/api/auth/failure-event/route.ts
+    - repos/compliance-tracker/src/app/api/auth/passcode-login/route.ts
+    - repos/compliance-tracker/src/app/api/auth/sso/[orgSlug]/acs/route.ts
+    - repos/compliance-tracker/src/app/api/auth/sso/[orgSlug]/login/route.ts
+  additional_files_read_for_this_evaluation:
+    - repos/compliance-tracker/src/lib/passcode-login-service.ts
+    - repos/compliance-tracker/src/lib/services/auth-failure-service.ts
+    - repos/compliance-tracker/src/lib/services/sso-service.ts
+    - repos/compliance-tracker/src/lib/engines/data-quality-engine.ts
+    - 51 drizzle/*.sql migrations grepped for org_id FK convention
+  method: 'Both audit records read in full. Each missing_item/duplicate_item/incomplete_item claim
+    checked line-by-line against the real current source at the paths above -- not just the audit
+    text. Where a route delegates real logic to a service file not in the audits'' own files_analysed
+    list (passcode-login-service.ts, auth-failure-service.ts, sso-service.ts), that service file was
+    also read, since a claim about "no evidence of X" in a route can be refuted by X existing one
+    layer down. No finding below is accepted from either audit by default; each carries its own
+    independent verdict and evidence citation.'
+
+cross_reference_summary:
+  raised_by_both_audits: 3
+  raised_by_chatgpt_only: 4
+  raised_by_zai_only: 12
+  confirmed: 14
+  partially_confirmed: 1
+  confirmed_but_deferred_out_of_scope: 2
+  refuted: 2
+  total_distinct_findings_evaluated: 19
+
+# ============================================================================
+# FINDINGS -- every item below traces to a real file:line cited in evidence.
+# ============================================================================
+findings:
+  - id: SEC-01
+    summary: interior_floor_plans.org_id / project_id / created_by_id have no REFERENCES (FK) constraint.
+    raised_by: [AUDIT-000009]
+    verdict: confirmed_but_deferred
+    severity: medium
+    evidence: 'drizzle/0126_wave143_visual_design_authoring.sql:13-18 -- org_id text NOT NULL,
+      project_id text NOT NULL, created_by_id text NOT NULL, none with REFERENCES.'
+    notes: 'Real gap, but NOT unique to this migration: grepped all 51 drizzle/*.sql files with
+      "org_id text NOT NULL" -- waves 4-6 (e.g. 0004_ai_configurations_and_indexes.sql,
+      0005_wave7_hierarchy_and_audit_foundation.sql) FK org_id to compliance.organisations(id), but
+      most later waves (e.g. 0085_wave107_...) declare org_id NOT NULL with no FK at all. This looks
+      like an established (if debatable) codebase-wide convention drift for later waves, not a
+      Wave-143-specific oversight -- adding the FK here alone would be inconsistent with dozens of
+      sibling tables and is a codebase-wide decision, not a security-hotfix-scoped one. Deferred out
+      of this plan; see finding SEC-18 for the same reasoning applied to RLS-policy duplication.
+      NOT assigned an implementation phase.'
+    implementation_phase: null
+
+  - id: SEC-02
+    summary: interior_floor_plan_rooms.polygon (jsonb) has no CHECK constraint validating it is a
+      well-formed closed polygon (>=3 points, numeric pairs, first==last).
+    raised_by: [AUDIT-000009, AUDIT-000010]
+    verdict: confirmed
+    severity: medium
+    evidence: 'drizzle/0126_wave143_visual_design_authoring.sql:40 -- polygon jsonb NOT NULL, no CHECK.'
+    notes: 'Both audits independently flag this -- higher confidence. Malformed polygon jsonb (e.g.
+      empty array, non-numeric coords, open path) would silently persist and only fail downstream at
+      2D-editor/3D-walkthrough render time, not at write time.'
+    implementation_phase: phase_2_interior_schema_integrity_migration
+
+  - id: SEC-03
+    summary: interior_floor_plan_rooms.floor_material_id / wall_material_id / ceiling_material_id are
+      nullable text columns with no REFERENCES compliance.interior_materials(id).
+    raised_by: [AUDIT-000010]
+    verdict: confirmed
+    severity: medium
+    evidence: 'drizzle/0126_wave143_visual_design_authoring.sql:42-44.'
+    notes: 'Confirmed by direct inspection. Notably, the SAME migration DOES FK floor_plan_id and
+      ffe_item_id (lines 38, 53) in sibling tables -- the omission on the three material columns
+      reads as an in-migration inconsistency/oversight rather than a deliberate convention choice,
+      which is stronger evidence for fixing this than SEC-01''s org_id case.'
+    implementation_phase: phase_2_interior_schema_integrity_migration
+
+  - id: SEC-04
+    summary: interior_furniture_placements.room_id is nullable text with no REFERENCES
+      compliance.interior_floor_plan_rooms(id).
+    raised_by: [AUDIT-000009]
+    verdict: confirmed
+    severity: medium
+    evidence: 'drizzle/0126_wave143_visual_design_authoring.sql:52 -- room_id text (no REFERENCES),
+      immediately next to ffe_item_id text NOT NULL REFERENCES compliance.interior_ffe_items(id) on
+      the very next line.'
+    notes: 'Raised only by ChatGPT (incomplete_items), independently verified true. Same
+      same-migration-inconsistency argument as SEC-03. Nullability itself (a placement not yet
+      assigned to a room) looks intentional and should stay nullable -- only the missing FK is the gap.'
+    implementation_phase: phase_2_interior_schema_integrity_migration
+
+  - id: SEC-05
+    summary: interior_floor_plans and interior_materials have created_at but no updated_at column.
+    raised_by: [AUDIT-000010]
+    verdict: confirmed
+    severity: low
+    evidence: 'drizzle/0126_wave143_visual_design_authoring.sql:11-20 (interior_floor_plans),
+      :24-34 (interior_materials) -- both have created_at timestamp only.'
+    implementation_phase: phase_2_interior_schema_integrity_migration
+
+  - id: SEC-06
+    summary: Supabase admin-client instantiation (createAdminClient with NEXT_PUBLIC_SUPABASE_URL! +
+      SUPABASE_SERVICE_ROLE_KEY!, both non-null-asserted) is duplicated verbatim in
+      passcode-login/route.ts and sso/[orgSlug]/acs/route.ts, with no runtime guard -- a missing env
+      var throws an unhandled TypeError at request time instead of a clean error.
+    raised_by: [AUDIT-000009, AUDIT-000010]
+    verdict: confirmed
+    severity: medium_high
+    evidence: 'passcode-login/route.ts:62-65 and sso/[orgSlug]/acs/route.ts:27-30 -- identical
+      createAdminClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+      calls, each with a bare "!" non-null assertion.'
+    notes: 'Both audits independently flag the duplication; Z.AI additionally and correctly flags the
+      non-null-assertion crash risk (AUDIT-000010 missing_items item on process.env "!"). Combined
+      into one finding since they share the same fix (a module that validates env vars once, at
+      import time, and exports a singleton).'
+    implementation_phase: phase_1_shared_auth_utils
+
+  - id: SEC-07
+    summary: IP-address extraction (x-forwarded-for split / x-real-ip fallback) is copy-pasted
+      identically in failure-event/route.ts and passcode-login/route.ts.
+    raised_by: [AUDIT-000010]
+    verdict: confirmed
+    severity: low
+    evidence: 'failure-event/route.ts:26-28 and passcode-login/route.ts:42-44 -- identical
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? request.headers.get("x-real-ip")
+      ?? <fallback> blocks (only the final fallback value differs: undefined vs "unknown").'
+    implementation_phase: phase_1_shared_auth_utils
+
+  - id: SEC-08
+    summary: failure-event/route.ts has no rate-limiting or call-frequency cap at the route level --
+      it can be invoked at unbounded frequency by an unauthenticated caller.
+    raised_by: [AUDIT-000009, AUDIT-000010]
+    verdict: confirmed
+    severity: high
+    evidence: 'failure-event/route.ts:12-37 -- no middleware, no per-IP/per-email throttle before
+      calling recordAuthFailureAndCheckAnomaly(). Verified auth-failure-service.ts:52-88 --
+      recordAuthFailureAndCheckAnomaly() records every call and only THROTTLES ESCALATION (at most one
+      risk_anomaly_events row per 15-minute window per account, auth-failure-service.ts:74-75); it does
+      not throttle or reject the calls themselves, so the route stays unbounded even though the
+      downstream anomaly signal is deduplicated.'
+    notes: 'Highest-confidence, highest-severity finding in this evaluation -- both audits independently
+      raised it, and it is the only finding rated high given this is a public, pre-auth, unauthenticated
+      POST endpoint with genuinely zero request-frequency control at any layer.'
+    implementation_phase: phase_4_failure_event_rate_limit_and_body_size
+
+  - id: SEC-09
+    summary: failure-event/route.ts has no request body size limit -- request.json() is called
+      directly on an arbitrarily large body.
+    raised_by: [AUDIT-000010]
+    verdict: confirmed
+    severity: medium
+    evidence: 'failure-event/route.ts:15 -- await request.json() with no Content-Length check or
+      streaming size cap beforehand.'
+    implementation_phase: phase_4_failure_event_rate_limit_and_body_size
+
+  - id: SEC-10
+    summary: No input length/format validation on the email parameter in the POST auth routes --
+      only .trim() is applied.
+    raised_by: [AUDIT-000010]
+    verdict: partially_confirmed
+    severity: medium
+    evidence: 'failure-event/route.ts:20 and passcode-login/route.ts:34 -- both do
+      `typeof body.email === "string" ? body.email.trim() : ""` with no max-length or format check.
+      sso/[orgSlug]/acs/route.ts does NOT take an email body field at all -- its email comes from
+      validateSsoAssertionAndGetUser() (sso-service.ts:106-119), which derives it from the SAML
+      profile (profile.email ?? profile.mail ?? profile.nameID) after @node-saml/node-saml has
+      already cryptographically validated the assertion signature (wantAssertionsSigned: true,
+      sso-service.ts:88) against the org-admin-configured IdP cert.'
+    notes: 'Confirmed as stated for failure-event and passcode-login -- both take fully
+      attacker-controlled, unvalidated-length email strings. The audit''s claim that this applies
+      identically to "SSO ACS" overstates it: that route''s email is not free-form user input, it is
+      extracted from a signed IdP assertion, a materially different (lower, but non-zero -- a
+      malicious/compromised IdP could still assert an oversized nameID) trust level. Verdict is
+      therefore partially_confirmed: full-severity fix for failure-event + passcode-login, lower-
+      severity defense-in-depth validation for the SSO ACS-derived email. Note also: this codebase
+      already has an established isValidEmail() utility (lib/engines/data-quality-engine.ts, used by
+      crm-accounts-service.ts) -- the fix should reuse it rather than invent a new regex, for
+      consistency with existing convention.'
+    implementation_phase: phase_3_auth_email_input_validation
+
+  - id: SEC-11
+    summary: No security response headers (Content-Security-Policy, X-Content-Type-Options,
+      Strict-Transport-Security, etc.) are set on any of the 4 analysed route handlers.
+    raised_by: [AUDIT-000010]
+    verdict: confirmed
+    severity: medium
+    evidence: 'All 4 route files (failure-event, passcode-login, sso/acs, sso/login) return
+      NextResponse.json()/NextResponse.redirect() with no headers argument anywhere.'
+    implementation_phase: phase_7_security_response_headers
+
+  - id: SEC-12
+    summary: No audit trail for SSO login-initiation attempts (GET sso/[orgSlug]/login) -- neither
+      success nor failure is logged anywhere beyond a console.error on the failure path.
+    raised_by: [AUDIT-000010]
+    verdict: confirmed
+    severity: medium
+    evidence: 'sso/[orgSlug]/login/route.ts:7-19 -- only console.error("SSO login redirect error:",
+      error) on the catch path, nothing on success. Verified sso-service.ts''s
+      getSsoLoginRedirectUrl() (lines 93-97): no logActivity() call. logActivity IS used elsewhere in
+      this same file for admin config changes (upsertSsoConfiguration, lines 52 and 60) -- so the
+      precedent and the import already exist in sso-service.ts, just not wired to the login-initiation
+      path.'
+    implementation_phase: phase_6_sso_and_failure_event_audit_logging
+
+  - id: SEC-13
+    summary: passcode-login/route.ts returns an identical generic 500 body for two distinct internal
+      failure modes (magic-link generation error vs. session-establishment exception), making them
+      indistinguishable to monitoring tooling without parsing log text.
+    raised_by: [AUDIT-000010]
+    verdict: confirmed
+    severity: low
+    evidence: 'passcode-login/route.ts:71-74 and :77-79 -- both branches return
+      { error: "Could not complete sign-in. Please try again or use a magic link." } at status 500,
+      distinguished only by their console.error message text.'
+    implementation_phase: phase_5_structured_auth_error_codes
+
+  - id: SEC-14
+    summary: sso/[orgSlug]/acs/route.ts constructs redirect URLs containing the raw internal
+      ServiceError.status code (/login?error=sso_${error.status}), exposing implementation detail via
+      the browser address bar.
+    raised_by: [AUDIT-000010]
+    verdict: confirmed
+    severity: low
+    evidence: 'sso/[orgSlug]/acs/route.ts:43 -- new URL(`/login?error=sso_${error.status}`, ...).'
+    notes: 'Low severity -- a numeric HTTP status is not itself sensitive -- but a legitimate hygiene
+      finding: a fixed, named error-code enum is more maintainable and forward-compatible than leaking
+      whatever numeric status ServiceError happens to carry.'
+    implementation_phase: phase_5_structured_auth_error_codes
+
+  - id: SEC-15
+    summary: "failure-event/route.ts silently returns { ok: true } for a request with an invalid
+      'method' value without logging that an invalid method was received."
+    raised_by: [AUDIT-000010]
+    verdict: confirmed
+    severity: low
+    evidence: 'failure-event/route.ts:21-24 -- if (!email || !isValidAuthFailureMethod(method)) return
+      NextResponse.json({ ok: true }) with no console.log/console.warn call on that branch.'
+    implementation_phase: phase_6_sso_and_failure_event_audit_logging
+
+  - id: SEC-16
+    summary: No evidence of audit logging for successful or failed passcode-login session
+      establishment.
+    raised_by: [AUDIT-000009]
+    verdict: refuted
+    severity: n/a
+    evidence: 'passcode-login-service.ts:162-167 (recordAttempt) -- every verifyPasscodeLogin() call,
+      success or failure, is persisted to passcode_login_attempts (email, ipAddress, wasSuccessful,
+      createdAt via schema default). Failures additionally call
+      recordAuthFailureAndCheckAnomaly({email, method:"passcode", ipAddress}) (line 165), which can
+      escalate to a risk_anomaly_events row and org notification via risk-escalation-service.ts
+      (auth-failure-service.ts:52-88). verifyPasscodeLogin() itself calls recordAttempt() on every
+      exit path (lines 191, 197, 203, 207).'
+    notes: 'ChatGPT''s audit lists passcode-login/route.ts among its files_analysed but the audit
+      logging it correctly says is absent from the ROUTE lives one layer down, in
+      passcode-login-service.ts (imported by the route but not itself in either audit''s
+      files_analysed list). This is a real audit trail, just not visible from route.ts alone -- the
+      claim does not hold up against the full call chain. REFUTED, not actioned in the implementation
+      plan. (It is NOT logged via the org-activity logActivity()/audit_logs table specifically -- that
+      table is for authenticated-user org activity, a different concern from this pre-auth
+      rate-limit+anomaly-detection trail -- but the underlying security property the audit is actually
+      asking about, "is a failed/successful passcode attempt recorded anywhere", is genuinely true.)'
+    implementation_phase: null
+
+  - id: SEC-17
+    summary: No evidence of documentation or metadata linkage to governance artifacts within the
+      analysed files.
+    raised_by: [AUDIT-000009]
+    verdict: refuted
+    severity: n/a
+    evidence: 'passcode-login-service.ts:1-65 alone is a 65-line header block explicitly citing
+      "Priority 14 Wave 2 (GAP-AUTH-REBUILD, Owner directive 2026-07-14/15 via AskUserQuestion)" and
+      cross-referencing org-join-code-service.ts''s established precedent. sso-service.ts:1-14 cites
+      "Wave 59 (Tier 3 #13...)". failure-event/route.ts:4-11 cites "VERIDIAN Review Framework
+      gap-closure: Anomaly Detection". auth-failure-service.ts:1-11 cites the same framework by name.'
+    notes: 'This claim names no specific file/line and is not independently verifiable as stated --
+      and on inspection the analysed files are unusually well-documented relative to typical code in
+      this repo, each with a substantial header tracing its origin to a named governance
+      wave/directive. REFUTED as factually contradicted by the real files. Not actioned.'
+    implementation_phase: null
+
+  - id: SEC-18
+    summary: RLS policy boilerplate (app_runtime_tenant_isolation USING + service_role_bypass USING
+      true) is repeated verbatim for all 4 interior_* tables in migration 0126, differing only by
+      table name.
+    raised_by: [AUDIT-000010]
+    verdict: confirmed_but_deferred
+    severity: low
+    evidence: 'drizzle/0126_wave143_visual_design_authoring.sql:71-99 -- 4 near-identical
+      DO $$ ... CREATE POLICY ... EXCEPTION WHEN duplicate_object THEN NULL; END $$; blocks.'
+    notes: 'Confirmed true, but this exact boilerplate pattern is used identically across dozens of
+      other migrations throughout this codebase (it is the standing RLS convention, not something
+      Wave 143 invented) -- a parameterized-SQL-function refactor to eliminate it is a codebase-wide
+      initiative out of scope for a security-finding-closure plan, and fixing only these 4 tables
+      would leave the codebase MORE inconsistent, not less. Same reasoning as SEC-01. Not assigned an
+      implementation phase.'
+    implementation_phase: null
+
+  - id: SEC-19
+    summary: interior_furniture_placements.room_id is nullable with no inline comment documenting the
+      intended semantics of a room-less placement.
+    raised_by: [AUDIT-000010]
+    verdict: confirmed
+    severity: informational
+    evidence: 'drizzle/0126_wave143_visual_design_authoring.sql:52.'
+    notes: 'Real but purely a documentation nit, not a security finding. Folded into
+      phase_2''s migration as an inline SQL comment rather than given its own phase.'
+    implementation_phase: phase_2_interior_schema_integrity_migration
+
+# ============================================================================
+# SEVERITY RANKING (highest first)
+# ============================================================================
+severity_ranking:
+  high:
+    - SEC-08
+  medium_high:
+    - SEC-06
+  medium:
+    - SEC-02
+    - SEC-03
+    - SEC-04
+    - SEC-09
+    - SEC-10
+    - SEC-11
+    - SEC-12
+    - SEC-01   # confirmed_but_deferred
+  low:
+    - SEC-05
+    - SEC-07
+    - SEC-13
+    - SEC-14
+    - SEC-15
+    - SEC-18   # confirmed_but_deferred
+  informational:
+    - SEC-19
+  refuted_no_severity:
+    - SEC-16
+    - SEC-17
+
+audit_quality_assessment:
+  chatgpt_AUDIT-000009: 'Correctly identified the two duplicate-admin-client/magic-link routes
+    (SEC-06) and the room_id FK gap (SEC-04) that Z.AI missed. Its two audit-logging/governance-
+    metadata claims (SEC-16, SEC-17) did not survive independent verification against the real
+    service-layer files and file headers -- both were refuted. Its recommendations were directionally
+    correct but less specific than Z.AI''s (no concrete file paths for the proposed shared utilities).'
+  zai_AUDIT-000010: 'Substantially more granular and mostly held up under verification -- 11 of its
+    13 distinct claims confirmed as stated, 1 partially confirmed (SEC-10''s SSO-ACS overreach), 1
+    confirmed-but-out-of-scope (SEC-18). Its implementation_suggestion field already named the exact
+    file paths (src/lib/utils/request-ip.ts, src/lib/supabase/admin-client.ts) used verbatim in this
+    evaluation''s companion implementation plan. No refuted claims from this audit.'
+  net_assessment: 'The two audits are complementary, not redundant -- 3 of 19 distinct findings
+    (SEC-02''s polygon CHECK constraint, SEC-06''s admin-client duplication, and SEC-08''s
+    failure-event rate-limiting gap -- the single highest-severity finding in the evaluation) were
+    raised by both.
+    Treating either audit alone as complete would have missed real findings the other one caught
+    (ChatGPT''s room_id FK gap; Z.AI''s rate-limiting/body-size/headers/audit-trail findings). Z.AI''s
+    lower self-reported confidence_pct (78 vs ChatGPT''s 88) does not track its actual hit rate here,
+    which was higher.'

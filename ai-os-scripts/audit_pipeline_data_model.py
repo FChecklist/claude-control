@@ -53,6 +53,9 @@ import sqlite3
 import subprocess
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import auditor_engine_events as _events  # Phase 7 shared event-emitter (AUDITOR_ENGINE_EVENT_SCHEMA)
+
 DB_PATH = os.environ.get("SUPERBOSS_REGISTER_DB", "/opt/veridian/ai-os/memory/superboss-register.sqlite")
 _WRITE_LOCK_PATH = DB_PATH + ".writelock"
 
@@ -448,11 +451,21 @@ def main():
     any_tools_ran = any(per_repo_tools.values())
     status = "ok" if not any_errors else ("partial" if any_tools_ran else "failed")
 
+    run_traces = {}
+    if not args.dry_run:
+        for repo_name in per_repo_records:
+            run_traces[repo_name] = _events.start_audit_run(
+                domain=DOMAIN, repo=repo_name, producer_name=os.path.basename(__file__), run_id=run_id,
+            )
+
     new_count = 0
+    new_by_repo = {}
     if not args.dry_run:
         with _write_lock():
             conn = _connect()
             ensure_tables(conn)
+            for repo_name, rt in run_traces.items():
+                new_by_repo[repo_name] = _events.stamp_new_finding_events(conn, per_repo_records[repo_name], rt)
             new_count = upsert_findings(conn, all_records, run_id)
             for repo_name, records in per_repo_records.items():
                 repo_status = "ok" if not per_repo_errors[repo_name] else ("partial" if per_repo_tools[repo_name] else "failed")
@@ -468,6 +481,10 @@ def main():
                 ))
             conn.commit()
             conn.close()
+        for repo_name, rt in run_traces.items():
+            repo_status = "ok" if not per_repo_errors[repo_name] else ("partial" if per_repo_tools[repo_name] else "failed")
+            _events.complete_audit_run(rt, status=repo_status, total_findings=len(per_repo_records[repo_name]),
+                                        new_findings=new_by_repo.get(repo_name, 0), duration_s=duration)
 
     summary = {
         "ok": status != "failed",

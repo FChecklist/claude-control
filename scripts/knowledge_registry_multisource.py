@@ -43,7 +43,16 @@ existing tags [source:X] and metadata_json fields, per Phase 1's own
               the whole run. Real, live-verified initial data was captured
               once via the interactive Supabase MCP connector before this
               script existed; recurring cron refresh needs a working token
-              (see KNOWLEDGE_ENGINE_PHASE3_CANDIDATES_2026-07-24.yaml).
+              (see KNOWLEDGE_ENGINE_PHASE3_CANDIDATES_2026-07-24.yaml,
+              ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml#supabase-management-api-token-refresh
+              -- minting a fresh Management API PAT is a real Owner-dashboard
+              action, not a code gap). Phase 5 (task-20260724-135834) added a
+              real mitigation, not a full fix: when the Management API call
+              fails, supabase_project_healthcheck_fallback() uses each repo's
+              own already-configured, unrelated project-scoped anon key to hit
+              Supabase's standard /auth/v1/health endpoint, so the row still
+              gets a genuine live signal every cron tick instead of pure
+              last-known-good data (metadata_json.fallback_healthcheck).
   GITHUB   -- one row per repo under /opt/veridian/repos, anchored at the
               real local .git/HEAD file, metadata_json carries a live `gh`
               snapshot (default branch, branch protection, open PR count).
@@ -256,6 +265,51 @@ def notify_owner_supabase_token_degraded(http_status, body):
     print(f"  notify-owner: {proc.stdout.strip() or proc.stderr.strip()}")
 
 
+def read_env_file(path):
+    env = {}
+    if not os.path.isfile(path):
+        return env
+    for line in open(path):
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        k, v = line.split("=", 1)
+        env[k] = v.strip().strip('"').strip("'")
+    return env
+
+
+def supabase_project_healthcheck_fallback(repo):
+    """Phase 5 (task-20260724-135834) mitigation for the SUPABASE_ACCESS_TOKEN gap
+    (KNOWLEDGE_ENGINE_PHASE3_CANDIDATES_2026-07-24.yaml supabase_cron_credential_broken):
+    the broken credential is the account-level Management API PAT
+    (api.supabase.com/v1/projects) -- minting a fresh one is a real Owner-dashboard
+    action, not a code fix (see ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml). But
+    each repo already carries its OWN project-scoped anon key (NEXT_PUBLIC_SUPABASE_URL
+    / NEXT_PUBLIC_SUPABASE_ANON_KEY in that repo's .env.local, needed by the app itself,
+    unrelated to the broken PAT and requiring no new Owner action) which can hit
+    Supabase's standard GoTrue /auth/v1/health endpoint -- a real, safe, read-only,
+    zero-side-effect liveness check. This does not replace the Management API snapshot
+    (project id/status/table list still need the PAT), but it stops the SUPABASE row
+    from going fully stale between successful Management API calls: every 6h cron tick
+    gets a genuine live signal instead of pure last-known-good data. Best-effort per
+    repo -- projexa's own .env.local carries no Supabase credentials at all (confirmed
+    2026-07-24), so this returns None for it rather than fabricating a check."""
+    env = read_env_file(f"{REPOS_ROOT}/{repo}/.env.local")
+    url = env.get("NEXT_PUBLIC_SUPABASE_URL")
+    key = env.get("NEXT_PUBLIC_SUPABASE_ANON_KEY")
+    if not url or not key:
+        return None
+    req = urllib.request.Request(f"{url.rstrip('/')}/auth/v1/health", headers={"apikey": key})
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            body = json.loads(resp.read())
+            return {"ok": True, "http_status": resp.status, "gotrue_version": body.get("version")}
+    except urllib.error.HTTPError as e:
+        return {"ok": False, "http_status": e.code}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
 def do_supabase():
     print("=== SUPABASE ===")
     if not os.path.isfile(DATABASE_CATALOG):
@@ -274,8 +328,10 @@ def do_supabase():
     api_ok = isinstance(projects, list)
     if not api_ok:
         print(f"  ! Supabase Management API call failed (http_status={status}, body={projects}) -- "
-              f"degraded mode, real known gap (see KNOWLEDGE_ENGINE_PHASE3_CANDIDATES_2026-07-24.yaml). "
-              f"Registering/verifying with last-known-good live data only, no fresh API snapshot this run.")
+              f"degraded mode, real known gap (see KNOWLEDGE_ENGINE_PHASE3_CANDIDATES_2026-07-24.yaml, "
+              f"ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml#supabase-management-api-token-refresh). "
+              f"Falling back to a per-project anon-key health check (Phase 5 mitigation) so this run still "
+              f"captures a real live signal instead of pure last-known-good data.")
         notify_owner_supabase_token_degraded(status, projects)
 
     for supa_name, repo in SUPABASE_PROJECT_MAP.items():
@@ -285,6 +341,13 @@ def do_supabase():
             if match:
                 tables_resp, tstatus = supabase_api_get(token, f"/v1/projects/{match['id']}/database/query")
                 table_summary = {"project_ref": match.get("id"), "status_field": match.get("status")}
+
+        fallback_health = None if api_ok else supabase_project_healthcheck_fallback(repo)
+        if fallback_health:
+            status_suffix = "FALLBACK_HEALTHCHECK_OK" if fallback_health.get("ok") else "FALLBACK_HEALTHCHECK_FAILED"
+        else:
+            status_suffix = "FALLBACK_UNAVAILABLE"
+
         result = register_or_verify(
             DATABASE_CATALOG, "canonical",
             f"Supabase project '{supa_name}' (repo: {repo}) remote schema summary -- DATABASE_CATALOG.json is "
@@ -299,18 +362,21 @@ def do_supabase():
             }],
             metadata={
                 "supabase_project_name": supa_name,
-                "supabase_api_status": "OK" if api_ok else f"DEGRADED_HTTP_{status}",
+                "supabase_api_status": "OK" if api_ok else f"DEGRADED_HTTP_{status}_{status_suffix}",
                 "supabase_api_note": (
                     "live" if api_ok else
                     "SUPABASE_ACCESS_TOKEN in shared/.env returned 401 from api.supabase.com/v1/projects -- "
-                    "credential needs Owner refresh for this script to keep this row live-current; last real "
-                    "verification of this project's schema was via the interactive Supabase MCP connector on "
-                    "2026-07-24 (task-20260724-033446)"
+                    "credential needs Owner refresh for this script to keep this row live-current (see "
+                    "ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml#supabase-management-api-token-refresh); "
+                    "last real Management API verification of this project's schema was via the interactive "
+                    "Supabase MCP connector on 2026-07-24 (task-20260724-033446)"
                 ),
                 "live_check_snapshot": table_summary,
+                "fallback_healthcheck": fallback_health,
             },
         )
-        print(f"  {supa_name} ({repo}): {result.get('verification_status') if result else 'ERROR'}")
+        print(f"  {supa_name} ({repo}): {result.get('verification_status') if result else 'ERROR'}"
+              f" [fallback_healthcheck={fallback_health}]")
 
 
 def do_github():

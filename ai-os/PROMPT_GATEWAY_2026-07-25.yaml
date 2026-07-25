@@ -1,0 +1,345 @@
+id: prompt_gateway
+type: chat_preprocessing_pipeline
+created: 2026-07-25
+task: task-20260725-053025-zai-prompt-gateway-integration
+
+summary: >
+  A real, working, stdlib-only Python pre-processing FILTER that takes raw owner
+  chat text, classifies it, strips filler/noise, and compresses it into a concise
+  machine_prompt BEFORE that text ever becomes a --text argument to the real,
+  already-in-production task dispatcher at /opt/veridian/scripts/task-gateway.py
+  (submit/start/log/close/register-automation/status). This module never calls
+  task-gateway.py itself and never replaces it -- it is strictly upstream of it.
+  Source: 9 Z.AI-authored files staged at
+  /opt/veridian/workspace/zai-prompt-gateway-staging/, integrated here without
+  duplication.
+
+critical_collision_avoided:
+  description: >
+    The staged entrypoint (prompt-gateway-ENTRYPOINT.py) called itself
+    "task-gateway.py" in its own header and was originally targeted at
+    /opt/veridian/scripts/task-gateway.py -- the exact path of the real,
+    live, in-production Superboss dispatch entrypoint every task this session
+    (60+ tasks) has been dispatched through, including this one. Writing the
+    staged file there would have destroyed the real dispatch pipeline.
+  mitigation: >
+    Deployed under its own namespace, /opt/veridian/scripts/prompt_gateway/,
+    with the entrypoint renamed gateway.py. task-gateway.py was never opened
+    for writing by this task.
+  verification:
+    baseline_sha256: 1e9421777219d7561511431219e04c09862d86b2761cf14c882af4599ca9a49b
+    final_sha256: 1e9421777219d7561511431219e04c09862d86b2761cf14c882af4599ca9a49b
+    baseline_wc_l: 642
+    final_wc_l: 642
+    match: true
+    note: >
+      The SUCCESS_CRITERIA grep pattern 'def submit_task\|argparse.*submit'
+      actually returns 0 against the real file both before and after this
+      task (the real function is named cmd_submit, not submit_task, and the
+      add_parser("submit") line doesn't contain the literal string
+      "argparse"). That pattern mismatch predates this task and is a detail
+      of the success-criteria wording, not a sign of file corruption -- the
+      sha256 and line-count identity above are the authoritative proof the
+      file is byte-for-byte unchanged.
+
+file_layout:
+  deployed_to: /opt/veridian/scripts/prompt_gateway/
+  files:
+    - path: /opt/veridian/scripts/prompt_gateway/config.py
+      from_staged: config.py
+      changed: true
+      change: >
+        SCRIPTS_DIR now points at .../scripts/prompt_gateway (its own
+        namespace) instead of the top-level .../scripts/ dir, so ENGINE_DIR
+        resolves to .../prompt_gateway/engine. DATA_DIR now points at
+        /opt/veridian/data/prompt_gateway (was /opt/veridian/data) and
+        SNIPPETS_DIR now lives under it at
+        /opt/veridian/data/prompt_gateway/snippets (was top-level
+        /opt/veridian/snippets). This keeps every writable path this module
+        touches inside its own namespace -- no collision with
+        /opt/veridian/ai-os/, /opt/veridian/chatgpt-audit/, or any other
+        top-level /opt/veridian/ directory, and no generic top-level
+        /opt/veridian/data or /opt/veridian/snippets dirs left for other
+        tools to accidentally collide with later.
+    - path: /opt/veridian/scripts/prompt_gateway/gateway.py
+      from_staged: prompt-gateway-ENTRYPOINT.py (renamed)
+      changed: true
+      change: >
+        (1) Removed a dead/shadowed local VERIDIAN_BASE fallback
+        (os.path.dirname(SCRIPT_DIR)) that would have silently resolved to
+        the wrong directory (/opt/veridian/scripts instead of
+        /opt/veridian) now that the entrypoint sits one level deeper -- it
+        was already unused (immediately shadowed by `from config import
+        VERIDIAN_BASE as BASE`) so this was a latent-bug removal, not a
+        behavior change.
+        (2) Fixed TaskGateway.__init__: it previously hardcoded
+        self.base_dir/"data", self.base_dir/"data"/"tags",
+        self.base_dir/"data"/"context", self.base_dir/"snippets" for the
+        id generator/tagger/context manager/snip engine -- bypassing
+        config.py's namespaced DATA_DIR/TAGS_DIR/CONTEXT_DIR/SNIPPETS_DIR
+        entirely and writing to bare /opt/veridian/data and
+        /opt/veridian/snippets. This was caught by actually running
+        --mode init and inspecting what got created on disk (it created
+        exactly the top-level collision the task was trying to avoid).
+        Fixed to use the config constants by default, while still honoring
+        an explicit --base-dir CLI override for ad hoc/test use.
+        (3) Updated docstring/usage/epilog text that referred to itself as
+        "task-gateway.py" and gave `python3 task-gateway.py ...` examples,
+        to gateway.py and to explicitly state its relationship to the real
+        task-gateway.py dispatcher (pre-processing filter, not a
+        replacement, never calls it).
+    - path: /opt/veridian/scripts/prompt_gateway/__init__.py
+      from_staged: __init__.py
+      changed: false
+    - path: /opt/veridian/scripts/prompt_gateway/engine/id_generator.py
+      from_staged: engine/id_generator.py
+      changed: false
+      verified: >
+        sys.path.insert(0, dirname(dirname(abspath(__file__)))) is
+        location-independent by construction (always resolves to the
+        directory one level above engine/, wherever that is) -- confirmed
+        correct at the new path both via `python3 gateway.py --mode init`
+        and by running `python3 id_generator.py` standalone (exit 0).
+    - path: /opt/veridian/scripts/prompt_gateway/engine/classifier.py
+      from_staged: engine/classifier.py
+      changed: false
+      verified: standalone self-test exit 0 at new path.
+    - path: /opt/veridian/scripts/prompt_gateway/engine/prompt_engine.py
+      from_staged: engine/prompt_engine.py
+      changed: false
+      verified: standalone self-test exit 0 at new path.
+    - path: /opt/veridian/scripts/prompt_gateway/engine/context_engine.py
+      from_staged: engine/context_engine.py
+      changed: false
+      verified: standalone self-test exit 0 at new path.
+    - path: /opt/veridian/scripts/prompt_gateway/engine/snip_engine.py
+      from_staged: engine/snip_engine.py
+      changed: false
+      verified: standalone self-test exit 0 at new path.
+    - path: /opt/veridian/scripts/prompt_gateway/engine/__init__.py
+      from_staged: null
+      changed: true
+      change: >
+        Added (was not in the staged set) as an empty file so engine/ is a
+        proper importable package consistent with the top-level
+        __init__.py Z.AI already wrote. Purely additive, zero behavior
+        change (the engine/*.py files were already being imported
+        successfully via sys.path manipulation, not package-relative
+        imports).
+  not_deployed:
+    - path: veridian-gateway.service.TEMPLATE
+      reason: see systemd_decision below -- corrected but intentionally not installed.
+
+vd_id_namespace:
+  format: "VD-YYYYMMDDHHMMSS-XXXX (UTC timestamp + zero-padded daily counter)"
+  scope: >
+    Chat/prompt pre-processing records ONLY, produced by
+    /opt/veridian/scripts/prompt_gateway/engine/id_generator.py. Counter
+    state lives at /opt/veridian/data/prompt_gateway/_id_counter.json and
+    resets daily.
+  explicit_distinction: >
+    This is a 4th, wholly separate ID namespace from the 3 that already
+    exist in this session: task IDs (from veridian-task.py, e.g.
+    task-YYYYMMDD-HHMMSS-slug), Knowledge Engine IDs (KE-...), and
+    Instruction IDs (INS-...). A VD- id identifies one raw-chat
+    pre-processing record (classification + compression + context-prune
+    result) inside this pipeline's own data store. It is NEVER a task id,
+    a knowledge-engine row id, or an instruction id, and must not be
+    confused for one when read out of a log or a --session-id flag. When a
+    VD- id is passed to task-gateway.py as --session-id (see
+    end_to_end_proof below), it is being reused purely as an opaque
+    session-correlation string, the same as any other caller-supplied
+    session id -- task-gateway.py has no special knowledge of the VD-
+    format and does not validate or interpret it.
+
+real_init_output: |
+  $ cd /opt/veridian/scripts/prompt_gateway && python3 gateway.py --mode init
+  2026-07-25 05:34:47,808 [INFO] [VERIDIAN] TaskGateway initialized
+  2026-07-25 05:34:47,808 [INFO] [VERIDIAN] Base directory: /opt/veridian
+  2026-07-25 05:34:47,808 [INFO] [VERIDIAN] Initializing VERIDIAN system...
+  2026-07-25 05:34:47,808 [INFO] [VERIDIAN]   Created directory: /opt/veridian/data/prompt_gateway
+  2026-07-25 05:34:47,808 [INFO] [VERIDIAN]   Created directory: /opt/veridian/data/prompt_gateway/chats
+  2026-07-25 05:34:47,809 [INFO] [VERIDIAN]   Created directory: /opt/veridian/data/prompt_gateway/tags
+  2026-07-25 05:34:47,809 [INFO] [VERIDIAN]   Created directory: /opt/veridian/data/prompt_gateway/logs
+  2026-07-25 05:34:47,809 [INFO] [VERIDIAN]   Created directory: /opt/veridian/data/prompt_gateway/context
+  2026-07-25 05:34:47,811 [INFO] [VERIDIAN]   Seeded 6 default snippets
+  2026-07-25 05:34:47,811 [INFO] [VERIDIAN]   Module OK: ID Generator
+  2026-07-25 05:34:47,811 [INFO] [VERIDIAN]   Module OK: File Tagger
+  2026-07-25 05:34:47,811 [INFO] [VERIDIAN]   Module OK: Classifier
+  2026-07-25 05:34:47,811 [INFO] [VERIDIAN]   Module OK: Prompt Engine
+  2026-07-25 05:34:47,811 [INFO] [VERIDIAN]   Module OK: Context Manager
+  2026-07-25 05:34:47,811 [INFO] [VERIDIAN]   Module OK: Snip Engine
+  2026-07-25 05:34:47,811 [INFO] [VERIDIAN]   Test ID generated: VD-20260725053447-0001
+  2026-07-25 05:34:47,811 [INFO] [VERIDIAN]   Test classification: GENERAL
+  2026-07-25 05:34:47,811 [INFO] [VERIDIAN] VERIDIAN system initialized successfully!
+  {
+    "status": "initialized",
+    "test_chat_id": "VD-20260725053447-0001",
+    "test_classification": {
+      "category": "GENERAL",
+      "confidence": 0.1,
+      "scores": {
+        "CODE": 0.0343,
+        "ANALYSIS": 0.0,
+        "OPS": 0.0,
+        "QUERY": 0.0,
+        "TASK": 0.0,
+        "GENERAL": 0.1
+      },
+      "keywords_found": ["script", "python"],
+      "patterns_matched": []
+    },
+    "directories_created": [
+      "/opt/veridian/data/prompt_gateway",
+      "/opt/veridian/data/prompt_gateway/chats",
+      "/opt/veridian/data/prompt_gateway/tags",
+      "/opt/veridian/data/prompt_gateway/logs",
+      "/opt/veridian/data/prompt_gateway/context"
+    ]
+  }
+  EXIT_CODE=0
+  note: >
+    The init self-test classifies "write a python script to parse json" and
+    lands on GENERAL (confidence 0.1) rather than CODE -- this is the real,
+    as-shipped scoring behavior of the Z.AI classifier (keyword-ratio
+    scoring against a large keyword list dilutes a 2-keyword match below
+    its own 0.05 GENERAL-fallback threshold). Left as-is: fixing
+    classifier scoring is a tuning change to Z.AI's own algorithm, out of
+    this task's integration/deployment scope, and is called out here so it
+    isn't mistaken for a deployment bug.
+
+end_to_end_proof:
+  input: "please can you like fix the bug in the login endpoint, it's basically broken"
+  command: |
+    echo "please can you like fix the bug in the login endpoint, it's basically broken" \
+      | python3 /opt/veridian/scripts/prompt_gateway/gateway.py --mode stdin --json-only
+  real_stderr_log: |
+    2026-07-25 05:34:54,336 [INFO] [VERIDIAN] TaskGateway initialized
+    2026-07-25 05:34:54,336 [INFO] [VERIDIAN] Base directory: /opt/veridian
+    2026-07-25 05:34:54,337 [INFO] [VERIDIAN] Processing chat (76 chars)...
+    2026-07-25 05:34:54,337 [INFO] [VERIDIAN] Generated chat ID: VD-20260725053454-0002
+    2026-07-25 05:34:54,337 [INFO] [VERIDIAN] Classification: CODE (confidence: 0.2514, intent: FIX)
+    2026-07-25 05:34:54,337 [INFO] [VERIDIAN] Noise reduction: 13.2% chars, Token reduction: 66.7%
+    2026-07-25 05:34:54,338 [INFO] [VERIDIAN] Found 2 relevant snippets: ['error-handling-pattern', 'git-workflow']
+    2026-07-25 05:34:54,338 [INFO] [VERIDIAN] Context: 1 msgs, ~20 tokens after prune
+    2026-07-25 05:34:54,338 [INFO] [VERIDIAN] Pipeline complete in 1.7ms. Token reduction: 66.7%
+  real_stdout_compressed_output: |
+    [VERIDIAN:VD-20260725053454-0002]
+    [CAT:CODE|INTENT:FIX]
+
+    CODE_FIX:issue=the bug:target=the login endpoint, it's broken
+
+    [SNIPS:error-handling-pattern,git-workflow]
+
+    ---
+    [CONTEXT]
+    [user] please can you like fix the bug in the login endpoint, it's basically broken
+  exit_code: 0
+  reduction_stats:
+    noise_reduction_pct: 13.2
+    token_reduction_pct: 66.7
+    classification: CODE
+    intent: FIX
+    confidence: 0.2514
+  composition_with_real_dispatcher: >
+    This module never calls task-gateway.py -- the caller (owner-facing
+    tooling, or a human) takes the compressed output above and passes it as
+    --text to the real dispatcher. Composition validated below (argparse
+    parse-only, submit was NOT actually executed since no real task needed
+    to be dispatched for this proof):
+  composed_command: |
+    python3 /opt/veridian/scripts/task-gateway.py submit \
+      --text "[VERIDIAN:VD-20260725053505-0003]
+    [CAT:CODE|INTENT:FIX]
+
+    CODE_FIX:issue=the bug:target=the login endpoint, it's broken
+
+    [SNIPS:error-handling-pattern,git-workflow]
+
+    ---
+    [CONTEXT]
+    [user] please can you like fix the bug in the login endpoint, it's basically broken" \
+      --source owner \
+      --session-id VD-20260725053454-0002
+  composition_validation: >
+    Parsed the real submit subcommand's argparse contract (--text required,
+    --source in {owner,ai_agent}, --session-id required) against the above
+    compressed output as --text: "argparse validation OK, text length: 262".
+    submit itself was not invoked (no real task was needed for this task's
+    scope) -- SUCCESS_CRITERIA only requires proving the composition works,
+    not a real dispatch.
+
+systemd_decision:
+  decision: not_installed
+  staged_template_defects_found:
+    - "User=veridian / Group=veridian -- that system user does not exist on this server; the real operating user for every other systemd --user unit here (veridian-worker@, veridian-supervisor@, veridian-docworker@, veridian-task-watchdog, veridian-glm-proxy) is rajat."
+    - "ExecStart pointed at /opt/veridian/scripts/task-gateway.py -mode pipe -- the colliding production path, not this module's real path."
+    - "StandardInput/StandardOutput were file:/var/run/veridian/input.pipe and output.pipe -- neither /var/run/veridian nor those named pipes exist, and creating/owning a /var/run path requires root or a tmpfiles.d rule this task was not asked to add."
+    - "[Install] WantedBy=multi-user.target -- a system-unit target, inconsistent with every other veridian-*.service on this box, which are systemd --user units under default.target.wants/."
+  reasoning: >
+    This pipeline's real use case, per SCOPE, is CLI pre-processing that runs
+    once per owner-initiated chat message immediately before a
+    task-gateway.py submit call -- inherently on-demand, not a streaming
+    workload. The staged .service.TEMPLATE assumes a `--mode pipe` daemon
+    fed by a named pipe, but nothing in this system today (or in this task's
+    scope) produces owner chat text as a live stream into a FIFO -- the
+    owner types directly into an interactive Claude session, not into a
+    /var/run pipe file. Installing and enabling a systemd --user unit for
+    this would mean running a process 24/7 that reads from a pipe no writer
+    ever opens: pure idle resource use with zero real trigger, which is
+    exactly the "installing something unused" anti-pattern this task's own
+    instructions warned against. If a genuinely streaming use case
+    materializes later (e.g. a live chat-ingest integration), the fixes
+    above (rajat, corrected ExecStart path, a real tmpfiles-managed pipe
+    path or a --mode stdin-per-invocation design instead) should be applied
+    at that time as their own scoped follow-on task -- not spec'd
+    speculatively here.
+  template_disposition: >
+    The original veridian-gateway.service.TEMPLATE remains, unmodified, at
+    /opt/veridian/workspace/zai-prompt-gateway-staging/ for reference. It
+    was NOT copied into /opt/veridian/scripts/prompt_gateway/ and NOT
+    installed under ~/.config/systemd/user/, precisely so nobody mistakes
+    the un-fixed User=veridian/colliding-path version for something already
+    wired in.
+
+owner_engine_spec_not_implemented:
+  what_this_task_implements: >
+    Only the PROMPT_PROCESSING_PIPELINE + CONTEXT_MANAGEMENT_PIPELINE + a
+    slice of the COMPRESSION_STACK boxes from the Owner's much larger
+    OWNER_ENGINE YAML spec (19 named engines total) -- using plain
+    deterministic stdlib Python, exactly what the 9 staged Z.AI files
+    actually contain. No network calls, no API keys, no external services.
+  explicitly_not_attempted_this_task:
+    - product: Temporal
+      role_in_spec: workflow/orchestration engine
+      status: not installed, not built, not stubbed. Named explicitly in this task's own CONSTRAINTS as out of scope.
+    - product: OPA (Open Policy Agent)
+      role_in_spec: policy engine
+      status: not installed, not built, not stubbed. Named explicitly in this task's own CONSTRAINTS as out of scope.
+    - product: Qdrant
+      role_in_spec: vector store
+      status: not installed, not built, not stubbed. Named explicitly in this task's own CONSTRAINTS as out of scope.
+    - product: local-model-inference hosting
+      role_in_spec: local LLM hosting/serving
+      status: not installed, not built, not stubbed. Named explicitly in this task's own CONSTRAINTS as out of scope.
+    - product: remaining named engines/products in the Owner's full 19-engine OWNER_ENGINE YAML
+      role_in_spec: various orchestration/policy/data engines beyond PROMPT_PROCESSING_PIPELINE/CONTEXT_MANAGEMENT_PIPELINE/COMPRESSION_STACK
+      status: >
+        Not attempted. This task's own KNOWN_CONTEXT is explicit that the 9
+        real Python files "do NOT implement that whole spec" and that the
+        confirmed installed stack on this server today is limited to
+        git/gh/Docker/Node/Python/uv/Claude Code CLI -- none of the products
+        the full spec names. This document does not have the complete
+        verbatim 19-engine list on hand (it was in the Owner's original chat
+        message, not reproduced in this task's dispatch prompt), so it is
+        not enumerated item-by-item here beyond the 4 explicitly-named
+        products above; treat the remainder as a real, separate, unscoped
+        gap requiring its own follow-on task to even inventory properly,
+        not something silently folded into "done" by this registry entry.
+  is_full_owner_engine_spec_done: false
+
+verification_commands:
+  - "test -f /opt/veridian/scripts/prompt_gateway/gateway.py  # exit 0"
+  - "test -f /opt/veridian/scripts/task-gateway.py && sha256sum /opt/veridian/scripts/task-gateway.py  # 1e9421777219d7561511431219e04c09862d86b2761cf14c882af4599ca9a49b, unchanged"
+  - "python3 /opt/veridian/scripts/prompt_gateway/gateway.py --mode init  # exit 0"
+  - "echo '<raw chat>' | python3 /opt/veridian/scripts/prompt_gateway/gateway.py --mode stdin --json-only  # exit 0, non-empty compressed output"

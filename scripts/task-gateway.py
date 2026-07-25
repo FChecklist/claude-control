@@ -22,6 +22,7 @@ import re
 import sqlite3
 import subprocess
 import sys
+import tempfile
 
 import yaml
 
@@ -33,6 +34,10 @@ SCRIPTS = f"{VERIDIAN_ROOT}/scripts"
 AI_OS = f"{VERIDIAN_ROOT}/ai-os"
 SUPERBOSS = f"{SCRIPTS}/superboss-register.py"
 VERIDIAN_TASK = f"{SCRIPTS}/veridian-task.py"
+# OWNER_ENGINE software (OWNER DIRECTIVE 2026-07-25 / KE-20260725-061008-8423),
+# a pre-processing filter upstream of this dispatcher -- see PROMPT_GATEWAY
+# below and run_owner_engine_gate().
+PROMPT_GATEWAY = f"{SCRIPTS}/prompt_gateway/gateway.py"
 POSTFLIGHT = f"{AI_OS}/scripts/postflight_audit_gate.py"
 TIGHT_VALIDATION = f"{SCRIPTS}/tight_task_validation.py"
 DB_PATH = f"{AI_OS}/memory/superboss-register.sqlite"
@@ -75,6 +80,73 @@ def run_json(cmd, step):
     except json.JSONDecodeError:
         fail(f"{step} did not return parseable JSON", command=cmd,
              stdout=proc.stdout[-2000:], stderr=proc.stderr[-2000:])
+
+
+def run_owner_engine_gate(text, session_id):
+    """OWNER DIRECTIVE 2026-07-25 (KE-20260725-061008-8423) point 2, NON
+    NEGOTIABLE: 'AI will not analyze any chat given by owner in raw format
+    ... The chat by default will go to the OWNER_ENGINE software ... AI
+    will only work on that output prompt given by the OWNER_ENGINE
+    software.' This is the real, default enforcement point -- cmd_submit
+    calls this for every --source owner submission, before keyword
+    extraction, log-instruction, duplicate/search/knowledge lookups, or
+    capability lookup ever see the raw text. Not an opt-in flag: there is
+    no code path in cmd_submit that lets --source owner text reach those
+    calls unprocessed.
+
+    Pipes text through the already-built, already-proven
+    scripts/prompt_gateway/gateway.py (task-20260725-053025) via --mode
+    stdin, and returns its full result dict (chat_id, classification,
+    processing.machine_prompt, final_output, ...). Callers must use
+    final_output (or processing.machine_prompt) downstream, never `text`.
+    """
+    fd, out_path = tempfile.mkstemp(suffix=".json", prefix="owner_engine_gate_")
+    os.close(fd)
+    try:
+        proc = subprocess.run(
+            ["python3", PROMPT_GATEWAY, "--mode", "stdin",
+             "--session", session_id, "--output", out_path, "--json-only"],
+            input=text, capture_output=True, text=True,
+        )
+        if proc.returncode != 0:
+            fail(
+                "OWNER_ENGINE gate (scripts/prompt_gateway/gateway.py) failed -- "
+                "OWNER DIRECTIVE 2026-07-25 point 2 is NON NEGOTIABLE, submit "
+                "cannot fall back to analyzing raw owner text",
+                stdout=proc.stdout[-2000:], stderr=proc.stderr[-2000:],
+            )
+        if not os.path.isfile(out_path):
+            fail("OWNER_ENGINE gate produced no output file", output_path=out_path)
+        with open(out_path, "r") as f:
+            return json.load(f)
+    finally:
+        if os.path.isfile(out_path):
+            os.remove(out_path)
+
+
+def call_machine_contract(query_code, cmd, params, found_key="found"):
+    """ai-os/OWNER_ENGINE_MACHINE_LANGUAGE_CONTRACT_2026-07-25.yaml proof-of-concept
+    retrofit (OWNER DIRECTIVE 2026-07-25 points 4/5/14/15/17): wraps an
+    EXISTING AI<->software subprocess call in the contract's close-ended
+    request/response envelope instead of ad hoc JSON. `cmd` is still the
+    exact same real command that was already being run -- this does not
+    reimplement or replace the wrapped script, only normalizes the shape
+    of what task-gateway.py does with its output. Real retrofit target:
+    superboss-register.py lookup-capability, called from cmd_submit."""
+    request_envelope = {"query": query_code, "chat_id": None, "params": params}
+    proc = run(cmd)
+    if proc.returncode != 0:
+        return request_envelope, {"status": "ERROR", "answer": None,
+                                   "reason_code": "SUBPROCESS_NONZERO_EXIT"}
+    try:
+        raw = json.loads(proc.stdout)
+    except json.JSONDecodeError:
+        return request_envelope, {"status": "ERROR", "answer": None,
+                                   "reason_code": "UNPARSEABLE_JSON"}
+    if not raw.get(found_key):
+        return request_envelope, {"status": "INSUFFICIENT_INFO", "answer": raw,
+                                   "reason_code": "NO_MATCH_FOUND"}
+    return request_envelope, {"status": "OK", "answer": raw, "reason_code": None}
 
 
 def lookup_work_item(task_id):
@@ -124,7 +196,18 @@ def extract_keywords_mechanical(text):
 
 
 def cmd_submit(args):
-    keywords = extract_keywords_mechanical(args.text)
+    # OWNER DIRECTIVE 2026-07-25 (KE-20260725-061008-8423) point 2, mandatory
+    # default for --source owner: raw text is gated through the OWNER_ENGINE
+    # software before anything below (keyword extraction, log-instruction,
+    # duplicate/search/knowledge/capability lookups) touches it. --source
+    # ai_agent is unaffected (that text was never a raw owner chat).
+    owner_engine_gate = None
+    effective_text = args.text
+    if args.source == "owner":
+        owner_engine_gate = run_owner_engine_gate(args.text, args.session_id)
+        effective_text = owner_engine_gate["final_output"]
+
+    keywords = extract_keywords_mechanical(effective_text)
     fallback_used = False
     if not keywords:
         # step_1_mechanical yielded zero terms. This script cannot itself
@@ -135,16 +218,22 @@ def cmd_submit(args):
         # happened so a calling AI agent can supply real step_2 terms if it
         # judges that necessary.
         fallback_used = True
-        words = re.findall(r"[A-Za-z]{4,}", args.text)
+        words = re.findall(r"[A-Za-z]{4,}", effective_text)
         keywords = [w for w in words if w.lower() not in STOPWORDS][:5]
-    keyword_str = " ".join(keywords) if keywords else args.text
+    keyword_str = " ".join(keywords) if keywords else effective_text
 
-    log_result = run_json(
-        ["python3", SUPERBOSS, "log-instruction",
-         "--text", args.text, "--source", args.source,
-         "--medium", "task_gateway", "--session-id", args.session_id],
-        "log-instruction",
-    )
+    log_cmd = ["python3", SUPERBOSS, "log-instruction",
+               "--text", effective_text, "--source", args.source,
+               "--medium", "task_gateway", "--session-id", args.session_id]
+    if owner_engine_gate:
+        # Raw owner text is preserved for audit in metadata_json, not lost --
+        # but per point 2 it is metadata, not what search/classification/
+        # dispatch (above and below) operate on. That is effective_text.
+        log_cmd += ["--metadata", json.dumps({
+            "owner_engine_chat_id": owner_engine_gate["chat_id"],
+            "owner_engine_raw_text": args.text,
+        })]
+    log_result = run_json(log_cmd, "log-instruction")
     instruction_id = log_result.get("instruction_id")
 
     dup_result = run_json(
@@ -166,10 +255,15 @@ def cmd_submit(args):
     # exactly that entrypoint (the first stop before a task is dispatched to
     # an AI worker), so it belongs alongside check-duplicate/search/
     # query-knowledge above, not as a separate gate a caller could skip.
-    capability_result = run_json(
+    # Retrofitted (task-20260725-080900, OWNER DIRECTIVE point 4/14/15/17)
+    # to go through the machine-language contract envelope -- same
+    # underlying superboss-register.py lookup-capability call, now wrapped.
+    capability_request, capability_response = call_machine_contract(
+        "LOOKUP_CAPABILITY",
         ["python3", SUPERBOSS, "lookup-capability", "--intent-text", keyword_str],
-        "lookup-capability",
+        {"intent_text": keyword_str},
     )
+    capability_result = capability_response["answer"] or {}
 
     systemctl_proc = run([
         "systemctl", "--user", "list-units", "veridian-worker@*",
@@ -194,6 +288,19 @@ def cmd_submit(args):
     print(json.dumps({
         "workflow_phase": phase_for_task_gateway_subcommand("submit"),
         "instruction_id": instruction_id,
+        "owner_engine_gate": {
+            "applied": owner_engine_gate is not None,
+            "chat_id": owner_engine_gate["chat_id"] if owner_engine_gate else None,
+            "category": owner_engine_gate["classification"]["category"] if owner_engine_gate else None,
+            "intent": owner_engine_gate["classification"]["intent"] if owner_engine_gate else None,
+            "token_reduction_pct": owner_engine_gate["processing"]["token_reduction_pct"] if owner_engine_gate else None,
+            "raw_text_chars": len(args.text) if owner_engine_gate else None,
+            "gated_text_chars": len(effective_text) if owner_engine_gate else None,
+        },
+        "machine_contract_call": {
+            "request": capability_request,
+            "response": capability_response,
+        },
         "duplicate_found": bool(dup_result.get("found", 0) > 0),
         "duplicate_evidence": dup_result.get("matches", []),
         "prior_search_results": search_result,

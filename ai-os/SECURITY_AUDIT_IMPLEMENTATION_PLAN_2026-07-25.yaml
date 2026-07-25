@@ -1,0 +1,254 @@
+meta:
+  title: Security-domain ChatGPT/Z.AI dual-audit implementation plan (compliance-tracker auth routes
+    + Wave 143 interior schema)
+  created: '2026-07-25'
+  produced_by_task: task-20260725-041130-security-audit-evaluation-and-implementa
+  owner_directive: 'Given directly in chat 2026-07-25: "EVALUATE AUDIT BY BOTH CHATGPT AND Z.AI. MAKE
+    IMPLEMENTATION PLAN. ALL DOCUMENTATION TO BE SAVED."'
+  precedent: 'Same phases[]-with-id/depends_on/status structure as
+    ai-os/WIRING_ENGINE_PHASE_PLAN_2026-07-25.yaml, ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml,
+    ai-os/AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml, ai-os/TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml
+    and ai-os/TERMINOLOGY_STANDARDIZATION_PHASE_PLAN_2026-07-24.yaml -- deliberately matched so
+    scripts/auto_phase_continuation.py (which scans *_PHASE_PLAN_*.yaml every 30 min, normalizes
+    phases[].id + depends_on, and auto-dispatches the next ready phase) picks this plan up with zero
+    further manual intervention once this task''s PR merges.'
+  source_evaluation: ai-os/SECURITY_AUDIT_EVALUATION_2026-07-25.yaml
+  scope_note: 'This plan closes every finding in the companion evaluation file marked verdict:
+    confirmed or verdict: partially_confirmed with a non-null implementation_phase (15 of 19 total
+    findings; 2 refuted findings and 2 confirmed_but_deferred findings are deliberately NOT actioned
+    here -- see the evaluation file''s own notes for why). Constraint from this task''s own spec: this
+    task produces the evaluation and the plan only -- phases 1-7 below are dispatched separately by
+    scripts/auto_phase_continuation.py after this PR merges, not implemented inline in this task.'
+  zero_live_user_risk_note: 'Owner''s standing directive this session: zero real customers currently,
+    so no live-user risk blocks any fix below -- every phase below is cleared to ship without a
+    migration-safety/rollback-window discussion beyond what''s noted per-phase.'
+
+# ============================================================================
+# PHASES
+# ============================================================================
+phases:
+  - id: phase_0_dual_audit_evaluation
+    name: "Evaluate AUDIT-000009 (ChatGPT) and AUDIT-000010 (Z.AI) against each other and the real source"
+    objective: "Read both real, filed Security-domain audit records in full plus all 6 real source
+      files (and, where a route delegates to a service file not in either audit's own files_analysed
+      list, that service file too) they analysed, cross-reference every claim, and produce a real,
+      independently-verified verdict (confirmed / partially_confirmed / confirmed_but_deferred /
+      refuted) with severity for each of the 19 distinct findings the two audits raised between them."
+    scope:
+      - "Read AUDIT-000009 and AUDIT-000010 in full from /opt/veridian/chatgpt-audit/Security/."
+      - "Read the 6 real analysed source files plus the 3 service-layer files
+        (passcode-login-service.ts, auth-failure-service.ts, sso-service.ts) needed to verify claims
+        not resolvable from the route files alone."
+      - "Write ai-os/SECURITY_AUDIT_EVALUATION_2026-07-25.yaml with every finding's raised_by,
+        verdict, evidence citation, and severity."
+      - "Write this phase plan (ai-os/SECURITY_AUDIT_IMPLEMENTATION_PLAN_2026-07-25.yaml)."
+      - "Register both files in MASTER_INDEX.yaml registries: and via
+        scripts/superboss-register.py register-knowledge."
+    depends_on: []
+    status: done
+    status_detail: 'Completed by this same task, task-20260725-041130-security-audit-evaluation-and-implementa.
+      Real output: ai-os/SECURITY_AUDIT_EVALUATION_2026-07-25.yaml (19 findings: 15 confirmed/
+      partially_confirmed and actioned in phases 1-7 below, 2 confirmed_but_deferred as
+      out-of-scope-for-a-security-plan [SEC-01 org_id FK, SEC-18 RLS boilerplate dedup], 2 refuted
+      [SEC-16 passcode audit logging -- exists one layer down in passcode-login-service.ts;
+      SEC-17 governance-metadata linkage -- contradicted by the files'' own substantial headers]).
+      This phase plan file is the evaluation''s own companion output, produced in the same task.'
+
+  - id: phase_1_shared_auth_utils
+    name: "Extract duplicated IP-extraction and Supabase-admin-client logic into shared modules"
+    objective: "Closes SEC-06 and SEC-07. Create src/lib/utils/request-ip.ts exporting a
+      getRequestIp(request: Request): string | undefined function (the x-forwarded-for-split /
+      x-real-ip-fallback logic currently duplicated verbatim in failure-event/route.ts:26-28 and
+      passcode-login/route.ts:42-44), and src/lib/supabase/admin-client.ts exporting a
+      getSupabaseAdmin() singleton that validates NEXT_PUBLIC_SUPABASE_URL and
+      SUPABASE_SERVICE_ROLE_KEY once at module load (throwing a clear, named error instead of the
+      current bare '!' non-null-assertion crash), replacing the duplicated inline createAdminClient
+      calls in passcode-login/route.ts:62-65 and sso/[orgSlug]/acs/route.ts:27-30."
+    scope:
+      - "Create src/lib/utils/request-ip.ts. Preserve each call site's existing fallback semantics
+        (failure-event's is `?? undefined`, passcode-login's is `?? \"unknown\"`) -- take the fallback
+        as a parameter or a sensible shared default, don't silently change either route's behavior."
+      - "Replace the duplicated blocks in failure-event/route.ts and passcode-login/route.ts with
+        calls to getRequestIp()."
+      - "Create src/lib/supabase/admin-client.ts exporting getSupabaseAdmin(), validating both env
+        vars once at module load with a clear thrown error (not a bare '!' assertion)."
+      - "Replace the duplicated createAdminClient(...) blocks in passcode-login/route.ts and
+        sso/[orgSlug]/acs/route.ts with getSupabaseAdmin()."
+      - "Add/update unit tests alongside passcode-login-service.test.ts's existing convention for the
+        two new modules."
+    depends_on: []
+    status: not_started
+
+  - id: phase_2_interior_schema_integrity_migration
+    name: "Add missing FK constraints, polygon CHECK constraint, and updated_at columns via a new drizzle migration"
+    objective: "Closes SEC-02, SEC-03, SEC-04, SEC-05, and folds in SEC-19 as a doc comment. Add
+      drizzle/0127_wave143_interior_schema_integrity.sql (next sequential migration number after
+      0126) that: (a) adds REFERENCES compliance.interior_materials(id) to
+      interior_floor_plan_rooms.floor_material_id/wall_material_id/ceiling_material_id, (b) adds
+      REFERENCES compliance.interior_floor_plan_rooms(id) to
+      interior_furniture_placements.room_id (keeping it nullable, with an inline SQL comment on the
+      column documenting that NULL means the placement is not yet assigned to a room -- closes
+      SEC-19), (c) adds a CHECK constraint on interior_floor_plan_rooms.polygon validating it is a
+      jsonb array of >=3 [x,y]-numeric-pair points with the first element equal to the last (closed
+      polygon), and (d) adds updated_at timestamp NOT NULL DEFAULT now() to interior_floor_plans and
+      interior_materials, with a trigger or application-layer set-on-update convention matching
+      whatever this codebase's existing updated_at columns already use elsewhere (check e.g.
+      ssoConfigurations.updatedAt's own migration/usage for the established pattern before inventing
+      a new one)."
+    scope:
+      - "Write drizzle/0127_wave143_interior_schema_integrity.sql. Since there are zero real
+        customers/live rows in these Wave-143 tables yet (per Owner's zero-live-user-risk directive),
+        the FK additions and CHECK constraint can be added directly with ADD CONSTRAINT, no need for
+        a validate-existing-data-first NOT VALID pre-pass."
+      - "Confirm the polygon CHECK constraint's jsonb-shape validation logic against real polygon data
+        already produced by the 2D floor-plan editor (if any test/seed fixtures exist) before making it
+        NOT VALID -> VALIDATE, to avoid rejecting a real, currently-accepted polygon shape."
+      - "Add updated_at to interior_floor_plans and interior_materials using this codebase's own
+        established updated_at-maintenance convention (grep for how e.g. ssoConfigurations.updatedAt
+        or other Wave 100+ tables set it -- trigger vs. application code -- and match it, don't invent
+        a third pattern)."
+      - "Do NOT add the org_id/project_id/created_by_id FK on interior_floor_plans (SEC-01) or refactor
+        the RLS policy boilerplate (SEC-18) in this migration -- both are deliberately deferred
+        per the companion evaluation's reasoning (codebase-wide convention questions, not Wave-143-
+        specific security gaps)."
+    depends_on: []
+    status: not_started
+
+  - id: phase_3_auth_email_input_validation
+    name: "Add length/format validation on the email parameter across the public auth POST routes"
+    objective: "Closes SEC-10. Add real input validation to the email field in failure-event/route.ts
+      and passcode-login/route.ts (fully attacker-controlled, currently only .trim()'d) using the
+      codebase's OWN existing isValidEmail() utility (src/lib/engines/data-quality-engine.ts, already
+      used by crm-accounts-service.ts) plus a max-length bound (254 chars, RFC 5322's practical
+      limit) -- do not invent a new regex when an established, already-imported-elsewhere validator
+      exists. Additionally add the same isValidEmail()+max-length check as defense-in-depth on the
+      email extracted from the SAML assertion in sso/[orgSlug]/acs/route.ts's call chain
+      (validateSsoAssertionAndGetUser in sso-service.ts), at LOWER priority since that email is
+      derived from a signature-validated IdP assertion, not raw user input (per the companion
+      evaluation's partially_confirmed verdict on this sub-case)."
+    scope:
+      - "failure-event/route.ts: reject (same generic { ok: true } posture, since this route already
+        never reveals internal validation reasons) an email that fails isValidEmail() or exceeds 254
+        chars, before calling recordAuthFailureAndCheckAnomaly()."
+      - "passcode-login/route.ts: reject with the same existing 'Email and passcode are required'-style
+        400 (or a clearly-named validation error) for an email failing isValidEmail() or exceeding 254
+        chars, before calling verifyPasscodeLogin()."
+      - "sso-service.ts's validateSsoAssertionAndGetUser(): apply isValidEmail()+length check to the
+        SAML-assertion-derived email before the users table lookup, throwing the existing ServiceError
+        pattern on failure (matches this file's own established error-handling convention)."
+      - "Do not change the generic-failure-response posture either route already deliberately uses
+        (per passcode-login-service.ts's own header comment on why failures stay generic) -- validation
+        failures should look the same to the caller as any other invalid-credential response."
+    depends_on: []
+    status: not_started
+
+  - id: phase_4_failure_event_rate_limit_and_body_size
+    name: "Add request body size limit and basic rate-limiting to failure-event/route.ts"
+    objective: "Closes SEC-08 (high severity -- the single highest-confidence, highest-severity
+      finding in the companion evaluation) and SEC-09. failure-event/route.ts is currently the only
+      one of the 4 analysed routes with NO request-frequency or body-size control at any layer --
+      recordAuthFailureAndCheckAnomaly() only deduplicates ESCALATION, it does not reject or throttle
+      the calls themselves. Add (a) a body size guard (reject via Content-Length check or a bounded
+      read before request.json(), matching the response posture of the { ok: true }-always route) and
+      (b) a basic per-IP rate limit (reuse this route's own getRequestIp() from phase_1, and either
+      the same passcode_login_attempts-style dual email+IP counting pattern already established in
+      passcode-login-service.ts's checkPasscodeRateLimit, or a lighter in-memory/DB-backed token
+      bucket -- match whichever this codebase's own conventions favor for a public pre-auth route)."
+    scope:
+      - "Add a body-size guard to failure-event/route.ts before calling request.json() -- reject
+        oversized bodies with the same { ok: true } generic-response posture this route already uses
+        for every other rejection case, so the fix doesn't change this route's information-disclosure
+        posture."
+      - "Add a rate limit keyed by getRequestIp() (and optionally email, mirroring
+        checkPasscodeRateLimit's dual-keying rationale in passcode-login-service.ts's header comment)
+        -- reuse the shared request-ip util from phase_1_shared_auth_utils rather than re-duplicating
+        IP extraction a third time."
+      - "Confirm the new rate limit does not interfere with recordAuthFailureAndCheckAnomaly()'s own
+        existing anomaly-escalation dedup (auth-failure-service.ts:74-75) -- the two are complementary
+        (one throttles the endpoint, the other dedupes the alert), not a replacement for each other."
+    depends_on: [phase_1_shared_auth_utils]
+    status: not_started
+
+  - id: phase_5_structured_auth_error_codes
+    name: "Replace generic passcode-login 500s and SSO ACS raw-status redirect codes with structured, named error codes"
+    objective: "Closes SEC-13 and SEC-14. In passcode-login/route.ts, distinguish the two currently-
+      identical 500 response bodies (magic-link generation failure vs. session-establishment
+      exception, lines 71-74 and 77-79) with distinct machine-readable error codes (e.g.
+      PASSCODE_LINK_GEN_FAILED, PASSCODE_SESSION_FAILED) in the JSON body, matching Z.AI's own
+      implementation_suggestion naming verbatim, while keeping the human-readable message generic
+      per this route's established never-leak-which-step-failed-to-the-end-user posture (the code is
+      for monitoring, not for the caller to branch on). In sso/[orgSlug]/acs/route.ts, replace the raw
+      `/login?error=sso_${error.status}` redirect (line 43) with a small fixed set of named error
+      codes mapped from ServiceError.status, so the browser-visible URL never carries an arbitrary
+      internal numeric status."
+    scope:
+      - "passcode-login/route.ts: add a distinct error code string to each of the two 500 response
+        bodies' JSON, without changing the human-readable message or the 500 status itself."
+      - "sso/[orgSlug]/acs/route.ts: define a small named-code mapping (e.g. 400 -> sso_bad_request,
+        401 -> sso_unauthorized, 403 -> sso_forbidden, 404 -> sso_not_found, default ->
+        sso_failed) and use it in place of the raw `sso_${error.status}` interpolation."
+      - "Confirm this doesn't break any existing client-side handling of the current sso_${status}
+        query param values (grep the login page/login-form.tsx for any current parsing of this param
+        before changing its value space)."
+    depends_on: []
+    status: not_started
+
+  - id: phase_6_sso_and_failure_event_audit_logging
+    name: "Add audit logging for SSO login-initiation attempts and invalid failure-event methods"
+    objective: "Closes SEC-12 and SEC-15. sso-service.ts already imports and uses logActivity()
+      for admin config changes (upsertSsoConfiguration, lines 52 and 60) but never for the actual
+      login-initiation path (getSsoLoginRedirectUrl, lines 93-97) -- wire the same logActivity
+      pattern (or an equivalent pre-auth-safe audit write, since login-initiation has no
+      authenticated dbUser/tx context the way admin-config changes do) to record both successful
+      redirects to the IdP and failures, mirroring the unified authFailureEvents table's own
+      pre-auth-safe posture (auth-failure-service.ts's own header comment on why it uses the raw db
+      client for exactly this reason). Separately, add a console.warn (or equivalent) to
+      failure-event/route.ts's silent-{ok:true} branch for an invalid 'method' value, so probing
+      attempts with malformed method values are observable."
+    scope:
+      - "sso-service.ts's getSsoLoginRedirectUrl(): record a login-initiation attempt (org, resolved
+        IdP entry point, outcome) using a pre-auth-safe write path, matching
+        auth-failure-service.ts's own raw-db-client convention rather than logActivity's
+        authenticated-tx-scoped one (there is no dbUser/session at this point in the flow)."
+      - "sso/[orgSlug]/login/route.ts: ensure both the success and failure paths are covered, not just
+        the existing console.error on failure."
+      - "failure-event/route.ts: add an observability log (not a behavior change -- still return
+        { ok: true }) on the invalid-method branch (line 21-24) so malformed probing is visible in
+        logs/monitoring without changing this route's external response posture."
+    depends_on: []
+    status: not_started
+
+  - id: phase_7_security_response_headers
+    name: "Add security response headers to all 4 analysed auth route handlers"
+    objective: "Closes SEC-11. Add standard security response headers (X-Content-Type-Options: nosniff,
+      Strict-Transport-Security, Referrer-Policy, and a Content-Security-Policy appropriate to a
+      JSON-API/redirect route -- not a full page CSP) to failure-event/route.ts,
+      passcode-login/route.ts, sso/[orgSlug]/acs/route.ts, and sso/[orgSlug]/login/route.ts. Prefer a
+      shared helper (e.g. a withSecurityHeaders() wrapper or a small headers constant reused across
+      all 4 NextResponse.json()/NextResponse.redirect() call sites) over repeating the header object
+      4 times, consistent with this plan's own phase_1 dedup precedent -- check whether Next.js
+      middleware or next.config.js headers() is already used elsewhere in this codebase for
+      route-level headers before adding a 5th distinct mechanism."
+    scope:
+      - "Check next.config.js and any existing middleware.ts for a pre-existing headers() convention
+        this codebase already uses -- prefer extending that over adding new per-route header-setting
+        code, if one already exists."
+      - "If no existing convention covers these 4 routes, add a small shared helper and apply it at
+        each of the 4 routes' response-construction points."
+      - "Confirm the added headers don't break the SSO redirect flows (a CSP that's too strict could
+        interfere with the browser's navigation through Supabase's own hosted magic-link verify
+        endpoint) -- test the full SSO ACS -> Supabase verify -> /auth/callback redirect chain after
+        adding headers, not just the JSON-returning routes."
+    depends_on: []
+    status: not_started
+
+# ============================================================================
+# REGISTRATION
+# ============================================================================
+registration:
+  knowledge_engine_query_command: 'python3 scripts/superboss-register.py query-knowledge
+    "security_audit_implementation_plan" --tag domain:security_audit'
+  master_index_registry_id: security_audit_implementation_plan
+  evaluation: ai-os/SECURITY_AUDIT_EVALUATION_2026-07-25.yaml
+  plan: ai-os/SECURITY_AUDIT_IMPLEMENTATION_PLAN_2026-07-25.yaml
+  audits_closed: [AUDIT-000009, AUDIT-000010]

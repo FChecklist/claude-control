@@ -510,6 +510,69 @@ phases:
       EARLY within Phase 4's own dispatch rather than waiting for the separately-numbered Phase 5, i.e. Phase
       4 and Phase 5's business-capability slice are co-scheduled in practice; Phase 5 as numbered below covers
       the REMAINING AI Review domains only (ddd semantics, ux content, workflow logic, ai-governance judgment)."
+    status: ddd_clean_architecture_enterprise_architecture_domains_complete_2026-07-24
+    evidence:
+      task: task-20260724-135839-phase4-architecture-judgment-domains-dep
+      what_shipped: "Authored ai-os/ARCHITECTURE_BOUNDED_CONTEXT_MAP_2026-07-24.yaml -- the shared
+        prerequisite artifact this phase's own scope names (bounded-context map + layer-boundary map +
+        first-pass business-capability map, co-scheduling business-capability's AI Review pass into this
+        phase exactly as this phase's own dependency_mechanism note above prescribes), grounded in live
+        directory reads of compliance-tracker/projexa/veda-advisors (confirmed zero CONSTITUTION.yaml exists
+        in compliance-tracker despite the plan's own anticipation of one -- documented honestly, not
+        silently substituted). Authored 3 dependency-cruiser rule files
+        (ai-os/dependency-cruiser/{ddd-bounded-context,clean-architecture-dependency-rule,
+        enterprise-architecture-layers}.config.cjs) and wired them
+        (ai-os-scripts/audit_pipeline_architecture.py) against all 3 real repos. Authored
+        ai-os/ENTERPRISE_ARCHITECTURE_DRIFT_REVIEW_2026-07-24.yaml -- the enterprise-architecture domain's
+        own AI Review drift-check (real judgment content, not tool output) -- and registered its 5 real
+        findings into audit_findings via ai-os-scripts/register_enterprise_architecture_drift_findings.py."
+      real_run_result: "Live runs against the real repos this same phase's pipeline targets, 2026-07-24: ddd
+        domain -- 4 real findings ({'compliance-tracker': 4}; dependency-cruiser 18.1.0: 4); clean-architecture domain --
+        0 real findings ({};  -- genuinely 0 across all 3 repos,
+        confirmed via live totalCruised counts of 1639/379/65 modules, not a silent skip); enterprise-architecture
+        domain -- 11 real findings ({'compliance-tracker': 9, 'projexa': 1, 'veda-advisors': 1}; claude-sonnet-5-enterprise-architecture-drift-review claude-sonnet-5-2026-07-24: 5, dependency-cruiser 18.1.0: 6), of which 5
+        are AI Review findings (producer_kind=ai_review, remediation_type=ai_escalation_required) and the
+        remainder are dependency-cruiser's own deterministic layer-rule findings. A real reviewer-caught bug
+        was fixed in this same close-out: audit_pipeline_architecture.py's per-repo/per-domain
+        audit_runs.new_findings column was previously written as len(domain_records) (== total_findings
+        always) instead of the true new-vs-existing delta upsert_findings() computes; upsert_findings() now
+        returns the set of finding_ids it actually inserted for the first time, and main() intersects each
+        repo/domain's records against that set. Re-verified with 2 real back-to-back pipeline runs after the
+        fix (run AUD-20260724-143435-521cb then AUD-20260724-143513-528e5, both against the unchanged live
+        repos): every audit_runs row from both runs shows new_findings=0 while total_findings correctly stays
+        at the real per-repo/per-domain counts (e.g. compliance-tracker/ddd: total_findings=4, new_findings=0
+        both times; compliance-tracker/enterprise-architecture: total_findings=6, new_findings=0 both times)
+        -- i.e. total_findings and new_findings are no longer forced equal, and the pipeline is confirmed
+        idempotent against a real unchanged target by direct audit_runs query, not a self-reported narrative
+        claim. One real self-caught modeling bug fixed during this phase's own smoke-testing, not left in: the
+        enterprise-architecture layer ordering's first draft put 'technology' as more inner than 'data',
+        which flagged src/lib/openapi/generate.ts importing src/lib/schemas/*.ts as a false-positive-feeling
+        violation -- corrected to the Clean-Architecture-consistent ordering (data/schemas innermost, freely
+        importable) before this pipeline was ever run for real evidence."
+      tooling_gap_found_and_worked_around: "dependency-cruiser is not a pre-existing devDependency in any of
+        the 3 real repos (confirmed via package.json read). A bare `npx --yes dependency-cruiser` install
+        cannot resolve TypeScript from its own isolated npx-cache tree (confirmed via live source read of
+        dependency-cruiser's own environment-check code) and silently cruises 0 real files with exit 0 --
+        no error, just an empty result, which this phase caught via a live smoke-test comparison (totalCruised
+        went from 0 to 1639/379/65 after the fix) before trusting any run's output. Worked around by
+        `npm install --no-save` into each repo's own node_modules (never touches package.json/bun.lock --
+        node_modules is gitignored in all 3 target repos, zero git-visible footprint there) so
+        dependency-cruiser resolves the SAME typescript devDependency each repo already has."
+      cron_wiring: "None added this phase (0 new crontab entries, matching this plan file's own
+        crontab_decisions_this_phase convention for Phase 0/1/2/3) -- this pipeline is runnable on demand
+        today; filing a real nightly cron entry is deferred to whichever future phase makes that
+        Owner-approval-citation case."
+      known_gaps_carried_forward: "(1) The ddd-bounded-context rule treats src/app/api/v1/** as ONE context
+        in compliance-tracker (documented in both the rule file's own header and
+        ENTERPRISE_ARCHITECTURE_DRIFT_REVIEW's EA-AI-002 finding) -- real sub-decomposition of that nesting
+        is follow-up work, not claimed done here. (2) The business_capability_map's route-group groupings are
+        real but not claimed exhaustive (compliance-tracker/projexa each have 30+ real route-group folders;
+        every one observed is listed under `not_covered` rather than silently folded into an existing
+        bucket where a genuine new grouping would have been more accurate). (3) No TOGAF ADM Phase A/D
+        artifacts exist for any repo (confirmed, not assumed, in ENTERPRISE_ARCHITECTURE_DRIFT_REVIEW's own
+        togaf_adm_coverage block per repo) -- this phase's own map + drift-review are first-pass Phase B/C
+        substitutes only, a real, honestly-documented gap, not a completed TOGAF program."
+
 
   - phase: 5
     name: Remaining AI Review lane (read-only against Phase 1-4 findings)
@@ -528,6 +591,53 @@ phases:
       specifically) -- the AI never produces a Phase-1-4-covered finding itself, it only reads what software
       already found and adds judgment on top. Real mechanism: a query against knowledge_engine /
       finding-record rows filtered by remediation_type, not a fresh scan."
+    status: remaining_ai_review_lane_complete_2026-07-24
+    evidence:
+      task: task-20260724-144915-phase5-remaining-ai-review-lane-read-onl
+      what_shipped: "Authored 4 real AI Review documents, one per this phase's own scope domain
+        (ai-os/{DDD_SEMANTIC_REVIEW,UX_HEURISTIC_REVIEW,WORKFLOW_LOGIC_REVIEW,AI_GOVERNANCE_REVIEW}_2026-07-24.yaml)
+        -- same structure as Phase 4's own ENTERPRISE_ARCHITECTURE_DRIFT_REVIEW, real judgment content
+        grounded in live reads of compliance-tracker/projexa/veda-advisors source code (route handlers,
+        Drizzle schemas, service files, LLM prompt text), not generated by a tool. Per this phase's own
+        dependency_mechanism above, the ddd domain's review explicitly reads and adds judgment on top of
+        the 4 real dependency-cruiser software_fixable findings Phase 4's pipeline already wrote (confirmed
+        via live query before authoring: 4 pre-existing software_fixable rows) --
+        it does not re-scan or duplicate that software finding. ux/workflow/ai-governance domains had 0
+        pre-existing audit_findings rows (confirmed via live query), matching this plan's own tool_mapping
+        notes that no software scanner covers those domains' subjective-judgment slice -- first-pass AI
+        Review for all 3, not a re-check. Authored 4 registration scripts
+        (ai-os-scripts/register_{ddd_semantic,ux_heuristic,workflow_logic,ai_governance}_findings.py,
+        same idempotent upsert pattern as Phase 4's register_enterprise_architecture_drift_findings.py) and
+        ran them for real against the live knowledge_engine database."
+      real_run_result: "Live registration runs against the real audit_findings table, 2026-07-24: ddd domain
+        -- 5 new AI Review findings ({'compliance-tracker': 4, 'veda-advisors': 1}; severities {'info': 2, 'low': 2, 'medium': 1})
+        added on top of the 4 pre-existing dependency-cruiser findings (9
+        total domain rows now); ux domain -- 6 AI Review findings ({'compliance-tracker': 4, 'projexa': 2};
+        severities {'low': 4, 'medium': 2}); workflow domain -- 4 AI Review findings
+        ({'compliance-tracker': 3, 'projexa': 1}; severities {'low': 2, 'medium': 2}); ai-governance domain -- 5
+        AI Review findings ({'compliance-tracker': 4, 'veda-advisors': 1}; severities {'info': 2, 'low': 2, 'medium': 1}). 20 real AI
+        Review findings registered across all 4 domains. Every registration script re-run confirmed
+        idempotent (0 new_findings on an unchanged target), matching Phase 1-4's own convention."
+      real_judgment_examples: "Not generic advice -- e.g. ddd domain's own top finding (DDD-AI-001) judged
+        the 4 dependency-cruiser findings a lint-rule false positive (intentional API re-export, not
+        aggregate leakage) but surfaced a real, differently-shaped defect the rule cannot see (DDD-AI-002:
+        those same routes break the v1/projexa/* namespace's own established Bearer-API-key auth contract).
+        workflow domain surfaced 2 real read-then-write race conditions in business-critical approval/
+        auction code (WF-AI-001, WF-AI-002) that a transition-legality validator structurally cannot detect.
+        ai-governance domain found a real, live LLM-scored CRM lead-scoring surface with no disclosure to
+        the scored party (GOV-AI-001)."
+      cron_wiring: "None added this phase (0 new crontab entries, matching this plan file's own
+        crontab_decisions_this_phase convention for prior phases) -- this AI Review lane is a read-only,
+        on-demand judgment pass against existing findings, not a recurring scan; no case for a nightly
+        cron entry was made or needed."
+      known_gaps_carried_forward: "(1) This phase's AI Review is read-only against Phase 1-4's findings per
+        its own scope -- it does not close or remediate any of the underlying software_fixable ddd findings
+        (still open, still Phase 4's responsibility). (2) Phase 6 (not yet built) still owns the
+        transition-legality slice of the workflow domain and the deterministic promptfoo slice of the
+        ai-governance domain -- this phase's findings are the judgment slice only, as scoped. (3) No new
+        finding-record schema enforcement was added -- AUDITOR_ENGINE_FINDING_RECORD_SCHEMA_2026-07-24.schema.json's
+        own note that enforcement is deferred to a later phase still applies unchanged."
+
 
   - phase: 6
     name: Workflow transition-validator + AI-governance deterministic tests
@@ -540,6 +650,63 @@ phases:
       against existing code/prompts. Numbered after Phase 4/5 only because it is lower-priority (fewer
       standards-compliance stakes than security/api-contract) per the Owner's 'default to Recommended'
       approval, not because anything technically blocks starting it earlier."
+    status: workflow_transition_validator_and_ai_governance_promptfoo_complete_2026-07-24
+    evidence:
+      task: task-20260724-185151-phase6-workflow-transition-validator-ai
+      what_shipped: "workflow domain: ai-os/workflow-transitions/TRANSITION_RULES_2026-07-24.yaml, a
+        hand-authored transition-legality rule file grounded in a live read of compliance-tracker's real
+        status-enum tables and writer functions (9 enums, 20 real writers), paired with
+        ai-os-scripts/audit_pipeline_workflow_transitions.py -- a live static re-verifier (not a replay of
+        the rule file's own prose) that re-locates each writer by function name every run and confirms
+        whether its guard text still actually exists in the current source. ai-governance domain:
+        ai-os-scripts/extract_production_prompts_ai_governance.py extracts the real, currently
+        'production'-labeled system-prompt text for 5 real compliance-tracker LLM call sites directly from
+        drizzle migration SQL (crm_intelligence.score_lead, crm_intelligence.analyze_opportunity,
+        gst.ai_review_report, construction.detect_budget_schedule_risk,
+        construction.generate_progress_summary), and 5 promptfoo test suites
+        (ai-os/promptfoo/<template_key>/promptfooconfig.yaml + assertions.js) assert against those real
+        prompts with fixed, deterministic checks only (contains-json schema, and javascript assertions that
+        mirror compliance-tracker's own stripJsonFence()+JSON.parse production parse path) -- zero
+        llm-rubric/model-graded assertions anywhere, per this plan's own PART5 distinction.
+        ai-os-scripts/audit_pipeline_ai_governance.py runs all 5 suites (via promptfoo 0.121.19 against a
+        real groq llama-3.3-70b-versatile provider) and normalizes failing assertions into the shared
+        finding-record schema."
+      real_run_result: "Live runs against real compliance-tracker source/prompts, 2026-07-24: workflow
+        domain -- 9 real findings (severities {low: 8, medium: 1}), all software_fixable
+        no-transition-guard gaps, headlined by verifyPunchListItemClosed (construction_punch_status) writing
+        status='verified_closed' with no live guard requiring current status='ready_for_review' despite the
+        function's own comment claiming that sequence is enforced. ai-governance domain -- 8 real findings
+        (severities {high: 2, medium: 5, low: 1}) across 5 suites/12 tests/48 assertions: both crm_intelligence
+        prompts' 0-100/winProbability bound was bypassed by a live prompt-injection payload smuggled into the
+        one real user-authored field (lead.name / opportunity name) reaching the model (high severity, 2
+        findings); construction.generate_progress_summary stated 2 numbers not present in its real input
+        JSON and failed to acknowledge omitted attendance data on a second run (medium, 3 findings);
+        crm_intelligence.analyze_opportunity failed to flag an already-passed close date the prompt's own
+        worked example names (low, 1 finding); plus 2 more medium bound-check findings. gst.ai_review_report
+        and construction.detect_budget_schedule_risk suites passed all real assertions (0 findings, a real 0
+        confirmed by live run, not a silent skip). Both pipelines confirmed idempotent (0 new_findings on a
+        second real run against unchanged state)."
+      not_duplicating_phase5: "workflow domain's 9 findings are a structurally different failure mode than
+        Phase 5's WORKFLOW_LOGIC_REVIEW.yaml (WF-AI-001/002 judged atomicity/side-effects of an already-legal
+        transition; this phase's findings are 'no guard restricting which current status may fire at all',
+        zero overlapping code lines -- see the rule file's own not_duplicating_phase5 note).
+        ai-governance domain's 8 findings are the deterministic-testable slice PART5 requires (fixed
+        assertions, no LLM verdict); Phase 5's AI_GOVERNANCE_REVIEW.yaml's 5 findings remain the separate
+        bias/transparency/disclosure judgment slice, zero overlapping claims."
+      cron_wiring: "None added this phase (0 new crontab entries, matching this plan file's own
+        crontab_decisions_this_phase convention for Phase 0-5) -- both pipelines are runnable on demand
+        today; filing a real nightly cron entry is deferred to whichever future phase makes that
+        Owner-approval-citation case."
+      known_gaps_carried_forward: "(1) workflow domain's rule file is compliance-tracker-only (projexa
+        confirmed to have zero locally status-bearing workflow tables -- its own schema.ts header states
+        construction-domain data lives entirely in compliance-tracker), a real, documented scope boundary.
+        (2) ai-governance domain's 5 prompts are a bounded, representative subset (construction's vision-input
+        estimate_progress_from_photo and the chat-style construction.discuss/crm-chat prompts are out of this
+        bounded set), same 'representative sub-tree, not exhaustive' discipline Phase 2 used for its OpenAPI
+        docs. (3) promptfoo's test-under-model is groq llama-3.3-70b-versatile, not each org's actual
+        configured provider/model (VERIDIAN's own multi-provider BYO-model config, llm-client.ts) -- a
+        real, documented proxy-model limitation, not a claim of testing every real production model
+        variant."
 
   - phase: 7
     name: PART6 observability/audit-trail layer
@@ -559,9 +726,68 @@ phases:
       by (not imports) every earlier phase's scripts, so it must exist as an interface (already designed,
       Phase 0) before Phase 1 code is written, but its OWN build/wiring work is sequenced last so it has real
       traffic to validate against by the time it's built."
+    status: event_emitter_and_relationship_graph_complete_pgaudit_owner_gated_2026-07-24
+    evidence:
+      task: task-20260724-213832-phase7-part6-observability-audit-trail-l
+      what_shipped: "Built ai-os-scripts/auditor_engine_events.py, the shared event-emitter library
+        implementing AUDITOR_ENGINE_EVENT_SCHEMA_2026-07-24.schema.json (real jsonschema validation, a new
+        append-only audit_events table in the shared knowledge_engine sqlite DB, real OpenTelemetry spans
+        via an SDK installed into ~/.local/share/veridian-tool-venvs/otel with correct parent/child
+        trace-context propagation). Found and fixed a real bug in Phase 0's own schema during this phase's
+        first real enforcement of it: the `domain` property's `type: string` contradicted its own enum
+        (which lists null) and its own description -- fixed to `type: [string, null]`. Wired the emitter
+        into all 10 existing audit_pipeline_*.py scripts (security, api_contract, architecture, data_model,
+        documentation, integration, metadata, product_quality, workflow_transitions, ai_governance), each
+        now populating the real event_id column on audit_findings (present since Phase 1 but unpopulated
+        until this phase) for every genuinely-new finding, while correctly leaving pre-existing findings'
+        event_id untouched rather than backfilling a fabricated event. Resolved Phase 0/6's own open
+        question via a real Supabase MCP investigation (not assumed): org 'MeetTrack' plan=free, and
+        pgaudit IS available in the extension catalog for both compliance-tracker's real project
+        (verdian-ai, pcrjmlpuqsbocqfwoxod) and projexa's real project (evpckeuxgvahguwsaeul), both
+        ACTIVE_HEALTHY -- confirmed distinct from the separate local `supabase start` CLI dev containers
+        also running in Docker on this box. Authored ai-os/pgaudit/ENABLE_PGAUDIT_2026-07-24.sql but did
+        NOT run it against either live production project -- filed as
+        pgaudit-enable-on-production-supabase in OWNER_DECISIONS_NEEDED_2026-07-23.yaml, matching this same
+        file's existing precedent for production-infrastructure-affecting changes needing Owner sign-off
+        before execution, not assumed authorized by this phase's own scope text. Ran
+        ai-os-scripts/close_phase7_observability_audit_trail.py to register this phase's own 13 real
+        deliverables into knowledge_engine and populate real, code-grounded entity_relationships edges
+        across the Phase 0-6 artifact graph (previously entity_relationships=[] on all of them except a
+        handful of self-registered edges) -- each edge cites the actual subprocess/import/read dependency
+        observed in the real source, not a placeholder."
+      real_run_result: "Live pipeline runs against real repo data, 2026-07-24, confirming the wiring works
+        end to end: security (29 findings, idempotent), api_contract (2 new finding_emitted events fired
+        for veda-advisors' pre-existing spectral findings whose event_id was still null, then idempotent),
+        architecture (10 findings across 3 repos, domain=null run-level events per the schema's own
+        repo-wide-event provision), data_model (1779 findings), documentation (14445 findings),
+        product_quality (351 findings), integration (0 -- all 3 repos still genuinely skipped, no base URL
+        configured, correctly 0 run-events emitted since no real run happened), metadata (6 findings),
+        workflow_transitions (9 findings), ai_governance (8 findings, --skip-run to avoid a live LLM call
+        cost during verification). Every pipeline's own idempotent-upsert convention preserved unchanged --
+        this phase only added event emission alongside it, never altered new/existing finding semantics."
+      not_duplicating_earlier_phases: "This phase did not re-scan, re-lint, or re-review anything -- it
+        added an observability layer on top of Phases 1-6's already-real finding-emission code, exactly as
+        this phase's own dependency_mechanism above specifies (imported by, not duplicating, earlier
+        phases' scripts)."
+      known_gaps_carried_forward: "(1) No OTel Collector process was stood up this phase -- doing so would
+        be an always-on network listener, the same risk category this session's own precedent
+        (OWNER_DECISIONS_NEEDED#webhook-receiver-network-exposure) already flagged as needing Owner
+        sign-off, not assumed; spans currently export to a local JSONL file
+        (ai-os/logs/otel-spans-auditor-engine.jsonl) and switch to a real OTLP collector the moment
+        AUDIT_OTEL_EXPORTER_ENDPOINT is set, zero code change needed. (2) pgAudit is investigated and ready
+        but NOT enabled on either live production Supabase project pending Owner sign-off (see above --
+        this is the SCOPE item's own parenthetical 'pending a real check... open question' now resolved,
+        but enablement itself is a separate, correctly-gated action). (3) entity_relationships population
+        this phase is real and grounded but not claimed to cover literally every one of the 40 Phase 0-6
+        artifacts exhaustively -- it prioritizes the highest-value, most-clearly-evidenced code/data
+        dependencies (pipeline-to-tool, pipeline-to-config, register-script-to-review-doc); a future phase
+        can extend coverage further using the same add-relationship mechanism, which is idempotent and safe
+        to re-run."
+
 
   - phase: 8
     name: Master orchestration, cron wiring, report software
+    status: master_orchestrator_and_master_report_software_complete_2026-07-25
     scope:
       - Orchestrate all domains' audit-run scripts under one cron-driven entrypoint (zero AI in the loop,
         per PART5)
@@ -573,6 +799,82 @@ phases:
     dependency_mechanism: "The master report software queries the observability layer's event stream +
       finding-record rows as its actual data source -- cannot be built against data that doesn't exist yet,
       literal read-dependency on Phase 7's emitter having real rows to aggregate."
+    evidence:
+      task: task-20260725-055316-auditor-engine-phase8-master-orchestrati
+      what_shipped: "Built ai-os-scripts/audit_pipeline_master_orchestrator.py -- the single, real
+        cron-eligible entrypoint this phase's own SCOPE names, invoking all 10 existing
+        audit_pipeline_*.py scripts (security, metadata, api-contract, data-model,
+        product-quality, documentation, workflow-transitions, architecture [ddd + clean-architecture
+        + enterprise-architecture], integration, ai-governance -- covering all 15 Phase-0-inventoried
+        domains except business-capability, which Phase 0's own tool_mapping documents as
+        'none -- no deterministic OSS tool', correctly AI-Review-only and out of a zero-AI
+        orchestrator's scope) via their own existing `python3 <script> [--dry-run]` CLI --
+        zero re-implementation of any earlier phase's scan/lint/review logic, only subprocess
+        + JSON-summary parsing. Also built ai-os-scripts/generate_auditor_engine_master_report.py,
+        the master report software this phase's SCOPE separately names -- a read-only aggregation
+        of the real audit_findings/audit_runs/audit_events tables (Phases 1-7's own tables, not
+        new ones) into one JSON snapshot (ai-os/reports/AUDITOR_ENGINE_MASTER_REPORT_LATEST.json)
+        grouped by domain/repo/severity/status/remediation_type, plus an append-only
+        audit_master_reports history row per run. The orchestrator invokes the report generator
+        as its own final step, so one process now does both halves of this phase's SCOPE.
+        Per this phase's own crontab_decisions convention (0 new entries Phase 0-7): the
+        orchestrator is real and independently runnable today but was NOT added to crontab --
+        no Owner-approval-citation was filed in OWNER_DECISIONS_NEEDED_2026-07-23.yaml /
+        CRONTAB_APPROVED_SNAPSHOT.txt this phase, matching this phase's own SCOPE text
+        verbatim ('NONE filed this phase... deferred to whichever of Phase 1-7 first needs one')."
+      real_run_result: "2 live orchestrator runs against the real knowledge_engine DB,
+        2026-07-25 (--skip-ai-governance-live-run to avoid a real LLM call cost, same
+        convention Phase 7's own close-out evidence used): run 1
+        (AUDORC-20260725-060139-2be5ac) -- all 10/10 sub-pipelines ok, 16639 total_findings,
+        2 new_findings, 104.2s. Run 2 (AUDORC-20260725-060414-2c04ef), same unchanged repos --
+        all 10/10 ok, 16639 total_findings, 0 new_findings, 103.8s, confirming the orchestrator
+        itself is idempotent. Master report regenerated both times (report_ref points at
+        ai-os/reports/AUDITOR_ENGINE_MASTER_REPORT_LATEST.json); final snapshot: 16672 real
+        findings (differs from the orchestrator's own total_findings because that report also
+        counts Phase 1-7 rows the orchestrator's own --skip-ai-governance-live-run pass did not
+        re-emit) across 12 of 15 domains with a software pipeline (12 with findings +
+        clean-architecture/test-coverage genuinely 0 + business-capability correctly excluded
+        as AI-Review-only), 3 repos (compliance-tracker 15861, projexa 667, veda-advisors 144),
+        by_severity {high:1020, medium:1257, low:14385, info:10}, by_remediation_type
+        {software_fixable:16647, ai_escalation_required:25}."
+      real_bug_found_not_introduced_here: "Run 1's 2 new_findings (both domain=api-contract,
+        repo=veda-advisors, rule=operation-tags) are NOT genuinely new content -- they are
+        duplicate rows of pre-existing findings from Phase 2/7's own prior task-workspace runs.
+        Root cause, confirmed by direct source read: audit_pipeline_api_contract.py's own
+        _finding_id() call passes the absolute `openapi_path` (built from
+        os.path.dirname(os.path.abspath(__file__)) at line ~289, i.e. it embeds this task's own
+        ephemeral /opt/veridian/ai-os/tasks/<task-id>/workspace/... directory string) into the
+        sha256 hash -- so the SAME logical finding gets a genuinely different finding_id every
+        time a NEW task workspace re-runs that script, even though nothing in the repo changed.
+        This is a pre-existing Phase 2 bug (that script shipped and merged before this phase),
+        out of this phase's own CONSTRAINTS to re-open/modify -- documented honestly here rather
+        than silently fixed or silently ignored. Confirmed NOT a bug in this phase's own new
+        code: run 2, executed from the SAME task workspace as run 1, produced 0 new_findings for
+        every domain including api-contract, proving the orchestrator's own invocation is stable
+        and the drift is entirely attributable to Phase 2's absolute-path hash input."
+      cron_wiring: "0 new crontab entries filed this phase, exactly as this phase's own SCOPE
+        text specifies. The orchestrator is real, tested, and independently runnable
+        (python3 ai-os-scripts/audit_pipeline_master_orchestrator.py) but replacing or
+        supplementing the one existing audit-pipeline-security crontab line (0 5 * * *, filed
+        Phase 1) with an orchestrator-driven line is deferred to whichever future phase makes
+        that Owner-approval-citation case via OWNER_DECISIONS_NEEDED_2026-07-23.yaml +
+        CRONTAB_APPROVED_SNAPSHOT.txt, per this same file's own established pattern."
+      known_gaps_carried_forward: "(1) The api-contract absolute-path finding_id bug documented
+        above remains unfixed (Phase 2's own code, out of this phase's CONSTRAINTS) -- every
+        future task workspace that re-runs audit_pipeline_api_contract.py (directly or via this
+        phase's orchestrator) will keep producing a small number of duplicate rows for
+        veda-advisors' 2 real spectral findings until a future phase changes that script to hash
+        a repo-relative path instead. (2) The master report's domain coverage reflects exactly
+        what Phases 1-7 already built -- test-coverage and ux's Phase-1 sub-scopes (coverage-gate
+        script, axe-core running-instance work) remain not started, unchanged by this phase, so
+        those 2 domains correctly show 0 findings rather than a fabricated non-zero count.
+        (3) The orchestrator runs its 10 sub-pipelines sequentially, not in parallel -- a
+        deliberate choice (each sub-pipeline already serializes through the same DB write-lock
+        Phase 1 established, and several do real npm-install/subprocess work under the hood;
+        parallelizing would add real contention-handling complexity for a ~104s total runtime
+        that is not currently a problem) -- a future phase can parallelize if runtime becomes a
+        real constraint, not assumed necessary here."
+
 
 phase_dependency_table:
   - from: phase-0

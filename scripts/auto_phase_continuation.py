@@ -73,7 +73,14 @@ PLAN_DIRS = [
     "/opt/veridian/ai-os",
     "/opt/veridian/repos/claude-control/ai-os",
 ]
-PLAN_GLOB = "*_PHASE_PLAN_2026-07-24.yaml"
+PLAN_GLOBS = ["*_PHASE_PLAN_*.yaml", "*_IMPLEMENTATION_PLAN_*.yaml"]  # PLAN_GLOB was hardcoded to
+# 2026-07-24 only; widened 2026-07-25 (Wiring Engine Phase 0, task-20260725-032718) so a newly-dated
+# plan (e.g. WIRING_ENGINE_PHASE_PLAN_2026-07-25.yaml) is discovered without a further hardcoded-date
+# edit every time a new initiative starts a day later. Widened again same day (Security Audit
+# Evaluation, task-20260725-041130) from a single PLAN_GLOB string to a PLAN_GLOBS list so a plan
+# named *_IMPLEMENTATION_PLAN_*.yaml (e.g. SECURITY_AUDIT_IMPLEMENTATION_PLAN_2026-07-25.yaml -- name
+# fixed by that task's own spec, not renameable to fit the narrower pattern) is discovered too. Still
+# matches every existing *_PHASE_PLAN_2026-07-24.yaml file unchanged.
 
 TASK_ID_RE = re.compile(r"task-20\d{6}-[a-z0-9-]+")
 
@@ -95,8 +102,9 @@ def discover_plan_paths():
     for d in PLAN_DIRS:
         if not os.path.isdir(d):
             continue
-        for path in glob.glob(os.path.join(d, PLAN_GLOB)):
-            by_name.setdefault(os.path.basename(path), []).append(path)
+        for plan_glob in PLAN_GLOBS:
+            for path in glob.glob(os.path.join(d, plan_glob)):
+                by_name.setdefault(os.path.basename(path), []).append(path)
     return by_name
 
 
@@ -303,7 +311,7 @@ def external_deps_satisfied(phase_raw, all_done_maps):
     ext = phase_raw.get("external_depends_on")
     if not ext:
         return True, None
-    file_re = re.compile(r"([A-Z0-9_]+_PHASE_PLAN_2026-07-24\.yaml)")
+    file_re = re.compile(r"([A-Z0-9_]+_(?:PHASE_PLAN|IMPLEMENTATION_PLAN)_[0-9]{4}-[0-9]{2}-[0-9]{2}\.yaml)")
     num_re = re.compile(r"[Pp]hase[ _]?(\d+)")
     for entry in ext:
         text = entry if isinstance(entry, str) else str(entry)
@@ -477,7 +485,9 @@ update, per the Owner's existing blanket approval -- do not add cron entries wit
 ## COMPLEXITY_TIER
 judgment
 """
-    title = f"phase{re.search(r'(\d+)', phase_id).group(1)}-{slugify(name, max_words=6)}"
+    _m = re.search(r'(\d+)', phase_id)
+    _num = _m.group(1) if _m else 'x'
+    title = f"phase{_num}-{slugify(name, max_words=6)}"
     return prompt, title
 
 
@@ -505,8 +515,27 @@ def dispatch(prompt_text, title, repo=DEFAULT_REPO):
                        "--title", title, "--repo", repo, "--instruction-id", str(instruction_id)],
                       timeout=120)
     if start_proc.returncode != 0:
-        return {"dispatched": False, "step": "start", "instruction_id": instruction_id,
-                "stdout": start_proc.stdout, "stderr": start_proc.stderr}
+        failure = {"dispatched": False, "step": "start", "instruction_id": instruction_id,
+                   "stdout": start_proc.stdout, "stderr": start_proc.stderr}
+        # already_dispatched() only recognizes real tasks/PRs, and a validation
+        # rejection here creates neither -- so this exact phase will be
+        # regenerated and re-rejected identically on every future cron tick
+        # with no other signal (the JSON below is otherwise only visible by
+        # reading this run's full report). Surface it plainly so a human
+        # scanning the next status check (or stderr/cron log) sees it fast.
+        try:
+            start_error = json.loads(start_proc.stdout)
+        except json.JSONDecodeError:
+            start_error = {}
+        if "tight_task_validation.py rejected" in str(start_error.get("error", "")):
+            failure["note"] = (
+                f"REJECTED BY tight_task_validation.py: {start_error.get('reason')} -- this phase's prompt "
+                "is regenerated deterministically from its own phase-plan content, so it will keep failing "
+                "the SAME way on every future cron tick until a human edits the phase-plan entry or the "
+                "validator; it is not silently marked done or skipped."
+            )
+            log(f"  REJECTED by tight_task_validation.py for {title}: {start_error.get('reason')}")
+        return failure
     try:
         start_result = json.loads(start_proc.stdout)
     except json.JSONDecodeError:
@@ -534,7 +563,7 @@ def main():
 
     by_name = discover_plan_paths()
     if not by_name:
-        print(json.dumps({"error": "no *_PHASE_PLAN_2026-07-24.yaml files found in any scanned dir",
+        print(json.dumps({"error": "no plan files matching PLAN_GLOBS found in any scanned dir",
                            "scanned_dirs": PLAN_DIRS}))
         sys.exit(1)
 
@@ -594,6 +623,12 @@ def main():
             entry["dispatch_result"] = result
             if result.get("dispatched"):
                 dispatched_count += 1
+            elif result.get("note"):
+                # Promoted out of the nested dispatch_result blob so a human
+                # (or a future automated status check) sees a rejected
+                # auto-dispatch without having to dig into stdout/stderr --
+                # this phase will otherwise re-fail identically every tick.
+                entry["note"] = result["note"]
 
         report.append(entry)
 

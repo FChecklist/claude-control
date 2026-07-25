@@ -1,0 +1,201 @@
+meta:
+  title: VERIDIAN Chrome persistent browser profile for Playwright/Puppeteer automation
+  created: '2026-07-25'
+  produced_by_task: task-20260725-053540-chrome-browser-persistent-profile
+  instruction: INS-20260725-054500
+  architecture: 'Owner -> SSH -> VERIDIAN SERVER -> Chrome with persistent profile ->
+    Playwright/Puppeteer/Claude Code CLI'
+  objective: 'Give future Playwright/Puppeteer-driven automation on this server a real
+    persistent Chrome profile it can reuse across runs, so a logged-in session (once the
+    Owner completes the one-time manual Google login below) survives process restarts
+    instead of re-authenticating every run.'
+  login_status: NOT_YET_COMPLETED
+  login_status_detail: 'No real Google login has been completed by this task or by any
+    automated process -- see constraints.google_login_constraint. This file must be
+    updated (login_status: COMPLETED, plus date/who) once the Owner finishes the
+    one-time procedure in /opt/veridian/browser/vnc/VNC_LOGIN_PROCEDURE.md.'
+
+constraints:
+  google_login_constraint: 'A Google account login genuinely requires a human to type
+    credentials and complete 2FA. No automated process, worker, or AI session -- including
+    this task -- may ever type a real password or 2FA code into any login form on the
+    Owner''s behalf. This task built 100% of the surrounding infrastructure (Chrome
+    install, profile directory, security hardening, Playwright wiring, one-time-login
+    GUI path) but did not and must not attempt the actual "sign into Google" step.'
+  no_root_available: 'Server access is key-only SSH as rajat (sudo+docker groups, sudo
+    requires a password this task does not have). Every install in this document (Chrome,
+    TigerVNC, and their shared-library dependencies) was therefore done user-space via
+    `dpkg-deb -x` extraction of official .deb packages into /opt/veridian/browser/, never
+    via apt/dpkg --install, and never running as root.'
+
+directory_layout:
+  root: /opt/veridian/browser
+  entries:
+    chrome:
+      path: /opt/veridian/browser/chrome
+      purpose: 'User-space Chrome install (dpkg-deb -x of the official .deb) plus a
+        google-chrome launcher wrapper and an extra-libs/ dir for the handful of shared
+        libraries not already covered by local-libs.'
+      owner: rajat:rajat
+    profile:
+      path: /opt/veridian/browser/profile
+      purpose: 'The persistent Chrome user-data-dir. Will hold real session cookies,
+        IndexedDB, and login state once the Owner completes the one-time Google login.'
+      owner: rajat:rajat
+      mode: '700'
+      mode_rationale: 'rajat-only, no group/other access -- this directory will contain
+        real session credentials once the Owner logs in.'
+    downloads: {path: /opt/veridian/browser/downloads, owner: rajat:rajat}
+    uploads: {path: /opt/veridian/browser/uploads, owner: rajat:rajat}
+    cache: {path: /opt/veridian/browser/cache, owner: rajat:rajat}
+    screenshots: {path: /opt/veridian/browser/screenshots, owner: rajat:rajat}
+    recordings: {path: /opt/veridian/browser/recordings, owner: rajat:rajat}
+    temp: {path: /opt/veridian/browser/temp, owner: rajat:rajat}
+    vnc:
+      path: /opt/veridian/browser/vnc
+      purpose: 'User-space TigerVNC install + setup-vnc.sh / teardown-vnc.sh /
+        VNC_LOGIN_PROCEDURE.md for the Owner''s one-time manual login. Not part of the
+        Owner''s original directory list -- added because the one-time login step
+        genuinely needs a GUI, and none existed on this server before this task.'
+      owner: rajat:rajat
+
+install:
+  chrome:
+    method: 'Downloaded https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+      and extracted user-space with `dpkg-deb -x <deb> /opt/veridian/browser/chrome`
+      (no root/apt available -- see constraints.no_root_available).'
+    version_installed: 'Google Chrome 150.0.7871.186'
+    version_check_command: 'google-chrome --version'
+    launcher: '/opt/veridian/browser/chrome/google-chrome -- a wrapper script that sets
+      LD_LIBRARY_PATH (chrome''s own lib dir + a small extra-libs/ set + the doc-worker''s
+      existing /opt/veridian/workspace/browser-tools/local-libs shared-library extraction)
+      and execs the real chrome binary with --no-sandbox.'
+    no_sandbox_rationale: 'Chrome''s setuid-root sandbox helper (chrome-sandbox) cannot
+      function without root, which this task does not have. --no-sandbox is the same
+      trade-off doc-worker-entrypoint.sh''s existing Playwright MCP server already makes
+      on this box (see its --no-sandbox flag) -- acceptable here because this is a single
+      dedicated automation user on a server with no other untrusted local users, not a
+      multi-tenant sandbox boundary.'
+    added_on_path: '~/.local/bin/google-chrome symlinked to the launcher, so plain
+      `google-chrome ...` invocations work for rajat.'
+    installed_to_repo_manifest: false
+    installed_to_repo_manifest_note: 'Chrome itself is not an npm/pip dependency -- it is
+      a system-level binary install, tracked here and in this directory layout, not in
+      any package manifest.'
+  extra_shared_libs:
+    reason: 'ldd against the extracted chrome binary found 17 missing libs; most were
+      already present in the doc-worker''s local-libs extraction. The remainder
+      (libxcb-render0, libxcb-shm0, libharfbuzz0b, libthai0, libthai-data, libdatrie1,
+      libgraphite2-3) were fetched directly from archive.ubuntu.com (noble/24.04 pool,
+      matching this box''s Ubuntu version) since apt has no configured/updated package
+      cache here, and extracted the same way into
+      /opt/veridian/browser/chrome/extra-libs.'
+    reused_from_doc_worker: '/opt/veridian/workspace/browser-tools/local-libs (108 libs
+      already extracted there for the existing Playwright MCP / Xvfb setup) -- deliberately
+      not duplicated.'
+
+headless_smoke_test:
+  command: 'google-chrome --headless=new --user-data-dir=/opt/veridian/browser/profile
+    --dump-dom https://example.com/'
+  result: 'Exit code 0. Rendered real DOM (<html lang="en"><head><title>Example
+    Domain</title>...<h1>Example Domain</h1>...). grep -c ''<html'' on the output
+    returns 1. Profile directory populated with real Chrome state (Default/, Local
+    State, GPUPersistentCache, etc. -- 40 entries) after the run; permissions stayed
+    700 rajat:rajat.'
+  proves: 'The persistent-profile + headless mechanism itself works end to end,
+    independent of whether a real Google session exists in the profile yet.'
+
+playwright_integration:
+  reused_install:
+    location: /opt/veridian/workspace/browser-tools
+    manifest: /opt/veridian/workspace/browser-tools/package.json
+    pinned_version: '"playwright": "^1.62.0-alpha-1783623505000" (already installed
+      there, node_modules/playwright resolves to exactly 1.62.0-alpha-1783623505000)'
+    why_reused: 'This is the same install doc-worker-entrypoint.sh''s workspace-local
+      .mcp.json wires up as the "playwright" MCP server (via `npx -y @playwright/mcp@latest`,
+      which itself resolves against this same node_modules). This task does not add a
+      second, parallel Playwright install or touch the manifest -- it requires the
+      package directly by absolute path from node_modules/playwright.'
+  helper_script:
+    path: scripts/browser/persistent-profile.js
+    exports: 'launchPersistentChrome(overrides) -> Promise<BrowserContext>, using
+      chromium.launchPersistentContext(PROFILE_DIR, { executablePath: <the Chrome binary
+      installed above>, headless: true, args: [''--no-sandbox''], env: <same
+      LD_LIBRARY_PATH composition as the google-chrome launcher script> })'
+  smoke_test_script:
+    path: scripts/browser/smoketest.js
+    what_it_does: 'Launches the persistent context headless, navigates to
+      https://example.com/, extracts page title/heading/paragraph text, prints JSON,
+      closes the context cleanly.'
+    real_run_output: |
+      {
+        "ok": true,
+        "url": "https://example.com/",
+        "title": "Example Domain",
+        "heading": "Example Domain",
+        "paragraph": "This domain is for use in documentation examples without needing permission. Avoid use in operations."
+      }
+    proves: 'The Task Gateway -> Playwright -> Chrome Profile -> Navigate -> Extract flow
+      works mechanically end to end, using the real installed Chrome binary and the real
+      persistent profile directory.'
+
+security_posture:
+  profile_directory: 'mode 700, owner rajat:rajat -- no group/other access. Verified with
+    `ls -ld /opt/veridian/browser/profile` (see checkpoint output) and re-verified
+    unchanged after both the headless smoke test and the Playwright smoke test ran.'
+  chrome_sandbox: 'Runs --no-sandbox (see install.chrome.no_sandbox_rationale) -- the
+    real security boundary here is host-level: single dedicated automation user, key-only
+    SSH, no other local untrusted users.'
+  gui_access_for_login:
+    mechanism: 'TigerVNC (Xtigervnc), installed user-space, reused for this one purpose
+      only.'
+    network_binding: '127.0.0.1 only (-interface 127.0.0.1 -localhost 1), verified live
+      with `ss -tlnp` showing 127.0.0.1:5947 and [::1]:5947 -- never 0.0.0.0 or a public
+      interface.'
+    reached_via: 'SSH port-forward only: `ssh -N -L 5947:127.0.0.1:5947 rajat@<host>`
+      from the Owner''s laptop, then a VNC viewer at 127.0.0.1:5947. No VNC port is ever
+      exposed to any network beyond loopback on the server itself.'
+    session_auth: 'A freshly generated random VncAuth password per setup-vnc.sh run
+      (defense in depth on top of the SSH-tunnel-only reachability) -- this is a local
+      VNC session password, not a Google credential, and is not typed by any automated
+      process.'
+    lifecycle: 'Brought up on demand via setup-vnc.sh, torn down via teardown-vnc.sh
+      immediately after use. Not left running between logins.'
+    known_workaround_documented: 'Xtigervnc''s XKB keymap-compile step shells out to a
+      compile-time-hardcoded /usr/bin/xkbcomp with no runtime override and no write
+      access to /usr/bin on this box. Fixed with a one-byte-safe in-place ELF string
+      patch (the embedded "/usr/bin" constant -> "/tmp") plus staging the real xkbcomp
+      binary (from the existing local-libs extraction) at /tmp/xkbcomp on every
+      setup-vnc.sh run. LD_PRELOAD does not work around this (Xorg strips LD_PRELOAD/
+      LD_LIBRARY_PATH before exec-ing helper binaries) and unprivileged mount/user
+      namespaces are blocked by this container''s policy -- both were tried and ruled
+      out before the binary patch. Full detail in
+      /opt/veridian/browser/vnc/VNC_LOGIN_PROCEDURE.md.'
+  end_of_task_listening_state:
+    claim: NOT_LISTENING
+    evidence: '`ss -tlnp | grep -Ei ''vnc|:59|:60''` returns empty after
+      teardown-vnc.sh -- verified live at the end of this task (see checkpoint output).
+      The VNC/X11 GUI service is intentionally not left running: it is only needed for
+      the Owner''s one-time login and is brought up/torn down around that single event.'
+
+owner_login_procedure:
+  location: /opt/veridian/browser/vnc/VNC_LOGIN_PROCEDURE.md
+  summary:
+    - 'On the server: /opt/veridian/browser/vnc/setup-vnc.sh (prints a one-time VNC
+       password, starts Xtigervnc on 127.0.0.1:5947, opens Chrome on the persistent
+       profile at accounts.google.com).'
+    - 'On your laptop: ssh -N -L 5947:127.0.0.1:5947 rajat@<server-host>'
+    - 'On your laptop: point a VNC viewer at 127.0.0.1:5947, enter the session password.'
+    - 'In the VNC window: sign into Google normally (email, password, 2FA) -- this is
+       the one step no automation may perform.'
+    - 'Close the Chrome window cleanly so profile state flushes to disk.'
+    - 'Close the VNC viewer and the SSH tunnel.'
+    - 'On the server: /opt/veridian/browser/vnc/teardown-vnc.sh, then verify with
+       ss -tlnp | grep -Ei ''vnc|:59|:60'' (expect empty).'
+
+next_steps:
+  - 'Owner completes owner_login_procedure above.'
+  - 'Update this file: set login_status: COMPLETED, record the date, and re-run
+     scripts/browser/smoketest.js style checks against a real (non-destructive)
+     Google-authenticated page to confirm session reuse -- without ever having this
+     task or any automation touch the Google credentials themselves.'

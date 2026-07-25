@@ -240,29 +240,175 @@ engine_inventory:
 # confirming the canonical list (see gateway_naming_gap below).
 # ============================================================================
 gateways:
+  gateway_naming_gap_resolved:
+    resolution: "CLOSED by phase gateway_definition_and_inventory, not by asking the Owner a fresh question
+      in chat (this session is non-interactive/auto-dispatched) -- per this task's own OBJECTIVE text ('the
+      Owner (or the original, uncondensed INS-20260724-053123-0e5a instruction text)'), the second option
+      was checked first: the instructions table in ai-os/memory/superboss-register.sqlite (scripts/
+      superboss-register.py's own live DB) still holds INS-20260724-053123-0e5a's full raw_text verbatim --
+      it was never lost from the system, only from this initiative's own condensed SPEC text that Phase 0
+      was dispatched with. Recovered via: python3 -c \"import sqlite3; c=sqlite3.connect('ai-os/memory/
+      superboss-register.sqlite'); print(c.execute(\\\"SELECT raw_text FROM instructions WHERE
+      instruction_id='INS-20260724-053123-0e5a\\\").fetchone()[0])\"."
+    canonical_10_gateway_list_verbatim_from_original_instruction: "10 gateways wrap all 20 engines: G01
+      Owner, G02 Engineering, G03 Organization, G04 UserChannel, G05 AI, G06 BusinessServices, G07
+      DataKnowledge, G08 Integration, G09 ObservabilityAudit, G10 Infrastructure -- no component talks to
+      another except through a gateway. Every gateway runs the same fixed pipeline: Authenticate->Authorize
+      ->Validate->Normalize->LoadOrgContext->LoadUserContext->LoadMetadata->CapabilityLookup->PolicyEval->
+      RuleEval->Decision->Execute->GenerateEvents->UpdateKnowledge->WriteAuditLog->WriteMetrics->Return."
+    plausible_candidates_note: "Phase 0's own 'starting hypothesis' guess (Auth/API/Data/AI-Model/
+      Notification/Document/Integration/Admin gateways) is superseded by the real, verbatim list above --
+      partially overlapping in spirit (an AI gateway and a Data/Integration-shaped gateway both appear in
+      the real list) but not a match name-for-name. Kept here only as a historical record of what Phase 0
+      guessed before the real instruction text was found; not used anywhere below."
   confirmed_real_today:
     - gateway_candidate: "Task Gateway"
       exists_as: scripts/task-gateway.py
       verified_on_disk: true
       evidence: "Already named 'gateway' literally in this codebase -- submit/start/log/close lifecycle for
         every AI task dispatched server-side, cron-invoked, referenced throughout this session's own
-        KNOWN_CONTEXT as partial Workflow Engine (8) + Automation Engine (9). The one gateway this task can
-        confirm with full confidence rather than infer."
-  gateway_naming_gap:
-    finding: "Grepped ai-os/, mother-router-task-prompt.txt, and all *.yaml/*.txt/*.md under ai-os/ for
-      'gateway' -- the only real hits are scripts/task-gateway.py and its own citations. No document on this
-      server enumerates '10 gateways' by name."
-    recommendation: "Before any phase below spends build effort on gateway work beyond Task Gateway, the
-      Owner (or the original INS-20260724-053123-0e5a instruction text, if it names them and that detail
-      was lost in this task's condensed SPEC) should confirm the canonical 10-gateway list. Once named, the
-      exact same method this document already used for the 20 engines (grep compliance-tracker/projexa/
-      veda-advisors + ai-os/+scripts for each gateway concept, live-verify every exists_as path) applies
-      unchanged -- see phases[] gateway_definition_and_inventory below, which is the phase that does this."
-    plausible_candidates_not_yet_confirmed: "Standard API-gateway-layer patterns this codebase's own
-      structure suggests (Auth/API/Data/AI-Model/Notification/Document/Integration/Admin gateways sitting in
-      front of the engines above) -- listed here only as a starting hypothesis for the Owner to confirm or
-      correct, NOT written into engine_inventory-style rows because none of them have been grep-verified
-      against a real name in this codebase the way every engine row above was."
+        KNOWN_CONTEXT as partial Workflow Engine (8) + Automation Engine (9)."
+      superseded_finding: "Now that the real 10-gateway list is known (G01-G10 above), this phase's own
+        investigation (see gateway_inventory below) confirmed task-gateway.py is NOT a match for any of
+        G01-G10 -- it is a task/workflow lifecycle CLI (submit/start/log/close), architecturally distinct
+        from an Authenticate->Authorize->...->Return request boundary per the Owner's own pipeline text.
+        Kept real and unchanged (still Workflow/Automation Engine infra, see engine_inventory rows 8/9) but
+        does not appear in gateway_inventory's exists_as anywhere."
+  gateway_inventory_method: "Produced by ai-os-scripts/generate_engines_gateways_inventory.py's
+    GATEWAY_DISCOVERY list (added by this phase, same file as the engine DISCOVERY list) -- identical
+    live-verification method and rigor as engine_inventory above: one grep/read finding per gateway gathered
+    this session, live os.path.exists() re-check at run time, verified_on_disk only true if every exists_as
+    path is real *right now*. Idempotent, re-runnable: `python3 ai-os-scripts/
+    generate_engines_gateways_inventory.py` (also writes ai-os/generated/gateway_inventory_2026-07-24.yaml
+    standalone, same convention as engine_inventory_2026-07-24.yaml)."
+
+# ============================================================================
+# GATEWAY INVENTORY -- verbatim output of ai-os-scripts/
+# generate_engines_gateways_inventory.py's GATEWAY_DISCOVERY list (also
+# written standalone to ai-os/generated/gateway_inventory_2026-07-24.yaml).
+# DO NOT HAND-EDIT this block -- re-run the script and re-splice if any cited
+# path changes. Every exists_as path was live-verified (verified_on_disk)
+# against the real filesystem at generation time: all 10/10 rows verified
+# true, 0 drifted, 0 NONE -- every gateway has real, partial prior art, same
+# finding shape as engine_inventory (0/20 engines were NONE either).
+# ============================================================================
+gateway_inventory:
+  - gateway_no: 1
+    gateway_id: "G01"
+    gateway_name: "Owner"
+    purpose: "Boundary through which the human Owner's own instructions/directives enter the system and get logged/tracked."
+    exists_as:
+      - scripts/superboss-register.py
+      - scripts/notify-owner.py
+      - ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      - ai-os/OWNER_DIRECTIVES/CHATGPT_AUDIT_AND_PROMPT_LIBRARY_WORKSPACE_2026-07-24.txt
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "Real, live pieces exist for both directions -- Owner-in (superboss-register.py's log-instruction subcommand and instructions table, the exact mechanism that registered INS-20260724-053123-0e5a itself) and Owner-out (notify-owner.py, rate-limited, plain-English by design). But they are two separate scripts sharing no Authenticate/Authorize pipeline -- log-instruction does not authenticate its caller (any process on the box can insert an instruction row claiming Owner origin), so this is a structured ledger, not an access boundary in the pipeline sense the Owner's own instruction describes."
+  - gateway_no: 2
+    gateway_id: "G02"
+    gateway_name: "Engineering"
+    purpose: "Boundary for engineering/dev-tooling requests -- CI, code-quality gates, and AI-dev-team dispatch."
+    exists_as:
+      - repos/compliance-tracker/.github/workflows/ci.yml
+      - repos/compliance-tracker/.github/workflows/ai-dispatch.yml
+      - repos/compliance-tracker/.github/workflows/ai-team-workforce.yml
+      - scripts/quality-gate.sh
+      - scripts/scope-check.py
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "Real, enforced dev-tooling gates exist (CI lint/typecheck/build, a pre-merge quality gate, file-ownership/scope-collision checks), but they are independent scripts/GitHub-Actions workflows triggered at different points, not one named Engineering gateway that authenticates/authorizes a caller before executing -- checks embedded in a pipeline, not a routing boundary a caller goes through."
+  - gateway_no: 3
+    gateway_id: "G03"
+    gateway_name: "Organization"
+    purpose: "Boundary that resolves and enforces tenant/organization context for every request."
+    exists_as:
+      - repos/compliance-tracker/src/lib/services/context.ts
+      - repos/compliance-tracker/src/lib/supabase/auth-guard.ts
+      - repos/compliance-tracker/src/lib/db/tenant-scoped.ts
+      - repos/compliance-tracker/src/lib/services/org-provisioning-service.ts
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "ServiceContext/ReadContext's mandatory orgId (Engine 2's own Context Engine finding) plus withTenantContext's Postgres RLS session vars are real, enforced org-scoping used consistently across service calls -- genuine LoadOrgContext. But it is woven into auth-guard.ts's requireAuth() per-route, not a standalone named Organization gateway other subsystems route through as one addressable Authenticate->Authorize->LoadOrgContext boundary."
+  - gateway_no: 4
+    gateway_id: "G04"
+    gateway_name: "UserChannel"
+    purpose: "Boundary for end-user-facing product channels (chat, portal, guest access) into the platform."
+    exists_as:
+      - repos/compliance-tracker/src/lib/supabase/auth-guard.ts
+      - repos/compliance-tracker/src/app/api/veri-chat
+      - repos/compliance-tracker/src/app/api/guest-chat
+      - repos/compliance-tracker/src/app/api/me/route.ts
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "requireAuth()/requireRole() in auth-guard.ts is a real, universally-used per-route Authenticate+Authorize gate, and veri-chat/guest-chat are real end-user channel surfaces built on it. But it is invoked ad hoc at the top of each individual route.ts file, not centralized behind one UserChannel gateway component -- no middleware.ts file exists anywhere in the repo."
+  - gateway_no: 5
+    gateway_id: "G05"
+    gateway_name: "AI"
+    purpose: "Boundary all AI/model calls route through for provider/model resolution, policy, and audit."
+    exists_as:
+      - repos/compliance-tracker/src/lib/ai-router/mother-router.ts
+      - repos/compliance-tracker/src/lib/model-tier-eligibility.ts
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "Mother Router (resolveModel(), versioned ai_routing_policies, ai_routing_audit_log) is real, live, audit-logged AI routing -- the strongest single candidate of all 10 gateways for matching the Owner's fixed-pipeline description. But its own header comment documents a mechanical grep finding 35 files still bypassing it by calling resolveModelConfig()/checkTierEligibility() directly -- a documented decision not (yet) to migrate them, so roughly a third of this one repo's AI dispatch call sites don't route through it at all."
+  - gateway_no: 6
+    gateway_id: "G06"
+    gateway_name: "BusinessServices"
+    purpose: "Boundary wrapping internal business-domain service calls (accounting, PMS, HR, etc.)."
+    exists_as:
+      - repos/compliance-tracker/src/lib/services
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "A large, real services/ directory (263 files -- erp-accounting-service.ts, pms-meeting-service.ts, org-branding-service.ts, etc.) exists and every function in it does take a ServiceContext/ReadContext (G03's own finding), so some uniform contract is enforced per-call. But there is no single BusinessServices gateway component -- each service module is called directly from its own route handler(s); this is a naming/directory convention, not a gateway other components route calls through."
+  - gateway_no: 7
+    gateway_id: "G07"
+    gateway_name: "DataKnowledge"
+    purpose: "Boundary for accessing/tracking data and knowledge-store artifacts (metadata, relationships, provenance)."
+    exists_as:
+      - scripts/superboss-register.py
+      - scripts/knowledge_registry_multisource.py
+      - ai-os/MASTER_INDEX.yaml
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "Same real infrastructure engine_inventory already rated coverage=full for Engine 15 (Knowledge Engine) -- a live SQLite+FTS5 store with a register-knowledge/query-knowledge CLI and a recurring multi-source cron refresh. As a gateway concept, though, it is a data store with a CLI, not a request boundary other components authenticate/authorize through first -- no Authenticate/Authorize step exists in front of register-knowledge/query-knowledge themselves."
+  - gateway_no: 8
+    gateway_id: "G08"
+    gateway_name: "Integration"
+    purpose: "Boundary for exchanging data with external systems/APIs (inbound and outbound)."
+    exists_as:
+      - repos/compliance-tracker/src/lib/webhook-deliver.ts
+      - repos/compliance-tracker/src/lib/webhooks/vercel-signature.ts
+      - repos/compliance-tracker/src/app/api/webhooks/vercel-deployment/route.ts
+      - repos/compliance-tracker/src/app/api/connectors/route.ts
+      - repos/compliance-tracker/src/lib/supabase/platform-application-auth.ts
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "Real outbound webhook delivery (Engine 10's own finding), real inbound webhook receipt with signature verification (Vercel deployment events), a real OAuth-connector framework (Composio, Drive/Gmail), and a real cross-product platform-application-key Authenticate step all exist and are live. None are unified under one Integration gateway -- each is its own auth/validation path with its own credential class (webhook signature vs. platform key vs. Composio OAuth)."
+  - gateway_no: 9
+    gateway_id: "G09"
+    gateway_name: "ObservabilityAudit"
+    purpose: "Boundary/loop surfacing system health and writing the audit trail for actions taken."
+    exists_as:
+      - scripts/health-check-15min.py
+      - scripts/veridian-task-watchdog.py
+      - repos/compliance-tracker/src/lib/audit.ts
+      - ai-os/AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "Real, live 15-minute health monitoring (systemd/DB/disk/mem) and a real per-write logActivity() in-app audit function both exist and are used (same finding as engine_inventory's Engine 19/20 rows). But these are two unrelated systems -- server-ops health cron vs. in-app DB audit log -- with no shared schema, and neither is a gateway boundary other components route calls through; logActivity() is a side effect at the end of a service function, not an enforced WriteAuditLog step of a shared pipeline."
+  - gateway_no: 10
+    gateway_id: "G10"
+    gateway_name: "Infrastructure"
+    purpose: "Boundary/deploy layer for provisioning and running the server-side process fleet."
+    exists_as:
+      - reconciliation/claude-control/systemd/veridian-task-watchdog.service
+      - scripts/supervisor-entrypoint.sh
+      - scripts/worker-entrypoint.sh
+      - scripts/sync-repos.sh
+    verified_on_disk: true
+    coverage: partial
+    gap_description: "Real systemd-managed worker/supervisor process lifecycle (veridian-worker@/veridian-supervisor@ units referenced throughout health-check-15min.py and supervisor-entrypoint.sh) and a real deployed watchdog unit exist. But no single Infrastructure gateway component exists, just a set of shell entrypoints and systemd units -- and the live server has no top-level /opt/veridian/systemd directory (units live staged under reconciliation/claude-control/systemd/ instead), honestly reported rather than assumed."
 
 # ============================================================================
 # DEPENDENCY TABLE -- concrete mechanism per edge (real file/cron/CLI call,
@@ -693,100 +839,184 @@ phases:
     depends_on: []
     status: done
     status_detail:
-      produced_by_task: task-20260724-140008-phase5-reconcile-master-index-yaml-s-reg
+      produced_by_task:
+        - task-20260724-140008-phase5-reconcile-master-index-yaml-s-reg
+        - task-20260724-135834-phase5-reconcile-master-index-yaml-s-reg
       completed_on: '2026-07-24'
-      scope_decision: "Full merge (deleting registries: prose in favor of DB rows) rejected as too
-        disruptive -- MASTER_INDEX.yaml's own 'READ_THIS_FILE_FIRST' protocol is cited by name across
-        dozens of scripts/docs as the human/AI entrypoint. Delivered the objective's own documented,
-        enforced sync-direction alternative instead: MASTER_INDEX.yaml registries: is the authored
-        source, knowledge_engine is the queryable layer kept current with it, one-way. Full detail in
-        ai-os/METADATA_KNOWLEDGE_ENGINE_RECONCILIATION_2026-07-24.yaml."
-      what_shipped:
-        - "scripts/superboss-register.py: 2 new additive subcommands. upsert-knowledge-fragment is a
-          true idempotent upsert (SELECT-latest-then-INSERT-or-UPDATE, never a duplicate row) for
-          artifacts whose content is supplied inline rather than read from a real file -- what
-          register-knowledge/verify-knowledge (both hash bytes from --path) cannot do for a FRAGMENT of
-          a larger file. list-knowledge is a plain SELECT with a --tag filter (no FTS query required),
-          for enumeration/orphan-detection. Both live-tested with a throwaway smoketest row (created ->
-          re-run same content -> VERIFIED_MATCH; changed content -> HASH_DRIFTED; single row throughout,
-          never duplicated) before being used for real, then the smoketest row was deleted and FTS
-          integrity re-confirmed."
-        - "ai-os-scripts/sync_master_index_registries.py (new): reads MASTER_INDEX.yaml's registries:
-          list, upserts one knowledge_engine row per entry keyed at
-          'ai-os/MASTER_INDEX.yaml#registries.<id>', reports forward drift (hash_drifted_this_run) and
-          reverse drift (orphaned_registry_rows -- rows whose registry id no longer exists in
-          MASTER_INDEX.yaml, detected and reported, never silently deleted). Both directions live-tested:
-          a real sync run, then a disposable copy of MASTER_INDEX.yaml with one entry removed correctly
-          reported it as orphaned without touching the live DB, then a normal re-sync restored clean
-          state (0 orphaned)."
-        - "scripts/task-gateway.py: cmd_close now also calls
-          sync_master_index_registries_if_touched() (new function, same changed-file-detection pattern
-          Phase 2's reverify_touched_knowledge_engine_rows() already established) -- runs the registries
-          sync automatically whenever a closing task's own git diff touched ai-os/MASTER_INDEX.yaml,
-          merged into cmd_close's own JSON output under master_index_registries_sync. Deliberately does
-          NOT use run_json()'s fail-the-whole-close-on-nonzero-exit behavior -- a partial sync failure is
-          reported, not allowed to undo an already-successful close."
-        - "A real, previously-undetected drift found and fixed: canonical_path_live
-          (/opt/veridian/ai-os/MASTER_INDEX.yaml) was missing the auditor_engine registries entry and
-          phases 2-4's status updates that this repo's own tracked copy already had (91 vs 92 entries, 0
-          entries unique to the live file, confirmed via a full parse-and-diff of both). Brought back in
-          sync as part of this phase (the repo copy, a strict superset, copied over the live path) --
-          not a new permanent auto-sync daemon (that would duplicate system-sync.py's own stated mandate,
-          see the reconciliation doc's own remediation_live_vs_repo_drift.why_not_a_new_permanent_auto-sync),
-          a one-time real remediation plus documentation of the drift."
-        - "MASTER_INDEX.yaml's own registries.engines_gateways_architecture and
-          registries.self_sustaining_system_engine entries updated in place: phases 2-4's real status
-          (previously undocumented in MASTER_INDEX.yaml itself, only in the phase plan file), phase 5's
-          own summary, and the SUPABASE gap's real current state (mitigated via a real Notification
-          Engine alert, not silently degrading, credential fix still needs the Owner)."
-        - "scripts/knowledge_registry_multisource.py: do_supabase() now calls the new
-          notify_owner_supabase_token_degraded() on every 401/403, which calls
-          scripts/notification_engine.py send-owner (Phase 4's own facade) with dedupe_key
-          'supabase-access-token-degraded' -- the first real Metadata/Knowledge Engine (14/15) ->
-          Notification Engine (12) cross-call, previously a planned-only dependency_table edge. This is
-          the part of 'close the SUPABASE_ACCESS_TOKEN gap' that IS a real code fix (the silent degrade);
-          the credential itself cannot be minted by any script (Supabase Management API PATs are
-          dashboard-only, by design) -- filed as
-          ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml#supabase-access-token-credential-refresh, same
-          honest 'requires an Owner-supplied credential, not a code gap' framing
-          KNOWLEDGE_ENGINE_PHASE3_CANDIDATES_2026-07-24.yaml already recorded, re-confirmed still true by
-          this phase's own live re-test (uniform 401/403 across 3 different Management API endpoints)."
-        - "ai-os/METADATA_KNOWLEDGE_ENGINE_RECONCILIATION_2026-07-24.yaml (new): the full contract
-          document for all of the above, same real_shapes/scope_decision convention
-          DOCUMENT_ENGINE_CONTRACT_2026-07-24.yaml and NOTIFICATION_ENGINE_CONTRACT_2026-07-24.yaml
-          already established."
-      real_evidence:
-        - "python3 ai-os-scripts/sync_master_index_registries.py against the real live DB and the
-          now-reconciled canonical_path_live MASTER_INDEX.yaml: {\"registries_entries_found\": 92,
-          \"synced_count\": 92, \"failed_count\": 0, \"orphaned_registry_rows\": []} -- 4 entries
-          correctly flagged hash_drifted_this_run (the exact ones this phase's own edits touched:
-          engines_gateways_architecture, self_sustaining_system_engine, terminology_standardization,
-          testing_engine_irvf), every other entry correctly VERIFIED_MATCH (unchanged)."
-        - "Orphan-detection live test: a disposable copy of MASTER_INDEX.yaml with
-          registries.terminology_standardization removed, synced via --master-index-path, correctly
-          returned orphaned_registry_rows=[{...registry_id: terminology_standardization}] without
-          deleting the real row; a normal re-sync against the real file afterward returned
-          orphaned_registry_rows=[] again."
-        - "python3 -c \"...knowledge_registry_multisource.do_supabase()...\" against the real,
-          still-invalid live SUPABASE_ACCESS_TOKEN: real Supabase Management API call returned 403 (same
-          credential-invalid class of failure as the originally-documented 401), notification_engine.py
-          send-owner fired for real -- 'SENT: Resend message id=6b9378a1-e7ce-4342-b21b-9cf75e9638f0'.
-          Immediate second call correctly 'SKIPPED (rate-limited, signature already notified within 1h)'."
-        - "python3 scripts/superboss-register.py query-knowledge \"phase_5_metadata_knowledge_consolidation\"
-          --tag domain:veridian-20-engine-10-gateway: found=2 (this phase's own SUCCESS_CRITERIA check)."
-        - "curl direct re-test of the live SUPABASE_ACCESS_TOKEN against /v1/projects, /v1/organizations,
-          and /v1/profile: uniform 401 Unauthorized on all 3 -- confirms the token itself is
-          invalid/revoked, not a scope/endpoint issue, before concluding this needs an Owner-issued
-          credential rather than a code fix."
-      what_remains_for_later_phases:
-        - "Owner action on ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml#supabase-access-token-credential-refresh
-          -- the one piece of this phase's objective no script can close."
-        - "Whether ai-os/scripts/system-sync.py should gain a 4th check for MASTER_INDEX.yaml
-          live-vs-repo drift specifically (today: mirror/constitution/unindexed/resume-balance) is a real
-          follow-on candidate, not built this phase."
-        - "phase_6_intent_context_planning_learning (depends_on this phase, now satisfiable) and
-          phase_7_ui_composition_analytics / gateway_definition_and_inventory (both depends_on: [])
-          remain open in this plan -- not attempted in this task."
+      note: "Two tasks were independently dispatched for this same phase_5 objective and
+        both produced real, non-overlapping deliverables before either was aware of the
+        other -- task-135834 merged to master first (scripts/metadata_reconciliation.py +
+        supabase_project_healthcheck_fallback()), task-140008 is this PR (ai-os-scripts/
+        sync_master_index_registries.py + notify_owner_supabase_token_degraded()). Neither
+        supersedes the other -- both are kept below for a complete, honest audit trail."
+      task_140008:
+        scope_decision: "Full merge (deleting registries: prose in favor of DB rows) rejected as too
+          disruptive -- MASTER_INDEX.yaml's own 'READ_THIS_FILE_FIRST' protocol is cited by name across
+          dozens of scripts/docs as the human/AI entrypoint. Delivered the objective's own documented,
+          enforced sync-direction alternative instead: MASTER_INDEX.yaml registries: is the authored
+          source, knowledge_engine is the queryable layer kept current with it, one-way. Full detail in
+          ai-os/METADATA_KNOWLEDGE_ENGINE_RECONCILIATION_2026-07-24.yaml."
+        what_shipped:
+          - "scripts/superboss-register.py: 2 new additive subcommands. upsert-knowledge-fragment is a
+            true idempotent upsert (SELECT-latest-then-INSERT-or-UPDATE, never a duplicate row) for
+            artifacts whose content is supplied inline rather than read from a real file -- what
+            register-knowledge/verify-knowledge (both hash bytes from --path) cannot do for a FRAGMENT of
+            a larger file. list-knowledge is a plain SELECT with a --tag filter (no FTS query required),
+            for enumeration/orphan-detection. Both live-tested with a throwaway smoketest row (created ->
+            re-run same content -> VERIFIED_MATCH; changed content -> HASH_DRIFTED; single row throughout,
+            never duplicated) before being used for real, then the smoketest row was deleted and FTS
+            integrity re-confirmed."
+          - "ai-os-scripts/sync_master_index_registries.py (new): reads MASTER_INDEX.yaml's registries:
+            list, upserts one knowledge_engine row per entry keyed at
+            'ai-os/MASTER_INDEX.yaml#registries.<id>', reports forward drift (hash_drifted_this_run) and
+            reverse drift (orphaned_registry_rows -- rows whose registry id no longer exists in
+            MASTER_INDEX.yaml, detected and reported, never silently deleted). Both directions live-tested:
+            a real sync run, then a disposable copy of MASTER_INDEX.yaml with one entry removed correctly
+            reported it as orphaned without touching the live DB, then a normal re-sync restored clean
+            state (0 orphaned)."
+          - "scripts/task-gateway.py: cmd_close now also calls
+            sync_master_index_registries_if_touched() (new function, same changed-file-detection pattern
+            Phase 2's reverify_touched_knowledge_engine_rows() already established) -- runs the registries
+            sync automatically whenever a closing task's own git diff touched ai-os/MASTER_INDEX.yaml,
+            merged into cmd_close's own JSON output under master_index_registries_sync. Deliberately does
+            NOT use run_json()'s fail-the-whole-close-on-nonzero-exit behavior -- a partial sync failure is
+            reported, not allowed to undo an already-successful close."
+          - "A real, previously-undetected drift found and fixed: canonical_path_live
+            (/opt/veridian/ai-os/MASTER_INDEX.yaml) was missing the auditor_engine registries entry and
+            phases 2-4's status updates that this repo's own tracked copy already had (91 vs 92 entries, 0
+            entries unique to the live file, confirmed via a full parse-and-diff of both). Brought back in
+            sync as part of this phase (the repo copy, a strict superset, copied over the live path) --
+            not a new permanent auto-sync daemon (that would duplicate system-sync.py's own stated mandate,
+            see the reconciliation doc's own remediation_live_vs_repo_drift.why_not_a_new_permanent_auto-sync),
+            a one-time real remediation plus documentation of the drift."
+          - "MASTER_INDEX.yaml's own registries.engines_gateways_architecture and
+            registries.self_sustaining_system_engine entries updated in place: phases 2-4's real status
+            (previously undocumented in MASTER_INDEX.yaml itself, only in the phase plan file), phase 5's
+            own summary, and the SUPABASE gap's real current state (mitigated via a real Notification
+            Engine alert, not silently degrading, credential fix still needs the Owner)."
+          - "scripts/knowledge_registry_multisource.py: do_supabase() now calls the new
+            notify_owner_supabase_token_degraded() on every 401/403, which calls
+            scripts/notification_engine.py send-owner (Phase 4's own facade) with dedupe_key
+            'supabase-access-token-degraded' -- the first real Metadata/Knowledge Engine (14/15) ->
+            Notification Engine (12) cross-call, previously a planned-only dependency_table edge. This is
+            the part of 'close the SUPABASE_ACCESS_TOKEN gap' that IS a real code fix (the silent degrade);
+            the credential itself cannot be minted by any script (Supabase Management API PATs are
+            dashboard-only, by design) -- filed as
+            ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml#supabase-access-token-credential-refresh, same
+            honest 'requires an Owner-supplied credential, not a code gap' framing
+            KNOWLEDGE_ENGINE_PHASE3_CANDIDATES_2026-07-24.yaml already recorded, re-confirmed still true by
+            this phase's own live re-test (uniform 401/403 across 3 different Management API endpoints)."
+          - "ai-os/METADATA_KNOWLEDGE_ENGINE_RECONCILIATION_2026-07-24.yaml (new): the full contract
+            document for all of the above, same real_shapes/scope_decision convention
+            DOCUMENT_ENGINE_CONTRACT_2026-07-24.yaml and NOTIFICATION_ENGINE_CONTRACT_2026-07-24.yaml
+            already established."
+        real_evidence:
+          - "python3 ai-os-scripts/sync_master_index_registries.py against the real live DB and the
+            now-reconciled canonical_path_live MASTER_INDEX.yaml: {\"registries_entries_found\": 92,
+            \"synced_count\": 92, \"failed_count\": 0, \"orphaned_registry_rows\": []} -- 4 entries
+            correctly flagged hash_drifted_this_run (the exact ones this phase's own edits touched:
+            engines_gateways_architecture, self_sustaining_system_engine, terminology_standardization,
+            testing_engine_irvf), every other entry correctly VERIFIED_MATCH (unchanged)."
+          - "Orphan-detection live test: a disposable copy of MASTER_INDEX.yaml with
+            registries.terminology_standardization removed, synced via --master-index-path, correctly
+            returned orphaned_registry_rows=[{...registry_id: terminology_standardization}] without
+            deleting the real row; a normal re-sync against the real file afterward returned
+            orphaned_registry_rows=[] again."
+          - "python3 -c \"...knowledge_registry_multisource.do_supabase()...\" against the real,
+            still-invalid live SUPABASE_ACCESS_TOKEN: real Supabase Management API call returned 403 (same
+            credential-invalid class of failure as the originally-documented 401), notification_engine.py
+            send-owner fired for real -- 'SENT: Resend message id=6b9378a1-e7ce-4342-b21b-9cf75e9638f0'.
+            Immediate second call correctly 'SKIPPED (rate-limited, signature already notified within 1h)'."
+          - "python3 scripts/superboss-register.py query-knowledge \"phase_5_metadata_knowledge_consolidation\"
+            --tag domain:veridian-20-engine-10-gateway: found=2 (this phase's own SUCCESS_CRITERIA check)."
+          - "curl direct re-test of the live SUPABASE_ACCESS_TOKEN against /v1/projects, /v1/organizations,
+            and /v1/profile: uniform 401 Unauthorized on all 3 -- confirms the token itself is
+            invalid/revoked, not a scope/endpoint issue, before concluding this needs an Owner-issued
+            credential rather than a code fix."
+        what_remains_for_later_phases:
+          - "Owner action on ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml#supabase-access-token-credential-refresh
+            -- the one piece of this phase's objective no script can close."
+          - "Whether ai-os/scripts/system-sync.py should gain a 4th check for MASTER_INDEX.yaml
+            live-vs-repo drift specifically (today: mirror/constitution/unindexed/resume-balance) is a real
+            follow-on candidate, not built this phase."
+          - "phase_6_intent_context_planning_learning (depends_on this phase, now satisfiable) and
+            phase_7_ui_composition_analytics / gateway_definition_and_inventory (both depends_on: [])
+            remain open in this plan -- not attempted in this task."
+      task_135834:
+        full_merge_vs_sync_direction_decision: "Full merge of MASTER_INDEX.yaml's 91-entry registries:
+          section into knowledge_engine judged too disruptive -- heterogeneous path shapes (bare relative
+          paths, absolute paths, sqlite #table fragments, '+'/','-joined multi-file groups, *.yaml globs,
+          6 entries with no path field at all) and, more importantly, every registries.<id> citation this
+          whole session already depends on (STANDING_DIRECTIVE.yaml, every other phase-plan file, the
+          Owner's own workflow) would break for a net-zero readability gain. Per this phase's own OBJECTIVE
+          text, shipped the documented+enforced sync-direction alternative instead -- see
+          ai-os/METADATA_ENGINE_RECONCILIATION_2026-07-24.yaml's own decision block for the full reasoning."
+        what_shipped:
+          - "ai-os/METADATA_ENGINE_RECONCILIATION_2026-07-24.yaml: the sync-direction contract -- MASTER_INDEX.yaml
+            registries: stays authoritative for human citation/scope narrative, knowledge_engine stays
+            authoritative for machine drift-detection, and every registries[] entry's real on-disk file
+            path(s) must have a corresponding knowledge_engine row tagged registry:<id> as the enforced,
+            queryable back-reference between the two."
+          - "scripts/metadata_reconciliation.py: the real, idempotent, re-runnable enforcement mechanism
+            (not prose alone) -- parses MASTER_INDEX.yaml's registries: via yaml.safe_load, extracts every
+            real-file path token per entry (handles '+'-joined/comma-joined groups, #table fragments, *.yaml
+            globs), registers/tags a knowledge_engine row per real file found, and reports (not silently
+            drops) both directions of gap: registries entries with no real-file path, and knowledge_engine
+            rows not cited by any registry."
+          - "Live-run against the real DB (/opt/veridian/ai-os/memory/superboss-register.sqlite): 88 real
+            file-path tokens extracted from 83/91 registries (6 have no path field by design -- state/incident
+            entries, not single-file artifacts; 2 named directory-only or not-yet-created paths, both
+            honestly reported, not fabricated as PATH_MISSING rows). First run: 74 new knowledge_engine rows
+            registered + 14 existing rows tagged registry:<id> (table grew 46 -> 141 rows, 85 now tagged
+            registry:). Re-run confirmed idempotent: 0 new rows, 88 no-op re-tags, row count unchanged at 141."
+          - "New MASTER_INDEX.yaml registries[] entry (metadata_engine_reconciliation) documenting this
+            mechanism, self-referentially reconciled by its own first live run. Corrected the
+            engines_gateways_architecture registry entry's stale status string (still said
+            phase_1_complete/phase_2_not_yet_dispatched despite phases 2-4 already done) and
+            self_sustaining_system_engine's known-gap note (now cross-references the Supabase mitigation
+            and Owner-decision entry below) while reconciling this same section."
+          - "scripts/knowledge_registry_multisource.py: real mitigation for the Supabase cron gap. Re-confirmed
+            live 2026-07-24 that SUPABASE_ACCESS_TOKEN still 401/403s against
+            https://api.supabase.com/v1/projects (genuine Owner-dashboard credential dependency -- no
+            delegated API exists to mint a fresh Management API PAT without an already-valid one, confirmed
+            not fixable by this session's available Supabase MCP connector either, which authenticates via a
+            separate OAuth session that does not expose PAT creation). Added
+            supabase_project_healthcheck_fallback(): when the Management API call fails, uses each repo's
+            own already-configured, unrelated project-scoped anon key (NEXT_PUBLIC_SUPABASE_URL /
+            NEXT_PUBLIC_SUPABASE_ANON_KEY, needed by the app itself, no new Owner action) to hit Supabase's
+            standard GoTrue /auth/v1/health endpoint -- a real, safe, read-only liveness check, so the
+            SUPABASE knowledge_engine rows keep getting a genuine live signal every 6h cron tick instead of
+            pure last-known-good data. Live-verified: compliance-tracker -> {ok: true, gotrue_version:
+            v2.193.1}; projexa -> correctly reports fallback unavailable (its .env.local carries no Supabase
+            credentials at all, confirmed, not fabricated)."
+          - "ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml#supabase-management-api-token-refresh: filed the
+            real Owner decision this gap actually needs (generate a fresh PAT via the Supabase dashboard),
+            same pending-decision convention Phase 3 used for webhook-receiver-network-exposure. No crontab
+            change made (the existing 6h knowledge-registry-multisource cron entry is unchanged), so
+            CRONTAB_APPROVED_SNAPSHOT.txt is correctly untouched, per this phase's own CONSTRAINTS."
+        real_evidence:
+          - "curl -H 'Authorization: Bearer $SUPABASE_ACCESS_TOKEN' https://api.supabase.com/v1/projects:
+            HTTP 401 {\"message\":\"Unauthorized\"} -- re-confirmed still broken live before building the
+            fallback, not assumed from the older candidates file."
+          - "python3 scripts/metadata_reconciliation.py reconcile (1st real run): rows_registered_new=74,
+            rows_tagged_existing=14; knowledge_engine total rows 46 -> 141, rows tagged registry:* = 85."
+          - "python3 scripts/metadata_reconciliation.py reconcile (2nd run, idempotency check):
+            rows_registered_new=0, rows_tagged_existing=88, row count unchanged at 141."
+          - "python3 scripts/knowledge_registry_multisource.py (live run against real repos): SUPABASE section
+            output: 'verdian-ai (compliance-tracker): VERIFIED_MATCH [fallback_healthcheck={ok: True,
+            http_status: 200, gotrue_version: v2.193.1}]' and 'projexa (projexa): VERIFIED_MATCH
+            [fallback_healthcheck=None]'."
+          - "python3 scripts/superboss-register.py query-knowledge \"phase_5_metadata_knowledge_consolidation\"
+            --tag domain:veridian-20-engine-10-gateway: found>=1 (this phase's own SUCCESS_CRITERIA check,
+            registered as part of this same commit)."
+        what_remains_for_later_phases:
+          - "The Owner must actually generate a fresh Supabase Management API PAT
+            (OWNER_DECISIONS_NEEDED#supabase-management-api-token-refresh) for the richer project
+            id/status/table-count snapshot to go live-current again -- the fallback mitigation keeps the row
+            from going fully stale in the meantime but does not replace that data."
+          - "phase_6_intent_context_planning_learning (depends_on phase_1 + phase_5, both now done) and
+            phase_7_ui_composition_analytics (depends_on: []) remain open in this plan -- not attempted in
+            this task."
 
   - id: phase_6_intent_context_planning_learning
     closes_engines: [1, 2, 4, 16]
@@ -799,6 +1029,112 @@ phases:
       plan/DAG generation. Extend Learning Engine's task-reflection.ts verdicts toward decisions that
       actually feed back into engine behavior (today they are recorded, not yet consumed)."
     depends_on: [phase_1_capability_registry_live_wiring, phase_5_metadata_knowledge_consolidation]
+    status: done
+    status_detail:
+      produced_by_task: task-20260724-143010-phase6-extend-intent-engine-beyond-mode
+      completed_on: '2026-07-24'
+      repo_boundary_honestly_stated: "context.ts, task-tightening.ts, dynamic-chain-directory-service.ts,
+        task-reflection.ts, and browser-intent-cache.ts all live in the separate FChecklist/compliance-tracker
+        repo, read-only checked out at /opt/veridian/repos/compliance-tracker. Per phases 1-5's own
+        established boundary (EXPECTED_OUTPUT requires a claude-control PR only), this task reads
+        those files' real shapes to ground all 4 mechanisms below but does not edit or commit to that
+        repo. See ai-os/PHASE6_INTENT_CONTEXT_PLANNING_LEARNING_2026-07-24.yaml's own
+        repo_boundary_honestly_stated and per-engine what_remains_for_compliance_tracker fields for
+        the full reasoning."
+      what_shipped:
+        - "scripts/intent_engine.py (Intent Engine, engine 1): NOT a generic NLU layer -- this
+          phase's own objective forbids building one speculatively. check-intent wraps Phase 1's
+          live lookup-capability CLI and logs every genuine miss (found=false) to a new
+          intent_unmatched_log table; gap-report honestly reports insufficient_data unless a
+          normalized query repeats 3+ times across >=2 distinct sessions. Live-tested: a real
+          out-of-domain miss ('what is the weather forecast for tomorrow') logs correctly and,
+          repeated across 3 sessions, flips gap-report's verdict to real_pattern_detected --
+          before that test data, the live DB correctly showed insufficient_data (zero real
+          historical misses existed). Closes the engine by building the honest detector for a
+          real future need, not by guessing one exists today."
+        - "scripts/context_engine.py (Context Engine, engine 2): remember-turn/recall-context over
+          a new conversation_memory table (same DB file as Knowledge Engine, same
+          write-lock/idempotent-create convention as capability_registry/automation_rules -- not a
+          new store) whose entity_relationships column reuses Knowledge Engine's own edge shape
+          field-for-field ({related_entity_type, related_entity_id, relationship_type, evidence}).
+          knowledge_engine's own table was not reused directly -- its schema is genuinely
+          file-shaped (sha256-hashed against a real on-disk path) and forcing a conversation
+          session into it would mean a permanently dishonest PATH_MISSING status. Live-tested:
+          a 2-turn session accumulates both entity_relationships edges in order; recall-context
+          returns the full accumulated edge list + running summary, the real cross-turn memory
+          this engine's gap named."
+        - "scripts/plan_generator.py (Planning Engine, engine 4): generate-plan deterministically
+          splits a free-text objective into ordered steps (';' / 'then' / 'after that', no LLM
+          call, same discipline as every other gate in this codebase), resolves each step against
+          Phase 1's live capability_registry via lookup-capability, and sequences steps via real
+          entity_relationships-shaped depends_on edges into new plans/plan_steps tables. Each
+          step's field shape mirrors TightTask's own envelope (objective/scope/successCriteria/
+          complexityTier) without duplicating its TS-side validation logic. Live-tested: a 3-step
+          objective ('gst rate split...; then commission rate...; then send a customer
+          notification') produced a real DAG with 2/3 steps genuinely resolved to a deterministic
+          capability (gst_calculation_engine, commission_calculator) and the third honestly left
+          unresolved rather than guessed -- the first real multi-step plan/DAG this engine has
+          ever generated from a goal, closing the named 'neither generates a novel multi-step
+          plan/DAG' gap."
+        - "scripts/learning_engine.py (Learning Engine, engine 16): reflect/reflect-all port
+          task-reflection.ts's own verdictFor() algorithm (MIN_COMPARABLE_SAMPLE=3, honest
+          insufficient_data) onto automation_rule_runs history, and -- unlike that file's
+          always-null differentAiTierFlag/reusablePatternFlag, confirmed by reading the whole
+          file to be write-only today -- this verdict is REAL CONSUMED FEEDBACK: a degraded rule
+          (success rate <50% over >=3 runs) has automation_rules.is_active flipped to 0, and
+          automation_rule_engine.py's evaluate-rules (Phase 3 code, unmodified) already filters
+          `WHERE is_active = 1`, so the rule genuinely stops firing on the next call. A recovered
+          rule is symmetrically re-enabled. Live end-to-end tested against the real DB: registered
+          rule AR-b3ac3e967571, simulated 4 failed runs, reflect -> verdict=degraded,
+          action_taken=disabled_by_learning_verdict, confirmed is_active 1->0 and the next
+          evaluate-rules call -> rules_fired=0; then simulated 5 recovery successes, reflect ->
+          verdict=reliable, action_taken=reenabled_by_learning_verdict, confirmed is_active 0->1
+          and evaluate-rules -> rules_fired=1 again. This is the literal 'verdicts that actually
+          feed back into engine behavior' the objective asked for, not a second recorded-only
+          flag."
+        - "ai-os/PHASE6_INTENT_CONTEXT_PLANNING_LEARNING_2026-07-24.yaml: the grounding contract
+          for all 4 engines above, documenting the real read shapes of every named compliance-tracker
+          file and, per engine, what remains as that repo's own future PR (same deferral posture
+          phases 1-5 used for their own TS-side gaps)."
+      real_evidence:
+        - "python3 scripts/intent_engine.py check-intent --intent-text 'what is the weather forecast
+          for tomorrow' (x3 distinct session_ids) then gap-report: {\"verdict\":
+          \"real_pattern_detected\", \"candidate_patterns\": [{\"normalized_query\": \"what is the
+          weather forecast for tomorrow\", \"repeat_count\": 3, \"distinct_sessions\": 3}]} --
+          insufficient_data confirmed as the correct prior state (0 real historical misses)."
+        - "python3 scripts/context_engine.py remember-turn (x2 turns, session
+          conv-phase6-test-1) then recall-context: {\"turn_count\": 2, \"entity_relationships\":
+          [2 real edges in order], \"summary\": \"User is asking about GST calculation for an
+          interstate invoice.\"}."
+        - "python3 scripts/plan_generator.py generate-plan --plan-name phase6-demo-onboard-invoice
+          --objective 'calculate gst rate split for an interstate invoice; then calculate sales
+          commission percent rate; then send a customer notification' --complexity-tier
+          integrative: 3 steps, deterministic_steps=2 (gst_calculation_engine,
+          commission_calculator, both ai_required=false), step 3 honestly unresolved; get-plan
+          confirmed the full DAG incl. depends_on entity_relationships edges round-trips."
+        - "python3 scripts/learning_engine.py reflect --rule-id AR-b3ac3e967571 (after 4 simulated
+          failures): {\"sample_size\": 6, \"success_rate\": 0.333, \"verdict\": \"degraded\",
+          \"action_taken\": \"disabled_by_learning_verdict\"} -- automation_rules.is_active
+          confirmed 1->0 in the live DB; next evaluate-rules call -> rules_fired=0. After 5
+          simulated recoveries: {\"verdict\": \"reliable\", \"action_taken\":
+          \"reenabled_by_learning_verdict\"} -- is_active confirmed 0->1; evaluate-rules ->
+          rules_fired=1 again."
+        - "python3 scripts/superboss-register.py query-knowledge
+          \"phase_6_intent_context_planning_learning\" --tag domain:veridian-20-engine-10-gateway:
+          found=1 (this phase's own SUCCESS_CRITERIA check)."
+      what_remains_for_later_phases:
+        - "compliance-tracker's own PRs (4, one per engine): wiring IntentCommandPalette.tsx's
+          free-text misses into check-intent; adding an optional conversationSessionId to
+          ServiceContext calling remember-turn/recall-context; consuming an unresolved
+          plan_generator.py step through proposeDynamicChain(); and applying
+          learning_engine.py's exact verdict-to-behavior pattern to
+          task-reflection.ts's own differentAiTierFlag/reusablePatternFlag. All 4 are named
+          explicitly in ai-os/PHASE6_INTENT_CONTEXT_PLANNING_LEARNING_2026-07-24.yaml's own
+          what_remains_for_compliance_tracker fields -- out of this task's repo boundary, same
+          deferral posture phases 1-5 used for their own TS-side gaps."
+        - "phase_7_ui_composition_analytics (depends_on: []) and gateway_definition_and_inventory
+          (depends_on: [], blocked on the Owner naming the canonical 10-gateway list) remain open
+          in this plan -- not attempted in this task."
 
   - id: phase_7_ui_composition_analytics
     closes_engines: [17, 18]
@@ -809,6 +1145,65 @@ phases:
       Evaluate the same acceptable-as-is question for Analytics Engine (analytics-engine.ts) before
       building a general-purpose analytics layer nothing currently asks for."
     depends_on: []
+    status: done
+    status_detail:
+      produced_by_task: task-20260724-144911-phase7-evaluate-whether-vericomposer-cha
+      completed_on: '2026-07-24'
+      closed_by_finding_not_by_building: "Per this phase's own objective and the plan's
+        owner_standing_instruction (no speculative building ahead of a real, identified need), this
+        phase's real deliverable is an honest evaluation + Owner decision filing, not new engine code --
+        same posture Phase 4 used to close Engine 13 (Data Engine/ETL) by finding rather than by building
+        speculative infrastructure."
+      what_shipped:
+        - "ai-os/UI_COMPOSITION_ANALYTICS_ENGINE_EVALUATION_2026-07-24.yaml: the real investigation and
+          evaluation for both engines, grounded in live reads/greps across all 3 product repos
+          (compliance-tracker, projexa, veda-advisors) plus the previously-unrecorded
+          @fchecklist/veridian-ui-kit shared package."
+        - "UI Composition Engine (17) finding: the composition pattern already DID generalize once, for
+          real -- into veridian-ui-kit v0.3.0, a live, separately-versioned shared shell package that
+          compliance-tracker AND projexa both consume directly (replacing projexa's prior independent
+          px-* fork, per that package's own README). That package's own README explicitly scopes itself
+          to the shell/composer/panel pattern only and declares it will not grow into product business
+          UI. A Grafana-inspired alerting page (metric-alerts/page.tsx) explicitly documents choosing a
+          plain CRUD-list UI over a heavier dashboard-builder pattern. Zero component/widget-registry or
+          page/dashboard-builder mechanism found anywhere across the 3 repos. Conclusion: acceptable
+          as-is -- do not build a general-purpose, design-system-wide UI Composition Engine."
+        - "Analytics Engine (18) finding: analytics-engine.ts's 6 generic stats primitives are real and
+          reused only where genuinely generic (VCEL leaf dispatch via task-execution-engine.ts's
+          trend_analysis_engine and 5 sibling cases), while 5 independent, already-shipped dashboard
+          services (work/construction/firm-practice/maintainability/orchestra-analytics) each solve
+          their own domain's analytics need without converging on or needing a shared general-purpose
+          analytics layer. Conclusion: acceptable as-is -- do not build a general-purpose analytics
+          layer nothing currently asks for."
+        - "ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml#ui-composition-analytics-engine-scope-confirmation:
+          filed the actual judgment-call decision to the Owner (status: awaiting_owner_decision) per
+          this phase's own objective text ('a judgment call for the Owner, not assumed here') -- this
+          task recommends both engines' current scope is acceptable as-is but does not have standing to
+          make that final call unilaterally."
+      real_evidence:
+        - "grep across compliance-tracker/src, projexa/src, veda-advisors for 'component registry',
+          'widget registry', 'dynamic component', 'page builder', 'dashboard builder' (case-insensitive):
+          zero real hits."
+        - "repos/projexa/src/app/layout.tsx, (app)/layout.tsx, AppTopbar.tsx, veri-chat/VeriComposer.tsx,
+          veri-chat/VeriChatPanel.tsx, veri-chat-context.tsx all import @fchecklist/veridian-ui-kit
+          directly -- confirmed live cross-product reuse of the composer/chain-selector pattern at
+          exactly the scope veridian-ui-kit's own README claims."
+        - "repos/compliance-tracker/src/app/(app)/metric-alerts/page.tsx header comment (Wave 38): '...
+          matching that page's own deliberate simplicity) rather than a heavier dashboard-builder UI
+          like Grafana's' -- real, in-code precedent of deliberately rejecting dynamic/composable widget
+          UI."
+        - "grep lib/task-execution-engine.ts for analytics-engine.ts imports: only the
+          trend_analysis_engine case family (6 dynamic imports), confirming scoped VCEL-leaf-dispatch
+          usage, no broader caller."
+        - "python3 scripts/superboss-register.py query-knowledge \"phase_7_ui_composition_analytics\"
+          --tag domain:veridian-20-engine-10-gateway: found=1 (this phase's own SUCCESS_CRITERIA
+          check)."
+      what_remains_for_later_phases:
+        - "Owner response to the filed decision (ui-composition-analytics-engine-scope-confirmation) --
+          if the Owner identifies a real need this evaluation missed, that becomes a new phase; absent
+          that, no further action is expected for engines 17/18."
+        - "gateway_definition_and_inventory (depends_on: [], blocked on the Owner naming the canonical
+          10-gateway list) remains the only open phase in this plan -- not attempted in this task."
 
   - id: gateway_definition_and_inventory
     closes_engines: []
@@ -819,6 +1214,63 @@ phases:
       engine_inventory above. Do not build any gateway beyond scripts/task-gateway.py (already confirmed
       real) before this naming gap is closed."
     depends_on: []
+    status: done
+    status_detail:
+      produced_by_task: task-20260724-185145-phasex-get-owner-or-original-uncondensed
+      completed_on: '2026-07-24'
+      naming_gap_closed_by: "The original, uncondensed INS-20260724-053123-0e5a instruction text -- recovered
+        verbatim from its real, live source (the instructions table in
+        ai-os/memory/superboss-register.sqlite, scripts/superboss-register.py's own DB, queried directly by
+        instruction_id) rather than by opening a fresh interactive chat with the Owner, since this task was
+        auto-dispatched non-interactively. This is the literal 'or the original, uncondensed ... instruction
+        text' branch this phase's own OBJECTIVE named as an acceptable alternative to a live Owner
+        confirmation -- not a shortcut around it. See gateways.gateway_naming_gap_resolved above for the
+        full recovered text and the real 10-gateway list it names (G01 Owner .. G10 Infrastructure)."
+      what_shipped:
+        - "ai-os-scripts/generate_engines_gateways_inventory.py extended with a GATEWAY_DISCOVERY list (10
+          entries, G01-G10) and build_gateway_rows()/to_yaml_gateways(), reusing the exact same verify()
+          live os.path.exists() function the engine DISCOVERY list already used -- no new verification
+          method invented, same script, same rigor, same DO-NOT-HAND-EDIT convention."
+        - "gateways.gateway_inventory block above: real, live-verified 10-row gateway inventory, same shape
+          as engine_inventory (gateway_no/gateway_id/gateway_name/purpose/exists_as/verified_on_disk/
+          coverage/gap_description). All 10/10 rows verified_on_disk: true, coverage: partial (0 full, 0
+          none, 0 drifted) -- same finding shape as the 20-engine inventory (every gateway has real, honest,
+          partial prior art under a different name; none had to be built from zero to produce this
+          inventory, per this phase's own 'do not build any gateway' constraint)."
+        - "Also wrote ai-os/generated/gateway_inventory_2026-07-24.yaml standalone, same convention as
+          ai-os/generated/engine_inventory_2026-07-24.yaml."
+        - "Corrected gateways.confirmed_real_today's own prior claim: this phase's investigation confirmed
+          scripts/task-gateway.py (Phase 0's only 'gateway'-named, high-confidence candidate) is NOT a match
+          for any of G01-G10 -- it's a task/workflow lifecycle CLI, architecturally distinct from the
+          Owner's own Authenticate->Authorize->...->Return request-boundary pipeline description. Recorded
+          honestly as gateways.confirmed_real_today.superseded_finding rather than silently dropped."
+      real_evidence:
+        - "python3 -c \"import sqlite3; c=sqlite3.connect('ai-os/memory/superboss-register.sqlite');
+          print(c.execute(\\\"SELECT raw_text FROM instructions WHERE
+          instruction_id='INS-20260724-053123-0e5a'\\\").fetchone()[0])\": returned the full original
+          instruction text naming all 10 gateways verbatim (quoted in full in
+          gateways.gateway_naming_gap_resolved above)."
+        - "python3 ai-os-scripts/generate_engines_gateways_inventory.py (live run against /opt/veridian):
+          stderr `wrote /opt/veridian/ai-os/generated/gateway_inventory_2026-07-24.yaml (10 rows)`, zero
+          'WARNING: drift detected' lines for the gateway rows -- all 10 exists_as path sets live-verified
+          true against the real filesystem at generation time."
+        - "python3 scripts/superboss-register.py query-knowledge \"gateway_definition_and_inventory\" --tag
+          domain:veridian-20-engine-10-gateway: found>=1 (this phase's own SUCCESS_CRITERIA check,
+          registered as part of this same commit)."
+      what_remains_for_later_phases:
+        - "This phase's own scope was inventory only, per its OBJECTIVE's last sentence ('Do not build any
+          gateway beyond scripts/task-gateway.py ... before this naming gap is closed'). Actually building
+          G01-G10 as real, unified Authenticate->Authorize->...->Return request boundaries (per the Owner's
+          own fixed 17-step pipeline) is real future build work this phase deliberately did not start -- a
+          new phase, gateway_live_wiring or similar, would need to be added to this plan's own phases[]
+          block first, same 'plan before build' discipline this whole document has followed since Phase 0."
+        - "This was the last open phase in this plan (all of phase_1 through phase_7 were already status:
+          done before this task started). Per this task's own KNOWN_CONTEXT ('do not stop after this phase
+          either without updating the plan file ... so the next cron tick can find real next-phase work if
+          one exists') -- there is no further real next-phase work left in THIS plan file's phases[] block;
+          a future gateway-build phase would be new scope, not a pre-existing dependency this document
+          already defined, so scripts/auto_phase_continuation.py correctly finds nothing further to
+          auto-dispatch from this file until the Owner (or a new instruction) defines that next phase."
 
   - id: audit_observability_external
     closes_engines: [19, 20]

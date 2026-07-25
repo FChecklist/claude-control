@@ -16,3 +16,4 @@ XDG_RUNTIME_DIR=/run/user/1000
 15 4 * * * /opt/veridian/scripts/run-logged.sh "software-catalog-gen" /usr/bin/python3 /opt/veridian/scripts/generate_software_catalog.py >> /opt/veridian/ai-os/logs/software-catalog-gen-cron.log 2>&1
 0 5 * * * /opt/veridian/scripts/run-logged.sh "audit-pipeline-security" /usr/bin/python3 /opt/veridian/ai-os/scripts/audit_pipeline_security.py >> /opt/veridian/ai-os/logs/audit-pipeline-security-cron.log 2>&1
 */30 * * * * /opt/veridian/scripts/run-logged.sh "auto-phase-continuation" /usr/bin/python3 /opt/veridian/scripts/auto_phase_continuation.py >> /opt/veridian/ai-os/logs/auto-phase-continuation-cron.log 2>&1
+0 */6 * * * /opt/veridian/scripts/run-logged.sh "generate-wiring-registry" /usr/bin/python3 /opt/veridian/scripts/generate_wiring_registry.py >> /opt/veridian/ai-os/logs/generate-wiring-registry-cron.log 2>&1

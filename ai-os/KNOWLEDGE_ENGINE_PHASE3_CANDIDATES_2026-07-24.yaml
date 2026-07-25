@@ -23,6 +23,18 @@ candidates:
       shared/.env under the same SUPABASE_ACCESS_TOKEN key so the existing script needs no code change.
     priority: medium
     real_blocker_if_any: requires an Owner-supplied credential; not a code gap.
+    phase_5_update_2026_07_24: "task-20260724-135834 (phase_5_metadata_knowledge_consolidation) confirmed
+      this is still broken live (401/403 from api.supabase.com/v1/projects, re-tested this task) and filed
+      the formal Owner decision at
+      ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml#supabase-management-api-token-refresh. Real mitigation
+      shipped in the meantime, not a full fix: knowledge_registry_multisource.py's new
+      supabase_project_healthcheck_fallback() uses each repo's own already-configured, unrelated
+      project-scoped anon key to hit Supabase's standard /auth/v1/health endpoint when the Management API
+      call fails, so the SUPABASE knowledge_engine rows keep getting a genuine live signal every 6h cron
+      tick (live-verified 2026-07-24: compliance-tracker -> {ok: true, gotrue_version: v2.193.1}; projexa
+      -> correctly reports fallback_unavailable, its .env.local carries no Supabase credentials at all,
+      not fabricated). The richer Management API snapshot (project id/status, table/RLS counts) remains
+      stale until the Owner replaces the token -- this candidate stays open until that happens."
 
   - id: laptop_memory_unreachable
     problem: >

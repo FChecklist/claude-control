@@ -1,0 +1,163 @@
+meta:
+  title: VERIDIAN ChatGPT Prompt Library -- per-prompt CSV schema
+  generated_by: hand-authored this task (task-20260724-141538-chatgpt-prompt-library-infrastructure,
+    instruction INS-20260724-141341-5f67) -- a schema document itself, not a data-extraction script
+    output like CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml or VARIABLE_DICTIONARY_2026-07-24.yaml were;
+    every *data row* validated against this schema (prompts, capability coverage, duplicate findings) is
+    still produced only by a script, per the standing "registry writes come from scripts not
+    hand-authored prose" directive.
+  generated_at: '2026-07-24'
+  sandbox: /opt/veridian/chatgpt-prompt-library (all real prompt CSVs live under CSV/ inside this
+    sandbox -- writes enforced via scripts/chatgpt_promptlib_guard.py, see that script's own docstring
+    for the 15-subfolder layout)
+  status: 'schema DESIGNED and coverage/duplicate tooling built this task; ZERO real prompt rows exist
+    yet -- see ai-os/CHATGPT_PROMPTLIB_BLOCKER_2026-07-24.yaml for exactly what unblocks real prompt
+    generation (a real OPENAI_API_KEY does not exist in /opt/veridian/shared/.env as of this task)'
+  cross_links:
+    variable_dictionary: 'ai-os/VARIABLE_DICTIONARY_2026-07-24.yaml -- this schema''s Variables column
+      REUSES that dictionary''s `<Entity.Attribute>` placeholder convention verbatim (e.g.
+      `<Clients.Name>`, `<Users.Email>`). Do not invent a second placeholder syntax. Any placeholder
+      token used in a real prompt row must be a registered `placeholder:` entry in that file --
+      ai-os/TERMINOLOGY_GUARDRAIL_2026-07-24.py already flags unregistered `<Entity.Attribute>`-shaped
+      tokens for exactly this reason and can be pointed at real CSV/ files once they exist.'
+    capability_registry: 'ai-os/CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml (schema) + the live
+      capability_registry table it populates (ai-os/memory/superboss-register.sqlite, query via
+      `python3 scripts/superboss-register.py list-capabilities`) -- this schema''s Capability column
+      values MUST be real capability_name values from that live table, never invented. As of this task
+      there are 10 real rows.'
+    coverage_report: scripts/generate_prompt_coverage_report.py (reads both of the above + CSV/ to
+      compute Prompt-Coverage-pct / Capability-Coverage-pct / Intent-Coverage-pct)
+    duplicate_detection: scripts/detect_prompt_duplicates.py
+    guard: scripts/chatgpt_promptlib_guard.py -- every real CSV/ write goes through this, no bare open()
+
+placeholder_variable_convention:
+  syntax: '`<Entity.Attribute>`, e.g. `<Clients.Name>`, `<Users.Email>`, `<Tasks.CreatedAt>` -- identical
+    to ai-os/VARIABLE_DICTIONARY_2026-07-24.yaml, reused not reinvented (that file already covers 60
+    tables / 894 placeholder entries derived from the real 444-table DATABASE_CATALOG.json).'
+  rule: 'Every Variables cell in a real prompt row must be a comma-separated list of tokens that each
+    exactly match a `placeholder:` entry already registered in VARIABLE_DICTIONARY_2026-07-24.yaml. If a
+    prompt needs an entity/attribute not yet in that dictionary, the fix is to extend the dictionary
+    (ai-os-scripts/generate_variable_dictionary.py, re-run against DATABASE_CATALOG.json), never to
+    hand-invent a one-off placeholder string inside a prompt row.'
+  example: 'Prompt: "Draft a gratuity payout notice for <Users.Name> at <Clients.Name>, effective
+    <Tasks.CreatedAt>." -> Variables: "<Users.Name>,<Clients.Name>,<Tasks.CreatedAt>"'
+
+csv_schema:
+  file_location: /opt/veridian/chatgpt-prompt-library/CSV/*.csv (one file per generation batch,
+    recommended naming PROMPTS_<capability_name>_<YYYY-MM-DD>.csv, written only via
+    scripts/chatgpt_promptlib_guard.py's guarded_write)
+  columns:
+    - name: Prompt ID
+      type: string
+      required: true
+      description: 'Stable unique identifier. Convention: PROMPT-<capability_name>-<4-digit seq>, e.g.
+        PROMPT-gratuity_calculator-0001. Never reused across rows.'
+    - name: Prompt
+      type: string
+      required: true
+      description: 'The literal ChatGPT-facing prompt text. Any example data inside it must use a
+        registered `<Entity.Attribute>` placeholder (see placeholder_variable_convention above), never a
+        hand-typed literal example -- ai-os/TERMINOLOGY_GUARDRAIL_2026-07-24.py enforces this pattern
+        family for other artifacts and can be pointed at this column.'
+    - name: Intent
+      type: string
+      required: true
+      description: 'Short snake_case label for what the prompt is trying to accomplish, e.g.
+        calculate_gratuity, generate_payout_letter, explain_gst_rate. No canonical intent taxonomy
+        exists yet (Intent/ subfolder is reserved for one once authored) -- until then, Intent values
+        are free text but must be internally consistent per capability (same capability + same
+        underlying ask = same Intent string, not a rephrasing).'
+    - name: Business Domain
+      type: string
+      required: true
+      description: 'The business domain the capability belongs to, e.g. HR & Payroll, Sales & CRM,
+        India GST Compliance, Analytics. Should be derivable from the capability''s own `owner` field in
+        the live capability_registry row (e.g. "VCEL HR/Payroll domain engines" -> "HR & Payroll").'
+    - name: Module
+      type: string
+      required: true
+      description: 'The specific product module/engine implementing the capability, e.g.
+        hr-engine.ts, payroll-engine.ts, gst-engine.ts -- sourced from the capability''s own `owner`
+        field, never invented.'
+    - name: Capability
+      type: string
+      required: true
+      description: 'MUST exactly match a real `capability_name` from the live capability_registry table
+        (python3 scripts/superboss-register.py list-capabilities). This is the join key
+        generate_prompt_coverage_report.py uses to compute per-capability coverage.'
+    - name: Business Process
+      type: string
+      required: true
+      description: 'The end-to-end business process this prompt sits inside, e.g. "Monthly payroll run",
+        "Sales commission reconciliation", "GST return filing".'
+    - name: Entity
+      type: string
+      required: true
+      description: 'The primary data entity the prompt operates on, using the same Entity naming as
+        VARIABLE_DICTIONARY_2026-07-24.yaml''s `entity:` field (PascalCase table name), e.g. Users,
+        Clients, Tasks.'
+    - name: Action
+      type: string
+      required: true
+      description: 'The verb describing what happens to the Entity, e.g. calculate, generate, explain,
+        summarize, validate.'
+    - name: Variables
+      type: string
+      required: true
+      description: 'Comma-separated list of `<Entity.Attribute>` placeholder tokens used in the Prompt
+        column. See placeholder_variable_convention above -- must all be registered in
+        VARIABLE_DICTIONARY_2026-07-24.yaml.'
+    - name: Keywords
+      type: string
+      required: true
+      description: 'Comma-separated free-text search keywords for this prompt, used to populate
+        Keywords/ manifests and for coverage/duplicate detection''s secondary matching.'
+    - name: Expected Software Capability
+      type: string
+      required: true
+      description: 'The concrete VERIDIAN system feature/API this prompt should ultimately be routed to
+        or backed by once resolved (e.g. a route from ai-os/ROUTE_REGISTRY_SCHEMA_2026-07-24.yaml, once
+        Routes/ is populated) -- distinct from the Capability column: Capability is the capability_registry
+        join key, this column is the human-readable description of what handling it well looks like.'
+    - name: Expected Output
+      type: string
+      required: true
+      description: 'What a correct ChatGPT response to this prompt looks like -- a short description,
+        not the full expected output text (that would defeat the purpose of a prompt library).'
+    - name: AI Required Yes/No
+      type: enum
+      values: ['Yes', 'No']
+      required: true
+      description: 'Whether answering this prompt actually requires an LLM (vs. a deterministic
+        calculation/lookup VERIDIAN already performs in code). Should agree with the matched
+        capability''s own `ai_required` boolean in the live capability_registry row -- a mismatch is
+        worth a Validation/ finding, not a silent override.'
+    - name: Confidence
+      type: number
+      range: [0.0, 1.0]
+      required: true
+      description: 'Confidence that this prompt row is correctly classified (Capability/Entity/Action/
+        Variables all correct and consistent). Should not silently exceed the matched capability''s own
+        `confidence` value in the live capability_registry row without a stated reason.'
+  id_convention: 'PROMPT-<capability_name>-<4-digit sequence, zero-padded, per-capability>, e.g.
+    PROMPT-gst_calculation_engine-0001'
+  example_row:
+    Prompt ID: PROMPT-gratuity_calculator-0001
+    Prompt: 'Calculate the gratuity payout for <Users.Name> given their tenure and last drawn salary at
+      <Clients.Name>.'
+    Intent: calculate_gratuity
+    Business Domain: HR & Payroll
+    Module: hr-engine.ts / payroll-engine.ts
+    Capability: gratuity_calculator
+    Business Process: Employee exit settlement
+    Entity: Users
+    Action: calculate
+    Variables: '<Users.Name>,<Clients.Name>'
+    Keywords: 'gratuity, payout, exit settlement, tenure, salary'
+    Expected Software Capability: 'VCEL HR/Payroll gratuity_calculator engine output, formatted as a
+      payout summary'
+    Expected Output: 'A computed gratuity amount with a short explanation of the formula and inputs used'
+    AI Required Yes/No: 'No'
+    Confidence: 0.95
+    note: 'This example row is illustrative only (documentation), not a real CSV/ data row -- no prompts
+      have been generated yet, see meta.status above.'

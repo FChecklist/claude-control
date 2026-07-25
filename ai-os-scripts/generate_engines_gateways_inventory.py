@@ -26,12 +26,19 @@ underlying files are unchanged. Run:
     python3 ai-os/scripts/generate_engines_gateways_inventory.py
 writes ai-os/generated/engine_inventory_2026-07-24.yaml and also prints the
 same YAML to stdout (for splicing into the phase-plan document).
+
+Phase gateway_definition_and_inventory (dispatched after the Owner's
+gateway_naming_gap was closed by recovering INS-20260724-053123-0e5a's
+original, uncondensed raw_text from the instructions table) extends this
+same script with a GATEWAY_DISCOVERY list, same live-verification method,
+also writes ai-os/generated/gateway_inventory_2026-07-24.yaml.
 """
 import os
 import sys
 
 VERIDIAN_ROOT = "/opt/veridian"
 OUT_PATH = f"{VERIDIAN_ROOT}/ai-os/generated/engine_inventory_2026-07-24.yaml"
+GATEWAY_OUT_PATH = f"{VERIDIAN_ROOT}/ai-os/generated/gateway_inventory_2026-07-24.yaml"
 
 # One entry per named engine (order matches the SPEC's own 20-name list).
 # exists_as: list of real, repo-relative-to-/opt/veridian paths found by
@@ -314,6 +321,203 @@ DISCOVERY = [
 ]
 
 
+# ---------------------------------------------------------------------------
+# GATEWAY_DISCOVERY -- Phase gateway_definition_and_inventory. The naming gap
+# recorded in this document's own gateways.gateway_naming_gap block (Phase 0)
+# is now closed: the original, uncondensed Owner instruction
+# (INS-20260724-053123-0e5a, recovered verbatim from
+# ai-os/memory/superboss-register.sqlite's instructions table -- it was never
+# missing, only lost in this task's own condensed SPEC) names all 10 gateways
+# explicitly: "10 gateways wrap all 20 engines: G01 Owner, G02 Engineering,
+# G03 Organization, G04 UserChannel, G05 AI, G06 BusinessServices, G07
+# DataKnowledge, G08 Integration, G09 ObservabilityAudit, G10 Infrastructure
+# -- no component talks to another except through a gateway. Every gateway
+# runs the same fixed pipeline: Authenticate->Authorize->Validate->
+# Normalize->LoadOrgContext->LoadUserContext->LoadMetadata->CapabilityLookup->
+# PolicyEval->RuleEval->Decision->Execute->GenerateEvents->UpdateKnowledge->
+# WriteAuditLog->WriteMetrics->Return."
+#
+# These are request-routing/access-boundary wrappers ("no component talks to
+# another except through a gateway"), architecturally distinct from the 20
+# ENGINES above. Same method as DISCOVERY: one grep/read finding per gateway,
+# gathered this session (see gateway_definition_and_inventory phase's
+# status_detail for the investigation), live-verified below by the same
+# verify() function -- no row hand-written into the phase-plan yaml directly.
+#
+# Confirmed finding: scripts/task-gateway.py -- the one "gateway"-named file
+# in this codebase, and the only gateway_candidate this document's Phase 0
+# could confirm before this naming gap closed -- is NOT a match for any of
+# G01-G10. It is a task/workflow lifecycle CLI (submit/start/log/close), not
+# an Authenticate->Authorize->...->Return request boundary per the Owner's
+# own pipeline text. It stays out of GATEWAY_DISCOVERY below; see
+# gateways.confirmed_real_today for the honest, updated record of that
+# finding.
+# ---------------------------------------------------------------------------
+GATEWAY_DISCOVERY = [
+    dict(
+        n=1, gid="G01", name="Owner",
+        purpose="Boundary through which the human Owner's own instructions/directives enter the system and get logged/tracked.",
+        exists_as=[
+            "scripts/superboss-register.py",
+            "scripts/notify-owner.py",
+            "ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml",
+            "ai-os/OWNER_DIRECTIVES/CHATGPT_AUDIT_AND_PROMPT_LIBRARY_WORKSPACE_2026-07-24.txt",
+        ],
+        coverage="partial",
+        gap="Real, live pieces exist for both directions -- Owner-in (superboss-register.py's log-instruction "
+            "subcommand and instructions table, the exact mechanism that registered "
+            "INS-20260724-053123-0e5a itself) and Owner-out (notify-owner.py, rate-limited, plain-English by "
+            "design). But they are two separate scripts sharing no Authenticate/Authorize pipeline -- "
+            "log-instruction does not authenticate its caller (any process on the box can insert an "
+            "instruction row claiming Owner origin), so this is a structured ledger, not an access boundary "
+            "in the pipeline sense the Owner's own instruction describes.",
+    ),
+    dict(
+        n=2, gid="G02", name="Engineering",
+        purpose="Boundary for engineering/dev-tooling requests -- CI, code-quality gates, and AI-dev-team dispatch.",
+        exists_as=[
+            "repos/compliance-tracker/.github/workflows/ci.yml",
+            "repos/compliance-tracker/.github/workflows/ai-dispatch.yml",
+            "repos/compliance-tracker/.github/workflows/ai-team-workforce.yml",
+            "scripts/quality-gate.sh",
+            "scripts/scope-check.py",
+        ],
+        coverage="partial",
+        gap="Real, enforced dev-tooling gates exist (CI lint/typecheck/build, a pre-merge quality gate, "
+            "file-ownership/scope-collision checks), but they are independent scripts/GitHub-Actions "
+            "workflows triggered at different points, not one named Engineering gateway that "
+            "authenticates/authorizes a caller before executing -- checks embedded in a pipeline, not a "
+            "routing boundary a caller goes through.",
+    ),
+    dict(
+        n=3, gid="G03", name="Organization",
+        purpose="Boundary that resolves and enforces tenant/organization context for every request.",
+        exists_as=[
+            "repos/compliance-tracker/src/lib/services/context.ts",
+            "repos/compliance-tracker/src/lib/supabase/auth-guard.ts",
+            "repos/compliance-tracker/src/lib/db/tenant-scoped.ts",
+            "repos/compliance-tracker/src/lib/services/org-provisioning-service.ts",
+        ],
+        coverage="partial",
+        gap="ServiceContext/ReadContext's mandatory orgId (Engine 2's own Context Engine finding) plus "
+            "withTenantContext's Postgres RLS session vars are real, enforced org-scoping used consistently "
+            "across service calls -- genuine LoadOrgContext. But it is woven into auth-guard.ts's "
+            "requireAuth() per-route, not a standalone named Organization gateway other subsystems route "
+            "through as one addressable Authenticate->Authorize->LoadOrgContext boundary.",
+    ),
+    dict(
+        n=4, gid="G04", name="UserChannel",
+        purpose="Boundary for end-user-facing product channels (chat, portal, guest access) into the platform.",
+        exists_as=[
+            "repos/compliance-tracker/src/lib/supabase/auth-guard.ts",
+            "repos/compliance-tracker/src/app/api/veri-chat",
+            "repos/compliance-tracker/src/app/api/guest-chat",
+            "repos/compliance-tracker/src/app/api/me/route.ts",
+        ],
+        coverage="partial",
+        gap="requireAuth()/requireRole() in auth-guard.ts is a real, universally-used per-route "
+            "Authenticate+Authorize gate, and veri-chat/guest-chat are real end-user channel surfaces built "
+            "on it. But it is invoked ad hoc at the top of each individual route.ts file, not centralized "
+            "behind one UserChannel gateway component -- no middleware.ts file exists anywhere in the repo.",
+    ),
+    dict(
+        n=5, gid="G05", name="AI",
+        purpose="Boundary all AI/model calls route through for provider/model resolution, policy, and audit.",
+        exists_as=[
+            "repos/compliance-tracker/src/lib/ai-router/mother-router.ts",
+            "repos/compliance-tracker/src/lib/model-tier-eligibility.ts",
+        ],
+        coverage="partial",
+        gap="Mother Router (resolveModel(), versioned ai_routing_policies, ai_routing_audit_log) is real, "
+            "live, audit-logged AI routing -- the strongest single candidate of all 10 gateways for matching "
+            "the Owner's fixed-pipeline description. But its own header comment documents a mechanical grep "
+            "finding 35 files still bypassing it by calling resolveModelConfig()/checkTierEligibility() "
+            "directly -- a documented decision not (yet) to migrate them, so roughly a third of this one "
+            "repo's AI dispatch call sites don't route through it at all.",
+    ),
+    dict(
+        n=6, gid="G06", name="BusinessServices",
+        purpose="Boundary wrapping internal business-domain service calls (accounting, PMS, HR, etc.).",
+        exists_as=[
+            "repos/compliance-tracker/src/lib/services",
+        ],
+        coverage="partial",
+        gap="A large, real services/ directory (263 files -- erp-accounting-service.ts, "
+            "pms-meeting-service.ts, org-branding-service.ts, etc.) exists and every function in it does "
+            "take a ServiceContext/ReadContext (G03's own finding), so some uniform contract is enforced "
+            "per-call. But there is no single BusinessServices gateway component -- each service module is "
+            "called directly from its own route handler(s); this is a naming/directory convention, not a "
+            "gateway other components route calls through.",
+    ),
+    dict(
+        n=7, gid="G07", name="DataKnowledge",
+        purpose="Boundary for accessing/tracking data and knowledge-store artifacts (metadata, relationships, provenance).",
+        exists_as=[
+            "scripts/superboss-register.py",
+            "scripts/knowledge_registry_multisource.py",
+            "ai-os/MASTER_INDEX.yaml",
+        ],
+        coverage="partial",
+        gap="Same real infrastructure engine_inventory already rated coverage=full for Engine 15 (Knowledge "
+            "Engine) -- a live SQLite+FTS5 store with a register-knowledge/query-knowledge CLI and a "
+            "recurring multi-source cron refresh. As a gateway concept, though, it is a data store with a "
+            "CLI, not a request boundary other components authenticate/authorize through first -- no "
+            "Authenticate/Authorize step exists in front of register-knowledge/query-knowledge themselves.",
+    ),
+    dict(
+        n=8, gid="G08", name="Integration",
+        purpose="Boundary for exchanging data with external systems/APIs (inbound and outbound).",
+        exists_as=[
+            "repos/compliance-tracker/src/lib/webhook-deliver.ts",
+            "repos/compliance-tracker/src/lib/webhooks/vercel-signature.ts",
+            "repos/compliance-tracker/src/app/api/webhooks/vercel-deployment/route.ts",
+            "repos/compliance-tracker/src/app/api/connectors/route.ts",
+            "repos/compliance-tracker/src/lib/supabase/platform-application-auth.ts",
+        ],
+        coverage="partial",
+        gap="Real outbound webhook delivery (Engine 10's own finding), real inbound webhook receipt with "
+            "signature verification (Vercel deployment events), a real OAuth-connector framework (Composio, "
+            "Drive/Gmail), and a real cross-product platform-application-key Authenticate step all exist and "
+            "are live. None are unified under one Integration gateway -- each is its own auth/validation "
+            "path with its own credential class (webhook signature vs. platform key vs. Composio OAuth).",
+    ),
+    dict(
+        n=9, gid="G09", name="ObservabilityAudit",
+        purpose="Boundary/loop surfacing system health and writing the audit trail for actions taken.",
+        exists_as=[
+            "scripts/health-check-15min.py",
+            "scripts/veridian-task-watchdog.py",
+            "repos/compliance-tracker/src/lib/audit.ts",
+            "ai-os/AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml",
+        ],
+        coverage="partial",
+        gap="Real, live 15-minute health monitoring (systemd/DB/disk/mem) and a real per-write logActivity() "
+            "in-app audit function both exist and are used (same finding as engine_inventory's Engine 19/20 "
+            "rows). But these are two unrelated systems -- server-ops health cron vs. in-app DB audit log -- "
+            "with no shared schema, and neither is a gateway boundary other components route calls through; "
+            "logActivity() is a side effect at the end of a service function, not an enforced WriteAuditLog "
+            "step of a shared pipeline.",
+    ),
+    dict(
+        n=10, gid="G10", name="Infrastructure",
+        purpose="Boundary/deploy layer for provisioning and running the server-side process fleet.",
+        exists_as=[
+            "reconciliation/claude-control/systemd/veridian-task-watchdog.service",
+            "scripts/supervisor-entrypoint.sh",
+            "scripts/worker-entrypoint.sh",
+            "scripts/sync-repos.sh",
+        ],
+        coverage="partial",
+        gap="Real systemd-managed worker/supervisor process lifecycle (veridian-worker@/veridian-supervisor@ "
+            "units referenced throughout health-check-15min.py and supervisor-entrypoint.sh) and a real "
+            "deployed watchdog unit exist. But no single Infrastructure gateway component exists, just a set "
+            "of shell entrypoints and systemd units -- and the live server has no top-level /opt/veridian/"
+            "systemd directory (units live staged under reconciliation/claude-control/systemd/ instead),"
+            " honestly reported rather than assumed.",
+    ),
+]
+
+
 def verify(entry):
     checked = []
     all_exist = True
@@ -367,6 +571,48 @@ def to_yaml(rows):
     return "\n".join(lines) + "\n"
 
 
+def build_gateway_rows():
+    rows = []
+    for e in GATEWAY_DISCOVERY:
+        checked, verified, coverage = verify(e)
+        rows.append({
+            "gateway_no": e["n"],
+            "gateway_id": e["gid"],
+            "gateway_name": e["name"],
+            "purpose": e["purpose"],
+            "exists_as": [c["path"] for c in checked] if checked else None,
+            "verified_on_disk": verified if checked else None,
+            "coverage": coverage if checked else "none",
+            "gap_description": e["gap"] if checked else
+                "No real implementation found under any name after a deliberate search of compliance-tracker/"
+                "projexa/veda-advisors src/ and /opt/veridian/scripts + ai-os/.",
+        })
+    return rows
+
+
+def to_yaml_gateways(rows):
+    lines = []
+    lines.append("# Generated by ai-os-scripts/generate_engines_gateways_inventory.py -- DO NOT HAND-EDIT.")
+    lines.append("# Re-run the script to regenerate after any of the cited paths change.")
+    lines.append("gateway_inventory:")
+    for r in rows:
+        lines.append(f"  - gateway_no: {r['gateway_no']}")
+        lines.append(f"    gateway_id: \"{r['gateway_id']}\"")
+        lines.append(f"    gateway_name: \"{r['gateway_name']}\"")
+        lines.append(f"    purpose: \"{r['purpose']}\"")
+        if r["exists_as"]:
+            lines.append("    exists_as:")
+            for p in r["exists_as"]:
+                lines.append(f"      - {p}")
+        else:
+            lines.append("    exists_as: NONE")
+        lines.append(f"    verified_on_disk: {str(r['verified_on_disk']).lower() if r['verified_on_disk'] is not None else 'null'}")
+        lines.append(f"    coverage: {r['coverage']}")
+        gap = r["gap_description"].replace('"', '\\"')
+        lines.append(f"    gap_description: \"{gap}\"")
+    return "\n".join(lines) + "\n"
+
+
 def main():
     rows = build_rows()
     yaml_text = to_yaml(rows)
@@ -378,6 +624,16 @@ def main():
     if unverified:
         sys.stderr.write(f"WARNING: drift detected, exists_as path missing for: {unverified}\n")
     sys.stderr.write(f"wrote {OUT_PATH} ({len(rows)} rows)\n")
+
+    gw_rows = build_gateway_rows()
+    gw_yaml_text = to_yaml_gateways(gw_rows)
+    with open(GATEWAY_OUT_PATH, "w") as f:
+        f.write(gw_yaml_text)
+    sys.stdout.write(gw_yaml_text)
+    gw_unverified = [r["gateway_name"] for r in gw_rows if r["verified_on_disk"] is False]
+    if gw_unverified:
+        sys.stderr.write(f"WARNING: drift detected, exists_as path missing for: {gw_unverified}\n")
+    sys.stderr.write(f"wrote {GATEWAY_OUT_PATH} ({len(gw_rows)} rows)\n")
 
 
 if __name__ == "__main__":

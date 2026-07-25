@@ -1,0 +1,182 @@
+meta:
+  id: MODULE_GAP_AUDIT
+  version: 1.0.0
+  generated_ts: '2026-07-25T06:50:00Z'
+  created_by_task: task-20260725-063204-module-scoped-zai-gap-audit
+  purpose: >
+    Extends the existing ChatGPT/Z.AI manual-bridge audit system
+    (scripts/generate_chatgpt_audit_request.py + scripts/ingest_chatgpt_audit_response.py,
+    proven working for the Security domain with both ChatGPT and Z.AI --
+    AUDIT-000009/AUDIT-000010) from domain-scoped to real MODULE-scoped
+    requests, covering compliance-tracker and projexa, so the Owner can have
+    Z.AI's free chat engine analyze every real module's function, business
+    logic, and input/output for gaps. This document is the Owner-facing
+    summary + procedure; the machine-generated per-module facts live in
+    ai-os/MODULE_GAP_AUDIT_MODULE_LIST_2026-07-25.yaml (re-run
+    scripts/generate_module_gap_audit_module_list.py any time to refresh it
+    against a newer commit -- do not hand-edit either file's counts).
+  reuses_unchanged:
+  - ai-os/CHATGPT_AUDIT_RECORD_SCHEMA_2026-07-24.yaml (zero schema changes --
+    modules_analysed/files_analysed already carry the module/repo linkage,
+    no new fields added)
+  - scripts/chatgpt_audit_guard.py (write-scope enforcement, unchanged)
+  - scripts/chatgpt_audit_versioning.py (audit_id/filename allocation,
+    unchanged -- module-scoped records use the schema's existing 'Modules'
+    domain subfolder, one of the original 23, not a new one)
+  - scripts/generate_chatgpt_audit_index.py (catalogue/index refresh,
+    unchanged -- already scans all schema.domain_subfolders generically,
+    'Modules' included automatically)
+  new_this_task:
+  - scripts/module_gap_audit_lib.py (real module-boundary resolution + file
+    discovery + chunk packing -- the only new module)
+  - scripts/generate_chatgpt_audit_request.py --module/--repo mode (added
+    alongside the existing --domain mode, which is unchanged and re-verified
+    working)
+  - scripts/ingest_chatgpt_audit_response.py --module/--repo mode (added
+    alongside the existing --domain mode, which is unchanged)
+  - scripts/generate_module_gap_audit_module_list.py +
+    ai-os/MODULE_GAP_AUDIT_MODULE_LIST_2026-07-25.yaml
+
+module_boundary_sources:
+  compliance-tracker:
+    source: compliance.module_registry
+    source_detail: >
+      A real Postgres table (drizzle/0017_wave20_module_registry_and_product_branches.sql
+      onward, "module reusability") that the product itself already uses at
+      runtime (src/lib/services/module-registry-service.ts) to gate which
+      modules a product branch has enabled. Not an invented taxonomy -- this
+      is the repo's own module concept, checked for first per KNOWN_CONTEXT
+      before deriving anything mechanically. Extracted by parsing the real
+      INSERT INTO compliance.module_registry statements across ~30
+      drizzle/*.sql migration files (never hand-typed), deduped by
+      module_key. 110 real modules found.
+    fallback_used: false
+  projexa:
+    source: src/app/api/<x>/ directory structure
+    source_detail: >
+      No module_registry-equivalent table exists in this repo (checked live:
+      no `module_registry`/`moduleRegistry` hit anywhere under drizzle/ or
+      src/, and neither PROJEXA_GAP_ANALYSIS.md nor PROJEXA_TASK_GOVERNANCE.md
+      names an explicit module taxonomy beyond prose). Falls back to the
+      KNOWN_CONTEXT-sanctioned mechanical derivation: each top-level
+      src/app/api/<x>/ directory is one real module boundary. 79 real
+      directories found.
+    fallback_used: true
+
+file_discovery_method: >
+  Per module, scripts/module_gap_audit_lib.py unions two real, mechanical
+  signals over `git ls-files`: (1) a filename-substring match (the same
+  technique generate_chatgpt_audit_request.py's original DOMAIN_KEYWORDS
+  search already used), and (2) a `git grep -lI` content match for the
+  module's snake_case, kebab-case, and camelCase identifier variants (needed
+  because compliance-tracker's module_key/table_name are DB identifiers that
+  show up as camelCase in TS source, e.g. board_meetings -> boardMeetings --
+  a filename-only match misses these entirely). SQL matches are narrowed to
+  the module_registry seed migration plus the migration that actually
+  CREATEs the module's table (checked live per file) -- otherwise a table
+  name appearing in one unrelated ALTER/seed/comment line elsewhere would
+  pull that whole unrelated migration's business logic in as noise. A single
+  monolithic shared file (verified case: src/lib/db/schema.ts, 10709 lines --
+  defines every table in the app, not just one module's) is excluded from
+  auto-discovery above a fixed size ceiling (1500 lines / 60000 bytes) so one
+  module's request isn't dominated by hundreds of unrelated tables; it
+  remains available via --files if the Owner wants it explicitly. Never a
+  hand-typed file list, never a fabricated path -- a module with zero real
+  matches falls back to real repo-overview docs (PLATFORM_STRATEGY.md etc.,
+  existence-checked) with used_fallback_docs: true, exactly like the
+  original domain mode.
+
+batching_and_chunking_rule: >
+  Reference ceiling per single request, per KNOWN_CONTEXT: ~400 lines /
+  ~20KB combined pasted content (same order of magnitude as the working
+  Security request, 19574 bytes). scripts/module_gap_audit_lib.py's
+  pack_into_chunks() greedily packs a module's real files (in deterministic
+  sorted order) into request-sized chunks bounded by this ceiling -- whole
+  files only, NEVER split or truncated mid-file. When adding the next file
+  would exceed either bound, the current chunk closes and a new numbered
+  part begins (Module-<repo>-<module>-request-<ts>-partNofM.txt; the
+  -partNofM suffix is omitted when a module fits in a single request). A
+  single file that alone exceeds the ceiling still gets its own solo chunk,
+  in full -- SCOPE item 2 forbids silent truncation, not an oversized
+  outlier chunk. This is the exact same function used both to actually
+  generate request files and to compute
+  MODULE_GAP_AUDIT_MODULE_LIST's chunk_count_for_full_coverage per module,
+  so the "real total request-file count" below is not a separate estimate --
+  it is the real output of the real chunking code, summed.
+
+real_totals_from_MODULE_GAP_AUDIT_MODULE_LIST_2026-07-25_yaml:
+  compliance-tracker:
+    module_count: 110
+    request_files_for_full_coverage: 653
+  projexa:
+    module_count: 79
+    request_files_for_full_coverage: 542
+  grand_total_modules: 189
+  grand_total_request_files_for_full_coverage: 1195
+
+first_batch_generated_this_task:
+  note: >
+    Per SCOPE item 4 / CONSTRAINTS, this task generates only the first 5 real
+    modules as real, working proof -- not full coverage. All 5 below produced
+    exactly 1 request file each (chosen deliberately from the leanest
+    real modules in MODULE_GAP_AUDIT_MODULE_LIST, chunk_count_for_full_coverage
+    == 1, so the initial batch is easy for the Owner to work through end to
+    end before committing to the full 1195-file backlog).
+  modules:
+  - repo: compliance-tracker
+    module_key: erp_cash_management
+    request_file: Module-compliance-tracker-erp_cash_management-request-20260725T064842Z.txt
+    files_analysed: 2
+  - repo: compliance-tracker
+    module_key: knowledge_base_pages
+    request_file: Module-compliance-tracker-knowledge_base_pages-request-20260725T064842Z.txt
+    files_analysed: 2
+  - repo: compliance-tracker
+    module_key: report_schedules
+    request_file: Module-compliance-tracker-report_schedules-request-20260725T064842Z.txt
+    files_analysed: 3
+  - repo: projexa
+    module_key: cost-centers
+    request_file: Module-projexa-cost-centers-request-20260725T064847Z.txt
+    files_analysed: 4
+  - repo: projexa
+    module_key: kpi-entries
+    request_file: Module-projexa-kpi-entries-request-20260725T064847Z.txt
+    files_analysed: 2
+  request_files_generated_this_task: 5
+  request_files_still_needed_for_full_coverage: 1190
+  modules_still_uncovered: 184
+
+owner_procedure: >
+  Identical, simple procedure already proven for the Security domain --
+  nothing new to learn, just a --module flag instead of --domain:
+  1. Open a request file under /opt/veridian/chatgpt-audit/_pending_requests/
+     (e.g. Module-compliance-tracker-erp_cash_management-request-<ts>.txt).
+  2. Copy everything below its '===== COPY BELOW THIS LINE =====' marker
+     into a new, free ChatGPT or Z.AI web chat session (no API key needed).
+  3. Save the model's full response (YAML only) to a file.
+  4. Run: python3 scripts/ingest_chatgpt_audit_response.py --module <module_key>
+     --repo <repo> --file <response-file>
+     (this validates the record against CHATGPT_AUDIT_RECORD_SCHEMA, allocates
+     a real audit_id, writes it under /opt/veridian/chatgpt-audit/Modules/,
+     and refreshes the master catalogue -- exactly the same mechanism that
+     already produced AUDIT-000008/9/10 for the Security domain).
+  5. To generate the next module's request(s), run:
+     python3 scripts/generate_chatgpt_audit_request.py --module <module_key>
+     --repo <compliance-tracker|projexa>
+     (pick any module_key from ai-os/MODULE_GAP_AUDIT_MODULE_LIST_2026-07-25.yaml's
+     repos.<repo>.modules[] -- every module in that list is real and ready to
+     generate on demand; this task deliberately did not pre-generate all
+     1195 request files, per CONSTRAINTS).
+
+honest_scope_statement: >
+  This task delivers real, working module-scoped infrastructure and a real
+  first batch of 5 modules (5 request files) as proof -- it does NOT claim
+  full coverage. 184 of 189 real modules across both repos remain
+  ungenerated, needing an estimated 1190 more request files (653-3=650 for
+  compliance-tracker's remaining 107 modules, 542-2=540 for projexa's
+  remaining 77 modules). The Owner can generate any remaining module's
+  request(s) on demand with the command in owner_procedure step 5, or a
+  future task can batch-generate more of the backlog -- this number is
+  reported honestly so the Owner knows the true remaining scope before
+  starting to paste.

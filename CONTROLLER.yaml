@@ -4929,3 +4929,434 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260724-123006-phase3-formalize-task-gateway-py-task-ex/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-122143-phase3-data-model-static-quality-linting
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''phase3-data-model-static-quality-linting-documentation''
+      on claude-control reached status=completed. tier1, Superboss-approved, merged
+      autonomously: https://github.com/FChecklist/claude-control/pull/37'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-122143-phase3-data-model-static-quality-linting/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/37'
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-133622-phase4-unify-document-pipeline-pdf-gener
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''phase4-unify-document-pipeline-pdf-generator-ts''
+      on claude-control reached status=completed. tier1, Superboss-approved, merged
+      autonomously: https://github.com/FChecklist/claude-control/pull/39'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-133622-phase4-unify-document-pipeline-pdf-gener/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/39'
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-133911-terminology-phase3-ci-enforcement-wiring
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''terminology-phase3-ci-enforcement-wiring'' on claude-control
+      reached status=blocked. Superboss rejected: https://github.com/FChecklist/claude-control/pull/38
+      — see review.json for issues'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-133911-terminology-phase3-ci-enforcement-wiring/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/38'
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-135834-phase5-reconcile-master-index-yaml-s-reg
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''phase5-reconcile-master-index-yaml-s-registries''
+      on claude-control reached status=completed. tier1, Superboss-approved, merged
+      autonomously: https://github.com/FChecklist/claude-control/pull/40'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-135834-phase5-reconcile-master-index-yaml-s-reg/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/40'
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-135839-phase4-architecture-judgment-domains-dep
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''phase4-architecture-judgment-domains-dependency-cruiser-ai''
+      on claude-control reached status=blocked. Superboss rejected: https://github.com/FChecklist/claude-control/pull/44
+      — see review.json for issues'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-135839-phase4-architecture-judgment-domains-dep/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/44'
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-140008-phase5-reconcile-master-index-yaml-s-reg
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''phase5-reconcile-master-index-yaml-s-registries''
+      on claude-control reached status=blocked. tier1, Superboss-approved, but the merge
+      itself FAILED (gh pr view confirms state=OPEN, mergedAt=; see supervisor.log)
+      — needs manual attention, NOT actually merged: https://github.com/FChecklist/claude-control/pull/42'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-140008-phase5-reconcile-master-index-yaml-s-reg/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/42'
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-140446-fix-terminology-phase3-pr552-review-gap
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''fix-terminology-phase3-pr552-review-gap'' on claude-control
+      reached status=completed. tier1, Superboss-approved, merged autonomously: https://github.com/FChecklist/claude-control/pull/43'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-140446-fix-terminology-phase3-pr552-review-gap/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/43'
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-141323-chatgpt-audit-workspace-infrastructure
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''chatgpt-audit-workspace-infrastructure'' on claude-control
+      reached status=blocked. tier1, Superboss-approved, but the merge itself FAILED
+      (gh pr view confirms state=OPEN, mergedAt=; see supervisor.log) — needs manual
+      attention, NOT actually merged: https://github.com/FChecklist/claude-control/pull/46'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-141323-chatgpt-audit-workspace-infrastructure/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/46'
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-141538-chatgpt-prompt-library-infrastructure
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''chatgpt-prompt-library-infrastructure'' on claude-control
+      reached status=blocked. tier1, Superboss-approved, but the merge itself FAILED
+      (gh pr view confirms state=OPEN, mergedAt=; see supervisor.log) — needs manual
+      attention, NOT actually merged: https://github.com/FChecklist/claude-control/pull/45'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-141538-chatgpt-prompt-library-infrastructure/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/45'
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-143010-phase6-extend-intent-engine-beyond-mode
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''phase6-extend-intent-engine-beyond-mode-pill'' on
+      claude-control reached status=completed. tier1, Superboss-approved, merged autonomously:
+      https://github.com/FChecklist/claude-control/pull/47'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-143010-phase6-extend-intent-engine-beyond-mode/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/47'
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-143013-phase4-migrate-existing-hardcoded-exampl
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''phase4-migrate-existing-hardcoded-examples-to-registered''
+      on claude-control reached status=blocked. Superboss rejected: https://github.com/FChecklist/claude-control/pull/48
+      — see review.json for issues'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-143013-phase4-migrate-existing-hardcoded-exampl/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/48'
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-143319-fix-auditor-phase4-rejected-issues
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''fix-auditor-phase4-rejected-issues'' on claude-control
+      reached status=blocked. tier1, Superboss-approved, but the merge itself FAILED
+      (gh pr view confirms state=, mergedAt=; see supervisor.log) — needs manual attention,
+      NOT actually merged: '
+    where: /opt/veridian/ai-os/tasks/task-20260724-143319-fix-auditor-phase4-rejected-issues/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-144911-phase7-evaluate-whether-vericomposer-cha
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: Server-worker task 'phase7-evaluate-whether-vericomposer-chainselector-s-dynamic'
+      on claude-control reached status=failed. worker exited with code 1; failure signature
+      recorded for circuit breaker; pushed whatever progress existed; systemd will retry
+      up to the burst limit
+    where: /opt/veridian/ai-os/tasks/task-20260724-144911-phase7-evaluate-whether-vericomposer-cha/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-144915-phase5-remaining-ai-review-lane-read-onl
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: Server-worker task 'phase5-remaining-ai-review-lane-read-only' on claude-control
+      reached status=failed. worker exited with code 1; failure signature recorded for
+      circuit breaker; pushed whatever progress existed; systemd will retry up to the
+      burst limit
+    where: /opt/veridian/ai-os/tasks/task-20260724-144915-phase5-remaining-ai-review-lane-read-onl/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-150010-phase7-evaluate-whether-vericomposer-cha
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: Server-worker task 'phase7-evaluate-whether-vericomposer-chainselector-s-dynamic'
+      on claude-control reached status=failed. worker exited with code 1; failure signature
+      recorded for circuit breaker; pushed whatever progress existed; systemd will retry
+      up to the burst limit
+    where: /opt/veridian/ai-os/tasks/task-20260724-150010-phase7-evaluate-whether-vericomposer-cha/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-153010-phase7-evaluate-whether-vericomposer-cha
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: Server-worker task 'phase7-evaluate-whether-vericomposer-chainselector-s-dynamic'
+      on claude-control reached status=failed. worker exited with code 1; failure signature
+      recorded for circuit breaker; pushed whatever progress existed; systemd will retry
+      up to the burst limit
+    where: /opt/veridian/ai-os/tasks/task-20260724-153010-phase7-evaluate-whether-vericomposer-cha/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-160022-phase7-evaluate-whether-vericomposer-cha
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: Server-worker task 'phase7-evaluate-whether-vericomposer-chainselector-s-dynamic'
+      on claude-control reached status=failed. worker exited with code 1; failure signature
+      recorded for circuit breaker; pushed whatever progress existed; systemd will retry
+      up to the burst limit
+    where: /opt/veridian/ai-os/tasks/task-20260724-160022-phase7-evaluate-whether-vericomposer-cha/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-163011-phase7-evaluate-whether-vericomposer-cha
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: Server-worker task 'phase7-evaluate-whether-vericomposer-chainselector-s-dynamic'
+      on claude-control reached status=failed. worker exited with code 1; failure signature
+      recorded for circuit breaker; pushed whatever progress existed; systemd will retry
+      up to the burst limit
+    where: /opt/veridian/ai-os/tasks/task-20260724-163011-phase7-evaluate-whether-vericomposer-cha/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-170010-phase7-evaluate-whether-vericomposer-cha
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: Server-worker task 'phase7-evaluate-whether-vericomposer-chainselector-s-dynamic'
+      on claude-control reached status=failed. worker exited with code 1; failure signature
+      recorded for circuit breaker; pushed whatever progress existed; systemd will retry
+      up to the burst limit
+    where: /opt/veridian/ai-os/tasks/task-20260724-170010-phase7-evaluate-whether-vericomposer-cha/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-173010-phase7-evaluate-whether-vericomposer-cha
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: Server-worker task 'phase7-evaluate-whether-vericomposer-chainselector-s-dynamic'
+      on claude-control reached status=failed. worker exited with code 1; failure signature
+      recorded for circuit breaker; pushed whatever progress existed; systemd will retry
+      up to the burst limit
+    where: /opt/veridian/ai-os/tasks/task-20260724-173010-phase7-evaluate-whether-vericomposer-cha/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-180011-phase7-evaluate-whether-vericomposer-cha
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: Server-worker task 'phase7-evaluate-whether-vericomposer-chainselector-s-dynamic'
+      on claude-control reached status=failed. worker exited with code 1; failure signature
+      recorded for circuit breaker; pushed whatever progress existed; systemd will retry
+      up to the burst limit
+    where: /opt/veridian/ai-os/tasks/task-20260724-180011-phase7-evaluate-whether-vericomposer-cha/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-183102-fix-terminology-phase4-gitlink-issue
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''fix-terminology-phase4-gitlink-issue'' on claude-control
+      reached status=blocked. tier1, Superboss-approved, but the merge itself FAILED
+      (gh pr view confirms state=, mergedAt=; see supervisor.log) — needs manual attention,
+      NOT actually merged: '
+    where: /opt/veridian/ai-os/tasks/task-20260724-183102-fix-terminology-phase4-gitlink-issue/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-185145-phasex-get-owner-or-original-uncondensed
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''phasex-get-owner-or-original-uncondensed-ins'' on
+      claude-control reached status=completed. tier1, Superboss-approved, merged autonomously:
+      https://github.com/FChecklist/claude-control/pull/51'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-185145-phasex-get-owner-or-original-uncondensed/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/51'
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-185151-phase6-workflow-transition-validator-ai
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''phase6-workflow-transition-validator-ai-governance-deterministic''
+      on claude-control reached status=blocked. tier1, Superboss-approved, but the merge
+      itself FAILED (gh pr view confirms state=, mergedAt=; see supervisor.log) — needs
+      manual attention, NOT actually merged: '
+    where: /opt/veridian/ai-os/tasks/task-20260724-185151-phase6-workflow-transition-validator-ai/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-213801-fix-terminology-phase4-pr553-review-gap
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''fix-terminology-phase4-pr553-review-gap'' on claude-control
+      reached status=blocked. CLARIFIED: real deliverable (compliance-tracker PR553)
+      confirmed MERGED 2026-07-24T21:45:17Z. The claude-control-side branch for this
+      fix task had no commits to offer (phase-plan update never got made by the worker);
+      corrected the citation directly. Terminology Phase4 is genuinely done.'
+    where: /opt/veridian/ai-os/tasks/task-20260724-213801-fix-terminology-phase4-pr553-review-gap/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-214215-chatgpt-manual-bridge-workflow
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''chatgpt-manual-bridge-workflow'' on claude-control
+      reached status=completed. tier1, Superboss-approved, merged autonomously: https://github.com/FChecklist/claude-control/pull/54'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-214215-chatgpt-manual-bridge-workflow/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/54'
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-213832-phase7-part6-observability-audit-trail-l
+    project: veridian
+    type: worker-task
+    status: in-progress
+    summary: 'Server-worker task ''phase7-part6-observability-audit-trail-layer'' on
+      claude-control reached status=awaiting_human_approval. tier2, Superboss-approved,
+      held for human merge: https://github.com/FChecklist/claude-control/pull/55'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-213832-phase7-part6-observability-audit-trail-l/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/55'
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-220012-phase5-full-repo-wide-enforcement-dictio
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''phase5-full-repo-wide-enforcement-dictionary-completion''
+      on claude-control reached status=completed. tier1, Superboss-approved, merged
+      autonomously: https://github.com/FChecklist/claude-control/pull/56'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-220012-phase5-full-repo-wide-enforcement-dictio/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/56'
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260724-230014-phase2-distributed-trace-verification-wi
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''phase2-distributed-trace-verification-wiring'' on
+      claude-control reached status=completed. tier1, Superboss-approved, merged autonomously:
+      https://github.com/FChecklist/claude-control/pull/57'
+    where: '/opt/veridian/ai-os/tasks/task-20260724-230014-phase2-distributed-trace-verification-wi/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/57'
+    last_touched: '2026-07-24'
+
+  - id: WORKER-20260725-032718-wiring-engine-phase0-schema-registry
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''wiring-engine-phase0-schema-registry'' on claude-control
+      reached status=completed. tier1, Superboss-approved, merged autonomously: https://github.com/FChecklist/claude-control/pull/58'
+    where: '/opt/veridian/ai-os/tasks/task-20260725-032718-wiring-engine-phase0-schema-registry/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/58'
+    last_touched: '2026-07-25'
+
+  - id: WORKER-20260725-041130-security-audit-evaluation-and-implementa
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''security-audit-evaluation-and-implementation-plan''
+      on claude-control reached status=completed. Re-review approved (tier2). Real merge
+      conflict against master (5 other PRs merged in the meantime) resolved manually.
+      gh pr view confirms state=MERGED, PR #59.'
+    where: '/opt/veridian/ai-os/tasks/task-20260725-041130-security-audit-evaluation-and-implementa/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/59'
+    last_touched: '2026-07-25'
+
+  - id: WORKER-20260725-053025-zai-prompt-gateway-integration
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''zai-prompt-gateway-integration'' on claude-control
+      reached status=completed. tier1, Superboss-approved, merged autonomously: https://github.com/FChecklist/claude-control/pull/60'
+    where: '/opt/veridian/ai-os/tasks/task-20260725-053025-zai-prompt-gateway-integration/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/60'
+    last_touched: '2026-07-25'
+
+  - id: WORKER-20260725-053540-chrome-browser-persistent-profile
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''chrome-browser-persistent-profile'' on claude-control
+      reached status=completed. PR #61 had a real merge conflict against master (MASTER_INDEX.yaml
+      registries list, 5 other PRs merged concurrently) despite tier1 AUDIT:PASS approval
+      -- resolved manually via clone/merge/union-resolve/push, verified 99 registries
+      intact including browser_automation_profile, merged for real: gh pr view confirms
+      state=MERGED.'
+    where: '/opt/veridian/ai-os/tasks/task-20260725-053540-chrome-browser-persistent-profile/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/61'
+    last_touched: '2026-07-25'
+
+  - id: WORKER-20260725-055316-auditor-engine-phase8-master-orchestrati
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''auditor-engine-phase8-master-orchestration'' on claude-control
+      reached status=completed. tier1, Superboss-approved, merged autonomously: https://github.com/FChecklist/claude-control/pull/64'
+    where: '/opt/veridian/ai-os/tasks/task-20260725-055316-auditor-engine-phase8-master-orchestrati/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/64'
+    last_touched: '2026-07-25'
+
+  - id: WORKER-20260725-055333-wiring-engine-phase1-e2e-gateway-verific
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''wiring-engine-phase1-e2e-gateway-verification'' on
+      claude-control reached status=completed. tier1, Superboss-approved, merged autonomously:
+      https://github.com/FChecklist/claude-control/pull/62'
+    where: '/opt/veridian/ai-os/tasks/task-20260725-055333-wiring-engine-phase1-e2e-gateway-verific/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/62'
+    last_touched: '2026-07-25'
+
+  - id: WORKER-20260725-055456-fix-contradiction-detector-false-positiv
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''fix-contradiction-detector-false-positives'' on claude-control
+      reached status=completed. tier1, Superboss-approved, merged autonomously: https://github.com/FChecklist/claude-control/pull/63'
+    where: '/opt/veridian/ai-os/tasks/task-20260725-055456-fix-contradiction-detector-false-positiv/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/63'
+    last_touched: '2026-07-25'
+
+  - id: WORKER-20260725-063204-module-scoped-zai-gap-audit
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''module-scoped-zai-gap-audit'' on claude-control reached
+      status=completed. tier1, Superboss-approved, merged autonomously: https://github.com/FChecklist/claude-control/pull/65'
+    where: '/opt/veridian/ai-os/tasks/task-20260725-063204-module-scoped-zai-gap-audit/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/65'
+    last_touched: '2026-07-25'
+
+  - id: WORKER-20260725-080900-owner-engine-mandatory-gate-implementati
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''owner-engine-mandatory-gate-implementation'' on claude-control
+      reached status=completed. tier1, Superboss-approved, merged autonomously: https://github.com/FChecklist/claude-control/pull/66'
+    where: '/opt/veridian/ai-os/tasks/task-20260725-080900-owner-engine-mandatory-gate-implementati/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/66'
+    last_touched: '2026-07-25'

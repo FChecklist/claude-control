@@ -48,7 +48,7 @@
       ]
     },
     "domain": {
-      "type": "string",
+      "type": ["string", "null"],
       "description": "One of the 15 audit domains, or 'observability-layer-self-check', or null for repo-wide events (e.g. audit_run_started before per-domain fan-out begins).",
       "enum": [
         "business-capability", "ddd", "enterprise-architecture", "clean-architecture",

@@ -1,0 +1,736 @@
+{
+  "evalId": "eval-D0T-2026-07-24T19:20:34",
+  "results": {
+    "version": 3,
+    "timestamp": "2026-07-24T19:20:34.700Z",
+    "prompts": [
+      {
+        "id": "036b755679bd6331018a8a430571c00a4fb9b9f46bd5a41b560477e4ae69e84e",
+        "raw": "[{\"role\":\"system\",\"content\":\"{{system_prompt}}\"},{\"role\":\"user\",\"content\":\"{{user_message}}\"}]",
+        "label": "[{\"role\":\"system\",\"content\":\"{{system_prompt}}\"},{\"role\":\"user\",\"content\":\"{{user_message}}\"}]",
+        "provider": "groq:llama-3.3-70b-versatile",
+        "metrics": {
+          "score": 2,
+          "testPassCount": 2,
+          "testFailCount": 0,
+          "testErrorCount": 0,
+          "assertPassCount": 8,
+          "assertFailCount": 0,
+          "totalLatencyMs": 1199,
+          "tokenUsage": {
+            "prompt": 0,
+            "completion": 0,
+            "cached": 727,
+            "total": 727,
+            "numRequests": 2,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            },
+            "assertions": {
+              "total": 0,
+              "prompt": 0,
+              "completion": 0,
+              "cached": 0,
+              "numRequests": 0,
+              "completionDetails": {
+                "reasoning": 0,
+                "acceptedPrediction": 0,
+                "rejectedPrediction": 0,
+                "cacheReadInputTokens": 0,
+                "cacheCreationInputTokens": 0
+              }
+            }
+          },
+          "namedScores": {},
+          "namedScoresCount": {},
+          "namedScoreWeights": {},
+          "cost": 0
+        }
+      }
+    ],
+    "results": [
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains-json",
+                "value": {
+                  "type": "object",
+                  "required": [
+                    "riskLevel",
+                    "budgetRiskReasoning",
+                    "scheduleRiskReasoning",
+                    "recommendedAction"
+                  ],
+                  "properties": {
+                    "riskLevel": {
+                      "type": "string",
+                      "enum": [
+                        "low",
+                        "medium",
+                        "high"
+                      ]
+                    },
+                    "budgetRiskReasoning": {
+                      "type": "string"
+                    },
+                    "scheduleRiskReasoning": {
+                      "type": "string"
+                    },
+                    "recommendedAction": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "parses via production's stripJsonFence()+JSON.parse",
+              "data": {
+                "riskLevel": "high",
+                "budgetRiskReasoning": "The project is currently over budget by $400,000, which is a significant variance of 40% from the original budget of $1,000,000. This indicates a high risk of budget overrun.",
+                "scheduleRiskReasoning": "More than half of the tasks (24 out of 40) are delayed, which suggests a high risk of schedule delays and potential further budget overruns due to extended timelines.",
+                "recommendedAction": "Immediately review and adjust the project budget and schedule to mitigate further overruns and delays. Consider re-prioritizing tasks, re-allocating resources, and negotiating with stakeholders to get the project back on track."
+              },
+              "assertion": {
+                "type": "javascript",
+                "value": "file://assertions.js:parses"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "riskLevel is a valid enum value",
+              "assertion": {
+                "type": "javascript",
+                "value": "file://assertions.js:riskLevelIsValid"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "riskLevel=high as the prompt's own variance/delay rule expects for this severely over-budget, badly-delayed input",
+              "assertion": {
+                "type": "javascript",
+                "value": "file://assertions.js:riskLevelIsHigh"
+              }
+            }
+          ]
+        },
+        "id": "23e8120e-657a-4032-bcc3-9bff37050908",
+        "latencyMs": 635,
+        "namedScores": {},
+        "prompt": {
+          "raw": "[{\"role\":\"system\",\"content\":\"You assess budget-overrun and schedule-delay risk for a construction project. You will be given real, already-computed numbers (budget, actual spend, variance, delayed task count, total task count) as JSON -- never estimate or invent a number that isn't in the input. Classify the project's risk level and explain why in plain language a non-technical site manager would understand. Respond with ONLY JSON matching: { \\\"riskLevel\\\": \\\"low\\\" | \\\"medium\\\" | \\\"high\\\", \\\"budgetRiskReasoning\\\": string, \\\"scheduleRiskReasoning\\\": string, \\\"recommendedAction\\\": string }. Base riskLevel primarily on variance (actual vs budget) and the proportion of delayed tasks -- do not speculate about causes you have no data for.\"},{\"role\":\"user\",\"content\":\"{\\\"budget\\\":1000000,\\\"actualSpend\\\":1400000,\\\"variance\\\":400000,\\\"delayedTaskCount\\\":24,\\\"totalTaskCount\\\":40}\"}]",
+          "label": "[{\"role\":\"system\",\"content\":\"{{system_prompt}}\"},{\"role\":\"user\",\"content\":\"{{user_message}}\"}]",
+          "config": {}
+        },
+        "promptId": "036b755679bd6331018a8a430571c00a4fb9b9f46bd5a41b560477e4ae69e84e",
+        "promptIdx": 0,
+        "provider": {
+          "id": "groq:llama-3.3-70b-versatile",
+          "label": ""
+        },
+        "response": {
+          "output": "```json\n{\n  \"riskLevel\": \"high\",\n  \"budgetRiskReasoning\": \"The project is currently over budget by $400,000, which is a significant variance of 40% from the original budget of $1,000,000. This indicates a high risk of budget overrun.\",\n  \"scheduleRiskReasoning\": \"More than half of the tasks (24 out of 40) are delayed, which suggests a high risk of schedule delays and potential further budget overruns due to extended timelines.\",\n  \"recommendedAction\": \"Immediately review and adjust the project budget and schedule to mitigate further overruns and delays. Consider re-prioritizing tasks, re-allocating resources, and negotiating with stakeholders to get the project back on track.\"\n}\n```",
+          "tokenUsage": {
+            "cached": 386,
+            "total": 386
+          },
+          "cached": true,
+          "latencyMs": 635,
+          "finishReason": "stop",
+          "guardrails": {
+            "flagged": false
+          },
+          "metadata": {
+            "http": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                "alt-svc": "h3=\":443\"; ma=86400",
+                "cache-control": "private, max-age=0, no-store, no-cache, must-revalidate",
+                "cf-cache-status": "[REDACTED]",
+                "cf-ray": "[REDACTED]",
+                "connection": "keep-alive",
+                "content-type": "application/json",
+                "date": "Fri, 24 Jul 2026 19:18:31 GMT",
+                "server": "cloudflare",
+                "set-cookie": "[REDACTED]",
+                "strict-transport-security": "max-age=15552000",
+                "transfer-encoding": "chunked",
+                "vary": "Origin",
+                "via": "[REDACTED]",
+                "x-groq-region": "fra",
+                "x-ratelimit-limit-requests": "[REDACTED]",
+                "x-ratelimit-limit-tokens": "[REDACTED]",
+                "x-ratelimit-remaining-requests": "[REDACTED]",
+                "x-ratelimit-remaining-tokens": "[REDACTED]",
+                "x-ratelimit-reset-requests": "[REDACTED]",
+                "x-ratelimit-reset-tokens": "[REDACTED]",
+                "x-request-id": "[REDACTED]"
+              }
+            }
+          }
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "severely over-budget, badly delayed project -- expect riskLevel=high per the prompt's own rule",
+          "vars": {
+            "system_prompt": "file://../prompts/construction_detect_budget_schedule_risk.txt",
+            "user_message": "{\"budget\":1000000,\"actualSpend\":1400000,\"variance\":400000,\"delayedTaskCount\":24,\"totalTaskCount\":40}"
+          },
+          "assert": [
+            {
+              "type": "contains-json",
+              "value": {
+                "type": "object",
+                "required": [
+                  "riskLevel",
+                  "budgetRiskReasoning",
+                  "scheduleRiskReasoning",
+                  "recommendedAction"
+                ],
+                "properties": {
+                  "riskLevel": {
+                    "type": "string",
+                    "enum": [
+                      "low",
+                      "medium",
+                      "high"
+                    ]
+                  },
+                  "budgetRiskReasoning": {
+                    "type": "string"
+                  },
+                  "scheduleRiskReasoning": {
+                    "type": "string"
+                  },
+                  "recommendedAction": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            {
+              "type": "javascript",
+              "value": "file://assertions.js:parses"
+            },
+            {
+              "type": "javascript",
+              "value": "file://assertions.js:riskLevelIsValid"
+            },
+            {
+              "type": "javascript",
+              "value": "file://assertions.js:riskLevelIsHigh"
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 0,
+        "tokenUsage": {
+          "prompt": 0,
+          "completion": 0,
+          "cached": 386,
+          "total": 386,
+          "numRequests": 1,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0
+          },
+          "assertions": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            }
+          }
+        },
+        "vars": {
+          "system_prompt": "file://../prompts/construction_detect_budget_schedule_risk.txt",
+          "user_message": "{\"budget\":1000000,\"actualSpend\":1400000,\"variance\":400000,\"delayedTaskCount\":24,\"totalTaskCount\":40}"
+        },
+        "metadata": {
+          "http": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+              "alt-svc": "h3=\":443\"; ma=86400",
+              "cache-control": "private, max-age=0, no-store, no-cache, must-revalidate",
+              "cf-cache-status": "[REDACTED]",
+              "cf-ray": "[REDACTED]",
+              "connection": "keep-alive",
+              "content-type": "application/json",
+              "date": "Fri, 24 Jul 2026 19:18:31 GMT",
+              "server": "cloudflare",
+              "set-cookie": "[REDACTED]",
+              "strict-transport-security": "max-age=15552000",
+              "transfer-encoding": "chunked",
+              "vary": "Origin",
+              "via": "[REDACTED]",
+              "x-groq-region": "fra",
+              "x-ratelimit-limit-requests": "[REDACTED]",
+              "x-ratelimit-limit-tokens": "[REDACTED]",
+              "x-ratelimit-remaining-requests": "[REDACTED]",
+              "x-ratelimit-remaining-tokens": "[REDACTED]",
+              "x-ratelimit-reset-requests": "[REDACTED]",
+              "x-ratelimit-reset-tokens": "[REDACTED]",
+              "x-request-id": "[REDACTED]"
+            }
+          },
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains-json",
+                "value": {
+                  "type": "object",
+                  "required": [
+                    "riskLevel",
+                    "budgetRiskReasoning",
+                    "scheduleRiskReasoning",
+                    "recommendedAction"
+                  ],
+                  "properties": {
+                    "riskLevel": {
+                      "type": "string",
+                      "enum": [
+                        "low",
+                        "medium",
+                        "high"
+                      ]
+                    },
+                    "budgetRiskReasoning": {
+                      "type": "string"
+                    },
+                    "scheduleRiskReasoning": {
+                      "type": "string"
+                    },
+                    "recommendedAction": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "parses via production's stripJsonFence()+JSON.parse",
+              "data": {
+                "riskLevel": "low",
+                "budgetRiskReasoning": "The project is currently under budget, with a variance of -$50,000, which indicates that the actual spend is less than the budgeted amount.",
+                "scheduleRiskReasoning": "There are no delayed tasks out of a total of 40 tasks, which suggests that the project is on track in terms of schedule.",
+                "recommendedAction": "Continue to monitor the project's progress and adjust as necessary to ensure that the project remains on track and under budget."
+              },
+              "assertion": {
+                "type": "javascript",
+                "value": "file://assertions.js:parses"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "riskLevel is a valid enum value",
+              "assertion": {
+                "type": "javascript",
+                "value": "file://assertions.js:riskLevelIsValid"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "riskLevel=low as expected for an on-budget, on-schedule project",
+              "assertion": {
+                "type": "javascript",
+                "value": "file://assertions.js:riskLevelIsLow"
+              }
+            }
+          ]
+        },
+        "id": "1077d88e-b1f7-4978-87c0-bc45b8a82b48",
+        "latencyMs": 564,
+        "namedScores": {},
+        "prompt": {
+          "raw": "[{\"role\":\"system\",\"content\":\"You assess budget-overrun and schedule-delay risk for a construction project. You will be given real, already-computed numbers (budget, actual spend, variance, delayed task count, total task count) as JSON -- never estimate or invent a number that isn't in the input. Classify the project's risk level and explain why in plain language a non-technical site manager would understand. Respond with ONLY JSON matching: { \\\"riskLevel\\\": \\\"low\\\" | \\\"medium\\\" | \\\"high\\\", \\\"budgetRiskReasoning\\\": string, \\\"scheduleRiskReasoning\\\": string, \\\"recommendedAction\\\": string }. Base riskLevel primarily on variance (actual vs budget) and the proportion of delayed tasks -- do not speculate about causes you have no data for.\"},{\"role\":\"user\",\"content\":\"{\\\"budget\\\":1000000,\\\"actualSpend\\\":950000,\\\"variance\\\":-50000,\\\"delayedTaskCount\\\":0,\\\"totalTaskCount\\\":40}\"}]",
+          "label": "[{\"role\":\"system\",\"content\":\"{{system_prompt}}\"},{\"role\":\"user\",\"content\":\"{{user_message}}\"}]",
+          "config": {}
+        },
+        "promptId": "036b755679bd6331018a8a430571c00a4fb9b9f46bd5a41b560477e4ae69e84e",
+        "promptIdx": 0,
+        "provider": {
+          "id": "groq:llama-3.3-70b-versatile",
+          "label": ""
+        },
+        "response": {
+          "output": "{\n  \"riskLevel\": \"low\",\n  \"budgetRiskReasoning\": \"The project is currently under budget, with a variance of -$50,000, which indicates that the actual spend is less than the budgeted amount.\",\n  \"scheduleRiskReasoning\": \"There are no delayed tasks out of a total of 40 tasks, which suggests that the project is on track in terms of schedule.\",\n  \"recommendedAction\": \"Continue to monitor the project's progress and adjust as necessary to ensure that the project remains on track and under budget.\"\n}",
+          "tokenUsage": {
+            "cached": 341,
+            "total": 341
+          },
+          "cached": true,
+          "latencyMs": 564,
+          "finishReason": "stop",
+          "guardrails": {
+            "flagged": false
+          },
+          "metadata": {
+            "http": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                "alt-svc": "h3=\":443\"; ma=86400",
+                "cache-control": "private, max-age=0, no-store, no-cache, must-revalidate",
+                "cf-cache-status": "[REDACTED]",
+                "cf-ray": "[REDACTED]",
+                "connection": "keep-alive",
+                "content-type": "application/json",
+                "date": "Fri, 24 Jul 2026 19:18:31 GMT",
+                "server": "cloudflare",
+                "set-cookie": "[REDACTED]",
+                "strict-transport-security": "max-age=15552000",
+                "transfer-encoding": "chunked",
+                "vary": "Origin",
+                "via": "[REDACTED]",
+                "x-groq-region": "fra",
+                "x-ratelimit-limit-requests": "[REDACTED]",
+                "x-ratelimit-limit-tokens": "[REDACTED]",
+                "x-ratelimit-remaining-requests": "[REDACTED]",
+                "x-ratelimit-remaining-tokens": "[REDACTED]",
+                "x-ratelimit-reset-requests": "[REDACTED]",
+                "x-ratelimit-reset-tokens": "[REDACTED]",
+                "x-request-id": "[REDACTED]"
+              }
+            }
+          }
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "on-budget, on-schedule project -- expect riskLevel=low",
+          "vars": {
+            "system_prompt": "file://../prompts/construction_detect_budget_schedule_risk.txt",
+            "user_message": "{\"budget\":1000000,\"actualSpend\":950000,\"variance\":-50000,\"delayedTaskCount\":0,\"totalTaskCount\":40}"
+          },
+          "assert": [
+            {
+              "type": "contains-json",
+              "value": {
+                "type": "object",
+                "required": [
+                  "riskLevel",
+                  "budgetRiskReasoning",
+                  "scheduleRiskReasoning",
+                  "recommendedAction"
+                ],
+                "properties": {
+                  "riskLevel": {
+                    "type": "string",
+                    "enum": [
+                      "low",
+                      "medium",
+                      "high"
+                    ]
+                  },
+                  "budgetRiskReasoning": {
+                    "type": "string"
+                  },
+                  "scheduleRiskReasoning": {
+                    "type": "string"
+                  },
+                  "recommendedAction": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            {
+              "type": "javascript",
+              "value": "file://assertions.js:parses"
+            },
+            {
+              "type": "javascript",
+              "value": "file://assertions.js:riskLevelIsValid"
+            },
+            {
+              "type": "javascript",
+              "value": "file://assertions.js:riskLevelIsLow"
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 1,
+        "tokenUsage": {
+          "prompt": 0,
+          "completion": 0,
+          "cached": 341,
+          "total": 341,
+          "numRequests": 1,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0
+          },
+          "assertions": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            }
+          }
+        },
+        "vars": {
+          "system_prompt": "file://../prompts/construction_detect_budget_schedule_risk.txt",
+          "user_message": "{\"budget\":1000000,\"actualSpend\":950000,\"variance\":-50000,\"delayedTaskCount\":0,\"totalTaskCount\":40}"
+        },
+        "metadata": {
+          "http": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+              "alt-svc": "h3=\":443\"; ma=86400",
+              "cache-control": "private, max-age=0, no-store, no-cache, must-revalidate",
+              "cf-cache-status": "[REDACTED]",
+              "cf-ray": "[REDACTED]",
+              "connection": "keep-alive",
+              "content-type": "application/json",
+              "date": "Fri, 24 Jul 2026 19:18:31 GMT",
+              "server": "cloudflare",
+              "set-cookie": "[REDACTED]",
+              "strict-transport-security": "max-age=15552000",
+              "transfer-encoding": "chunked",
+              "vary": "Origin",
+              "via": "[REDACTED]",
+              "x-groq-region": "fra",
+              "x-ratelimit-limit-requests": "[REDACTED]",
+              "x-ratelimit-limit-tokens": "[REDACTED]",
+              "x-ratelimit-remaining-requests": "[REDACTED]",
+              "x-ratelimit-remaining-tokens": "[REDACTED]",
+              "x-ratelimit-reset-requests": "[REDACTED]",
+              "x-ratelimit-reset-tokens": "[REDACTED]",
+              "x-request-id": "[REDACTED]"
+            }
+          },
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      }
+    ],
+    "stats": {
+      "successes": 2,
+      "failures": 0,
+      "errors": 0,
+      "tokenUsage": {
+        "prompt": 0,
+        "completion": 0,
+        "cached": 727,
+        "total": 727,
+        "numRequests": 2,
+        "completionDetails": {
+          "reasoning": 0,
+          "acceptedPrediction": 0,
+          "rejectedPrediction": 0,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0
+        },
+        "assertions": {
+          "total": 0,
+          "prompt": 0,
+          "completion": 0,
+          "cached": 0,
+          "numRequests": 0,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0
+          }
+        }
+      },
+      "durationMs": 87,
+      "evaluationDurationMs": 87
+    }
+  },
+  "config": {
+    "tags": {},
+    "description": "construction.detect_budget_schedule_risk -- production prompt regression suite",
+    "prompts": [
+      "[{\"role\":\"system\",\"content\":\"{{system_prompt}}\"},{\"role\":\"user\",\"content\":\"{{user_message}}\"}]"
+    ],
+    "providers": [
+      {
+        "id": "groq:llama-3.3-70b-versatile",
+        "config": {
+          "temperature": 0.2,
+          "max_tokens": 400
+        }
+      }
+    ],
+    "tests": [
+      {
+        "description": "severely over-budget, badly delayed project -- expect riskLevel=high per the prompt's own rule",
+        "vars": {
+          "user_message": "{\"budget\":1000000,\"actualSpend\":1400000,\"variance\":400000,\"delayedTaskCount\":24,\"totalTaskCount\":40}"
+        },
+        "assert": [
+          {
+            "type": "javascript",
+            "value": "file://assertions.js:riskLevelIsHigh"
+          }
+        ]
+      },
+      {
+        "description": "on-budget, on-schedule project -- expect riskLevel=low",
+        "vars": {
+          "user_message": "{\"budget\":1000000,\"actualSpend\":950000,\"variance\":-50000,\"delayedTaskCount\":0,\"totalTaskCount\":40}"
+        },
+        "assert": [
+          {
+            "type": "javascript",
+            "value": "file://assertions.js:riskLevelIsLow"
+          }
+        ]
+      }
+    ],
+    "env": {},
+    "defaultTest": {
+      "vars": {
+        "system_prompt": "file://../prompts/construction_detect_budget_schedule_risk.txt"
+      },
+      "assert": [
+        {
+          "type": "contains-json",
+          "value": {
+            "type": "object",
+            "required": [
+              "riskLevel",
+              "budgetRiskReasoning",
+              "scheduleRiskReasoning",
+              "recommendedAction"
+            ],
+            "properties": {
+              "riskLevel": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ]
+              },
+              "budgetRiskReasoning": {
+                "type": "string"
+              },
+              "scheduleRiskReasoning": {
+                "type": "string"
+              },
+              "recommendedAction": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "type": "javascript",
+          "value": "file://assertions.js:parses"
+        },
+        {
+          "type": "javascript",
+          "value": "file://assertions.js:riskLevelIsValid"
+        }
+      ],
+      "options": {},
+      "metadata": {}
+    },
+    "outputPath": [
+      ".last_result.json"
+    ],
+    "extensions": [],
+    "metadata": {},
+    "evaluateOptions": {}
+  },
+  "shareableUrl": null,
+  "metadata": {
+    "promptfooVersion": "0.121.19",
+    "nodeVersion": "v24.18.0",
+    "platform": "linux",
+    "arch": "x64",
+    "exportedAt": "2026-07-24T19:20:34.813Z",
+    "evaluationCreatedAt": "2026-07-24T19:20:34.700Z"
+  },
+  "vars": [
+    "system_prompt",
+    "user_message"
+  ],
+  "runtimeOptions": {
+    "eventSource": "cli",
+    "showProgressBar": false,
+    "repeat": 1,
+    "maxConcurrency": 4,
+    "cache": true
+  }
+}

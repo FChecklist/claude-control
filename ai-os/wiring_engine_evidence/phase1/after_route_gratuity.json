@@ -1,0 +1,74 @@
+{
+  "entity_id": "route-RT-gratuity_calculator-001",
+  "entity_type": "route",
+  "source_system": "github",
+  "path": "repos/compliance-tracker/src/components/veri-chat/ChainSelector.tsx -> repos/compliance-tracker/src/lib/engines/payroll-engine.ts",
+  "relationships": [
+    {
+      "target_entity_id": "file-3d5cbfced750",
+      "relationship_type": "originates_at",
+      "evidence": "repos/compliance-tracker/src/components/veri-chat/ChainSelector.tsx"
+    },
+    {
+      "target_entity_id": "file-03f2dd8e634a",
+      "relationship_type": "terminates_at",
+      "evidence": "repos/compliance-tracker/src/lib/engines/payroll-engine.ts"
+    },
+    {
+      "target_entity_id": "engine-01",
+      "relationship_type": "hops_through",
+      "evidence": "hop 1: Intent Engine (live) via repos/compliance-tracker/src/components/veri-chat/ChainSelector.tsx"
+    },
+    {
+      "target_entity_id": "engine-17",
+      "relationship_type": "hops_through",
+      "evidence": "hop 2: UI Composition Engine (live) via repos/compliance-tracker/src/components/veri-chat/ChainSelector.tsx"
+    },
+    {
+      "target_entity_id": "gateway-G04",
+      "relationship_type": "hops_through",
+      "evidence": "hop 3: UserChannel (live) via repos/compliance-tracker/src/lib/supabase/auth-guard.ts"
+    },
+    {
+      "target_entity_id": "gateway-G03",
+      "relationship_type": "hops_through",
+      "evidence": "hop 4: Organization (live) via repos/compliance-tracker/src/lib/services/context.ts"
+    },
+    {
+      "target_entity_id": "engine-02",
+      "relationship_type": "hops_through",
+      "evidence": "hop 5: Context Engine (live) via repos/compliance-tracker/src/lib/services/context.ts"
+    },
+    {
+      "target_entity_id": "engine-03",
+      "relationship_type": "hops_through",
+      "evidence": "hop 6: Capability Registry Engine (live) via repos/compliance-tracker/src/lib/services/capability-tree-service.ts"
+    },
+    {
+      "target_entity_id": "engine-08",
+      "relationship_type": "hops_through",
+      "evidence": "hop 7: Workflow Engine (live) via repos/compliance-tracker/src/lib/task-execution-engine.ts"
+    },
+    {
+      "target_entity_id": "engine-06",
+      "relationship_type": "hops_through",
+      "evidence": "hop 8: Rule Engine (live) via repos/compliance-tracker/src/lib/guardrail-registrations.ts"
+    },
+    {
+      "target_entity_id": null,
+      "relationship_type": "registered_capability_match",
+      "evidence": "capability_registry row found live (confidence=1.0, ai_required=False)"
+    }
+  ],
+  "last_verified_ts": "2026-07-25T06:03:21.146101+00:00",
+  "verification_status": "VERIFIED_MATCH",
+  "source_ref": [
+    "route_registry_schema",
+    "capability_registry"
+  ],
+  "metadata": {
+    "capability_name": "gratuity_calculator",
+    "test_status": "passing",
+    "trace_verification_status": "instrumented_unverified"
+  }
+}

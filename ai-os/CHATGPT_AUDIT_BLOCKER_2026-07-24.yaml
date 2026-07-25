@@ -1,0 +1,150 @@
+id: CHATGPT_AUDIT_BLOCKER
+created_ts: '2026-07-24T14:23:04Z'
+created_by_task: task-20260724-141323-chatgpt-audit-workspace-infrastructure
+instruction: INS-20260724-141101-89d8
+status: resolved_via_manual_bridge
+resolved_ts: '2026-07-24T21:52:04Z'
+resolved_by_task: task-20260724-214215-chatgpt-manual-bridge-workflow
+resolved_instruction: INS-20260724-214122-f0ed
+
+what: >
+  All ChatGPT Audit Workspace infrastructure is built and verified live:
+  /opt/veridian/chatgpt-audit/ (23 domain subfolders), scripts/chatgpt_audit_guard.py
+  (mechanical write-scope enforcement -- --test-path/write both verified live
+  against real production and lookalike-prefix paths), scripts/chatgpt_audit_versioning.py
+  (real incrementing audit_id + never-overwrite filename allocation),
+  ai-os/CHATGPT_AUDIT_RECORD_SCHEMA_2026-07-24.yaml (the audit record schema), and
+  scripts/generate_chatgpt_audit_index.py (machine-generated
+  ai-os/CHATGPT_AUDIT_MASTER_CATALOGUE_2026-07-24.yaml + local searchable index). Full
+  detail: registries.chatgpt_audit_workspace in ai-os/MASTER_INDEX.yaml.
+
+  RESOLUTION (2026-07-24, task-20260724-214215-chatgpt-manual-bridge-workflow): the
+  Owner made a real, final decision on this blocker -- no OPENAI_API_KEY will be
+  supplied. Instead, a manual-bridge workflow is now live: the Owner copies a
+  script-generated request into a free ChatGPT web session by hand, then saves
+  the pasted-back response for a script to parse, validate, and write
+  version-safe through the existing guard/versioning infrastructure. See
+  how_to_run_it below for the exact commands. This replaces the
+  awaiting_owner_decision state below (kept for history) -- the API-key path is
+  not being pursued for this workspace.
+
+how_to_run_it:
+  step_1_generate_request: >
+    python3 scripts/generate_chatgpt_audit_request.py --domain <Domain>
+    (one of the 23 domain subfolders, e.g. Security) -- discovers real,
+    git-tracked files for that domain in the target repo (default
+    compliance-tracker, override with --repo), embeds their real content plus
+    the real commit hash/branch, and writes a ready-to-copy request .txt to
+    /opt/veridian/chatgpt-audit/_pending_requests/<Domain>-request-<ts>.txt via
+    scripts/chatgpt_audit_guard.py's guarded_write.
+  step_2_owner_manual_action: >
+    The Owner copies everything below the "COPY BELOW THIS LINE" marker in
+    that .txt file into a new, free ChatGPT web session, and saves ChatGPT's
+    full YAML reply to a file.
+  step_3_ingest_response: >
+    python3 scripts/ingest_chatgpt_audit_response.py --domain <Domain> --file
+    <saved-response-file> (or pipe the response via stdin) -- validates every
+    required ai-os/CHATGPT_AUDIT_RECORD_SCHEMA_2026-07-24.yaml field, allocates
+    a real audit_id + never-overwritten path via
+    scripts/chatgpt_audit_versioning.py (audit_id/timestamp are always
+    allocated fresh here, never trusted from ChatGPT's own output), writes the
+    record through scripts/chatgpt_audit_guard.py's guarded_write, and
+    refreshes ai-os/CHATGPT_AUDIT_MASTER_CATALOGUE_2026-07-24.yaml +
+    the local index automatically.
+  verified_live_this_task: >
+    Full round trip run for real: `--domain Security` produced a real request
+    naming 6 real compliance-tracker files at commit
+    c4d74e8766cec27c7a349aea627f574650dde241; a hand-crafted synthetic YAML
+    fixture (standing in for a real ChatGPT reply) was ingested and landed at
+    /opt/veridian/chatgpt-audit/Security/AUDIT-000008-20260724T215204Z.yaml,
+    with the master catalogue correctly showing total_audit_records: 1,
+    Security: 1 afterwards.
+
+why_not_an_api_call: >
+  There is no OPENAI_API_KEY to fabricate or silently substitute, and the
+  Owner asked specifically for ChatGPT; routing this through Claude, GROQ, or
+  OpenRouter instead without saying so would be exactly the kind of silent
+  model substitution this session's "no lying" rule forbids. The Owner's real
+  decision (this task) is to use ChatGPT's free web session manually instead
+  of supplying a paid API key -- this is the resolution, not a workaround.
+
+original_awaiting_owner_decision_state_kept_for_history:
+  needed_action: >
+    Owner supplies a real OPENAI_API_KEY, added to /opt/veridian/shared/.env
+    (same convention already used there for ANTHROPIC_API_KEY/GROQ_API_KEY/etc),
+    and confirms the exact OpenAI model name to use (see model field below --
+    intentionally left for the Owner to name, not assumed).
+  why_not_done_automatically: >
+    There is no key to fabricate or silently substitute. The Owner asked
+    specifically for ChatGPT to produce these audits; routing this through
+    Claude, GROQ, or OpenRouter instead without saying so would be exactly the
+    kind of silent model substitution this session's "no lying" rule forbids.
+    This blocker is filed honestly rather than worked around with a different
+    provider. SUPERSEDED: the Owner has since decided (task-20260724-214215)
+    to use the manual-bridge workflow above instead of ever supplying a key.
+
+exact_call_shape_once_key_exists:
+  model: 'OWNER_TO_CONFIRM -- do not assume a specific OpenAI model name without the Owner naming it (CONSTRAINTS: "must use the model the Owner actually named when it runs")'
+  api: 'OpenAI Chat Completions or Responses API -- POST https://api.openai.com/v1/chat/completions (or /v1/responses, whichever the confirmed model requires)'
+  auth: 'Authorization: Bearer $OPENAI_API_KEY, sourced from /opt/veridian/shared/.env'
+  read_scope: >
+    Only the files/modules explicitly listed in a given audit request's
+    files_analysed (ai-os/CHATGPT_AUDIT_RECORD_SCHEMA_2026-07-24.yaml) -- those
+    file contents are read and included in the prompt (or supplied via a
+    retrieval step); ChatGPT is never given broader repository access than
+    that explicit list.
+  prompt_template: |
+    SYSTEM: You are auditing VERIDIAN AI OS source code for gaps,
+    duplication, and incompleteness against the standards listed below. You
+    have READ-ONLY access to the files listed in READ_SCOPE. You do not have
+    write access to any production source -- your output is a single YAML
+    document, nothing else. Output must match
+    ai-os/CHATGPT_AUDIT_RECORD_SCHEMA_2026-07-24.yaml exactly: every required
+    field populated, no fabricated file paths, no fabricated linkage ids
+    (capability/workflow/metadata/business_rule/database/api/ui/report/document
+    -- omit a linkage field rather than invent one).
+
+    STANDARDS_USED: {{standards_used}}
+    READ_SCOPE (files_analysed): {{files_analysed}}
+    MODULES_ANALYSED: {{modules_analysed}}
+    REPOSITORY_VERSION: {{repository_version}}
+    COMMIT_HASH: {{commit_hash}}
+
+    USER: <the real file contents for each path in READ_SCOPE, concatenated
+    with a path header per file>
+  output_write_path: >
+    The ONLY way the resulting YAML may reach disk: allocate the target path
+    via `python3 scripts/chatgpt_audit_versioning.py allocate --subfolder
+    <Domain>`, then write the model's output through `python3
+    scripts/chatgpt_audit_guard.py write --path <allocated path> --stdin`.
+    The calling code must never call open()/write() directly on a
+    ChatGPT-authored path -- routing every write through the guard script is
+    the mechanical guarantee, not a comment in the prompt.
+  post_write: >
+    `python3 scripts/generate_chatgpt_audit_index.py` to refresh the local
+    searchable index and ai-os/CHATGPT_AUDIT_MASTER_CATALOGUE_2026-07-24.yaml.
+
+owner_decision_needed:
+  question: >
+    SUPERSEDED (see resolved_ts/resolved_by_task above) -- originally: supply
+    a real OPENAI_API_KEY and confirm the exact OpenAI model name to use.
+  real_decision_made: >
+    The Owner decided against supplying an OPENAI_API_KEY and instead approved
+    the manual-bridge workflow documented in how_to_run_it above (no API key,
+    ChatGPT's free web session used manually). This is a real, final decision
+    for this workflow, not a placeholder pending further input.
+  registered_in: >
+    ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml#chatgpt-audit-openai-api-key
+    (status: resolved_via_manual_bridge)
+
+scope_note: >
+  The exact_call_shape_once_key_exists section above documents the API-key
+  call shape that was designed but never built, kept here for reference only
+  -- it is not the path this workspace uses going forward. The real, live
+  path is scripts/generate_chatgpt_audit_request.py +
+  scripts/ingest_chatgpt_audit_response.py (how_to_run_it above), built and
+  round-trip tested by task-20260724-214215-chatgpt-manual-bridge-workflow.
+  Generating the full audit corpus one domain/batch at a time remains real
+  follow-on work using these scripts -- this task's own CONSTRAINTS
+  explicitly scope it to the manual-bridge scripts themselves, not a full
+  audit pass.

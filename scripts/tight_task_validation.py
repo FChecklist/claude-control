@@ -58,6 +58,27 @@ CONTRADICTION_STOPWORDS = {
     "it", "this", "that", "under", "any", "all", "circumstances", "as", "is", "be",
 }
 
+# Phrases that make a nearby prohibition/requirement CONDITIONAL rather than
+# absolute -- e.g. "do not add X without an approved citation" only forbids
+# adding X in the unapproved case, and "build X where missing" only requires
+# X where it doesn't already exist. Keyword overlap across one of these
+# boundaries is not evidence of a real conflict: the two clauses are often
+# each other's complement (forbidden-without-citation vs required-only-
+# where-missing), not a restatement of the same unconditional rule.
+QUALIFIER_PHRASES = [
+    "without", "unless", "except", "excluding", "only when", "only if",
+    "already", "where missing", "not yet", "so long as", "provided that",
+    "as long as",
+]
+
+# Bare negation markers, scanned across the WHOLE requirement text (not just
+# after one of the fixed NEGATION_TRIGGERS phrases) so that a word used only
+# inside a negative/prohibitive clause elsewhere in the prompt (e.g. "...are
+# not implemented", "isn't required", "adds no cron entries") is never
+# counted as an affirmative requirement. Two negatives about the same thing
+# are agreement, not a contradiction.
+NEGATION_MARKER_WORDS = {"not", "never", "without", "excluding", "no"}
+
 VALID_TIERS = ["mechanical", "integrative", "judgment"]
 
 FIELD_HEADER_RE = re.compile(r"^##\s*(OBJECTIVE|SCOPE|SUCCESS_CRITERIA|EXPECTED_OUTPUT|CONSTRAINTS|COMPLEXITY_TIER|KNOWN_CONTEXT)\s*$", re.IGNORECASE | re.MULTILINE)
@@ -160,6 +181,74 @@ def content_words(text, limit=None):
     return words[:limit] if limit else words
 
 
+def _truncate_at_qualifier(text):
+    """Cut `text` at the first QUALIFIER_PHRASES match. Text after a
+    qualifier describes the exception/condition attached to a prohibition,
+    not the core prohibited action, and must not be compared for overlap
+    (e.g. "add cron entries without an approved citation" -> the core
+    prohibited action is "add cron entries"; "an approved citation" is what
+    makes it OK, not part of what's forbidden)."""
+    cut = len(text)
+    for phrase in QUALIFIER_PHRASES:
+        idx = text.find(phrase)
+        if idx != -1 and idx < cut:
+            cut = idx
+    return text[:cut]
+
+
+def _scoped_token_positions(tokens, window=10):
+    """Token indices that fall within `window` tokens of a negation marker
+    (not/never/without/excluding/no/n't) or a QUALIFIER_PHRASES match.
+    Content words at these positions are either part of a negative/
+    prohibitive clause ("...are not implemented", "adds no cron entries")
+    or a scope-narrowing qualifier ("...where missing", "...already done")
+    -- neither states a plain, unconditional requirement."""
+    scoped = set()
+    for i, tok in enumerate(tokens):
+        if tok in NEGATION_MARKER_WORDS or tok.endswith("n't"):
+            lo, hi = max(0, i - window), min(len(tokens), i + window + 1)
+            scoped.update(range(lo, hi))
+    for phrase in QUALIFIER_PHRASES:
+        phrase_tokens = phrase.split()
+        n = len(phrase_tokens)
+        for i in range(len(tokens) - n + 1):
+            if tokens[i:i + n] == phrase_tokens:
+                lo, hi = max(0, i - window), min(len(tokens), i + n + window)
+                scoped.update(range(lo, hi))
+    return scoped
+
+
+def _max_unconditional_cluster_overlap(requirement_text, phrase_words, cluster_window=12):
+    """Slide a `cluster_window`-token span across requirement_text and
+    return the largest number of `phrase_words` found TOGETHER within any
+    single span that isn't scoped (see _scoped_token_positions).
+
+    This is deliberately a local, clustered check rather than "does this
+    word appear anywhere in the document": a Constraints prohibition like
+    "do not add cron entries" sharing one word ("cron") with an unrelated
+    sentence about a cron-driven entrypoint, and a different word
+    ("entries") with yet another unrelated sentence elsewhere, is not
+    evidence those words were restated together as a real, conflicting
+    requirement -- they never actually co-occur. Only a genuine local
+    restatement of the same cluster counts."""
+    tokens = re.findall(r"[a-z0-9']+", requirement_text)
+    scoped = _scoped_token_positions(tokens)
+    phrase_set = set(phrase_words)
+    best = 0
+    n = len(tokens)
+    for start in range(n):
+        end = min(n, start + cluster_window)
+        if any(p in scoped for p in range(start, end)):
+            continue
+        span_words = set(tokens[start:end])
+        overlap = len(phrase_set & span_words)
+        if overlap > best:
+            best = overlap
+            if best == len(phrase_set):
+                break
+    return best
+
+
 def detect_field_contradiction(task):
     constraint_text = (task.get("constraints") or "").lower()
     if not constraint_text.strip():
@@ -169,7 +258,6 @@ def detect_field_contradiction(task):
     ).lower()
     if not requirement_text.strip():
         return {"detected": False}
-    requirement_words = set(content_words(requirement_text))
 
     for trigger in NEGATION_TRIGGERS:
         search_from = 0
@@ -177,11 +265,11 @@ def detect_field_contradiction(task):
             idx = constraint_text.find(trigger, search_from)
             if idx == -1:
                 break
-            after = constraint_text[idx + len(trigger):]
+            after = _truncate_at_qualifier(constraint_text[idx + len(trigger):])
             words = content_words(after, 6)
             if len(words) >= 2:
-                matched = [w for w in words if w in requirement_words]
-                if len(matched) >= 2 and len(matched) / len(words) >= 0.6:
+                matched = _max_unconditional_cluster_overlap(requirement_text, words)
+                if matched >= 2 and matched / len(words) >= 0.6:
                     return {"detected": True, "conflictingTerm": " ".join(words)}
             search_from = idx + len(trigger)
     return {"detected": False}
