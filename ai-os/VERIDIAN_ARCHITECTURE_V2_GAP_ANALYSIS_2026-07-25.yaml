@@ -25,15 +25,66 @@ meta:
     drizzle-orm/Postgres server-rendered SaaS apps, plus this repo''s own stdlib-only Python
     cron/dispatch scripts) -- no overlap in the underlying technology stack beyond the shared
     "prompt"/"engine" vocabulary.'
-  headline_finding: 'Of 105 itemized real requirements, 85 (81.0%) are not_implemented, 20
-    (19.0%) are partially_implemented via real but narrow/differently-scoped prior art, and 0
+  headline_finding: 'Of 105 itemized real requirements, 73 (69.5%) are not_implemented, 32
+    (30.5%) are partially_implemented via real but narrow/differently-scoped prior art, and 0
     (0%) are already_implemented as this document specifies them. This is an honest count, not
     a manufactured one -- see per-item evidence below. The document describes what is, in
     effect, a new, third kind of software this system has never built: neither the compliance-
     tracker/projexa business-SaaS product line nor this ai-os orchestration system''s own
     prompt-dispatch tooling (scripts/prompt_gateway/) match its browser-native local-inference
-    product surface. The 8 partial items are real, narrowly-scoped prior art this plan must
-    extend rather than duplicate -- listed in known_partial_prior_art below and cited per-item.'
+    product surface. The 10 known_partial_prior_art groups below are real, narrowly-scoped prior
+    art this plan must extend rather than duplicate -- cited per-item. UPDATED 2026-07-25 by
+    task-20260725-160908-task2-dedup-integration-audit''s independent re-verification: see
+    re_verification block below -- this task changed 12 of the original 85 not_implemented
+    verdicts to partially_implemented after finding two real, live, previously-uncited prior-art
+    systems (prompt_os and embedding_similarity_pgvector, both added to known_partial_prior_art
+    below) via direct code reads, not name matching. The other 93 items were independently
+    re-checked against the same real systems and held up as originally verdicted (see
+    re_verification.items_confirmed_unchanged for the specific re-check evidence on the highest-
+    risk naming-collision items).'
+  re_verification:
+    performed_by_task: task-20260725-160908-task2-dedup-integration-audit
+    performed_ts: '2026-07-25'
+    method: 'Independent re-derivation, not a rubber-stamp: read the real current code/registries
+      cited by each item (and searched for prior art NOT cited, via repo-wide grep for
+      pgvector/hnsw/embedding/semantic-cache/promptfoo/DATABASE_CATALOG prompt* tables) rather
+      than trusting the original task''s own evidence text at face value. Found and verified two
+      real, live, previously-missed prior-art systems this way (see known_partial_prior_art ids
+      prompt_os and embedding_similarity_pgvector below), then re-checked all 12 items those two
+      systems bear on plus 10 additional highest-naming-collision-risk items (business rule,
+      permission, policy, compliance, governance, audit, cost optimization, dependency, gateway
+      integration, knowledge sync) against real code with a separate verification pass.'
+    items_re_checked: 105
+    verdicts_changed: 12
+    verdicts_confirmed_unchanged: 93
+    not_implemented_before: 85
+    not_implemented_after: 73
+    partially_implemented_before: 20
+    partially_implemented_after: 32
+    already_implemented_before: 0
+    already_implemented_after: 0
+    changed_item_ids: [engine-prompt-registry, engine-prompt-version, engine-prompt-lifecycle,
+      engine-prompt-testing, engine-prompt-benchmark, engine-prompt-similarity, cache-l5,
+      engine-l5-semantic-cache, engine-testing-regression, stack-prompt-engineering,
+      governance-gitops-workflow, engine-audit]
+    evidence_only_corrections_no_verdict_change: [metadata-schema-200-fields,
+      engine-prompt-validation, governance-lifecycle-state-machine, cache-l7,
+      engine-cost-optimization, engine-gateway-integration, engine-permission,
+      pipeline-prompt-construction]
+    items_confirmed_unchanged_highest_risk: 'engine-business-rule, engine-dependency,
+      engine-policy, engine-compliance, engine-governance, engine-knowledge-sync: independently
+      re-read the real files the original evidence cited (guardrail-registrations.ts,
+      WIRING_ENGINE_SCHEMA_2026-07-25.yaml entity_type enum, task-execution-engine.ts
+      enforcePolicy() call sites, compliance-service.ts VALID_TYPES, AI_GOVERNANCE_REVIEW /
+      GOVERNANCE_PHASE15_CLOSEOUT scope, KNOWLEDGE_ENGINE_*.yaml browser-reference grep) and
+      confirmed zero functional overlap with the document''s prompt-lifecycle-scoped
+      requirement -- these hold as originally verdicted, not softened.'
+    constraint_honored: 'No genuinely confirmed gap was softened to make the numbers look
+      smaller -- all 12 changes are backed by newly-found, cited, real file:line evidence of
+      actual running code/tables/CI, and every changed item remains partially_implemented (never
+      already_implemented), because in every case the real prior art found is still materially
+      narrower than the document''s full requirement (see each item''s own evidence for the
+      specific gap that survives).'
   known_partial_prior_art:
     - id: prompt_gateway
       path: scripts/prompt_gateway/ (gateway.py, engine/{classifier,prompt_engine,context_engine,snip_engine}.py)
@@ -84,6 +135,75 @@ meta:
         Architecturally reusable for the document''s Permission Engine (RBAC for prompt access/
         edit/approve/deploy) but not wired to any prompt-lifecycle object today, because no prompt
         registry exists for it to protect.'
+    - id: prompt_os
+      path: 'repos/compliance-tracker/src/lib/prompt-os-resolver.ts (resolvePromptTemplate()),
+        src/lib/services/prompt-os-service.ts (createPromptVersion/listPromptVersions),
+        src/lib/services/prompt-eval-service.ts (createEvalCase/runEval/listEvalRuns),
+        src/app/(app)/prompt-eval/page.tsx, src/app/api/settings/prompts/route.ts,
+        src/app/api/prompt-eval/**, drizzle/0019_wave22_prompt_os_and_observability_schema.sql,
+        drizzle/0080_wave94_prompt_eval_framework.sql, drizzle/0197_prompt_cache_metrics.sql'
+      registry: 'compliance.prompt_templates, compliance.prompt_versions,
+        compliance.prompt_eval_cases, compliance.prompt_eval_runs,
+        compliance.prompt_cache_metrics (ai-os/DATABASE_CATALOG.json; all 5 already tracked as
+        entity_type=table, source_system=supabase rows in
+        ai-os/WIRING_ENGINE_REGISTRY_2026-07-25.json -- confirmed present by this task, NOT new
+        table entities this task adds)'
+      real_capability: 'A real, live, previously-uncited "Prompt OS": prompt_templates
+        (unique templateKey) + prompt_versions (integer auto-increment version, free-text
+        label in {production,staging,null}, isActive flag) is resolved by
+        resolvePromptTemplate(templateKey, label) and called from ~20 real production sites
+        (chat-service.ts, task-execution-engine.ts, api/ai/orchestrate/route.ts,
+        api/help/ask/route.ts, and 12+ other services) -- a real, discoverable
+        (listPromptVersions()), versioned (immutable per-version rows, auto-incrementing
+        integer, NOT semver), admin-gated (hasRole(dbUser,"veridian_admin") in auth-guard.ts,
+        wired to createPromptVersion/createEvalCase/runEval) prompt registry + version store.
+        prompt-eval-service.ts + prompt_eval_cases/prompt_eval_runs is a real, live, UI-backed
+        (prompt-eval/page.tsx) prompt test/benchmark harness: creates test cases, runs them
+        against a real LLM via callLLM(), scores pass/fail by keyword-containment, and records
+        latency_ms/prompt_tokens/estimated_cost_usd per run. createPromptVersion also fires a
+        real (best-effort) recordAuditTrigger(event:"new_prompt", entityType:"prompt_version")
+        audit event. Separately, .github/workflows/ai-prompt-evals.yml runs promptfoo (a real
+        installed tool, promptfooconfig.yaml) against hardcoded copies of prompt-bearing files
+        on every PR touching them -- real and live, but NOT wired to prompt_templates/
+        prompt_versions at runtime and NOT a required/blocking merge check (Owner has not added
+        it to branch protection).'
+      caveat: 'No semantic versioning (MAJOR.MINOR.PATCH), no rollback function, no diff view,
+        and no Draft/Review/Staging/Production/Deprecated state machine -- only the 2-value
+        label convention (production/staging), unilaterally settable by any veridian_admin with
+        no approval gate, eval threshold, or canary duration. No prompt schema-validation logic
+        (only Drizzle''s column-level types). prompt_cache_metrics is NOT a cache (no hit/miss
+        lookup path found -- fire-and-forget observability logging only, see
+        src/lib/prompt-cache/metrics.ts). This is real, live, narrowly-scoped prior art the new
+        phases must extend, not a full match for any single document engine.'
+    - id: embedding_similarity_pgvector
+      path: 'repos/compliance-tracker/src/lib/embeddings.ts (findSimilar/storeEmbedding,
+        real OpenRouter text-embedding-3-small / Groq nomic-embed-text / hash-fallback chain),
+        src/lib/services/capability-registry-service.ts (findSimilarCapabilities,
+        auditDuplicateCapabilities), src/lib/services/instruction-execution-cache-service.ts,
+        src/lib/services/assistant-memory-service.ts,
+        drizzle/0083_wave99_vector_search_optimization.sql (idx_embeddings_vector_hnsw)'
+      registry: 'compliance.embeddings (vector(1536) column, real pgvector HNSW cosine index),
+        compliance.instruction_execution_cache, compliance.embedding_cache'
+      real_capability: 'A real, live pgvector-backed embedding similarity engine, previously
+        uncited anywhere in this gap analysis: embeddings.ts runs a genuine cosine-distance
+        query (`1 - (e.embedding <=> $vector::vector) as score ... ORDER BY e.embedding <=>
+        $vector::vector`) against a real HNSW index over real embeddings (OpenRouter
+        text-embedding-3-small primary path, degrades to a deterministic hash-pseudo-vector if
+        no API key is configured at runtime). capability-registry-service.ts uses it for
+        capability-entity duplicate detection (worker_agent/automation_rule/module/
+        prompt_pattern/dynamic_chain entity types, threshold 0.5-0.92).
+        instruction-execution-cache-service.ts is a genuine SEMANTIC CACHE: pgvector HNSW
+        cosine similarity >=0.95 reuses a prior resolved chat instruction''s answer for a new,
+        semantically-similar one -- functionally the closest real match anywhere in this system
+        to the document''s L5 Semantic Cache / engine-prompt-similarity requirements.'
+      caveat: 'Scoped to capability-registry entities and chat-instruction resolution, not to
+        the document''s "prompt" object (which does not exist as a distinct entity_type in this
+        index). No configurable per-caller similarity threshold or TTL policy layered on top
+        (0.95/0.5/0.92 are hardcoded per call site). Embedding quality depends on
+        OPENROUTER_API_KEY actually being set at runtime -- verify separately before relying on
+        it as production-quality prior art to extend. compliance.llm_response_cache (separate
+        table) is NOT semantic -- exact SHA-256 hash of (orgId,provider,model,systemPrompt,
+        userMessage), 24h TTL; real cache infra, but not embedding-based.'
     - id: engines_gateways_architecture_pattern
       path: ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml + ai-os/CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml
       real_capability: 'Real, live, mechanically-verified 20-engine/10-gateway architecture
@@ -130,28 +250,47 @@ items:
     domain: prompt_core
     name: Prompt Registry Engine
     requirement: Master registry of every prompt across all lifecycle states, unique ID, indexing, discovery.
-    verdict: not_implemented
-    evidence: 'No prompt registry exists in any repo. scripts/prompt_gateway/ has no registry table
-      (only a per-invocation VD- id counter, ai-os/PROMPT_GATEWAY_2026-07-25.yaml vd_id_namespace
-      -- explicitly "NEVER a task id, a knowledge-engine row id" and scoped to raw-chat pre-processing
-      records only, not compiled/versioned prompts). Confirmed by grep: no "prompt_registry" table
-      in ai-os/DATABASE_CATALOG.json (444 tables catalogued, none named prompt*).'
+    verdict: partially_implemented
+    evidence: 'CORRECTED 2026-07-25 (task-20260725-160908): the original "no prompt registry
+      exists... none named prompt*" claim was wrong -- ai-os/DATABASE_CATALOG.json DOES have
+      compliance.prompt_templates (unique templateKey) and compliance.prompt_versions tables,
+      real and live: resolvePromptTemplate(templateKey,label) (prompt-os-resolver.ts) is called
+      from ~20 real production sites, and listPromptVersions() (prompt-os-service.ts) gives full
+      discovery across all templates+versions. This is a real, live prompt registry with unique
+      IDs, indexing, and discovery -- but no lifecycle-STATE indexing (only a free-text
+      production/staging label, not Draft/Review/Staging/Production/Deprecated), no diff/search
+      UI beyond a flat list. scripts/prompt_gateway/ remains a separate, non-registry filter as
+      originally noted.'
+    known_partial_prior_art_ref: prompt_os
 
   - id: engine-prompt-version
     domain: prompt_core
     name: Prompt Version Engine
     requirement: Semantic versioning (MAJOR.MINOR.PATCH), full diff history, immutable snapshots, rollback.
-    verdict: not_implemented
-    evidence: No prompt versioning mechanism exists. Git itself provides diff/rollback for files
-      generally, but nothing implements prompt-object-specific semantic versioning.
+    verdict: partially_implemented
+    evidence: 'CORRECTED 2026-07-25 (task-20260725-160908): compliance.prompt_versions
+      (createPromptVersion, prompt-os-service.ts) is real, live, prompt-object-specific
+      versioning -- each version is an immutable new row (auto-incrementing integer, not
+      overwritten), with a real, live 20-call-site consumer. Real but narrower than the
+      requirement: integer auto-increment, not MAJOR.MINOR.PATCH semver; no diff view between
+      versions; no rollback function (only re-promoting the label to an older version row
+      manually, no dedicated API for it).'
+    known_partial_prior_art_ref: prompt_os
 
   - id: engine-prompt-lifecycle
     domain: prompt_core
     name: Prompt Lifecycle Engine
     requirement: State machine (Draft/Review/Staging/Production/Deprecated) with approval gates.
-    verdict: not_implemented
-    evidence: No such state machine exists for prompts. compliance-tracker has unrelated approval-workflow-service.ts
-      for business approvals (different domain object entirely).
+    verdict: partially_implemented
+    evidence: 'CORRECTED 2026-07-25 (task-20260725-160908): compliance.prompt_versions carries a
+      real, live, used label column in {production, staging, null} (prompt-os-service.ts
+      createPromptVersion demotes any prior holder of the same label on publish) -- a real but
+      thin 2-of-5-state analog, with NO Draft/Review/Deprecated states and NO approval gate
+      (any single veridian_admin can flip label unilaterally, per auth-guard.ts hasRole check --
+      no second-approver, no eval threshold, no canary duration). compliance-tracker''s unrelated
+      approval-workflow-service.ts remains a different domain object (business approvals), not
+      cited as a match.'
+    known_partial_prior_art_ref: prompt_os
 
   - id: engine-prompt-compiler
     domain: prompt_core
@@ -196,25 +335,46 @@ items:
     name: Prompt Validation Engine
     requirement: Schema completeness check, required field validation, structural integrity verification.
     verdict: not_implemented
-    evidence: No prompt schema exists to validate against (see engine-prompt-registry -- nothing to validate).
+    evidence: 'CORRECTED 2026-07-25 (task-20260725-160908): engine-prompt-registry''s verdict
+      changed -- compliance.prompt_templates/prompt_versions do exist and carry Drizzle
+      column-level types (see prompt_os prior art). But no VALIDATION LOGIC exists on top of
+      that schema (no required-field/structural-integrity checker runs before a version is
+      created; createPromptVersion only checks role + auto-increments version, no content
+      schema check) -- verdict correctly remains not_implemented for the validation-ENGINE
+      requirement specifically, on corrected grounds.'
+    known_partial_prior_art_ref: prompt_os
 
   - id: engine-prompt-testing
     domain: prompt_core
     name: Prompt Testing Engine
     requirement: Automated test execution -- unit, regression, adversarial, shadow testing of prompts.
-    verdict: not_implemented
-    evidence: 'registries.testing_engine_irvf (ai-os/TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml) is
-      a real, live route/API test-generation-and-replay engine for compliance-tracker''s HTTP routes
-      -- confirmed by reading its own scope (route auto-generation on capability creation, distributed
-      trace verification, route replay/diff) to be about API ROUTE testing, not prompt testing. Not
-      a functional match; no prompt-specific test engine exists.'
+    verdict: partially_implemented
+    evidence: 'CORRECTED 2026-07-25 (task-20260725-160908): testing_engine_irvf is confirmed
+      route-scoped as originally stated (not a match) -- but a real, previously-uncited,
+      prompt-SPECIFIC test engine does exist: prompt-eval-service.ts (createEvalCase/runEval,
+      admin-gated) + compliance.prompt_eval_cases/prompt_eval_runs + a working UI
+      (prompt-eval/page.tsx) let an admin create a test case for a prompt version, run it
+      against a real LLM (callLLM()), and record pass/fail (keyword-containment scoring, not an
+      LLM judge) plus latency/tokens/cost per run. Separately, .github/workflows/ai-prompt-evals.yml
+      runs promptfoo (a real installed tool) against prompt-bearing files on every touching PR --
+      real automated execution, but non-blocking and not itself wired to prompt_eval_runs. Real,
+      narrower than "unit/regression/adversarial/shadow" -- no adversarial or shadow-testing mode,
+      and the CI path is advisory only.'
+    known_partial_prior_art_ref: prompt_os
 
   - id: engine-prompt-benchmark
     domain: prompt_core
     name: Prompt Benchmark Engine
     requirement: Measure speed, accuracy, cost, quality against standardized benchmark datasets.
-    verdict: not_implemented
-    evidence: No benchmark dataset or harness for prompts exists in any repo.
+    verdict: partially_implemented
+    evidence: 'CORRECTED 2026-07-25 (task-20260725-160908): compliance.prompt_eval_cases is a
+      real, reusable, standardized test-case store, and compliance.prompt_eval_runs captures
+      real per-run latency_ms, prompt_tokens, estimated_cost_usd, and passed (keyword-scored
+      quality) -- literally speed+cost+quality measurement per prompt version, live and UI-backed
+      (prompt-eval-service.ts, prompt-eval/page.tsx). Narrower than the requirement: no
+      accuracy metric beyond keyword-containment pass/fail, no cross-prompt standardized
+      leaderboard/benchmark-suite concept, single-org scoped.'
+    known_partial_prior_art_ref: prompt_os
 
   - id: engine-prompt-portability
     domain: prompt_core
@@ -250,11 +410,18 @@ items:
     domain: intelligence_matching
     name: Prompt Similarity Engine
     requirement: Semantic matching via local embeddings for duplicate detection and clustering.
-    verdict: not_implemented
-    evidence: No embedding generation or similarity search exists anywhere in either product repo
-      or this ops system (confirmed by the same repo-wide grep that found zero transformers.js/
-      onnx/embedding-model references outside litert-spike-embeddings' own tokenizer scaffold,
-      which computes no similarity index).
+    verdict: partially_implemented
+    evidence: 'CORRECTED 2026-07-25 (task-20260725-160908): the "no embedding generation or
+      similarity search exists anywhere" claim was wrong -- repos/compliance-tracker/src/lib/embeddings.ts
+      is a real, live embedding-similarity engine: generates embeddings (OpenRouter
+      text-embedding-3-small, 1536-dim, with a Groq/hash-vector fallback chain) and runs a real
+      pgvector cosine-distance query (`e.embedding <=> $vector::vector`) over a real HNSW index
+      (idx_embeddings_vector_hnsw). capability-registry-service.ts''s findSimilarCapabilities/
+      auditDuplicateCapabilities use it for duplicate detection today (threshold 0.5-0.92) --
+      the exact "duplicate detection and clustering via embeddings" shape the requirement
+      describes, just for capability-registry entities, not "prompts", and SERVER-side (not
+      "local" browser-side as the document''s browser-native framing implies).'
+    known_partial_prior_art_ref: embedding_similarity_pgvector
 
   - id: engine-intent
     domain: intelligence_matching
@@ -353,11 +520,14 @@ items:
     name: Permission Engine
     requirement: RBAC for prompt access, edit, approve, and deploy operations.
     verdict: partially_implemented
-    evidence: 'repos/compliance-tracker/src/lib/services/permission-service.ts is a real, live,
-      generic org/user RBAC service used across the product today. Architecturally reusable (same
-      library, same role model) but not wired to any prompt-lifecycle object, because no prompt
-      registry/lifecycle exists yet for it to gate (see engine-prompt-registry, engine-prompt-lifecycle).'
-    known_partial_prior_art_ref: permission_service
+    evidence: 'ENRICHED 2026-07-25 (task-20260725-160908): permission-service.ts is confirmed real,
+      live, generic org/user RBAC, unwired to prompts, as originally stated. CORRECTION to the
+      "not wired to any prompt-lifecycle object" claim, though: a DIFFERENT, real permission check
+      IS live-wired to prompt-lifecycle objects today -- auth-guard.ts''s hasRole(dbUser,
+      "veridian_admin") gates prompt-os-service.ts''s createPromptVersion/createEvalCase/runEval
+      (see prompt_os prior art). Still narrower than the requirement: one coarse admin role, not
+      distinct access/edit/approve/deploy permissions.'
+    known_partial_prior_art_ref: prompt_os
 
   - id: engine-policy
     domain: business_policy
@@ -395,25 +565,37 @@ items:
     domain: business_policy
     name: Audit Engine (prompt-lifecycle sense)
     requirement: Complete, append-only history of every prompt change, access, and execution event.
-    verdict: not_implemented
-    evidence: 'The existing Audit Engine (engine 19 of 20_ENGINES_10_GATEWAYS) and knowledge_engine''s
-      own append-only KE- record history are both real, live, generic audit-log MECHANISMS this
-      plan''s phases should reuse (per zero-duplication CONSTRAINT) rather than build a 3rd audit
-      log from scratch -- but neither currently records any prompt-object change/access/execution
-      event, because no prompt registry exists yet to generate those events. Real gap for the
-      specific requirement; reusable mechanism noted for the phase plan.'
+    verdict: partially_implemented
+    evidence: 'CORRECTED 2026-07-25 (task-20260725-160908): re-verified the 20-Engines Audit
+      Engine and AUDITOR_ENGINE independently -- both confirmed CORRECT non-matches
+      (AUDITOR_ENGINE_EVENT_SCHEMA_2026-07-24.schema.json is itself explicit: "Enforcement/
+      emission code is a later phase; this is the contract" -- schema-only, not yet emitting;
+      scoped to source-code-scan domains, not prompt objects). But the "no prompt registry
+      exists yet to generate those events" premise is now false (see engine-prompt-registry) --
+      and a real, live prompt-CHANGE audit event already exists: prompt-os-service.ts''s
+      createPromptVersion calls recordAuditTrigger(event:"new_prompt",
+      entityType:"prompt_version") on every version creation (best-effort -- skipped if the
+      acting admin has no orgId). Real but narrow: covers CHANGE (creation) only, not ACCESS or
+      EXECUTION events, and is best-effort rather than guaranteed append-only.'
+    known_partial_prior_art_ref: prompt_os
 
   - id: engine-cost-optimization
     domain: business_policy
     name: Cost Optimization Engine
     requirement: Per-prompt cost tracking, budget guardrails, cost-reduction recommendations.
     verdict: partially_implemented
-    evidence: 'llm-client.ts''s estimateCostUsd()/estimateCacheSavingsUsd() (repos/compliance-tracker/src/lib/llm-client.ts:212,229)
-      are real, live per-CALL cost estimation functions. registries.credit_spend_governance
-      (this ops system''s own session/task cost tracking, scripts/cost_reconciliation.py,
-      scripts/cost_usage_60min.py) is a real, separate cost-governance mechanism, but for THIS
-      ops system''s own AI-agent spend, not per-prompt product cost. Neither implements
-      budget guardrails or cost-reduction recommendations for a prompt registry (which does not exist).'
+    evidence: 'ENRICHED 2026-07-25 (task-20260725-160908): llm-client.ts''s estimateCostUsd()/
+      estimateCacheSavingsUsd() and scripts/cost_reconciliation.py + scripts/cost_usage_60min.py
+      (confirmed real, live, with COST_ALERT_THRESHOLD_USD budget-guardrail alerting to
+      ATTENTION.md -- genuine budget-guardrail mechanism, just scoped to this ops system''s own
+      agent spend, not a prompt product) both re-confirmed as originally described. Additional
+      real evidence found: compliance.prompt_eval_runs already records real estimated_cost_usd
+      per prompt-eval run (prompt_os prior art), and compliance.llm_response_cache is a real,
+      live exact-hash (SHA-256 of orgId/provider/model/systemPrompt/userMessage) 24h-TTL cache
+      that reduces real repeat-LLM-call cost -- a genuine cost-REDUCTION mechanism (not
+      "recommendations", but real savings), previously uncited. Still no per-prompt-registry
+      BUDGET GUARDRAIL (a cap that blocks/warns before an over-budget prompt executes).'
+    known_partial_prior_art_ref: llm_client
     known_partial_prior_art_ref: llm_client
 
   # -- Security and Quality Engines (6) --
@@ -599,8 +781,11 @@ items:
     domain: caching_data
     name: L5 Semantic Cache Engine
     requirement: Embedding-based similarity caching with configurable thresholds and TTL policies.
-    verdict: not_implemented
-    evidence: See cache-l5.
+    verdict: partially_implemented
+    evidence: 'CORRECTED 2026-07-25 (task-20260725-160908): see cache-l5 -- instruction-execution-cache-service.ts
+      is real, live prior art for this exact requirement (server-side, hardcoded threshold, not
+      the full configurable-threshold/browser-tiered engine the document specifies).'
+    known_partial_prior_art_ref: embedding_similarity_pgvector
 
   - id: engine-l8-server-cache
     domain: caching_data
@@ -690,12 +875,15 @@ items:
     name: Gateway Integration Engine
     requirement: API gateway routing, rate limiting, protocol translation for external integrations.
     verdict: partially_implemented
-    evidence: 'The existing 10-gateway architecture (G01-G10, ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml)
-      is a real, live, partially-wired gateway-boundary system (WIRING_ENGINE_PHASE_PLAN_2026-07-25.yaml
-      phase 1 proved a real request crosses G03/G04 boundaries) -- for business-task dispatch routing,
-      not LLM-provider gateway routing. The SEPARATION PATTERN (named gateway boundaries with
-      verified hop evidence) is directly reusable rather than duplicable; the specific LLM-provider
-      routing/rate-limiting/protocol-translation function does not exist.'
+    evidence: 'REFINED 2026-07-25 (task-20260725-160908): the existing 10-gateway architecture is
+      confirmed real and live (WIRING_ENGINE_REGISTRY_2026-07-25.json records a verified G03/G04
+      hop, task-20260725-055333, PR #62). Tighter citation than the original G03/G04 (Organization/
+      UserChannel) reference: G05 ("AI" -- "Boundary all AI/model calls route through for
+      provider/model resolution, policy, and audit") is the real, purpose-built LLM-provider
+      gateway boundary, implemented by mother-router.ts/model-tier-eligibility.ts -- confirmed by
+      reading those files to do real provider/model SELECTION routing. Still no rate-limiting or
+      protocol-translation code in either file, so the specific requirement remains a real gap --
+      but G05, not G03/G04, is the gateway this plan''s phases should integrate with.'
     known_partial_prior_art_ref: engines_gateways_architecture_pattern
 
   - id: engine-knowledge-sync
@@ -740,10 +928,16 @@ items:
     domain: sync_infrastructure
     name: Testing and Regression Engine (prompt-lifecycle sense)
     requirement: Automated regression testing triggered by prompt version changes with threshold enforcement.
-    verdict: not_implemented
-    evidence: 'testing_engine_irvf triggers route tests on capability_registry inserts (a real,
-      live, different trigger and different tested object -- API routes, not prompt versions).
-      No functional match.'
+    verdict: partially_implemented
+    evidence: 'CORRECTED 2026-07-25 (task-20260725-160908): testing_engine_irvf''s API-route
+      scoping (not prompt versions) confirmed as originally stated -- no match there. But a real,
+      previously-uncited trigger does exist: .github/workflows/ai-prompt-evals.yml runs on PRs
+      touching a fixed list of prompt-bearing files (including prompt-os-resolver.ts), running
+      promptfoo regression assertions against a real LLM. Narrower than the requirement: the
+      trigger is file-path-based (git diff), not a DB-driven "prompt_version row changed" event,
+      and it explicitly has NO threshold enforcement blocking merge (not a required status
+      check, by the workflow''s own header).'
+    known_partial_prior_art_ref: prompt_os
 
   - id: engine-performance-profiling
     domain: sync_infrastructure
@@ -820,8 +1014,13 @@ items:
     name: 'Pipeline Layer 4: Prompt Construction (Stages 13-18)'
     requirement: Machine prompt build, optimization, compression, hashing, fingerprinting, semantic-cache lookup -- 30ms budget.
     verdict: partially_implemented
-    evidence: prompt_engine.py builds and compresses a machine_prompt (real). No hash generation,
-      no semantic fingerprint, no L5 semantic-cache lookup (see cache-l5) exist.
+    evidence: 'prompt_engine.py builds and compresses a machine_prompt (real). No hash generation,
+      no semantic fingerprint exist in prompt_gateway itself. CORRECTED 2026-07-25
+      (task-20260725-160908): cache-l5''s verdict changed to partially_implemented --
+      instruction-execution-cache-service.ts is a real, live L5-equivalent semantic-cache lookup
+      (pgvector HNSW, >=0.95 threshold), just not wired to prompt_gateway''s own pipeline. Verdict
+      here remains partially_implemented on the same (deepen, don''t duplicate) grounds as
+      before.'
     known_partial_prior_art_ref: prompt_gateway
 
   - id: pipeline-verification
@@ -902,8 +1101,17 @@ items:
     domain: cache_levels
     name: 'L5: Semantic Cache (embedding similarity)'
     requirement: 10-30ms, 10K embeddings, TTL + similarity threshold.
-    verdict: not_implemented
-    evidence: No embedding index or similarity-threshold cache exists anywhere.
+    verdict: partially_implemented
+    evidence: 'CORRECTED 2026-07-25 (task-20260725-160908): the "no embedding index or
+      similarity-threshold cache exists anywhere" claim was wrong. compliance.instruction_execution_cache
+      (instruction-execution-cache-service.ts) is a real, live semantic cache: real pgvector HNSW
+      cosine-similarity index, hardcoded similarity threshold (>=0.95), reuses a prior resolved
+      chat instruction''s answer for a new, semantically-similar one -- functionally the closest
+      real match anywhere in this system to this exact requirement. Real gaps vs the requirement:
+      server-side only (not the browser L5 tier the document specifies), no configurable
+      per-caller threshold (hardcoded 0.95), TTL policy not confirmed present, capacity not
+      bounded to 10K.'
+    known_partial_prior_art_ref: embedding_similarity_pgvector
 
   - id: cache-l6
     domain: cache_levels
@@ -918,7 +1126,14 @@ items:
     name: 'L7: Metadata Cache (prompt metadata, permission, config)'
     requirement: 1-5ms, 50K entries, TTL + version-aware invalidation.
     verdict: not_implemented
-    evidence: No prompt-metadata cache exists (no prompt metadata schema exists yet -- see item metadata-schema-200-fields).
+    evidence: 'CORRECTED 2026-07-25 (task-20260725-160908): a prompt metadata schema now exists
+      (see metadata-schema-200-fields, narrower than 200+ fields but real), so the "no prompt
+      metadata schema exists yet" premise is corrected. A candidate table, compliance.prompt_cache_metrics,
+      does exist -- but is confirmed NOT a cache (src/lib/prompt-cache/metrics.ts::recordPromptCacheMetric
+      is fire-and-forget observability logging only; no hit/miss lookup path, no read-then-serve
+      logic found). Verdict correctly remains not_implemented: no real metadata CACHE (with
+      TTL + version-aware invalidation) exists, on corrected grounds.'
+    known_partial_prior_art_ref: prompt_os
 
   - id: cache-l8
     domain: cache_levels
@@ -983,8 +1198,16 @@ items:
     domain: tech_stack
     name: Prompt Engineering Stack (DSPy, promptfoo, DeepEval, XGrammar, Guidance/Outlines, LangSmith/LangFuse pattern)
     requirement: All 8 named prompt-engineering tools installed and wired.
-    verdict: not_implemented
-    evidence: None of the 8 named tools are installed anywhere (confirmed absent by the same grep).
+    verdict: partially_implemented
+    evidence: 'CORRECTED 2026-07-25 (task-20260725-160908): "none of the 8 named tools are
+      installed anywhere" was wrong for promptfoo specifically -- repos/compliance-tracker has a
+      real promptfooconfig.yaml and .github/workflows/ai-prompt-evals.yml that installs
+      promptfoo@0.121.19 in CI and runs it against real prompt-bearing files with llm-rubric/
+      contains/contains-json assertions on a real LLM (Groq), on every touching PR. Real and
+      live (1 of 8 tools), but non-blocking (not a required status check). DSPy, DeepEval,
+      XGrammar, Guidance, Outlines, and LangSmith/LangFuse remain confirmed absent (0 hits in any
+      package.json/requirements.txt across all repos).'
+    known_partial_prior_art_ref: prompt_os
 
 # ============================================================================
 # ITEMS -- Cross-cutting requirements (2.5, 2.6, 2.7, 2.8, 2.9)
@@ -1005,9 +1228,18 @@ items:
       Analytics/Security/Performance/AI/Browser/Cache/Gateway/Version/Dependency/Execution/Audit/
       Learning/Testing categories) attached to every registered prompt.
     verdict: not_implemented
-    evidence: No prompt object exists to carry metadata (see engine-prompt-registry); no schema
-      of this shape exists in ai-os/DATABASE_CATALOG.json's 444 real tables or any repo's type
-      definitions.
+    evidence: 'CORRECTED 2026-07-25 (task-20260725-160908): the "no prompt object exists... no
+      schema of this shape exists" claim was wrong -- ai-os/DATABASE_CATALOG.json''s 444 tables
+      DO include 5 real prompt-related tables (compliance.prompt_templates 6 cols,
+      prompt_versions 8 cols incl. label/isActive, prompt_eval_cases 8 cols, prompt_eval_runs 17
+      cols incl. latency_ms/prompt_tokens/estimated_cost_usd/passed, prompt_cache_metrics 11
+      cols) -- see engine-prompt-registry / prompt_os prior art. Verdict correctly remains
+      not_implemented on corrected grounds: ~50 real columns across 5 tables is nowhere near the
+      200+ fields / 18 named categories (Functional/UI/Workflow/Business/Validation/Analytics/
+      Security/Performance/AI/Browser/Cache/Gateway/Version/Dependency/Execution/Audit/Learning/
+      Testing) this item requires -- most named categories (UI, Browser, Gateway, Security,
+      Learning) have zero real column coverage today.'
+    known_partial_prior_art_ref: prompt_os
 
   - id: ycml-spec-catalog
     domain: cross_cutting
@@ -1040,23 +1272,33 @@ items:
     requirement: State machine with explicit per-transition approval, automated eval gates
       (Review->Staging), minimum canary duration (Staging->Production), full audit logging of every transition.
     verdict: not_implemented
-    evidence: Same underlying gap as engine-prompt-lifecycle (state machine) plus engine-audit
-      (transition logging) -- itemized separately here because 2.9 specifies the GOVERNANCE gates
-      (approval, eval thresholds, canary duration) on top of the bare state machine, a distinct
-      requirement layer.
+    evidence: 'CORRECTED 2026-07-25 (task-20260725-160908): engine-prompt-lifecycle''s verdict
+      changed to partially_implemented (real production/staging label convention exists) and
+      engine-audit''s verdict changed to partially_implemented (real recordAuditTrigger on
+      version creation exists) -- see prompt_os prior art. This item''s own verdict correctly
+      remains not_implemented on corrected grounds: the GOVERNANCE GATES specifically (mandatory
+      approval before a label change, automated eval-threshold gate Review->Staging, minimum
+      canary duration Staging->Production) have zero real implementation -- today any single
+      veridian_admin can flip a prompt_version''s label unilaterally with no gate of any kind.'
+    known_partial_prior_art_ref: prompt_os
 
   - id: governance-gitops-workflow
     domain: cross_cutting
     name: GitOps Workflow Integration (2.9)
     requirement: Prompts stored as versioned Git files, PR-based changes with mandatory CI/CD eval
       artifacts, branch protection requiring passing evals before merge.
-    verdict: not_implemented
-    evidence: 'This SESSION''s own dev workflow (claude-control/compliance-tracker) already uses
-      real GitOps for CODE (PRs, branch protection likely present per .github/workflows -- not
-      re-verified here, out of scope) -- but that is GitOps for application source code, not for
-      versioned PROMPT files with eval-gated promotion, which do not exist as a distinct artifact
-      class in any repo. Real gap for the specific requirement (prompts-as-versioned-Git-files with
-      eval-gated CI).'
+    verdict: partially_implemented
+    evidence: 'CORRECTED 2026-07-25 (task-20260725-160908): a real, previously-uncited, PR-gated
+      eval mechanism specific to prompt content does exist: .github/workflows/ai-prompt-evals.yml
+      triggers on PRs touching prompt-bearing files (per its own path filter, including
+      prompt-os-resolver.ts) and runs real promptfoo LLM-rubric evals against them, posting
+      results to the PR/CI log. This is real "PR-based changes with CI/CD eval artifacts" --
+      but explicitly NOT a "mandatory... branch protection requiring passing evals before merge"
+      (the workflow''s own header states this was deliberately left non-blocking, same posture as
+      mandatory-audit-check.yml, pending an Owner decision). Prompts also are not stored as their
+      own versioned Git files (they live in DB prompt_versions rows or hardcoded TS strings) --
+      that part of the requirement remains a real gap.'
+    known_partial_prior_art_ref: prompt_os
 
 # ============================================================================
 # ITEMS -- Platform-scope disambiguation (not in the document's own catalog, but real,

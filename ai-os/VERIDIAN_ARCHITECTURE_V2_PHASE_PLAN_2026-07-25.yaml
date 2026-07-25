@@ -39,6 +39,20 @@ meta:
     ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml entry with status approved, OR falls under the
     Owner''s existing blanket "95pct-resources / Recommended-default" approval (already cited by
     20_ENGINES_10_GATEWAYS and WIRING_ENGINE plans) if the new entry is consistent with that default.'
+  re_verification_note: 'task-20260725-160908-task2-dedup-integration-audit independently
+    re-checked all 105 gap-analysis items (see that file''s own re_verification block) before any
+    phase below was allowed to start, per Owner directive. Found real, live, previously-uncited
+    prior art (a working "Prompt OS": compliance.prompt_templates/prompt_versions/
+    prompt_eval_cases/prompt_eval_runs, live at ~20 production call sites; and real pgvector+HNSW
+    embedding-similarity/semantic-cache infrastructure) that changed phase_1 from "build a new
+    SQLite prompt_registry table in claude-control" to "extend the real, live Postgres tables
+    already in production" -- the exact kind of duplication this re-check exists to prevent. No
+    phase below was removed (every phase''s underlying gap-analysis items survived re-verification
+    as real gaps, even where deepened by new prior-art citations), but phase_1''s scope, phase_2/3/
+    4/5/6/7/9''s evidence citations, and every phase''s new integration_point field below were
+    corrected as a direct result. See each phase''s own integration_point field for where its real
+    work must plug into the existing Wiring Engine registry / Capability Registry / named gateway
+    (G01-G10) rather than stand alone.'
 
 # ============================================================================
 # PHASES
@@ -46,35 +60,65 @@ meta:
 phases:
   - id: phase_1_prompt_registry_lifecycle_foundation
     name: "Prompt Registry, Version, Lifecycle, Validation Engines + Metadata Schema (data-model foundation)"
-    objective: "Build the foundational prompt data model every other phase depends on: a real,
-      queryable prompt registry (unique IDs, indexing, discovery), semantic versioning with diff/
-      rollback, a Draft->Review->Staging->Production->Deprecated lifecycle state machine with
-      approval-gate hooks (gates themselves wired in phase_3), schema validation, and the 200+
-      field/18-category metadata schema (2.6) every registered prompt must carry. This phase is
-      config/schema design + a real live table, not application UI -- can proceed in
-      claude-control (extending scripts/superboss-register.py the same way capability_registry
-      and knowledge_engine tables were added) regardless of the owner_decision_dependency above."
+    objective: "CORRECTED 2026-07-25 by task-20260725-160908's re-verification: a real prompt
+      registry/version store already exists and is LIVE in production
+      (compliance.prompt_templates/prompt_versions, resolvePromptTemplate() called from ~20 real
+      call sites in repos/compliance-tracker -- see ai-os/VERIDIAN_ARCHITECTURE_V2_GAP_ANALYSIS_2026-07-25.yaml
+      known_partial_prior_art.prompt_os). The original plan below to add a NEW prompt_registry
+      table to scripts/superboss-register.py's SQLite DB would have built exactly the disconnected
+      parallel system the Owner's zero-duplication directive forbids. This phase is corrected to
+      EXTEND the real, live Postgres tables instead: add semantic (MAJOR.MINOR.PATCH) versioning,
+      a real Draft/Review/Staging/Production/Deprecated lifecycle_state column (replacing the
+      current free-text label), diff/rollback support, and expand the metadata schema (2.6) on
+      top of prompt_templates/prompt_versions' existing ~50 real columns -- not a fresh datastore."
     scope:
       - "Gap items closed: engine-prompt-registry, engine-prompt-version, engine-prompt-lifecycle,
         engine-prompt-validation, metadata-schema-200-fields, governance-lifecycle-state-machine
         (bare state machine only -- the approval-gate ENFORCEMENT itself is phase_3 scope, not
         this phase's, per that item's own note distinguishing the state machine from its governance gates)."
-      - "Add a prompt_registry table (+ prompt_versions, prompt_metadata) to
-        scripts/superboss-register.py's existing SQLite DB, mirroring knowledge_engine/
-        capability_registry's own init_db()/register/lookup/list CLI pattern (per this session's
-        own zero-duplication precedent -- do not build a 4th, differently-shaped datastore)."
-      - "Define the metadata schema as a real JSON Schema file (ai-os/PROMPT_METADATA_SCHEMA_2026-07-25.schema.json
-        or similar), covering the 18 categories the document names (2.6) at minimum-viable field
-        depth, not literally all 200+ fields verbatim -- match this session's own precedent of
-        building the minimum real schema a validator can enforce (AUDITOR_ENGINE's
-        metadata domain used the same approach)."
-      - "Register the new table + schema in MASTER_INDEX.yaml and via superboss-register.py
-        register-knowledge, citing this gap analysis + phase plan as evidence."
+      - "CORRECTED: do NOT add a prompt_registry table to scripts/superboss-register.py's SQLite
+        DB (the original plan here). Instead, extend repos/compliance-tracker's real Drizzle
+        schema: add a lifecycle_state enum column (Draft/Review/Staging/Production/Deprecated) to
+        compliance.prompt_versions alongside (not replacing, to avoid breaking the ~20 live
+        resolvePromptTemplate() call sites) its existing label column, add MAJOR/MINOR/PATCH
+        integer columns, and a diff/rollback API in prompt-os-service.ts next to the existing
+        createPromptVersion/listPromptVersions."
+      - "Expand the metadata schema on compliance.prompt_templates/prompt_versions (2.6's 18
+        categories) as a real Drizzle migration + JSON Schema doc
+        (ai-os/PROMPT_METADATA_SCHEMA_2026-07-25.schema.json) at minimum-viable field depth per
+        category, not literally all 200+ fields verbatim -- match this session's own precedent
+        (AUDITOR_ENGINE's metadata domain used the same minimum-real-schema approach)."
+      - "Register this extension (not a new table) in MASTER_INDEX.yaml and via
+        scripts/superboss-register.py register-knowledge, citing this gap analysis + phase plan
+        as evidence, and add a corresponding entity in ai-os/WIRING_ENGINE_REGISTRY_2026-07-25.json
+        (already tracks compliance.prompt_templates/prompt_versions as generic `table` entities
+        via DATABASE_CATALOG.json -- add the new lifecycle_state/version columns' relationship
+        evidence on the next scripts/generate_wiring_registry.py run, do not create a second,
+        parallel entity for the same table)."
+    integration_point: "ai-os/WIRING_ENGINE_REGISTRY_2026-07-25.json table entities
+      compliance.prompt_templates / compliance.prompt_versions (already present, source_system:
+      supabase, sourced from ai-os/DATABASE_CATALOG.json) -- this phase extends those exact rows'
+      real schema rather than creating new registry entities."
     depends_on: []
-    external_depends_on: []
+    external_depends_on:
+      - "repos/compliance-tracker (repo: compliance-tracker, not claude-control) -- CORRECTED: this
+        phase is compliance-tracker-scoped (a real Drizzle migration + prompt-os-service.ts
+        change), not claude-control-native as originally scoped, because the real prompt registry
+        it must extend lives there, not in this repo. Proceeds regardless of the
+        owner_decision_dependency below (extending existing production tables is not the same
+        commitment as new browser-native product surface)."
     status: not_started
     success_criteria:
-      - "python3 scripts/superboss-register.py list-entities --table prompt_registry  # exits 0 once the table exists (empty list is fine)"
+      - "CORRECTED: the original 'python3 scripts/superboss-register.py list-entities --table
+        prompt_registry' command never existed as a real CLI subcommand (superboss-register.py's
+        real subcommand list is init/log-*/search/index-*/check-duplicate/register-knowledge/
+        query-knowledge/verify-knowledge/annotate-knowledge/add-relationship/add-tag/
+        upsert-knowledge-fragment/list-knowledge/register-capability/lookup-capability/
+        list-capabilities/capture-replay/run-replay/list-replays -- no list-entities). Replaced
+        with a real command against the actual extended table this phase modifies:
+        \"psql $DATABASE_URL -c \\\"SELECT lifecycle_state FROM compliance.prompt_versions LIMIT 1\\\"\"
+        # exits 0 once the lifecycle_state column is added (or an equivalent real command the
+        dispatched compliance-tracker task defines against its own migration)."
       - "test -f ai-os/PROMPT_METADATA_SCHEMA_2026-07-25.schema.json  # exits 0"
       - "python3 scripts/superboss-register.py query-knowledge \"veridian_v2_prompt_registry\" --tag domain:veridian_architecture_v2  # found=1"
 
@@ -102,6 +146,13 @@ phases:
       - "Dispatch as a compliance-tracker-scoped task (per meta.cross_repo_dispatch_note) extending
         prompt_engine.py/classifier.py/context_engine.py's real algorithms into the target repo's
         own application code, backed by phase_1's prompt_registry table for versioned storage."
+    integration_point: "Gateway G05 (\"AI\" -- \"Boundary all AI/model calls route through for
+      provider/model resolution, policy, and audit\", ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml)
+      via mother-router.ts/model-tier-eligibility.ts, plus the compliance.prompt_versions table
+      phase_1 extends (compiled/versioned pipeline output must be written there, not a new
+      datastore). CORRECTED 2026-07-25: the original gap analysis cited the weaker G03/G04
+      Organization/UserChannel hop for the sibling engine-gateway-integration item; G05 is the
+      real AI-call boundary this phase's compiled prompts actually route through."
     depends_on: [phase_1_prompt_registry_lifecycle_foundation]
     external_depends_on:
       - "repos/compliance-tracker (repo: compliance-tracker, not claude-control) -- this phase
@@ -137,11 +188,18 @@ phases:
         canary-duration contract as a YAML schema, mirroring CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml's
         own Phase-0-schema/Phase-1-live-wiring split -- defer live enforcement wiring (which needs
         phase_1's live table + phase_2's compiled-prompt objects) to this phase's own live-wiring sub-scope."
+    integration_point: "Two real, live mechanisms this phase must wire onto rather than replace:
+      (1) auth-guard.ts's hasRole(dbUser,\"veridian_admin\") check, already gating
+      prompt-os-service.ts's createPromptVersion/createEvalCase/runEval -- deepen this into
+      distinct access/edit/approve/deploy permissions rather than building a parallel gate; (2)
+      prompt-os-service.ts's existing recordAuditTrigger(entityType:\"prompt_version\") call --
+      extend its coverage to access/execution events, do not build a 3rd audit log alongside it
+      and the 20-Engines Audit Engine."
     depends_on: [phase_1_prompt_registry_lifecycle_foundation]
     external_depends_on:
       - "repos/compliance-tracker (repo: compliance-tracker, not claude-control) -- wiring
-        permission-service.ts and llm-client.ts is application code in that repo, once the
-        target-repo decision resolves."
+        permission-service.ts, auth-guard.ts, llm-client.ts, and prompt-os-service.ts's audit
+        trigger is application code in that repo, once the target-repo decision resolves."
     status: not_started
     success_criteria:
       - "python3 scripts/superboss-register.py query-knowledge \"veridian_v2_governance_engines\" --tag domain:veridian_architecture_v2  # found=1"
@@ -168,6 +226,12 @@ phases:
         existing scanning infrastructure pattern for the Red Team Engine's adversarial-testing
         cadence (cron-wired, findings normalized into knowledge_engine) rather than building a
         parallel scan-and-report pipeline from scratch."
+    integration_point: "Gateway G05 (\"AI\" -- all AI/model calls route through for provider/model
+      resolution, policy, and audit) -- input sanitization and output filtering must wrap calls
+      at this real boundary (mother-router.ts/model-tier-eligibility.ts), not a new, separate
+      security choke point. Also reuse registries.auditor_engine's real scanning-cadence pattern
+      (cron-wired, findings normalized into knowledge_engine) for the Red Team Engine, per this
+      phase's own scope note."
     depends_on: [phase_2_compiler_pipeline_intelligence_engines]
     external_depends_on:
       - "repos/compliance-tracker (repo: compliance-tracker, not claude-control) -- guardrail
@@ -206,6 +270,10 @@ phases:
         MASTER_INDEX.yaml registries: (closes gap-analysis item litert-spike-unregistered) so this
         phase's own starting point is discoverable for any future session, per this system's own
         zero-duplication protocol."
+    integration_point: "MASTER_INDEX.yaml registries (litert-spike registration, this phase's own
+      first step) + Gateway G05 (\"AI\") for the Server Escalation Engine's Tier-5 fallback calls,
+      which must route through the same AI-call boundary llm-client.ts already uses, not a
+      separate escalation path."
     depends_on: [phase_2_compiler_pipeline_intelligence_engines]
     external_depends_on:
       - "repos/compliance-tracker (repo: compliance-tracker, not claude-control) -- all browser-
@@ -237,6 +305,13 @@ phases:
         browser-facing sync/fetch API (new CLI subcommand or a real HTTP route in
         compliance-tracker calling into it) rather than a second knowledge store -- the direct
         reuse this phase's own objective names."
+    integration_point: "ai-os/WIRING_ENGINE_REGISTRY_2026-07-25.json table entities
+      compliance.instruction_execution_cache and compliance.embeddings (real, live pgvector HNSW
+      semantic-cache prior art, ai-os/VERIDIAN_ARCHITECTURE_V2_GAP_ANALYSIS_2026-07-25.yaml
+      known_partial_prior_art.embedding_similarity_pgvector) for L5, and the knowledge_engine
+      table (scripts/superboss-register.py) for L9 -- per this phase's own objective, wire L9 as
+      a browser-facing sync/fetch API onto knowledge_engine rather than building a second
+      knowledge store."
     depends_on: [phase_5_browser_execution_tiers]
     external_depends_on:
       - "repos/compliance-tracker (repo: compliance-tracker, not claude-control) -- L0-L5 browser
@@ -264,6 +339,11 @@ phases:
         span_id convention) for prompt-pipeline stage tracing rather than inventing a second
         tracing convention in the same overall system, per gap analysis's engine-observability
         evidence explicitly noting this as the closest (though non-matching) real precedent."
+    integration_point: "Gateway G09 (\"ObservabilityAudit\" -- \"Boundary/loop surfacing system
+      health and writing the audit trail for actions taken\", ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml)
+      -- pipeline/cache/browser-execution telemetry must feed into this existing observability
+      boundary, reusing testing_engine_irvf's real trace_id/span_id convention rather than
+      inventing a second tracing scheme in the same system."
     depends_on: [phase_5_browser_execution_tiers, phase_6_multi_level_cache_architecture]
     external_depends_on:
       - "repos/compliance-tracker (repo: compliance-tracker, not claude-control) -- instrumentation
@@ -290,6 +370,17 @@ phases:
         stack (services/doc-processing/ already runs a standalone Python microservice per
         AUDITOR_ENGINE_PHASE_PLAN's own stack_confirmed_2026-07-24 -- the real, existing Python
         surface this phase's DSPy integration would extend, not a fresh Python deployment)."
+    integration_point: "PARTIAL -- engine-dspy-integration integrates into phase_2's compiler
+      pipeline (itself wired to compliance.prompt_versions and Gateway G05), and
+      services/doc-processing/'s existing standalone Python microservice surface is the real
+      integration point for any DSPy Python runtime (do not stand up a fresh Python deployment).
+      engine-ai-learning, engine-prompt-translation, engine-prompt-localization,
+      engine-prompt-marketplace, engine-prompt-export, engine-prompt-import have NO real existing
+      system to plug into -- integration_point: none -- standalone, reason: these are genuinely
+      new prompt-lifecycle concerns (translation, localization, marketplace, import/export) with
+      zero prior art anywhere in this system (confirmed by the gap analysis) and no natural
+      existing registry/gateway boundary governs them; they should register as new
+      MASTER_INDEX.yaml entries once built, not be forced onto an unrelated existing system."
     depends_on: [phase_2_compiler_pipeline_intelligence_engines, phase_4_defense_in_depth_security_quality]
     external_depends_on:
       - "repos/compliance-tracker (repo: compliance-tracker, not claude-control) -- services/doc-processing/
@@ -320,6 +411,12 @@ phases:
         strongest real candidate path, trace/build each hop with file:line evidence, re-run
         scripts/generate_wiring_registry.py to confirm) to one real VERIDIAN-v2 prompt-execution
         request crossing a G01-G10 gateway boundary, rather than re-deriving a new verification method."
+    integration_point: "Gateway G05 (\"AI\") for engine-gateway-integration (CORRECTED citation
+      from the original G03/G04 -- G05 is the real, purpose-built LLM/model-call boundary), the
+      Capability Registry (capability_registry table, scripts/superboss-register.py
+      register-capability/lookup-capability) for engine-capability-intel, and the knowledge_engine
+      table for engine-knowledge-sync -- this phase's entire objective is wiring onto these three
+      existing systems, per its own scope."
     depends_on: [phase_1_prompt_registry_lifecycle_foundation, phase_3_governance_policy_cost_engines]
     external_depends_on:
       - "ai-os/WIRING_ENGINE_PHASE_PLAN_2026-07-25.yaml phase_4_extend_gateway_coverage_beyond_first_proven_path
@@ -350,6 +447,11 @@ phases:
         explicit, still-open gap in a successor plan rather than fabricating specs for unbuilt engines."
       - "Update this plan's own gap analysis file in place with final real verdicts and evidence
         for every item, closing the loop this task's own Phase 0 opened."
+    integration_point: "none -- standalone, reason: this phase produces documentation artifacts
+      (one YCML spec file per engine actually shipped by phases 1-9, plus a final re-run of this
+      gap analysis's own verdict logic) rather than runtime code, so it has no wiring surface of
+      its own to attach to any one registry/gateway/table -- it instead REFERENCES every real
+      integration point named in phases 1-9 above."
     depends_on: [phase_2_compiler_pipeline_intelligence_engines, phase_3_governance_policy_cost_engines,
       phase_4_defense_in_depth_security_quality, phase_5_browser_execution_tiers,
       phase_6_multi_level_cache_architecture, phase_7_analytics_telemetry_observability_performance,
