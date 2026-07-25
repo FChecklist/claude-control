@@ -23,12 +23,70 @@ meta:
     capability_registry: 'ai-os/CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml (schema) + the live
       capability_registry table it populates (ai-os/memory/superboss-register.sqlite, query via
       `python3 scripts/superboss-register.py list-capabilities`) -- this schema''s Capability column
-      values MUST be real capability_name values from that live table, never invented. As of this task
-      there are 10 real rows.'
+      values MUST be real capability_name values from that live table, OR the real Module-slug fallback
+      documented in the Capability column description below, never invented. As of task-20260725-180624
+      there are still only 10 real rows.'
     coverage_report: scripts/generate_prompt_coverage_report.py (reads both of the above + CSV/ to
       compute Prompt-Coverage-pct / Capability-Coverage-pct / Intent-Coverage-pct)
     duplicate_detection: scripts/detect_prompt_duplicates.py
     guard: scripts/chatgpt_promptlib_guard.py -- every real CSV/ write goes through this, no bare open()
+
+anchor_decision_2026-07-25:
+  task: task-20260725-180624-end-user-prompt-library-generation
+  question: 'Capability/Module columns need a real join key with enough breadth for "thousands of
+    various functionalities" (Owner''s own framing). Two candidates named in this task''s own spec were
+    checked live before picking one.'
+  checked_capability_registry: 'python3 scripts/superboss-register.py list-capabilities -- still exactly
+    10 real rows as of 2026-07-25 (unchanged since the schema was authored 2026-07-24). Too small to
+    anchor a 10,000-prompt library on its own.'
+  checked_vcel_247_engine_registry: 'ai-os/MASTER_INDEX.yaml''s own registries.engine_registry entry
+    claims /opt/veridian/repos/compliance-tracker/ai-os/engines/ENGINES.yaml is a "VCEL
+    deterministic-computation engine registry (247 engines catalogued, 41 implemented)". Read the real
+    file: it is NOT that. It is an AI-agent (Z.ai / Claude Code) full-access authorization/permissions
+    document -- authorized_by, api.secret_key, permissions.write_code, scope.repositories, etc. -- with
+    zero engine catalog content. This is a real, confirmed namespace collision (registries.
+    engines_gateways_architecture in the same MASTER_INDEX.yaml already flags an unrelated collision at
+    this same path). registries.wiring_engine''s own mechanically-generated 2026-07-25 count independently
+    corroborates this: engine=20 real entities, not 247. The "247/41" figure is stale/unverifiable and
+    was NOT used as an anchor.'
+  real_anchor_used: 'compliance-tracker/src/lib/engines/*.ts (including the src/lib/engines/in/
+    subfolder) -- 30 real .ts files on disk, of which 25 are real domain-engine implementations (5
+    excluded as infrastructure, not domains: types.ts, engine-invocation.ts,
+    compliance-engine-registry.ts, breakdown.ts, and *.test.ts files). Each real domain-engine filename
+    is used verbatim as a Module column value; Business Domain is a deterministic, human-authored mapping
+    from that real filename (e.g. hr-engine.ts -> "HR & Payroll", gst-engine.ts -> "India GST
+    Compliance") recorded in scripts/generate_chatgpt_promptbatch_request.py''s ENGINE_MODULE_DOMAIN_MAP,
+    with a startup check that every mapped filename still exists on disk (so the map cannot silently
+    drift from the real repo). This gives 25 real Module values / ~22 unique Business Domain values --
+    far broader than the 10-row capability_registry, and independently verifiable (unlike the disproven
+    247 claim).'
+  capability_column_fallback: 'Because capability_registry (10 rows) cannot cover 25 real modules, a row
+    whose Module has no matching real capability_registry row uses Capability =
+    "<module_slug>_unregistered" (module_slug = the Module filename without ".ts", e.g.
+    "hr_engine_unregistered") instead of inventing a fake capability_name. This is intentionally
+    visually distinct from a real registered capability_name so generate_prompt_coverage_report.py''s
+    capability_coverage_pct keeps meaning exactly what it always meant (coverage of the real, narrow
+    capability_registry) and does not silently inflate. Registering these 25 modules as real
+    capability_registry rows is the correct long-term fix and is out of this task''s scope.'
+  end_user_role_anchor: 'Checked ai-os/AI_ROSTER_CATALOG.json first per this task''s own KNOWN_CONTEXT --
+    it is a real roster but of AI/LLM-backed roles (role_count, by_team, by_model, llm_backed_role_count),
+    not end-user business personas, so not applicable here. Checked
+    compliance-tracker/src/lib/db/schema.ts''s real userRoleEnum (''admin'', ''manager'', ''member'',
+    ''viewer'', ''veridian_admin'', ''branch_manager'', ''senior_professional'', ''team_member'',
+    ''client_viewer'', ''external_auditor'', ''stage_0'') -- also real, but it is a technical
+    software-access-level enum (what a login can do), a different concept from "which kind of business
+    person is asking this ERP question" that the Owner''s worked examples describe. No formal end-user
+    business-persona registry exists yet. End User Role therefore uses the Owner''s own verbatim role
+    list from this task''s prompt (Owner, HOD, Employee, Vendor, Customer, Finance Manager) as the real
+    enum -- sourced from the Owner''s own words, not invented, and deliberately kept distinct from the
+    unrelated technical userRoleEnum above.'
+  industry_anchor: 'compliance-tracker/src/lib/db/schema.ts has a free-text `industry` column on CRM
+    accounts (no fixed enum) plus a real, evidenced regulated-sector distinction: organisations.
+    regulatoryEntityType (''listed_company'' | ''bank_nbfc'' | ''insurer'' | ''general'') gating the real
+    sebiComplianceItems / rbiComplianceItems / irdaiComplianceItems tables. Industry values therefore
+    lean on that real evidence for the regulated cases (Banking & NBFC, Capital Markets / Listed Company,
+    Insurance) plus the Owner-mandated `Generic / Cross-Industry` for the (expected-to-be-common) rest --
+    see CONSTRAINTS: do not force industry-specificity that is not real.'
 
 placeholder_variable_convention:
   syntax: '`<Entity.Attribute>`, e.g. `<Clients.Name>`, `<Users.Email>`, `<Tasks.CreatedAt>` -- identical
@@ -83,8 +141,13 @@ csv_schema:
       type: string
       required: true
       description: 'MUST exactly match a real `capability_name` from the live capability_registry table
-        (python3 scripts/superboss-register.py list-capabilities). This is the join key
-        generate_prompt_coverage_report.py uses to compute per-capability coverage.'
+        (python3 scripts/superboss-register.py list-capabilities), OR -- when Module is one of the 25
+        real compliance-tracker/src/lib/engines/*.ts files with no matching capability_registry row yet
+        (10 rows as of 2026-07-25, see anchor_decision_2026-07-25 above) -- the fallback value
+        "<module_slug>_unregistered" (module_slug = the Module filename minus ".ts"). This is the join
+        key generate_prompt_coverage_report.py uses to compute per-capability coverage; the
+        "_unregistered" fallback is deliberately excluded from that coverage''s meaning of "real
+        registered capability".'
     - name: Business Process
       type: string
       required: true
@@ -139,6 +202,30 @@ csv_schema:
       description: 'Confidence that this prompt row is correctly classified (Capability/Entity/Action/
         Variables all correct and consistent). Should not silently exceed the matched capability''s own
         `confidence` value in the live capability_registry row without a stated reason.'
+    - name: End User Role
+      type: enum
+      values: ['Owner', 'HOD', 'Employee', 'Vendor', 'Customer', 'Finance Manager']
+      required: true
+      description: 'Added task-20260725-180624 per the Owner''s own verbatim requirement ("various end
+        users... owners, head of departments... employees, vendors, customers"). Real enum sourced from
+        the Owner''s own words, not the unrelated technical userRoleEnum in compliance-tracker/src/lib/db/
+        schema.ts (admin/manager/member/viewer/etc. -- a login-permission concept, not a business
+        persona) -- see anchor_decision_2026-07-25.end_user_role_anchor above. This is one half of the
+        (End User Role x Business Domain) targeting matrix
+        scripts/generate_chatgpt_promptbatch_request.py''s enduser_domain mode uses instead of
+        capability-gap-only targeting.'
+    - name: Industry
+      type: string
+      required: true
+      description: 'Added task-20260725-180624. `Generic / Cross-Industry` is the real, valid, expected-
+        to-be-common default for prompts that are not genuinely industry-specific -- never force
+        industry-specificity that is not real (see this task''s own CONSTRAINTS). Where a prompt is
+        genuinely industry-specific, prefer the real regulated-sector values evidenced by
+        compliance-tracker/src/lib/db/schema.ts''s organisations.regulatoryEntityType +
+        sebiComplianceItems/rbiComplianceItems/irdaiComplianceItems tables: `Banking & NBFC`, `Capital
+        Markets / Listed Company`, `Insurance`. Any other real, evidenced industry value is acceptable
+        but must not be fabricated to look more industry-specific than the prompt actually is -- see
+        anchor_decision_2026-07-25.industry_anchor above.'
   id_convention: 'PROMPT-<capability_name>-<4-digit sequence, zero-padded, per-capability>, e.g.
     PROMPT-gst_calculation_engine-0001'
   example_row:
@@ -159,5 +246,7 @@ csv_schema:
     Expected Output: 'A computed gratuity amount with a short explanation of the formula and inputs used'
     AI Required Yes/No: 'No'
     Confidence: 0.95
+    End User Role: HOD
+    Industry: Generic / Cross-Industry
     note: 'This example row is illustrative only (documentation), not a real CSV/ data row -- no prompts
       have been generated yet, see meta.status above.'
