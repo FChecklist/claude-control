@@ -450,3 +450,37 @@ decisions:
     approval this session covers it''), same standing blanket-approval mechanism as
     audit-pipeline-security-crontab-addition and auto-phase-continuation-crontab-addition above, not a
     fresh case-by-case confirmation.'
+- id: veridian-architecture-v2-target-repo-anchor
+  raised_by_task: task-20260725-112909-veridian-architecture-v2-task2-phase0-ga
+  raised_ts: '2026-07-25T12:00:00+00:00'
+  title: Confirm the target repo for VERIDIAN_Architecture_v2.0.docx's browser-native "Prompt
+    Intelligence Platform" implementation work (phases 2-10 of ai-os/VERIDIAN_ARCHITECTURE_V2_PHASE_PLAN_2026-07-25.yaml)
+  what: 'This task''s own gap analysis (ai-os/VERIDIAN_ARCHITECTURE_V2_GAP_ANALYSIS_2026-07-25.yaml)
+    found the document describes a browser-native, local-LLM-inference product (WebLLM/WebGPU/WebNN/
+    DSPy/74 engines) that has no real home in this system today. claude-control (this repo) is
+    config/YAML-only by its own MASTER_INDEX.yaml role definition and cannot host any of it. The
+    ONLY real prior art anywhere (repos/compliance-tracker/src/app/litert-spike/ +
+    litert-spike-embeddings/, a browser WebGPU/WASM inference spike under an app-router debug route)
+    lives in compliance-tracker -- a B2B compliance-SaaS product with no stated product connection to
+    a general-purpose prompt-intelligence platform. The new phase plan defaults to compliance-tracker
+    as the target repo for phases 2-10 (the first phase that writes real application code) purely on
+    the strength of that one existing spike, not on any Owner confirmation that this document''s
+    product should live inside compliance-tracker at all (vs. a new, separate repo, or being folded
+    into this ops system''s own prompt_gateway tooling instead).'
+  needed_action: 'Owner confirms one of: (a) compliance-tracker is the correct target repo (the
+    plan''s current default, needing no change); (b) a new, separate repo should be created for this
+    product; (c) this document''s scope should instead be re-read as an aspirational upgrade to this
+    ops system''s own prompt_gateway/OWNER_ENGINE tooling (server-side, not browser-native) rather
+    than a new browser product, which would require re-scoping the phase plan; or (d) this document
+    should be treated as reference/research material only, not a build target, pausing the phase
+    plan''s auto-dispatch entirely.'
+  why_not_done_automatically: 'This is exactly the kind of large, hard-to-reverse, cross-repo product-
+    scope decision this session''s own operating rules require a human to make -- phases 2-10
+    collectively represent the largest net-new engineering surface any phase plan has proposed this
+    session (10 browser-execution engines, a 10-level cache hierarchy, a 4-layer security stack, none
+    of which exist today), and committing that scope to a specific repo without Owner sign-off risks
+    building a large amount of work in the wrong place or on a document the Owner intended only as
+    reference. Not blocking on this decision entirely (phase_1 and phase_3 are claude-control-native
+    schema/governance design work that is useful regardless of the outcome), per this plan''s own
+    meta.owner_decision_dependency note.'
+  status: awaiting_owner_decision
