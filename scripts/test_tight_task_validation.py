@@ -91,6 +91,37 @@ def test_pattern4_already_done_vs_where_missing_is_not_a_contradiction():
     assert result["detected"] is False, result
 
 
+def test_scattered_unrelated_mentions_are_not_a_contradiction():
+    """Real auto-generated Auditor Engine phase-8 prompt (cached at
+    /tmp/auto_phase_continuation_phase8-master-orchestration-cron-wiring-
+    report-software.txt): Constraints says "do not add cron entries
+    without that citation". Scope separately mentions "cron" once (an
+    unrelated cron-driven audit entrypoint) and "entries" once in a
+    negated disclaimer ("adds no cron entries") and once in a general,
+    citation-conditioned procedural sentence -- the words "cron" and
+    "entries" never actually co-occur as a real, unconditional restatement
+    of "add cron entries" anywhere in the requirement text; they only
+    scatter across unrelated or negated sentences."""
+    task = _base_task(
+        constraints=(
+            "Any crontab change needs an approved entry in "
+            "ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml plus a matching "
+            "ai-os/CRONTAB_APPROVED_SNAPSHOT.txt update -- do not add cron entries without that citation."
+        ),
+        objective="Master orchestration, cron wiring, report software",
+        scope=(
+            "- Orchestrate all domains' audit-run scripts under one cron-driven entrypoint (zero AI in the loop, per PART5)\n"
+            "- Build the master report software (aggregates finding-record rows across all domains + repos)\n"
+            "- File any new crontab entries through the existing Owner-approval-citation pattern "
+            "(ai-os/OWNER_DECISIONS_NEEDED_*.yaml + CRONTAB_APPROVED_SNAPSHOT.txt) -- NONE filed this phase "
+            "(Phase 0 adds no cron entries; deferred to whichever later phase first needs one)"
+        ),
+        successCriteria="python3 scripts/superboss-register.py query-knowledge phase-8",
+    )
+    result = detect_field_contradiction(task)
+    assert result["detected"] is False, result
+
+
 def test_true_positive_unconditional_conflict_is_still_detected():
     """Constraints unconditionally forbids adding any cron entry; Objective
     unconditionally requires adding one. A real conflict -- must still be
