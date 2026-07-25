@@ -2497,18 +2497,36 @@ registries:
     the Owner-named model) and the exact capability->N-prompts generation call shape, registered as
     OWNER_DECISIONS_NEEDED_2026-07-23.yaml id chatgpt-promptlib-openai-api-key. The actual LLM-execution
     step (ChatGPT generating the 10,000 real prompts) is explicitly out of this task''s scope.'
-  status: infrastructure_100pct_ready_generation_blocked_on_owner_supplied_openai_api_key
+  status: infrastructure_live_manual_bridge_resolved_extended_2026-07-25_for_end_user_role_x_domain_first_real_batch_generated
   query_command: python3 scripts/superboss-register.py query-knowledge "chatgpt_prompt_library"
     --tag domain:chatgpt_prompt_library
   cross_link_note: 'registries.chatgpt_audit_workspace (sibling task-20260724-141323-chatgpt-audit-workspace-infrastructure)
     had not landed as of this entry -- cross-link once it registers; do not build a second sandbox-guard
     pattern from scratch if that task''s scripts/chatgpt_audit_guard.py already exists by the time a
     future phase touches this.'
-  next_phase: 'A future task, once the Owner supplies a real OPENAI_API_KEY and names the model: the
-    actual capability->N-prompts generation call per ai-os/CHATGPT_PROMPTLIB_BLOCKER_2026-07-24.yaml''s
-    exact_generation_call_shape_once_unblocked, writing real CSV/ rows only via
-    scripts/chatgpt_promptlib_guard.py, then re-running generate_prompt_coverage_report.py and
-    detect_prompt_duplicates.py in real (non---test-fixture) mode.'
+  extension_2026-07-25: 'task-20260725-180624-end-user-prompt-library-generation: the Owner-decided
+    manual-bridge workflow (task-20260724-214215, no OPENAI_API_KEY, Owner pastes into ChatGPT/Z.AI by
+    hand) is unchanged, but the schema and generator are extended for the Owner''s real requirement --
+    10,000 prompts covering owners/HODs/employees/vendors/customers/finance managers across industries,
+    which the original capability-gap-only targeting (10-row capability_registry) could not anchor at
+    that scale. Added: 2 real schema columns (End User Role, Industry -- see
+    ai-os/CHATGPT_PROMPT_SCHEMA_2026-07-24.yaml''s anchor_decision_2026-07-25, which also documents a
+    confirmed namespace collision disproving the previously-assumed "VCEL 247-engine registry" at
+    registries.engine_registry''s own path); a second generator mode
+    (scripts/generate_chatgpt_promptbatch_request.py --mode enduser_domain) targeting real (End User
+    Role x Business Domain) combos from the 25 real compliance-tracker/src/lib/engines/*.ts modules;
+    matching ingest validation (End User Role enum + Capability''s "<module_slug>_unregistered"
+    fallback) in scripts/ingest_chatgpt_promptbatch_response.py. First real batch generated: 240
+    expected prompts (30 combos x 8) at
+    /opt/veridian/chatgpt-prompt-library/_pending_requests/BATCH-ENDUSER-20260725T181728Z-request-20260725T181728Z.txt.
+    Real total-batch-count for 10,000 prompts at this batch size: 42 (see
+    ai-os/CHATGPT_PROMPTLIB_BLOCKER_2026-07-24.yaml''s extension_2026-07-25 for the full computation).'
+  next_phase: 'The Owner runs the how_to_run_it_extended steps in
+    ai-os/CHATGPT_PROMPTLIB_BLOCKER_2026-07-24.yaml''s extension_2026-07-25 block (paste the generated
+    request into ChatGPT/Z.AI, save the reply, ingest) -- 41 further --mode enduser_domain batches (plus
+    ad hoc --mode capability_gap batches as capability_registry grows) to reach the real 10,000-prompt
+    target. Registering the 25 real engine modules as real capability_registry rows (replacing the
+    "_unregistered" fallback) is the correct long-term fix, out of this task''s scope.'
 - id: wiring_engine
   type: entity_relationship_schema_and_mechanical_registry
   path: ai-os/WIRING_ENGINE_SCHEMA_2026-07-25.yaml + ai-os/WIRING_ENGINE_REGISTRY_2026-07-25.json + ai-os/WIRING_ENGINE_PHASE_PLAN_2026-07-25.yaml

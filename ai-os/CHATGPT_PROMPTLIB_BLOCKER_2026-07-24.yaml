@@ -127,3 +127,42 @@ exact_generation_call_shape_once_unblocked:
 owner_decision_needed_entry: "Filed in ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml, id
   chatgpt-promptlib-openai-api-key, status resolved_via_manual_bridge (real decision made:
   no API key, manual-bridge workflow used instead -- see resolution_summary/how_to_run_it above)."
+
+extension_2026-07-25:
+  task: task-20260725-180624-end-user-prompt-library-generation
+  status: still_resolved_via_manual_bridge_now_extended_for_end_user_role_and_industry
+  what_changed: >
+    The Owner's real go-live requirement is 10,000 prompts modeling actual end users (owners,
+    HODs, employees, vendors, customers, finance managers) across industries -- the original
+    manual-bridge workflow above (still fully valid, unchanged) only targeted capability-gap
+    coverage against the 10-row capability_registry, far too narrow for that scale.
+    ai-os/CHATGPT_PROMPT_SCHEMA_2026-07-24.yaml gained two real columns (End User Role, Industry;
+    see that file's own anchor_decision_2026-07-25 for the full sourcing/rejection trail, incl. a
+    confirmed namespace collision that disproved the previously-assumed "VCEL 247-engine
+    registry"). scripts/generate_chatgpt_promptbatch_request.py gained a second mode,
+    --mode enduser_domain, targeting real (End User Role x Business Domain) combos derived from
+    the 25 real compliance-tracker/src/lib/engines/*.ts modules instead. The blocker itself (no
+    OPENAI_API_KEY) is unchanged and still resolved the same way -- the Owner still pastes into a
+    free ChatGPT (or Z.AI) web session by hand.
+  how_to_run_it_extended:
+    step_1_generate_request: >
+      python3 scripts/generate_chatgpt_promptbatch_request.py --mode enduser_domain --combos <N>
+      [--prompts-per-combo <k>, default 8] -- selects up to N real, currently-uncovered
+      (End User Role x Business Domain) combos, writes a ready-to-copy request .txt to
+      /opt/veridian/chatgpt-prompt-library/_pending_requests/.
+    step_2_and_3: "Same as the original how_to_run_it above (Owner pastes into ChatGPT/Z.AI web
+      session, saves reply, runs scripts/ingest_chatgpt_promptbatch_response.py --file
+      <response-file> -- that script now also validates the real End User Role enum and the
+      Capability module-slug fallback)."
+  first_real_batch_generated_this_task: >
+    /opt/veridian/chatgpt-prompt-library/_pending_requests/BATCH-ENDUSER-20260725T181728Z-request-
+    20260725T181728Z.txt -- 30 real (role x domain) combos x 8 prompts = 240 expected prompts,
+    24896 bytes / 203 lines (same order of magnitude as the working ChatGPT-audit Security
+    request's ~19.5KB/397-line reference ceiling).
+  real_total_batch_count_for_10000: >
+    ceil(10000 / 240) = 42 batches at this batch's real size (240 prompts/batch). Only the first
+    ceil(138 / 30) = 5 of those 42 batches can use entirely fresh (End User Role x Business
+    Domain) combos (138 = 6 real roles x 23 unique real domains, all real per
+    anchor_decision_2026-07-25) -- the remaining 37 batches necessarily repeat combos with
+    different prompts, which is expected and real (a single domain like "HR & Payroll" or
+    "Sales & CRM" genuinely has far more than 8 distinct real prompts across all 6 roles).

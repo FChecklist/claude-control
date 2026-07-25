@@ -9,10 +9,16 @@ the request text (produced by that script) into a free ChatGPT web session,
 saves the CSV (or YAML list-of-rows) reply to a file (or pipes it via
 stdin), and this script:
   1. parses it (CSV or YAML, auto-detected),
-  2. validates every row has all 15 required
-     ai-os/CHATGPT_PROMPT_SCHEMA_2026-07-24.yaml columns, a real
-     capability_name (from the live capability_registry, never invented),
-     and a well-formed AI Required Yes/No + Confidence,
+  2. validates every row has all required
+     ai-os/CHATGPT_PROMPT_SCHEMA_2026-07-24.yaml columns (17 as of
+     task-20260725-180624's End User Role + Industry extension), a real
+     Capability (either a real capability_name from the live
+     capability_registry, or the documented "<module_slug>_unregistered"
+     fallback for one of the 25 real compliance-tracker/src/lib/engines/*.ts
+     modules -- see that schema's anchor_decision_2026-07-25 -- never any
+     other invented value), a real End User Role (must be one of the
+     schema's own enum values, never invented), and a well-formed AI
+     Required Yes/No + Confidence,
   3. rejects any row using a hardcoded/placeholder-style company or person
      name (or an unregistered <Entity.Attribute>-shaped token) instead of a
      real registered placeholder -- reusing
@@ -54,6 +60,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, SCRIPT_DIR)
 from chatgpt_promptlib_guard import SANDBOX_ROOT, guarded_write  # noqa: E402
 from generate_prompt_coverage_report import load_real_capabilities  # noqa: E402
+from generate_chatgpt_promptbatch_request import load_real_engine_modules, load_schema_enum  # noqa: E402
 
 import yaml  # noqa: E402
 
@@ -138,7 +145,8 @@ def parse_rows(raw, fmt, required_columns):
 
 
 def validate_and_classify_row(row, required_columns, real_capability_names, registered_placeholders,
-                               pattern_families, placeholder_token_re, existing_ids, seen_ids_this_batch):
+                               pattern_families, placeholder_token_re, existing_ids, seen_ids_this_batch,
+                               real_module_unregistered_slugs, real_end_user_roles):
     reasons = []
 
     missing = [c for c in required_columns if not (row.get(c) or "").strip()]
@@ -147,8 +155,17 @@ def validate_and_classify_row(row, required_columns, real_capability_names, regi
         return reasons  # can't validate further meaningfully without the columns
 
     capability = row["Capability"].strip()
-    if capability not in real_capability_names:
-        reasons.append(f"unknown_capability: '{capability}' is not a real capability_name in the live registry")
+    if capability not in real_capability_names and capability not in real_module_unregistered_slugs:
+        reasons.append(
+            f"unknown_capability: '{capability}' is neither a real capability_name in the live registry "
+            f"nor a real '<module_slug>_unregistered' fallback for one of the 25 real "
+            f"compliance-tracker/src/lib/engines/*.ts modules (see CHATGPT_PROMPT_SCHEMA_2026-07-24.yaml's "
+            f"anchor_decision_2026-07-25)"
+        )
+
+    end_user_role = row["End User Role"].strip()
+    if end_user_role not in real_end_user_roles:
+        reasons.append(f"invalid_end_user_role: '{end_user_role}' must be one of {sorted(real_end_user_roles)}")
 
     ai_required = row["AI Required Yes/No"].strip()
     if ai_required not in ("Yes", "No"):
@@ -243,6 +260,10 @@ def main():
         sys.exit(1)
     real_capability_names = {c["capability_name"] for c in capabilities}
 
+    real_modules, _dropped = load_real_engine_modules()
+    real_module_unregistered_slugs = {f"{m['module_slug']}_unregistered" for m in real_modules}
+    real_end_user_roles = set(load_schema_enum(schema, "End User Role"))
+
     guardrail = _load_terminology_guardrail()
     registered_placeholders, _covered_tables = guardrail.load_registered_placeholders(VARIABLE_DICTIONARY_PATH)
     pattern_families = guardrail.PATTERN_FAMILIES
@@ -256,6 +277,7 @@ def main():
         reasons = validate_and_classify_row(
             row, column_order, real_capability_names, registered_placeholders,
             pattern_families, placeholder_token_re, existing_ids, seen_ids_this_batch,
+            real_module_unregistered_slugs, real_end_user_roles,
         )
         if reasons:
             rejected.append({"row": row, "reasons": reasons})
