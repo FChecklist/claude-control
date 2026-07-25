@@ -48,6 +48,7 @@ import argparse
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Optional
 
 # Ensure the engine modules are importable
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -64,6 +65,7 @@ from engine.classifier import ChatClassifier
 from engine.prompt_engine import PromptEngine
 from engine.context_engine import ContextManager
 from engine.snip_engine import SnipEngine
+from engine import document_engine
 
 
 # =============================================================================
@@ -147,12 +149,20 @@ class TaskGateway:
             Complete processing result dict.
         """
         pipeline_start = datetime.now(timezone.utc)
-        
+
         logger.info(f"Processing chat ({len(raw_text)} chars)...")
-        
+
         # === STEP 1: Generate Chat ID ===
         chat_id = self.id_gen.generate_id()
         logger.info(f"Generated chat ID: {chat_id}")
+
+        # Document-scale input (multi-page structured text: headings, tables,
+        # many sections) takes a dedicated path -- see _process_document_chat
+        # for why: the single-sentence pipeline below forces one category
+        # onto the whole input, caps entities at 5, and runs a template
+        # compiler written for one imperative sentence.
+        if document_engine.is_document_input(raw_text):
+            return self._process_document_chat(raw_text, role, session_id, chat_id, pipeline_start)
 
         # === STEP 2: Classify (software, not AI) ===
         analysis = self.classifier.full_analysis(raw_text)
@@ -240,35 +250,165 @@ class TaskGateway:
 
     def _build_final_output(self, machine_prompt: str, pruned_context: str,
                              category: str, intent: str, chat_id: str,
-                             entities: list, snippet_assists: list) -> str:
+                             entities: list, snippet_assists: list,
+                             entity_cap: Optional[int] = 5) -> str:
         """
         Build the final pruned output that gets sent to Claude/AI.
         This replaces the original noisy chat with a concise, structured prompt.
+
+        entity_cap=5 is the original short-chat-message behavior (a single
+        instruction has at most a handful of entities worth referencing
+        up front). Document mode passes entity_cap=None: a 50-section
+        architecture spec can legitimately carry hundreds of real named
+        entities (engines, technologies, numeric requirements), and silently
+        truncating to 5 discards the vast majority of the document's content.
         """
         parts = []
-        
+
         # Header with machine-readable metadata
         parts.append(f"[VERIDIAN:{chat_id}]")
         parts.append(f"[CAT:{category}|INTENT:{intent}]")
-        
+
         # Entity references (if any)
         if entities:
-            entity_refs = [f"{e['type']}={e['value']}" for e in entities[:5]]
+            ent_list = entities if entity_cap is None else entities[:entity_cap]
+            entity_refs = [f"{e['type']}={e['value']}" for e in ent_list]
             parts.append(f"[ENTS:{','.join(entity_refs)}]")
-        
+
         # Machine prompt (the core instruction)
         parts.append(f"\n{machine_prompt}")
-        
+
         # Snippet references (if any)
         if snippet_assists:
             snip_names = [s["name"] for s in snippet_assists[:3]]
             parts.append(f"\n[SNIPS:{','.join(snip_names)}]")
-        
+
         # Pruned context (only high-relevance messages)
         if pruned_context and len(pruned_context) > 10:
             parts.append(f"\n---\n[CONTEXT]\n{pruned_context}")
-        
+
         return "\n".join(parts)
+
+    def _process_document_chat(self, raw_text: str, role: str, session_id: Optional[str],
+                                chat_id: str, pipeline_start) -> dict:
+        """
+        Document-mode pipeline: parses real structure (headings, tables)
+        instead of forcing the input through the single-sentence compiler.
+
+        Differences from process_chat's short-message path, and why:
+          - Classification is per-section (classify_document), not one
+            category for the whole document -- ChatClassifier.classify()
+            picks a single argmax category, which is correct for one
+            instruction and wrong for a document spanning CODE, ANALYSIS,
+            OPS, and QUERY content simultaneously.
+          - machine_prompt is a structural digest (document_engine.
+            build_document_digest) that preserves every heading and table
+            row verbatim, instead of PromptConverter's single greedy-regex
+            template match, which was written for one imperative sentence
+            and garbles/truncates anything longer.
+          - entities use extract_document_entities (unbounded, plus numeric-
+            fact patterns) and are NOT capped at 5 in the final output.
+          - the raw document text is NOT added to the context window as a
+            literal chat message. CONTEXT_MIN_MESSAGES protects a lone
+            message from pruning regardless of size, so an oversized single
+            message would otherwise survive untouched in every future turn's
+            [CONTEXT] block -- inflating final_output back to ~original size
+            and defeating the token-reduction the gateway exists to provide.
+            The document's real content already lives in machine_prompt; the
+            context window gets a short pointer instead.
+        """
+        logger.info(f"Processing DOCUMENT ({len(raw_text)} chars)...")
+
+        blocks = document_engine.parse_document(raw_text)
+        sections = document_engine.section_breakdown(blocks)
+
+        doc_classification = self.classifier.classify_document(sections)
+        category = doc_classification["primary_category"]
+        intent = self.classifier.extract_intent(raw_text)
+        entities = self.classifier.extract_document_entities(raw_text)
+        logger.info(
+            f"Document classification: {category} "
+            f"(histogram: {doc_classification['category_histogram']}), "
+            f"{len(sections)} sections, {len(entities)} entities"
+        )
+
+        machine_prompt = document_engine.build_document_digest(blocks)
+        cleaned_text = machine_prompt
+
+        original_length = len(raw_text)
+        final_length = len(machine_prompt)
+        noise_reduction_pct = round((1 - final_length / max(original_length, 1)) * 100, 1)
+        token_reduction = self.prompt_engine.prompt_converter.estimate_token_reduction(
+            raw_text, machine_prompt
+        )
+        logger.info(
+            f"Document digest: {noise_reduction_pct}% chars, "
+            f"Token reduction: {token_reduction['reduction_pct']}%"
+        )
+
+        snippet_assists = self.snip_engine.get_prompt_assist_snippets(
+            category=category, intent=intent
+        )
+        snippet_names = [s["name"] for s in snippet_assists] if snippet_assists else []
+
+        context_id = session_id or chat_id
+        window = self.context_mgr.get_window(context_id)
+        context_placeholder = (
+            f"[document submitted: {chat_id}, {len(sections)} sections, "
+            f"{original_length} chars -- full content in machine_prompt, not context]"
+        )
+        window.add_message(role, context_placeholder, msg_id=chat_id)
+        prune_stats = self.context_mgr.prune_and_save(context_id, current_query=context_placeholder)
+        context_messages = prune_stats.get("messages_after", 0) if isinstance(prune_stats, dict) else 0
+        pruned_context = window.get_context_text()
+        pruned_tokens = prune_stats.get("tokens_after", 0) if isinstance(prune_stats, dict) else 0
+
+        final_output = self._build_final_output(
+            machine_prompt=machine_prompt,
+            pruned_context=pruned_context,
+            category=category,
+            intent=intent,
+            chat_id=chat_id,
+            entities=entities,
+            snippet_assists=snippet_assists,
+            entity_cap=None,
+        )
+
+        pipeline_end = datetime.now(timezone.utc)
+        processing_ms = (pipeline_end - pipeline_start).total_seconds() * 1000
+
+        result = {
+            "chat_id": chat_id,
+            "session_id": session_id,
+            "document_mode": True,
+            "classification": {
+                "category": category,
+                "intent": intent,
+                "confidence": None,
+                "category_histogram": doc_classification["category_histogram"],
+                "section_classifications": doc_classification["section_classifications"],
+            },
+            "processing": {
+                "original_chars": original_length,
+                "cleaned_chars": final_length,
+                "noise_reduction_pct": noise_reduction_pct,
+                "original_est_tokens": len(raw_text.split()),
+                "machine_prompt": machine_prompt,
+                "token_reduction_pct": token_reduction["reduction_pct"],
+                "context_messages": context_messages,
+                "context_tokens": pruned_tokens,
+                "processing_time_ms": round(processing_ms, 1),
+                "sections_detected": len(sections),
+            },
+            "entities": entities,
+            "snippets_used": snippet_names,
+            "final_output": final_output,
+            "pipeline_timestamp_utc": pipeline_end.isoformat(),
+        }
+
+        logger.info(f"Document pipeline complete in {processing_ms:.1f}ms.")
+        self._save_chat_record(chat_id, result)
+        return result
 
     def _save_chat_record(self, chat_id: str, result: dict):
         """Save the processing record to disk."""

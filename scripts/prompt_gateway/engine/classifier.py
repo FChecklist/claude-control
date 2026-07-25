@@ -16,7 +16,10 @@ from typing import Optional
 
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from config import CHAT_CATEGORIES
+from collections import Counter
+import document_engine
 
 
 class ChatClassifier:
@@ -156,6 +159,60 @@ class ChatClassifier:
             entities.append({"type": "VERSION", "value": match.group()})
 
         return entities
+
+    def classify_document(self, sections: list) -> dict:
+        """
+        Classify a document section-by-section instead of forcing one
+        category onto the whole input. A 50-section architecture document
+        spans CODE, ANALYSIS, OPS and QUERY content simultaneously; picking
+        the single highest-scoring category for the entire text (the
+        short-message behavior in classify()) silently discards that.
+
+        Returns: {"primary_category": str, "category_histogram": dict,
+                   "section_classifications": [{"heading","category","confidence"}]}
+        """
+        per_section = []
+        cat_counter = Counter()
+        for sec in sections:
+            text = sec.get("text", "").strip()
+            if not text:
+                continue
+            result = self.classify(text)
+            per_section.append({
+                "heading": sec.get("heading", ""),
+                "category": result["category"],
+                "confidence": result["confidence"],
+            })
+            cat_counter[result["category"]] += 1
+
+        primary = cat_counter.most_common(1)[0][0] if cat_counter else "GENERAL"
+        return {
+            "primary_category": primary,
+            "category_histogram": dict(cat_counter),
+            "section_classifications": per_section,
+        }
+
+    def extract_document_entities(self, text: str) -> list:
+        """
+        Entity extraction for document-scale input: reuses the existing
+        pattern-based extract_entities() (file paths, URLs, code refs,
+        measurements, versions) across the FULL text -- not just a 5-entity
+        slice of it -- and adds numeric/structural claims ("74 engines",
+        "L0-L9") that the chat-tuned patterns never looked for.
+        """
+        entities = self.extract_entities(text)
+        for fact in document_engine.extract_numeric_facts(text):
+            entities.append({"type": "NUMERIC_FACT", "value": fact})
+
+        # De-duplicate by (type, value) while preserving first-seen order.
+        seen = set()
+        unique = []
+        for e in entities:
+            key = (e["type"], e["value"])
+            if key not in seen:
+                seen.add(key)
+                unique.append(e)
+        return unique
 
     def full_analysis(self, text: str) -> dict:
         """

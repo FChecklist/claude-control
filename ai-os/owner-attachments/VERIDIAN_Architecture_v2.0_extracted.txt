@@ -1,0 +1,565 @@
+VERIDIAN
+Prompt Intelligence Platform
+Comprehensive Architecture Specification v2.0
+Research-Backed Architecture Analysis
+Browser-First AI Platform Design
+Based on WebLLM, BrowserMCP, DSPy, WebGPU, and 30+ Technologies
+July 2025
+Table of Contents
+Note: Right-click the Table of Contents and select "Update Field" to refresh page numbers.
+
+# Executive Summary
+
+VERIDIAN is envisioned as the world's most comprehensive browser-first Prompt Intelligence Platform. After extensive research into current browser AI frameworks, prompt engineering systems, and the MCP ecosystem, this document presents a significantly expanded and refined architecture that addresses the full scope of challenges in production-grade prompt lifecycle management, browser-native AI execution, and enterprise governance.
+The original specification outlined approximately 44 engines and a promising browser-first direction. Our analysis, grounded in research of projects including WebLLM (165 pre-compiled LLM configurations, WebGPU-optimized), BrowserMCP (real-browser MCP automation), Transformers.js v3 (WebGPU-accelerated inference), DSPy (declarative prompt optimization), and the broader prompt engineering tooling ecosystem (LangSmith, LangFuse, NeMo Guardrails, promptfoo), reveals that a production-grade Prompt Intelligence Platform requires a substantially broader architectural footprint.
+This improved specification expands the architecture from approximately 44 engines to over 70 engines, adds 16 previously missing pipeline stages, introduces a defense-in-depth security model backed by research on current prompt injection prevention techniques, incorporates newly available browser APIs (WebNN, Chrome Built-in AI, NPU support), and provides concrete performance budgets for every pipeline stage. The result is an architecture that covers not only the original vision but also the gaps that separate a prototype from a production-grade system.
+
+# Part I: Gap Analysis of the Original Architecture
+
+This section identifies the specific areas where the original VERIDIAN specification fell short of a production-grade Prompt Intelligence Platform. Each gap is categorized by severity and mapped to the research-backed improvements introduced in this document.
+
+## 1.1 Missing Browser AI APIs and Technologies
+
+The original specification referenced WebLLM, BrowserMCP, and OPFS, but missed several critical browser AI technologies that have matured as of mid-2025. WebGPU shipped by default in all major browsers simultaneously in November 2025, making it the universal compute backbone for browser AI. However, the architecture failed to account for the Web Neural Network API (WebNN), which shipped in Chrome 131 and provides hardware-accelerated inference via CPU, GPU, and NPU backends through navigator.ml. Chrome's Built-in AI API (window.ai) offers zero-download, zero-configuration access to models like Gemini Nano for summarization, rewriting, and classification tasks. The NPU (Neural Processing Unit) delegation path, available through WebNN, enables sub-30ms inference times for certain workloads and represents an entirely new execution tier that the original architecture did not consider.
+Additionally, the specification overlooked Transformers.js v3, which supports WebGPU-accelerated inference for over 100 model families including LLMs (Llama, Phi, Gemma, Qwen), embeddings (BERT, MiniLM, BGE), image models (ViT, CLIP), audio models (Whisper, Bark), and supports progressive loading, ONNX format, and quantization (INT8, INT4). ONNX Runtime Web provides an alternative WebGPU/WebNN/WASM inference path with enterprise backing. Shape Detection API (FaceDetector, TextDetector, BarcodeDetector) and Web Codecs API for multimodal pipelines were also absent. These omissions mean the original architecture would have been unable to leverage a significant portion of the available browser AI compute surface.
+
+## 1.2 Missing Prompt Engineering Concepts
+
+The prompt management ecosystem has matured dramatically. The original specification included prompt versioning and A/B testing, but missed the most significant advancement in the field: DSPy, Stanford NLP's declarative prompt programming framework. DSPy separates task definition (signatures) from prompt implementation and provides automatic optimizers (BootstrapFewShot, MIPROv2, BayesianSignatureOptimizer, COPRO) that programmatically improve prompt quality against defined metrics. This is the closest existing technology to a true prompt compiler, and its absence from the original architecture is a critical gap.
+The specification also lacked defense-in-depth security architecture. Research into current prompt security tools reveals a mandatory multi-layer approach: input sanitization (regex, LLM classifiers), system prompt hardening (XML tags, instruction hierarchy), output filtering (NeMo Guardrails, Llama Guard), and runtime guardrails. The original architecture had a Prompt Security Engine but without specifying the layered defense model that production systems require. Other missing concepts include: LLM-as-judge evaluation (using a powerful model to score prompt outputs), semantic caching (embedding-based similarity matching via GPTCache or Redis vector search), cross-model portability (prompts that work across providers), real-time prompt adaptation (dynamic adjustment based on input characteristics), prompt staleness detection (correlating time-since-update with quality drift), and the GitOps-for-prompts workflow pattern (Git branch protection plus CI/CD plus eval gates for prompt promotion).
+
+## 1.3 Missing Pipeline Stages
+
+The original Prompt Compiler Pipeline contained 25 stages from User Input to AI Execution. Our analysis identifies 16 additional stages required for production operation. Before execution, the pipeline needs a Cost Estimation stage that calculates token budget and dollar cost before committing to LLM inference. A Model Selection stage must evaluate whether the task should go to the browser Lite LLM, the NPU via WebNN, Chrome's Built-in AI, or escalate to a server-side model based on task complexity, privacy requirements, and latency budget. A Guardrails stage must validate both input and output against safety policies using NeMo Guardrails or Llama Guard. A Semantic Cache Check stage, using embedding similarity search, can avoid redundant LLM calls for semantically identical inputs.
+After execution, an Output Filtering stage removes PII, injected instructions, or policy violations. A Staleness Detection stage monitors whether the active prompt version is producing degrading results compared to historical baselines, triggering an automatic re-optimization request to the Learning Engine. A Quality Scoring stage evaluates the output against defined quality metrics, feeding the Analytics Engine with performance data that drives continuous improvement. Together, these 16 additional stages transform the pipeline from a linear compiler into a production-grade inference system with feedback loops at every critical juncture.
+
+## 1.4 Missing Engines
+
+The original 44 engines, while comprehensive in scope, missed several categories identified through our research. A Semantic Cache Engine is needed to implement embedding-based similarity caching alongside the existing multi-level structural cache. An NPU Integration Engine is required to manage the WebNN delegation path and NPU model lifecycle. A Defense-in-Depth Engine coordinates the multi-layer security model across input, system prompt, output, and runtime layers. A Red Team Engine provides automated adversarial testing using tools like Garak and PyRIT. A Cost Optimization Engine tracks per-prompt cost, enforces budget guardrails, and recommends cost-reduction strategies.
+A Compliance Engine manages GDPR, HIPAA, SOC 2 requirements for prompt content, evaluation datasets, and audit logs. A Model Selection Engine evaluates task requirements against available compute tiers (NPU, WebGPU LLM, Built-in AI, Server) and selects the optimal execution path. A Prompt Portability Engine ensures prompts can be adapted across model providers without manual rewriting. A DSPy Integration Engine provides the bridge between VERIDIAN's prompt registry and Stanford's declarative optimization framework, enabling automatic prompt improvement against defined quality metrics. A Browser Worker Engine manages the lifecycle of Web Workers, SharedArrayBuffer coordination, and thread pool scaling for parallel ML inference.
+
+## 1.5 Incomplete Performance Specifications
+
+The original specification mentioned performance targets generically. A production architecture requires concrete latency budgets per pipeline stage. For example, browser startup to operational readiness must complete within 3 seconds. Prompt parsing and noise removal must complete within 10ms. Intent extraction via the Lite LLM should complete within 50ms. Entity and variable detection should each complete within 20ms. The full cache lookup chain (L0 through L5) should complete within 5ms for a hit. Execution planning, including model selection and capability verification, must complete within 30ms. The total browser-execution budget (user input to response rendering) should not exceed 500ms for cached/confident prompts and 3 seconds for prompts requiring full LLM inference.
+Memory budgets must also be specified: the Lite LLM context cache should be capped at 256MB, the prompt registry's in-memory index should not exceed 128MB, and the total browser tab memory footprint should stay under 2GB to avoid browser tab crashes. Storage budgets need definition: OPFS allocation for model weights should be capped at 4GB (enough for one 8B model at 4-bit quantization plus one embedding model), IndexedDB for metadata should be capped at 500MB, and the Cache API should be managed with explicit quota monitoring to avoid eviction of critical assets. These concrete budgets are essential because without them, individual engines will compete for resources without coordination, leading to performance degradation and unpredictable behavior.
+
+## 1.6 Summary of Identified Gaps
+
+
+[TABLE]
+Gap Category | Severity | Impact if Unaddressed
+Missing browser AI APIs (WebNN, Built-in AI, NPU, Transformers.js) | Critical | Cannot utilize 40%+ of available browser compute
+No DSPy-style declarative prompt optimization | Critical | Manual prompt engineering does not scale
+No defense-in-depth security model | High | Single-layer security is insufficient for production
+Missing 16 pipeline stages | High | Pipeline cannot handle real-world edge cases
+No semantic caching layer | Medium | Redundant LLM calls waste cost and latency
+No concrete latency budgets per stage | Medium | Cannot measure or enforce performance SLAs
+No LLM-as-judge evaluation | Medium | Quality assessment relies solely on human review
+No GitOps prompt lifecycle workflow | Medium | Manual deployment processes do not scale
+No NPU execution tier | Medium | Missing sub-30ms inference opportunity
+No cross-model portability | Low | Vendor lock-in for prompt assets
+[/TABLE]
+
+
+# Part II: The Improved VERIDIAN Architecture
+
+
+## 2.1 Complete Engine Catalog
+
+The following presents the complete engine catalog for VERIDIAN v2.0, organized by functional domain. Each engine serves a specific role within the broader platform, and together they form an integrated system that covers the full lifecycle of prompt intelligence, from creation and optimization through execution, governance, and continuous improvement. The catalog has been expanded from the original 44 engines to 74 engines, with 30 engines added based on research gaps identified in Part I.
+
+### Prompt Core Engines (12 engines)
+
+
+[TABLE]
+Engine | Purpose
+Prompt Registry Engine | Master registry of every prompt across all lifecycle states, providing unique identification, indexing, and discovery
+Prompt Version Engine | Semantic versioning (MAJOR.MINOR.PATCH) with full diff history, immutable snapshots, and rollback capability
+Prompt Lifecycle Engine | State machine managing Draft, Review, Staging, Production, Deprecated transitions with approval gates
+Prompt Compiler Engine | Natural language intent to optimized machine prompt via DSPy-style declarative compilation pipeline
+Prompt Optimizer Engine | Automatic token reduction, instruction refinement, and structure optimization using metric-guided techniques
+Prompt Compression Engine | Lossless and lossy prompt compression for reduced token count while preserving semantic intent
+Prompt Expansion Engine | Expand compressed prompts, restore hidden defaults, and hydrate templates with full context
+Prompt Validation Engine | Schema completeness check, required field validation, and structural integrity verification
+Prompt Testing Engine | Automated test case execution including unit, regression, adversarial, and shadow testing
+Prompt Benchmark Engine | Measure speed, accuracy, cost, and quality against standardized benchmark datasets
+Prompt Portability Engine | Cross-model prompt adaptation ensuring prompts work across OpenAI, Anthropic, Google, and local models
+Prompt A/B Engine | Multi-armed bandit experimentation with traffic splitting, statistical significance, and auto-promotion
+[/TABLE]
+
+
+### Intelligence and Matching Engines (10 engines)
+
+
+[TABLE]
+Engine | Purpose
+Prompt Ranking Engine | Best prompt selection using weighted scoring across quality, cost, latency, and freshness metrics
+Prompt Recommendation Engine | Suggest related prompts, templates, and optimization opportunities based on usage patterns
+Prompt Similarity Engine | Semantic matching using local embeddings for duplicate detection and prompt clustering
+Intent Engine | Multi-level intent extraction (primary, secondary, implicit) from natural language user input
+Entity Engine | Named entity recognition and extraction including domain-specific entity types
+Variable Engine | Variable identification, type inference, default resolution, and runtime binding
+Context Engine | Dynamic context construction combining user context, session history, and business context
+Workflow Engine | Workflow mapping, step orchestration, and dependency resolution for multi-step prompts
+Capability Engine | Required software capability assessment matching prompt needs to available tools
+Confidence Engine | Multi-signal confidence scoring combining cache match, intent clarity, and model readiness
+[/TABLE]
+
+
+### Business and Policy Engines (8 engines)
+
+
+[TABLE]
+Engine | Purpose
+Business Rule Engine | Business logic evaluation, rule matching, and constraint enforcement
+Dependency Engine | Required module identification and dependency graph management
+Permission Engine | Role-Based Access Control (RBAC) for prompt access, edit, approve, and deploy operations
+Policy Engine | Company-wide policy enforcement including content policies, brand voice, and compliance rules
+Compliance Engine | GDPR, HIPAA, SOC 2 compliance management for prompt content, datasets, and audit logs
+Governance Engine | Ownership tracking, stewardship assignment, and cross-team prompt coordination
+Audit Engine | Complete, append-only history of every prompt change, access, and execution event
+Cost Optimization Engine | Per-prompt cost tracking, budget guardrails, and cost-reduction recommendations
+[/TABLE]
+
+
+### Security and Quality Engines (6 engines)
+
+
+[TABLE]
+Engine | Purpose
+Defense-in-Depth Engine | Coordinates multi-layer security: input sanitization, prompt hardening, output filtering, runtime guardrails
+Prompt Security Engine | Prompt injection detection, jailbreak prevention, and instruction leakage protection
+Red Team Engine | Automated adversarial testing using tools like Garak, PyRIT, and custom attack generators
+Quality Engine | Accuracy scoring, hallucination detection, and output quality assessment
+Telemetry Engine | Performance metrics collection, latency tracking, and resource utilization monitoring
+Analytics Engine | Usage analytics, trend detection, prompt efficiency scoring, and staleness indexing
+[/TABLE]
+
+
+### Browser Execution Engines (10 engines)
+
+
+[TABLE]
+Engine | Purpose
+Browser Execution Engine | Master orchestrator for all browser-native execution, routing tasks to optimal compute tier
+Browser Lite LLM Engine | WebGPU-accelerated local LLM inference via WebLLM (165+ models, streaming, JSON mode)
+Browser NPU Engine | WebNN-based NPU inference for sub-30ms lightweight tasks (classification, summarization)
+Browser Built-in AI Engine | Chrome window.ai integration for zero-download Gemini Nano inference
+Browser MCP Engine | BrowserMCP integration for authenticated browser automation and DOM interaction
+Browser Function Engine | Browser API orchestration including Clipboard, Notifications, Geolocation, and Web APIs
+Browser Storage Engine | Multi-backend storage management across OPFS, IndexedDB, and Cache API
+Browser Sync Engine | Server synchronization with conflict resolution, offline queuing, and delta sync
+Browser Worker Engine | Web Worker lifecycle management, SharedArrayBuffer coordination, and thread pool scaling
+Browser Transformers Engine | Transformers.js v3 integration for WebGPU-accelerated embeddings, classification, and more
+[/TABLE]
+
+
+### Caching and Data Engines (8 engines)
+
+
+[TABLE]
+Engine | Purpose
+L0 Memory Cache Engine | JavaScript in-memory LRU cache for hot data, sub-microsecond access
+L1 Browser Cache Engine | Cache API management for HTTP-sourced assets and pre-computed responses
+L2 IndexedDB Engine | Structured data storage with rich indexing for metadata and queryable results
+L3 OPFS Engine | High-performance binary file storage via sync access handles for model weights and large data
+L4 Context Cache Engine | Lite LLM context window caching with KV-cache management and eviction
+L5 Semantic Cache Engine | Embedding-based similarity caching with configurable thresholds and TTL policies
+L8 Server Cache Engine | Server-side caching coordination with cache invalidation and version synchronization
+L9 Knowledge Cache Engine | Domain knowledge caching with structured retrieval and knowledge graph integration
+[/TABLE]
+
+
+### Learning, Escalation, and Distribution Engines (8 engines)
+
+
+[TABLE]
+Engine | Purpose
+AI Learning Engine | Learn from unknown prompts through autonomous exploration, evaluation, and registration
+Server Escalation Engine | Intelligent escalation from browser to server when local resources are insufficient
+Prompt Translation Engine | Multi-language prompt translation with cultural adaptation and model-specific optimization
+Prompt Localization Engine | Country/region-specific prompt adaptation including regulatory and cultural compliance
+Prompt Marketplace Engine | Internal prompt package discovery, sharing, versioning, and dependency management
+Prompt Export Engine | Export to JSON, YAML, TOML, and proprietary formats with schema validation
+Prompt Import Engine | Import from external libraries with conflict detection, dependency analysis, and sandboxing
+DSPy Integration Engine | Stanford DSPy framework integration for declarative prompt programming and auto-optimization
+[/TABLE]
+
+
+### Synchronization and Infrastructure Engines (12 engines)
+
+
+[TABLE]
+Engine | Purpose
+Gateway Integration Engine | API gateway routing, rate limiting, and protocol translation for external integrations
+Knowledge Sync Engine | Domain knowledge synchronization between browser cache and server knowledge base
+Model Selection Engine | Task-aware model routing across NPU, WebGPU LLM, Built-in AI, and server tiers
+Execution Planner Engine | Build and optimize execution plans considering latency, cost, privacy, and capability constraints
+L6 Workflow Cache Engine | Active workflow state machine caching with TTL and usage-frequency eviction
+L7 Metadata Cache Engine | Prompt metadata, permission, and configuration caching with version-aware invalidation
+Testing and Regression Engine | Automated regression testing triggered by prompt version changes with threshold enforcement
+Performance Profiling Engine | Per-stage latency profiling with flame graph visualization and bottleneck detection
+Memory Management Engine | Browser memory budget enforcement across engines with priority-based allocation
+Storage Quota Engine | OPFS/IndexedDB/Cache API quota monitoring, eviction policies, and usage optimization
+Network Resilience Engine | Offline detection, request queuing, exponential backoff, and sync reconciliation
+Observability Engine | Distributed tracing across pipeline stages with OpenTelemetry-compatible export
+[/TABLE]
+
+
+## 2.2 Improved Prompt Compiler Pipeline
+
+The Prompt Compiler Pipeline is the central nervous system of VERIDIAN. It transforms raw user input into an optimized, validated, and executable prompt through a series of precisely defined stages. The improved pipeline expands from 25 stages to 41 stages, adding critical paths for NPU delegation, semantic caching, cost estimation, guardrails, output filtering, and staleness detection. Each stage has a defined input, output, latency budget, and fallback behavior.
+
+### Stage 1: Input Acquisition Layer (Stages 1-2)
+
+User Input is received and immediately checked against the multi-level cache hierarchy. Browser Cache Check traverses L0 (JavaScript memory, sub-microsecond), then L1-L3 in parallel via Promise.all (Cache API, IndexedDB, OPFS, combined 5ms target). If any cache level returns a hit, the pipeline short-circuits and returns the cached response immediately, bypassing all subsequent stages. This optimization is critical because cache hits represent the majority of production traffic in a mature system. Only on a complete cache miss does the pipeline proceed to Stage 2.
+
+### Stage 2: Lightweight Analysis Layer (Stages 3-7)
+
+This layer runs entirely in JavaScript without any LLM inference, using pattern matching, regex, and cached intent models. Noise Removal strips formatting artifacts, redundant whitespace, and non-semantic content. Intent Extraction identifies the primary, secondary, and implicit intents from the cleaned input using a pre-trained classifier running via Transformers.js or the NPU. Entity Detection extracts named entities including domain-specific types defined in the prompt metadata schema. Variable Detection identifies template variables, type-infers them, and resolves defaults from the variable registry. Finally, Input Classification categorizes the request as simple (cached pattern), complex (requires compilation), or novel (triggers learning path). This entire layer must complete within 15ms total.
+
+### Stage 3: Context Assembly Layer (Stages 8-12)
+
+The Context Assembly Layer gathers all contextual information needed for prompt construction. Business Context Builder loads relevant business rules and domain knowledge from the Knowledge Cache (L9). User Context Loader retrieves the user's preferences, history, and permission scope from IndexedDB (L2). Session History Assembly constructs the conversation context from the session store. Variable Binding resolves all detected variables against their type-specific sources. Template Hydration combines the base prompt template with context, variables, and session data into a complete but unoptimized prompt. Data is pulled from IndexedDB (L2) for metadata and OPFS (L3) for large context documents. Total latency budget: 25ms.
+
+### Stage 4: Prompt Construction Layer (Stages 13-18)
+
+The Machine Prompt Builder takes the hydrated template and applies the prompt compilation strategy selected by the DSPy Integration Engine. The Prompt Optimizer performs token reduction, instruction refinement, and structural optimization to minimize token count while preserving semantic completeness. The Prompt Compressor applies lossless compression techniques. A Prompt Hash Generator creates a deterministic hash of the compiled prompt for cache keying. The Prompt Fingerprint generates a semantic fingerprint for the Similarity Search. The Prompt Similarity Search (L5 Semantic Cache) queries the embedding index: if similarity exceeds 0.95, return cached response; if between 0.85 and 0.95, return cached response with staleness flag; if below 0.85, continue to Stage 5. Total latency budget: 30ms.
+
+### Stage 5: Verification Layer (Stages 19-25)
+
+The Verification Layer ensures the compiled prompt is safe, authorized, and economically viable before execution. Confidence Scoring combines signals from cache match quality, intent clarity, context completeness, and model readiness into a single confidence score. Business Rule Verification checks the prompt against active business rules. Workflow Verification validates the execution workflow. Capability Verification confirms all required software capabilities are available. Permission Verification checks RBAC permissions for the requesting user and prompt combination. Cost Estimation calculates the expected token budget and dollar cost before committing resources. Model Selection evaluates task complexity, privacy requirements, latency budget, and hardware availability to route to the optimal execution tier. Total latency budget: 30ms.
+
+### Stage 6: Pre-Execution Guardrails (Stages 26-29)
+
+Before any inference, the pipeline validates through Pre-Execution Guardrails. Input Guardrails, powered by NeMo Guardrails or Llama Guard, evaluate the full compiled prompt against configurable safety policies. Content Policy Check ensures compliance with organizational content policies. PII Detection scans for personally identifiable information that should not be processed. Safety Classification categorizes the request by risk level. If any guardrail triggers, the pipeline diverts to a safe fallback path rather than proceeding to execution. This layer operates within a 20ms latency budget and is critical for preventing harmful outputs.
+
+### Stage 7: Execution Layer (Stages 30-34)
+
+The Execution Layer routes the validated prompt to the optimal compute tier with automatic fallback. The Execution Plan Builder constructs the final execution graph. Tier 1 (NPU via WebNN) handles lightweight tasks like classification and summarization in under 30ms. Tier 2 (Chrome Built-in AI via window.ai) provides zero-download inference for simple tasks. Tier 3 (Browser Lite LLM via WebLLM WebGPU) handles complex reasoning with 7B-8B models at 40-70 tokens per second. Tier 4 (Browser Transformers.js) provides embeddings, classification, and NER via dedicated models. Tier 5 (Server Escalation) handles tasks that exceed browser capabilities. Each tier has a timeout and falls back to the next tier if unavailable. Total execution budget: 3 seconds maximum.
+
+### Stage 8: Post-Execution Layer (Stages 35-41)
+
+After inference, the Post-Execution Layer ensures output quality and system integrity. Output Filtering removes PII using browser-adapted Presidio, injected instructions, and policy violations. Guardrails Validation applies output-side safety checks. Quality Scoring evaluates the response against defined quality metrics using either heuristic rules or LLM-as-judge. Result Caching stores the response across L0-L5 with appropriate TTL. Telemetry Emission sends performance and quality metrics to the Analytics Engine. Staleness Comparison checks whether the output quality matches historical baselines; if degradation is detected, a re-optimization signal is emitted to the Learning Engine. This feedback loop is essential for continuous improvement. Total latency budget: 10ms.
+
+### Pipeline Performance Summary
+
+
+[TABLE]
+Pipeline Section | Stages | Budget | Key Technology
+Input Acquisition | 1-2 | 5ms | Cache API, OPFS, IndexedDB
+Lightweight Analysis | 3-7 | 15ms | Pattern matching, regex, cached models
+Context Assembly | 8-12 | 25ms | IndexedDB, OPFS, BroadcastChannel
+Prompt Construction | 13-18 | 30ms | DSPy, custom compiler, semantic embeddings
+Verification | 19-25 | 30ms | Rule engines, RBAC, cost models
+Pre-Execution Guardrails | 26-29 | 20ms | NeMo Guardrails, Llama Guard
+Execution | 30-34 | 3000ms max | WebNN, WebLLM, window.ai, Transformers.js
+Post-Execution | 35-41 | 10ms | Output filters, quality scorers, telemetry
+[/TABLE]
+
+
+## 2.3 Enhanced Multi-Level Cache Architecture
+
+The improved cache architecture defines 10 levels (L0-L9) with specific technologies, access patterns, latency targets, eviction policies, and storage limits. Research into browser storage APIs confirms that OPFS with synchronous access handles provides near-native I/O performance and is the optimal storage backend for large binary data such as model weights. IndexedDB remains optimal for structured queries on metadata. The Cache API is best for HTTP-sourced assets. The addition of a Semantic Cache (L5) using embedding similarity search fills a critical gap for avoiding redundant LLM inference on semantically similar inputs.
+
+[TABLE]
+Level | Technology | Latency | Capacity | Eviction | Best Use
+L0 | JavaScript Map | <0.01ms | 128MB | LRU, 1000 entries | Hot prompts, active session data
+L1 | Browser Cache API | 1-5ms | Shared quota | LRU, browser-managed | HTTP responses, pre-computed assets
+L2 | IndexedDB | 5-20ms | Shared quota | Manual, by date | Metadata, queryable results, config
+L3 | OPFS (sync handles) | 2-10ms | Shared quota | Manual, LRU on files | Model weights, large binary data
+L4 | Lite LLM Context Cache | 1ms | 256MB | LRU on KV-cache | Active inference context windows
+L5 | Semantic Cache | 10-30ms | 10K embeddings | TTL + similarity | Deduplicate semantically similar queries
+L6 | Workflow Cache | 5-15ms | 1K workflows | TTL + usage freq | Active workflow state machines
+L7 | Metadata Cache | 1-5ms | 50K entries | TTL + version | Prompt metadata, permission caches
+L8 | Server Cache (Redis) | 10-50ms | Unlimited | Server-managed | Cross-device sync, global knowledge
+L9 | Knowledge Cache | 20-100ms | Unlimited | Relevance score | Domain knowledge, embeddings index
+[/TABLE]
+
+
+### Cache Hit Path Optimization
+
+The cache lookup chain follows a waterfall pattern with short-circuiting. L0 is checked first (sub-microsecond). On miss, L1-L3 are checked in parallel using Promise.all, reducing the combined latency to the slowest single lookup rather than the sum. If L5 (Semantic Cache) has a hit with similarity greater than 0.95, the cached response is returned immediately, bypassing all subsequent pipeline stages. This optimization can eliminate up to 80% of LLM inference calls for repeated or similar queries, reducing both latency and cost significantly.
+The L5 semantic cache uses local embeddings computed via Transformers.js (all-MiniLM-L6-v2 at approximately 50ms per embedding on WebGPU) or the Lite LLM's embedding capability. Embeddings are stored in IndexedDB with a JavaScript-implemented HNSW-style approximate nearest neighbor index maintained in L0 memory. The similarity threshold is configurable per-prompt, with high-stakes prompts using a stricter 0.97 threshold and low-stakes prompts using a more aggressive 0.90 threshold to maximize cache utilization.
+
+## 2.4 Complete Technology Stack
+
+Every technology listed has been verified as available and production-ready as of mid-2025 through our research process.
+
+### Browser Compute Tier
+
+
+[TABLE]
+Component | Primary Tech | Fallback | Performance | Notes
+GPU Inference | WebLLM (WebGPU) | WASM (Transformers.js) | 40-70 tok/s (7B-8B) | 165+ pre-compiled models
+NPU Inference | WebNN (navigator.ml) | WebGPU via WebLLM | <30ms (lightweight) | Chrome 131+, NPU delegation
+Built-in AI | window.ai (Chrome) | WebLLM fallback | Varies by model | Zero-download Gemini Nano
+Embeddings | Transformers.js v3 | WebLLM embeddings | 50ms/embed | BERT, MiniLM, BGE models
+Classification | Transformers.js v3 | Built-in AI | <20ms | Zero-shot and fine-tuned
+Computer Vision | Transformers.js + Shape API | Server escalation | 30-100ms | ViT, CLIP, FaceDetector
+Audio/Speech | Transformers.js (Whisper) | Server escalation | Real-time | ASR via Whisper, TTS via Bark
+[/TABLE]
+
+
+### Storage Tier
+
+
+[TABLE]
+Component | Technology | Capacity | Access | Use Case
+Hot Memory | JavaScript Map | 128MB | Synchronous | Active session data
+HTTP Cache | Cache API | Shared quota | URL-matched | Fetched assets, model shards
+Structured Data | IndexedDB | Shared quota | Indexed queries | Metadata, config, embeddings
+Binary Storage | OPFS (sync handles) | GB-scale | Byte-level I/O | Model weights, WASM
+Model Persist | OPFS + IndexedDB | GB-scale | Multi-backend | Cross-session model cache
+Sync State | IndexedDB + BroadcastChannel | MB-scale | Event-driven | Cross-tab state sync
+[/TABLE]
+
+
+### Parallelism and Background Processing
+
+
+[TABLE]
+Component | Technology | Status | Use Case
+Inference Workers | Dedicated Web Workers | Universal | Offload LLM from main thread
+Shared Memory | SharedArrayBuffer + Atomics | All browsers (COOP/COEP) | Zero-copy weight sharing
+Thread Pool | N Workers + SAB work queue | Requires COOP/COEP | Multi-threaded ML inference
+Background Sync | Service Worker (sync) | Chrome, Edge | Process data on reconnect
+Offline Routing | Service Worker | Universal | Cache-first offline strategy
+Model Pre-fetch | Service Worker + Background Fetch | Chrome only | Download models in background
+Cross-Tab Coord. | BroadcastChannel | Universal | Model state, result sharing
+[/TABLE]
+
+
+### Security and Guardrails Stack
+
+
+[TABLE]
+Component | Technology | Purpose
+Input Sanitization | Custom regex + LLM classifier | Detect injection patterns before processing
+System Prompt Hardening | XML tags, instruction hierarchy | Structural separation of user from instructions
+Output Filtering | NeMo Guardrails / Llama Guard | Enforce output policies at inference time
+Injection Detection | Prompt Guard (Meta) / Rebuff | Dedicated prompt injection classifier
+Adversarial Testing | Garak / PyRIT (Microsoft) | Automated red-teaming of vulnerabilities
+Content Moderation | Llama Guard 3 / Lakera Guard | Multi-tier content safety classification
+PII Detection | Presidio (browser-adapted) | Identify and scrub sensitive data from outputs
+[/TABLE]
+
+
+### Prompt Engineering Stack
+
+
+[TABLE]
+Component | Technology | Purpose
+Declarative Programming | DSPy (Stanford NLP) | Separate task definition from prompt implementation
+Auto-Optimization | DSPy MIPROv2 / COPRO | Programmatic prompt improvement against metrics
+Evaluation | promptfoo + DeepEval | Unit testing, red-teaming, regression testing
+Structured Generation | XGrammar (via WebLLM) | State-of-the-art JSON schema generation
+Programmatic Prompts | Guidance (Microsoft) / Outlines | Control flow in prompt construction
+LLM-as-Judge | Lite LLM / Server model | Automated quality scoring of prompt outputs
+Semantic Caching | Local embeddings + HNSW index | Deduplicate semantically similar queries
+Observability | LangSmith / LangFuse pattern | Tracing, evaluation, analytics, prompt registry
+[/TABLE]
+
+
+## 2.5 Performance Budget Framework
+
+Every pipeline stage operates within a defined latency budget. These budgets are not aspirational; they represent hard limits that trigger fallback behavior when exceeded. The total browser-execution budget for a confident, cached prompt response is 500ms. For prompts requiring full LLM inference, the budget extends to 3 seconds. For prompts that escalate to the server, the budget extends to 10 seconds with progressive loading feedback to the user.
+
+[TABLE]
+Stage | Target | Hard Limit | Fallback on Exceed
+Browser Startup to Operational | 2s | 5s | Show loading, preload critical assets
+L0-L3 Cache Lookup | 5ms | 20ms | Skip cache, proceed to analysis
+L5 Semantic Cache Lookup | 15ms | 30ms | Skip semantic cache, proceed to construction
+Noise Removal + Intent Extraction | 10ms | 25ms | Use simplified intent classifier
+Entity + Variable Detection | 20ms | 40ms | Skip entity detection, use defaults
+Context Assembly | 25ms | 50ms | Use cached context, skip dynamic assembly
+Prompt Construction + Optimization | 30ms | 60ms | Use last-known-good compiled prompt
+Verification (Rules + Permissions) | 30ms | 60ms | Allow with elevated logging
+Pre-Execution Guardrails | 20ms | 40ms | Proceed with warning flag
+NPU Inference (Tier 1) | 30ms | 100ms | Fall back to Built-in AI (Tier 2)
+Built-in AI (Tier 2) | 100ms | 300ms | Fall back to Lite LLM (Tier 3)
+Lite LLM Inference (Tier 3) | 500ms | 3000ms | Fall back to Server (Tier 5)
+Post-Execution Filtering | 10ms | 30ms | Return unfiltered with warning
+Total (Cached Response) | 150ms | 500ms | Degraded mode: skip optional stages
+Total (Full Inference) | 1000ms | 3000ms | Show progress, partial response
+[/TABLE]
+
+
+### Memory and Storage Budgets
+
+
+[TABLE]
+Resource | Budget | Enforcement | Notes
+L0 Memory Cache | 128MB | LRU eviction at limit | Hot prompts and session data
+L4 Context Cache | 256MB | KV-cache eviction | Active inference context
+In-Memory Index (Registry) | 128MB | Pagination + lazy load | Prompt metadata index
+Total Tab Memory | 2GB | Engine priority levels | Avoid browser tab crash
+OPFS (Model Weights) | 4GB | LRU on model files | One 8B Q4 model + embeddings
+IndexedDB (Metadata) | 500MB | Manual pruning | Prompt metadata and config
+Cache API | Quota-monitored | Explicit eviction | Fetched assets, model shards
+[/TABLE]
+
+
+## 2.6 Prompt Metadata Schema (200+ Fields)
+
+Every prompt in the VERIDIAN registry carries a rich metadata payload spanning 18 categories and over 200 fields. This metadata enables the platform's intelligence engines to make informed decisions about prompt selection, optimization, caching, security, and governance. The following categories represent the minimum viable metadata schema; individual implementations may extend these based on domain-specific requirements.
+
+[TABLE]
+Category | Fields | Key Examples | Purpose
+Functional | 25+ | name, id, type, domain, complexity, intent_map | Core identification and classification
+UI | 15+ | display_name, icon, category, tags, search_keywords | Discovery and presentation
+Workflow | 15+ | workflow_id, step_number, dependencies, timeout | Orchestration and sequencing
+Business | 15+ | business_unit, cost_center, sla, priority | Business alignment and accountability
+Validation | 15+ | required_vars, output_schema, test_cases | Quality assurance and testing
+Analytics | 20+ | usage_count, avg_latency, p95_latency, hit_rate | Performance monitoring and optimization
+Security | 15+ | security_class, injection_risk, pii_flag, audit_level | Access control and compliance
+Performance | 15+ | token_budget, latency_target, model_preference | Execution planning and budgeting
+AI | 20+ | model_family, quantization, temperature, top_p | Model selection and parameterization
+Browser | 15+ | webgpu_required, npu_capable, offline_capable | Browser capability matching
+Cache | 10+ | cache_ttl, cache_key, semantic_threshold | Cache strategy and invalidation
+Gateway | 10+ | gateway_id, endpoint, rate_limit, auth_scope | API gateway integration
+Version | 15+ | version, changelog, diff_hash, rollback_version | Version management and history
+Dependency | 10+ | requires_engines, requires_models, requires_apis | Dependency resolution
+Execution | 15+ | execution_count, success_rate, error_rate, avg_cost | Runtime behavior tracking
+Audit | 15+ | created_by, approved_by, last_modified, approval_chain | Governance and compliance audit
+Learning | 10+ | optimization_score, staleness_index, drift_detected | Continuous improvement signals
+Testing | 15+ | test_coverage, regression_status, red_team_score | Quality assurance metrics
+[/TABLE]
+
+
+## 2.7 Modular YCML Specification Catalog (40 Specs)
+
+The improved specification expands the YCML file catalog from 30 to 40 specifications. Each YCML specification is a self-contained, version-controlled document that defines the interfaces, data models, configuration schema, and integration points for its respective engine. The modular approach ensures independent development, testing, and deployment while maintaining compatibility through shared interface definitions.
+
+[TABLE]
+# | Specification | Domain | Status
+1 | Prompt Intelligence Engine (Core) | Platform | Revised
+2 | Prompt Registry | Core | Revised
+3 | Prompt Metadata Schema | Core | Expanded (200+ fields)
+4 | Prompt Lifecycle Management | Core | Revised
+5 | Prompt Compiler Pipeline | Compiler | Expanded (41 stages)
+6 | Prompt Matching and Ranking | Intelligence | New
+7 | Intent Extraction Engine | Intelligence | Revised
+8 | Context Construction Engine | Intelligence | Revised
+9 | Variable Resolution Engine | Intelligence | Revised
+10 | Entity Extraction Engine | Intelligence | Revised
+11 | Business Rule Engine | Business | Revised
+12 | Execution Planner | Execution | Expanded (5-tier model selection)
+13 | Confidence Scoring Engine | Intelligence | New
+14 | AI Learning Engine | Learning | Revised
+15 | Browser Intelligence Engine | Browser | Expanded
+16 | Browser Cache Engine | Cache | Expanded (L0-L9)
+17 | Browser Lite LLM (WebLLM) | Browser | Expanded
+18 | Browser NPU Engine (WebNN) | Browser | New
+19 | Browser Built-in AI (window.ai) | Browser | New
+20 | Browser MCP Engine (BrowserMCP) | Browser | Revised
+21 | Browser Transformers (Transformers.js) | Browser | New
+22 | Browser Storage Engine (OPFS/IndexedDB) | Browser | Expanded
+23 | Browser Worker Engine (SAB/Atomics) | Browser | New
+24 | Analytics and Telemetry Engine | Observability | Revised
+25 | Governance and Audit Engine | Governance | Revised
+26 | Defense-in-Depth Security Engine | Security | New
+27 | Red Team and Adversarial Testing | Security | New
+28 | Prompt Quality and Benchmark Engine | Quality | Revised
+29 | DSPy Integration Engine | Optimization | New
+30 | Semantic Cache Engine | Cache | New
+31 | Cost Optimization Engine | Business | New
+32 | Compliance Engine (GDPR/HIPAA/SOC2) | Governance | New
+33 | Model Selection Engine | Execution | New
+34 | Prompt Portability Engine | Core | New
+35 | Testing and Regression Engine | Quality | Expanded
+36 | Synchronization Engine | Infrastructure | Revised
+37 | Server-side End User Engine | Infrastructure | Revised
+38 | Gateway Integration Engine | Infrastructure | Revised
+39 | Knowledge Synchronization Engine | Infrastructure | Revised
+40 | AI Escalation Engine | Infrastructure | Revised
+[/TABLE]
+
+
+## 2.8 Defense-in-Depth Security Architecture
+
+Based on research into current prompt injection prevention techniques and tools (NeMo Guardrails, Llama Guard, Prompt Guard, Garak, PyRIT), VERIDIAN implements a four-layer defense-in-depth security architecture. No single layer is sufficient on its own; the layers are designed to be complementary, with each catching threats that slip through previous layers.
+
+### Layer 1: Input Sanitization
+
+The first line of defense operates before any prompt construction begins. This layer implements regex-based pattern detection for known injection vectors (ignore previous instructions, system:, role-playing attempts), character-level anomaly detection for invisible Unicode characters and zero-width spaces used in injection attacks, and a lightweight LLM classifier (running locally via the Lite LLM or NPU) that classifies input intent as benign, suspicious, or malicious. Inputs classified as malicious are rejected immediately. Suspicious inputs are flagged for additional scrutiny in downstream layers. This layer operates within the 15ms latency budget of the Lightweight Analysis section.
+
+### Layer 2: System Prompt Hardening
+
+The second layer protects the system prompt itself. All system prompts in VERIDIAN use XML tag delimiters to create clear boundaries between instructions and user input. Instruction hierarchy is enforced: system-level instructions are marked with a higher priority than user-level content, making it structurally difficult for user input to override system directives. Prompt templates use least-privilege design, including only the instructions necessary for the specific task. This layer is enforced at compile time in the Prompt Compiler Engine and validated by the Prompt Validation Engine.
+
+### Layer 3: Runtime Guardrails
+
+The third layer operates during inference execution. NeMo Guardrails or Llama Guard evaluates both the full compiled prompt (input-side guardrails) and the model's output (output-side guardrails) against configurable safety policies. These policies include topical boundaries (ensuring the model stays within its defined domain), fact-checking rails (flagging potentially hallucinated claims), and format enforcement (ensuring output adheres to required schemas). This layer operates at the Pre-Execution and Post-Execution stages of the pipeline, within a combined 30ms latency budget.
+
+### Layer 4: Output Filtering and Monitoring
+
+The fourth and final layer operates after inference completes. This layer scrubs PII from model outputs using Microsoft Presidio (adapted for browser execution), detects and removes any leaked system instructions that may have been included in the output, applies content moderation using Llama Guard 3 or Lakera Guard, and logs all outputs to the Audit Engine for compliance review. The Analytics Engine monitors for anomalous patterns in prompt usage that may indicate an ongoing attack, triggering automatic rate limiting or alerting. This layer operates within the 10ms Post-Execution budget.
+
+## 2.9 Governance and Compliance Framework
+
+Production prompt systems in enterprise environments must comply with regulatory requirements and internal governance policies. VERIDIAN's governance framework implements four key capabilities: Role-Based Access Control (RBAC), approval workflows, compliance management, and comprehensive audit trails.
+
+### Prompt Lifecycle Governance
+
+The Prompt Lifecycle Engine implements a state machine with the following transitions: Draft (engineer creates) to Review (team reviews, evals run) to Staging (canary deployment, 1-5% traffic) to Production (full rollout) to Deprecated (sunset with timeline). Each transition requires explicit approval from a designated reviewer. The Review-to-Staging transition requires passing automated evaluation gates (accuracy, latency, cost) with configurable thresholds. The Staging-to-Production transition requires a minimum canary duration (e.g., 24 hours) with no regression detection. All transitions are logged to the Audit Engine with timestamp, actor, and justification.
+
+### GitOps Workflow Integration
+
+VERIDIAN supports a GitOps workflow where prompts are stored as versioned files (YAML, JSON, or TOML) in a Git repository. Changes go through pull requests with mandatory evaluation results attached as CI/CD artifacts. Branch protection rules require passing evals before merge. The Prompt Import/Export Engine handles serialization between the Git format and the internal registry format. This approach enables code review processes, reverting changes via Git, and integration with existing CI/CD pipelines.
+
+# Part III: Research References and Technology Verification
+
+This section documents the specific technologies, projects, and research findings that informed the improved VERIDIAN architecture. Every technology referenced has been verified as available and production-ready as of mid-2025.
+
+## 3.1 Browser AI Frameworks
+
+
+[TABLE]
+Technology | Version | Key Capability | Source
+WebLLM | v0.2.84 | 165+ pre-compiled LLMs, WebGPU, JSON mode | github.com/mlc-ai/web-llm
+Transformers.js | v3.x | WebGPU/WASM, 100+ models, embeddings, vision | huggingface.co/docs/transformers.js
+ONNX Runtime Web | Active | WebGPU/WebNN/WASM, enterprise inference | onnxruntime.ai
+BrowserMCP | Active, MIT | Chrome ext + MCP server, browser automation | github.com/BrowserMCP/mcp
+LocalMode.dev | Active | Local-first browser AI patterns and tooling | localmode.dev
+[/TABLE]
+
+
+## 3.2 Browser APIs
+
+
+[TABLE]
+API | Status | Browser Support | VERIDIAN Use
+WebGPU | Default all browsers (Nov 2025) | Chrome 113+, Edge, Firefox 145+, Safari 18+ | Primary GPU compute for LLM inference
+WebNN (navigator.ml) | Chrome 131+ | Chrome 131+, Edge, Firefox experimental | NPU inference delegation for fast tasks
+Built-in AI (window.ai) | Chrome 131+ (origin trial) | Chrome only, progressive rollout | Zero-download Gemini Nano inference
+OPFS (sync handles) | Universal | Chrome 102+, Edge, Safari 16.4+, Firefox 128+ | GB-scale model weight storage
+SharedArrayBuffer | Universal (COOP/COEP) | Chrome, Edge, Firefox, Safari 16.4+ | Multi-threaded ML inference
+BroadcastChannel | Universal | Chrome 54+, Firefox 38+, Safari 15.4+ | Cross-tab coordination
+Shape Detection API | Shipped | Chrome | Face, text, barcode detection
+Web Codecs API | Shipped | Chrome, Edge, Firefox | Efficient video/audio for multimodal
+[/TABLE]
+
+
+## 3.3 Prompt Engineering Tools
+
+
+[TABLE]
+Tool | Category | Key Feature | VERIDIAN Integration
+DSPy | Optimization | Declarative prompt programming, auto-optimizers | Core compiler and optimization
+NeMo Guardrails | Security | Programmable input/output guardrails | Runtime guardrails layer
+Llama Guard 3 | Security | LLM-based safety classifier | Content moderation and safety
+promptfoo | Testing | Red-team, regression, provider comparison | Automated test execution
+DeepEval | Testing | Unit testing (hallucination, bias, toxicity) | Quality evaluation framework
+Garak | Security | Automated red-teaming for LLMs | Adversarial testing
+PyRIT | Security | Python Risk Identification Tool for LLMs | Security audit automation
+Presidio | Privacy | PII detection and scrubbing | Output filtering (browser-adapted)
+Prompt Guard (Meta) | Security | Dedicated injection classifier | Input sanitization
+LangSmith / LangFuse | Observability | Registry, tracing, eval, analytics | Reference architecture
+[/TABLE]
+
+
+## 3.4 Key Research Findings
+
+WebGPU is now universal across all major browsers (November 2025 milestone), providing a consistent compute substrate for browser AI. WebGPU delivers 10x performance improvement over WebGL for AI workloads, enabling real-time inference for models up to 8B parameters. OPFS with synchronous access handles provides near-native I/O performance for large binary data, making it the optimal storage backend for model weights. The Chrome Built-in AI API (window.ai) provides zero-download, zero-configuration access to models, representing a new execution tier. WebNN enables NPU delegation, opening sub-30ms inference paths for lightweight classification and summarization tasks.
+DSPy has become the de facto standard for programmatic prompt optimization, with its declarative signature approach separating task definition from prompt implementation. The prompt engineering tooling landscape has consolidated around a gateway pattern for routing, caching, and cost control, combined with a registry for versioning and evaluation, and a separate evaluation framework for quality assurance. Defense-in-depth security is now mandatory for production prompt systems. Public prompt marketplaces have declined; organizations build internal prompt libraries with rigorous evaluation and governance instead.

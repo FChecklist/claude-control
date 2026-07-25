@@ -777,6 +777,42 @@ quick_reference:
   summary: Live alert surface. Written by health-check-15min.py (systemd unit failures,
     stalled checkpoints, Mother Router DB reachability, disk/mem,...
 registries:
+- id: owner_engine_document_accuracy_convergence
+  type: accuracy_convergence_test_and_result
+  path: ai-os/OWNER_ENGINE_DOCUMENT_ACCURACY_CONVERGENCE_2026-07-25.yaml
+  scope: >
+    Task 1 of 2 (task-20260725-104606, Owner directive 2026-07-25): a real,
+    iterative accuracy-convergence test of OWNER_ENGINE
+    (scripts/prompt_gateway/gateway.py) against the real Owner-supplied
+    document VERIDIAN_Architecture_v2.0.docx -- OWNER_ENGINE had never been
+    run against document-scale input before (its only real test fixtures
+    were short chat sentences). RUN 1 (unmodified engine) measured a real
+    93.94% gap (single-category forcing, template-regex garbling, entity
+    list hard-capped at 5, no numeric-fact extraction, table content
+    entirely discarded, and a context-window bug that echoed the full raw
+    document back into the output). Built a real document-mode engine
+    feature (new scripts/prompt_gateway/engine/document_engine.py +
+    classifier.py/gateway.py changes) that detects document-scale input and
+    preserves real structure (headings, tables, per-section classification,
+    uncapped entity extraction with numeric-fact patterns) instead of
+    forcing it through the single-sentence compiler. RUN 2 and RUN 3
+    (confirmation) both measured 0.0% gap against a fixed, reproducible
+    165-item gold-standard content-coverage checklist
+    (scripts/owner_engine_convergence/{build_gold_items.py,
+    measure_accuracy.py,gold_items.json}). Extracted document text is
+    committed at ai-os/owner-attachments/VERIDIAN_Architecture_v2.0_extracted.txt.
+    Task 2 (the phased implementation the document itself describes) is
+    explicitly OUT OF SCOPE of this registry entry and was not started --
+    this convergence result is the Owner's own hard gate before Task 2 may begin.
+  status: converged_gap_0.0pct_confirmed_2_consecutive_runs
+  query_command: python3 scripts/superboss-register.py query-knowledge "owner_engine_document_accuracy_convergence" --tag domain:owner_engine_document_accuracy_convergence
+  reproduce: >
+    python3 scripts/prompt_gateway/gateway.py --mode file --input
+    <(python3 -c "import json;print(json.dumps({'text':
+    open('ai-os/owner-attachments/VERIDIAN_Architecture_v2.0_extracted.txt').read()}))")
+    --output /tmp/result.json ; python3 scripts/owner_engine_convergence/measure_accuracy.py
+    <(python3 -c "import json;print(json.load(open('/tmp/result.json'))['processing']['machine_prompt'])")
+    --summary-only
 - id: engines_gateways_architecture
   type: engine_inventory_capability_schema_and_phase_plan
   path: ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml + ai-os/CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml
