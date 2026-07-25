@@ -393,3 +393,26 @@ decisions:
     not have standing to make the final call on the Owner's behalf, same posture as every other judgment-tier
     decision in this file.
   status: awaiting_owner_decision
+- id: wiring-engine-generate-registry-crontab-addition
+  raised_by_task: task-20260725-032718-wiring-engine-phase0-schema-registry
+  raised_ts: '2026-07-25T03:46:51+00:00'
+  title: Add 1 crontab entry for the VERIDIAN Wiring Engine Phase 0 registry generator (generate-wiring-registry)
+  what: 'Task added a new cron entry directly to the live crontab: ''0 */6 * * * run-logged.sh "generate-wiring-registry"
+    /usr/bin/python3 /opt/veridian/scripts/generate_wiring_registry.py >> /opt/veridian/ai-os/logs/generate-wiring-registry-cron.log
+    2>&1'', same run-logged.sh wrapper convention as every other cron entry (same 6h cadence as
+    knowledge-registry-multisource, whose sources this script''s own sources overlap with). Rewrites
+    ai-os/WIRING_ENGINE_REGISTRY_2026-07-25.json from the 8 real sources named in
+    ai-os/WIRING_ENGINE_SCHEMA_2026-07-25.yaml every 6h -- zero AI/LLM calls in the run path, real live
+    os.path.exists()/sqlite reads only.'
+  needed_action: Owner acceptance of this entry as part of the approved crontab baseline (CRONTAB_APPROVED_SNAPSHOT.txt
+    already updated to match the live crontab as part of this same task).
+  why_not_done_automatically: 'Same standing exception as every other cron-item entry above: AI_ENGINEERING_POLICY.yaml
+    requires Owner confirmation before any crontab modification, regardless of how safe the underlying
+    script is.'
+  status: approved
+  approved_ts: '2026-07-25T03:46:51+00:00'
+  approved_via: 'This task''s own dispatched SPEC (KNOWN_CONTEXT: ''any crontab need follows the
+    Owner-approval-citation pattern in ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml -- Owner''s blanket
+    approval this session covers it''), same standing blanket-approval mechanism as
+    audit-pipeline-security-crontab-addition and auto-phase-continuation-crontab-addition above, not a
+    fresh case-by-case confirmation.'
