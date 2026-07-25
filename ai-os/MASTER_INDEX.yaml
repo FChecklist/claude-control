@@ -2418,6 +2418,36 @@ registries:
     phases[] -- picked up automatically by scripts/auto_phase_continuation.py (its PLAN_GLOB was widened
     from a hardcoded *_PHASE_PLAN_2026-07-24.yaml to *_PHASE_PLAN_*.yaml as part of this same task so this
     new, later-dated plan is discovered without further manual intervention) once this task''s PR merges.'
+- id: browser_automation_profile
+  type: browser_install_and_persistent_profile
+  path: ai-os/BROWSER_AUTOMATION_PROFILE_2026-07-25.yaml + scripts/browser/persistent-profile.js
+    + scripts/browser/smoketest.js + /opt/veridian/browser/
+  scope: 'task-20260725-053540-chrome-browser-persistent-profile, instruction INS-20260725-054500:
+    installed Google Chrome stable (150.0.7871.186) user-space at /opt/veridian/browser/chrome (no
+    root/apt on this box, extracted via dpkg-deb -x, reusing the doc-worker''s existing
+    /opt/veridian/workspace/browser-tools/local-libs shared-library extraction plus a small
+    extra-libs/ set), created /opt/veridian/browser/{chrome,profile,downloads,uploads,cache,
+    screenshots,recordings,temp} with profile/ locked to 700 rajat-only, and verified the
+    persistent-profile + headless mechanism end to end (google-chrome --headless=new
+    --user-data-dir=/opt/veridian/browser/profile --dump-dom https://example.com/, exit 0, real
+    DOM). Wired a Playwright helper (scripts/browser/persistent-profile.js) against the SAME
+    playwright install doc-worker-entrypoint.sh''s Playwright MCP server already uses
+    (/opt/veridian/workspace/browser-tools, "playwright": "^1.62.0-alpha-1783623505000") -- no
+    second parallel install -- with a real smoke test (scripts/browser/smoketest.js,
+    launchPersistentContext -> navigate -> extract, real run against https://example.com).
+    Also built a hardened, on-demand-only VNC path (TigerVNC, user-space install at
+    /opt/veridian/browser/vnc/root, bound to 127.0.0.1 only, SSH-tunnel-reachable, torn down
+    by default) for the Owner''s one-time manual Google login -- see
+    /opt/veridian/browser/vnc/VNC_LOGIN_PROCEDURE.md. Per the hard constraint that no
+    automated process may ever type a Google password/2FA code, that login has NOT been
+    completed by this task (BROWSER_AUTOMATION_PROFILE_2026-07-25.yaml meta.login_status:
+    NOT_YET_COMPLETED) and this registry entry must be updated once the Owner completes it.'
+  status: infrastructure_complete_owner_login_pending
+  query_command: python3 scripts/superboss-register.py query-knowledge "browser_automation_profile"
+    --tag domain:browser_automation_profile
+  next_phase: 'Owner completes the one-time login per VNC_LOGIN_PROCEDURE.md; then update
+    BROWSER_AUTOMATION_PROFILE_2026-07-25.yaml login_status and re-verify session reuse via
+    scripts/browser/smoketest.js-style checks against a real Google-authenticated page.'
 tree_lineage:
   tree1_audit_tree:
     path: /opt/veridian/repos/compliance-tracker/ai-os/audit-tree/
