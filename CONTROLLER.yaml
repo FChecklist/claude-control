@@ -5990,3 +5990,52 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260726-115420-resolve-pr79-merge-conflict--ddl-gate--c/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/79'
     last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-114944-fix-write-gate-argv-position-bypass---in
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: Server-worker task 'Fix write-gate argv-position bypass + investigate systemd-run
+      impersonation (round 4)' on claude-control reached status=blocked. supervisor
+      could not resolve a real PR for branch 'pr80-fix-local' (gh pr create failed,
+      no existing open PR found for it) — refusing to proceed rather than risk operating
+      on an unrelated PR via gh's empty-argument fallback. See supervisor.log.
+    where: /opt/veridian/ai-os/tasks/task-20260726-114944-fix-write-gate-argv-position-bypass---in/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-115422-resolve-pr80-merge-conflict--write-gate
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: Server-worker task 'Resolve PR80 merge conflict (write-gate round 3)' on
+      claude-control reached status=blocked. supervisor could not resolve a real PR
+      for branch 'pr80-work' (gh pr create failed, no existing open PR found for it)
+      — refusing to proceed rather than risk operating on an unrelated PR via gh's empty-argument
+      fallback. See supervisor.log.
+    where: /opt/veridian/ai-os/tasks/task-20260726-115422-resolve-pr80-merge-conflict--write-gate/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-115425-resolve-pr563-merge-conflict--supabase-m
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Resolve PR563 merge conflict (Supabase migration-drift
+      audit, missed scope)'' on compliance-tracker reached status=completed. tier1,
+      Superboss-approved, merged autonomously: https://github.com/FChecklist/compliance-tracker/pull/569'
+    where: '/opt/veridian/ai-os/tasks/task-20260726-115425-resolve-pr563-merge-conflict--supabase-m/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/569'
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-121633-adopted-write-gate-round-4--argv-position-fix
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Write-gate round 4: argv-position fix + task-registry
+      cross-reference (adopted)'' on claude-control reached status=blocked. Superboss
+      rejected: https://github.com/FChecklist/claude-control/pull/80 — see review.json
+      for issues'
+    where: '/opt/veridian/ai-os/tasks/task-20260726-121633-adopted-write-gate-round-4--argv-position-fix/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/80'
+    last_touched: '2026-07-26'
