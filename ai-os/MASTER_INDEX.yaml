@@ -1011,6 +1011,29 @@ registries:
     a script can fabricate): knowledge_registry_multisource.py''s SUPABASE refresh now calls
     scripts/notification_engine.py send-owner on every 401, so the gap is a real, rate-limited Owner
     alert instead of a silent degrade.'
+- id: policy_gate_registry
+  type: policy_rule_decision_gate_registry
+  path: ai-os/POLICY_GATE_REGISTRY_2026-07-26.yaml
+  scope: 'Phase 2 extension (task-20260726-154345-phase-2--policy-rule-decision-engine-uni), closing
+    the real gap registries.engines_gateways_architecture''s own phase_2_scope_judgment_2026_07_26 note
+    flagged: this session added a 3rd (scripts/ddl_authorization_check.py) and 4th (the interactive-session
+    write-gate) disconnected policy/gate mechanism after Phase 2 (task-20260724-115041) closed having
+    unified only 2. A real, queryable registry of all 4 gates now exists (path/scope/checks/schema_emission
+    status per gate), plus the actual schema-port for ddl_authorization_check.py (the one gate whose shape
+    genuinely matched Phase 2''s existing unification -- see POLICY_GATE_REGISTRY_2026-07-26.yaml''s own
+    schema_emission fields for the honest, judged answer per gate, not a uniform port applied without
+    reading what each gate actually is).'
+  status: 'DONE, 2026-07-26. 4/4 real gates found and registered: preflight-guard.py and
+    ddl_authorization_check.py both emit policy_decision_schema (scripts/policy_decision.py);
+    policy-enforcement-engine.ts remains documented-not-yet-ported (compliance-tracker''s own PR, same
+    repo-boundary discipline Phase 1/2 established); the interactive-session write-gate is registered but
+    marked not_applicable_by_design (a bash-level operator-safety control, not a machine dispatch decision
+    -- see that gate''s own schema_emission.detail for the full reasoning). The write-gate''s real content
+    was also committed to git for the first time this task
+    (ai-os/OWNER_DIRECTIVES/interactive-session-guard.bashrc-snippet, previously only at
+    /home/rajat/.claude-interactive-session-guard.bashrc-snippet, un-versioned) along with a new real
+    end-to-end test, tests/interactive_session_guard_test.sh (8/8 scenarios pass).'
+  query_command: python3 scripts/superboss-register.py query-knowledge "policy_gate_registry" --tag registry-id:policy_gate_registry
 - id: auditor_engine
   type: audit_domain_inventory_and_phase_plan
   path: ai-os/AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml + ai-os/AUDITOR_ENGINE_EVENT_SCHEMA_2026-07-24.schema.json
@@ -3254,11 +3277,14 @@ registries:
     phase_2_scope_judgment_2026_07_26 for the judgment that this one, unlike the
     other 3 new items this session, should be folded into Phase 2''s unification as
     a follow-up (it does not yet emit scripts/policy_decision.py''s shared schema).'
-  status: 'PR open, pending review -- PR #79 (FChecklist/claude-control), mergeable:
-    CONFLICTING as of 2026-07-26 (needs a rebase against current master; content
-    previously reported as approved, blocked at that time on PR #84 being unmerged --
-    #84 is now merged, so the current CONFLICTING state reflects a real, separate
-    stale-base rebase need, not the original blocker).'
+  status: 'MERGED -- PR #79 (FChecklist/claude-control) is merged to master (confirmed by this task''s
+    own `git log --oneline` re-check, 2026-07-26: "Merge pull request #79 ... add-ddl-pre-flight-authorization-gate-to").
+    Previously-reported CONFLICTING/pending-review state above is stale, superseded by this line, not
+    corrected in place (same "append, do not silently rewrite" discipline this file uses elsewhere). The
+    one real gap this entry itself flagged -- "does not yet emit scripts/policy_decision.py''s shared
+    schema" -- is now closed by task-20260726-154345-phase-2--policy-rule-decision-engine-uni: see
+    registries.policy_gate_registry / ai-os/POLICY_GATE_REGISTRY_2026-07-26.yaml for the real port
+    (additive `policy_decision` key, all 28 existing tests unmodified and passing).'
   query_command: python3 scripts/superboss-register.py query-knowledge "ddl_preflight_authorization_gate"
     --tag registry-id:ddl_preflight_authorization_gate
 - id: owner_engine_task_gateway_integration

@@ -1,0 +1,292 @@
+# === Interactive-session write gate ===================================
+# Real, technical enforcement of "AI agents work only through software,
+# software follows process" (see ai-os/OWNER_DIRECTIVES/PROTOCOL_OWNER_AI.yaml
+# article A8_software_execution_only) for the two most dangerous manual
+# escape hatches: merging a PR (`gh pr merge`, or the equivalent raw
+# `gh api ... /pulls/N/merge` call) and `git push` to a protected branch
+# (including `push --all`/`--mirror`, which push every branch -- protected
+# ones included -- regardless of which branch is currently checked out).
+#
+# REAL INCIDENT (2026-07-26): an interactive Claude Code session ran
+#   gh pr merge 78 --repo FChecklist/claude-control --merge --delete-branch
+# and a direct `git push` (an empty retrigger commit) to compliance-tracker's
+# `main` by hand, after the automated pipeline's own merge/CI-trigger step
+# failed -- instead of diagnosing and fixing the real bug in the pipeline
+# (task-gateway.py -> veridian-task.py -> systemd worker ->
+# supervisor-entrypoint.sh).
+#
+# ROUND 2 (this version): the first version of this guard was a pair of bash
+# *functions* named `gh`/`git`, gated on nothing but a bare
+# `[ -z "${INVOCATION_ID:-}" ]` check. A real audit found two ways through
+# that were not obscure edge cases:
+#   (a) `export INVOCATION_ID=anything; gh pr merge ...` -- a plain env var
+#       read has no cryptographic or kernel-verified binding to a real
+#       systemd unit, so anyone can just set it and the guard trusts it.
+#   (b) `command git push origin master` / `command gh pr merge ...` -- the
+#       bash builtin `command` looks a word up ignoring shell functions and
+#       aliases *by design* (that is its documented purpose), so a shell
+#       function can never stop it. This is a standard, well-known technique,
+#       not a niche trick.
+# Both are closed below: (a) by requiring a SECOND, kernel-tracked signal
+# (this process's real cgroup membership, read from /proc/self/cgroup) in
+# addition to INVOCATION_ID, and (b) by replacing the shell functions with
+# real wrapper SCRIPTS placed on disk in a directory prepended to PATH ahead
+# of the real gh/git binaries -- `command` bypasses functions/aliases but
+# NOT the PATH search, so it finds our script exactly the same way a plain
+# unprefixed `git`/`gh` invocation does. Verified directly (not just
+# theorized) in tests/interactive_session_guard_test.sh's "command git" /
+# "command gh" scenarios.
+#
+# MECHANISM (dual signal, both required):
+#   1. INVOCATION_ID -- the real environment variable systemd sets for every
+#      unit it launches (present for veridian-worker@*.service /
+#      veridian-supervisor@*.service units spawned by scripts/veridian-task.py's
+#      systemd --user integration). Absent in a normal interactive login/SSH
+#      shell. On its own this is just a plain env var read -- trivially
+#      spoofed by `export INVOCATION_ID=anything` -- so it is never trusted
+#      alone (see ROUND 2 above).
+#   2. This process's real, kernel-tracked cgroup membership (read from
+#      /proc/self/cgroup) actually names a veridian-worker@*/
+#      veridian-supervisor@* systemd unit. Cgroup membership is assigned by
+#      the kernel when systemd forks the unit's process tree and is
+#      inherited by every descendant process -- there is no environment
+#      variable or shell builtin that lets an ordinary interactive process
+#      rewrite its own cgroup path to impersonate a unit it isn't actually
+#      running under. A real interactive SSH/login shell's cgroup names
+#      `session-N.scope`/`user@<uid>.service`, never a veridian-worker/
+#      veridian-supervisor unit.
+# The command is only treated as "real dispatched worker context" when BOTH
+# signals agree; either one alone is not enough.
+#
+# SCOPE: only a PR merge (`gh pr merge`, or `gh api -X PUT|PATCH` against a
+# `.../pulls/<n>/merge` path) and `git push` to a protected branch (or
+# `push --all`/`--mirror`, which reach protected branches regardless of the
+# current branch) are intercepted. Every other gh/git subcommand (view,
+# checks, pr list, pr comment, pr diff, run rerun, log, diff, status, push to
+# a non-protected/feature branch, `gh api` calls that are not a merge, etc.)
+# passes through to the real binary unchanged in both contexts -- this guard
+# never blocks read-only verification/status-checking work.
+#
+# KNOWN LIMITATIONS (honest, not silently glossed over):
+#   - Same-account limitation (unchanged from round 1): this guard is scoped
+#     to the AI session's own discipline, NOT a security boundary against the
+#     Owner. The Owner's own interactive SSH session uses this same `rajat`
+#     account and sources this same ~/.bashrc, so there is no technical way
+#     here to distinguish "the Owner typed this by hand" from "the AI session
+#     typed this by hand" -- both share the same shell environment, and both
+#     get blocked identically.
+#   - Residual bypass (new, disclosed honestly): the wrapper-script mechanism
+#     works by winning the normal PATH search -- it cannot intercept a
+#     command that never does a normal PATH search in the first place. Two
+#     real ways to do that still exist after this round:
+#       * an absolute-path invocation of the real binary, e.g.
+#         `/usr/bin/git push origin master` or `/usr/bin/gh pr merge ...`;
+#       * `command -p git ...` / `command -p gh ...` -- bash's `-p` flag to
+#         `command` explicitly searches a fixed, default system PATH instead
+#         of the shell's current (guard-prepended) $PATH.
+#     Both require the caller to already know (or go find) the real
+#     binary's absolute path rather than just typing the ordinary command,
+#     which is a real, if modest, additional deterrent -- but it is not a
+#     hard technical stop, and this file makes no claim that it is. Closing
+#     this fully would require replacing the real binaries themselves (or an
+#     OS-level exec hook), which is out of scope for a per-user shell-profile
+#     guard and is left for a future round if the Owner decides it is worth
+#     the operational cost of touching system binaries.
+#
+# This file is meant to be sourced from ~/.bashrc and ~/.profile on
+# VERIDIAN-DEV (167.233.220.35), for the rajat user's interactive shells
+# only -- systemd units do not source .bashrc/.profile, so this guard never
+# runs for real dispatched workers/supervisors regardless of INVOCATION_ID.
+# Every time it is sourced it rewrites the wrapper scripts (and the small
+# cgroup-path config file used only for testing, see below) from scratch, so
+# a fresh interactive shell always gets the guard exactly as committed here
+# -- no manual sync step, no drift between "deployed" and "committed".
+
+_interactive_guard_dir="${INTERACTIVE_GUARD_DIR:-$HOME/.claude-interactive-session-guard.d}"
+mkdir -p "$_interactive_guard_dir" 2>/dev/null
+
+# --- shared helpers, sourced by both wrapper scripts below -----------------
+cat > "$_interactive_guard_dir/_lib.sh" <<'LIB_EOF'
+#!/bin/bash
+# Shared helpers for the interactive-session write-gate wrapper scripts
+# (git, gh) living alongside this file. Sourced by both; not meant to be
+# executed directly. See interactive-session-guard.bashrc-snippet (the
+# installer that writes this file) for the full design rationale.
+
+# Real (non-wrapper) binary for $1 ("git"/"gh"): PATH search with this
+# directory removed, so the wrapper never resolves to itself.
+_interactive_guard_real_bin() {
+    local name="$1" dir p rest=""
+    dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    local IFS=:
+    for p in $PATH; do
+        [ "$p" = "$dir" ] && continue
+        rest="${rest:+$rest:}$p"
+    done
+    ( PATH="$rest" type -P "$name" )
+}
+
+# Path to the cgroup file to check for the real-worker signal. Defaults to
+# the real /proc/self/cgroup. Overridable ONLY by editing the small
+# "$guard_dir/_cgroup_path" config file this same installer writes (reset to
+# the real path every time the snippet is re-sourced) -- this exists so the
+# check is testable end-to-end without root/namespace tricks to fabricate a
+# real kernel cgroup. It is not an environment variable, so it cannot be
+# spoofed the way INVOCATION_ID can: changing it requires filesystem write
+# access to this guard directory, which is the same access level as editing
+# ~/.bashrc directly to remove the guard entirely (already the documented
+# same-account limitation, not a new gap).
+_interactive_guard_cgroup_path() {
+    local dir cfg p
+    dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    cfg="$dir/_cgroup_path"
+    if [ -r "$cfg" ]; then
+        p="$(cat "$cfg" 2>/dev/null)"
+        if [ -n "$p" ]; then
+            printf '%s' "$p"
+            return
+        fi
+    fi
+    printf '%s' "/proc/self/cgroup"
+}
+
+# Both signals required: (1) INVOCATION_ID -- the real env var systemd sets
+# for every unit it launches, and (2) this process's own real, kernel-
+# tracked cgroup membership actually names a
+# veridian-worker@*/veridian-supervisor@* systemd unit. (1) alone is a plain
+# env var and can be spoofed by anyone with `export INVOCATION_ID=anything`;
+# (2) cannot be set by an env var -- it comes from /proc/self/cgroup, which
+# reflects the kernel's real process hierarchy, inherited from whatever real
+# unit (or login session) actually spawned this process tree.
+_interactive_guard_is_real_worker_context() {
+    [ -n "${INVOCATION_ID:-}" ] || return 1
+    local cgroup_file
+    cgroup_file="$(_interactive_guard_cgroup_path)"
+    [ -r "$cgroup_file" ] || return 1
+    grep -Eq '(veridian-worker|veridian-supervisor)@[^[:space:]/]+\.service' "$cgroup_file"
+}
+
+# gh: does this argv perform (or attempt) a PR merge -- either the direct
+# subcommand or the equivalent raw API call?
+_interactive_guard_gh_is_merge() {
+    if [ "$1" = "pr" ] && [ "$2" = "merge" ]; then
+        return 0
+    fi
+    if [ "$1" = "api" ]; then
+        shift
+        local method="" path="" arg
+        while [ $# -gt 0 ]; do
+            arg="$1"
+            case "$arg" in
+                -X|--method) shift; method="$1" ;;
+                -X*) method="${arg#-X}" ;;
+                --method=*) method="${arg#--method=}" ;;
+                -*) ;;
+                *) [ -z "$path" ] && path="$arg" ;;
+            esac
+            shift
+        done
+        method="$(printf '%s' "$method" | tr '[:lower:]' '[:upper:]')"
+        case "$method" in
+            PUT|PATCH)
+                case "$path" in
+                    */pulls/*/merge) return 0 ;;
+                esac
+                ;;
+        esac
+    fi
+    return 1
+}
+
+# git: sets _interactive_guard_push_verdict to "" (allow) or a label
+# describing the protected ref this push argv (the args *after* "push")
+# would reach, for the args of a `git push` invocation. `--all`/`--mirror`
+# push every ref -- including protected branches -- regardless of the
+# current checked-out branch, so they are always flagged without needing to
+# resolve a single destination branch.
+_interactive_guard_git_push_verdict() {
+    local real_git="$1"; shift
+    local args=("$@") positional=() arg refspec="" dest
+    for arg in "${args[@]}"; do
+        case "$arg" in
+            --all|--mirror)
+                _interactive_guard_push_verdict="all refs (push $arg)"
+                return
+                ;;
+            -*) ;;
+            *) positional+=("$arg") ;;
+        esac
+    done
+    if [ "${#positional[@]}" -ge 2 ]; then
+        refspec="${positional[1]}"
+    fi
+    if [ -n "$refspec" ]; then
+        dest="${refspec##*:}"
+    else
+        dest="$("$real_git" symbolic-ref --short HEAD 2>/dev/null)"
+    fi
+    dest="${dest#refs/heads/}"
+    case "$dest" in
+        master|main) _interactive_guard_push_verdict="$dest" ;;
+        *) _interactive_guard_push_verdict="" ;;
+    esac
+}
+LIB_EOF
+
+# --- the real, honest default: reset every time this snippet is sourced ---
+printf '%s\n' "/proc/self/cgroup" > "$_interactive_guard_dir/_cgroup_path"
+
+# --- git wrapper script -----------------------------------------------------
+cat > "$_interactive_guard_dir/git" <<'GIT_EOF'
+#!/bin/bash
+_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$_dir/_lib.sh"
+
+_real_git="$(_interactive_guard_real_bin git)"
+if [ -z "$_real_git" ]; then
+    echo "interactive-session-guard: real git binary not found on PATH" >&2
+    exit 127
+fi
+
+if [ "$1" = "push" ] && ! _interactive_guard_is_real_worker_context; then
+    shift
+    _interactive_guard_git_push_verdict "$_real_git" "$@"
+    if [ -n "$_interactive_guard_push_verdict" ]; then
+        echo "BLOCKED: git push to protected branch/ref '$_interactive_guard_push_verdict' must run through the dispatch pipeline (task-gateway.py), not an interactive session -- see ai-os/OWNER_DIRECTIVES/PROTOCOL_OWNER_AI.yaml" >&2
+        exit 1
+    fi
+    exec "$_real_git" push "$@"
+fi
+exec "$_real_git" "$@"
+GIT_EOF
+chmod +x "$_interactive_guard_dir/git"
+
+# --- gh wrapper script -------------------------------------------------------
+cat > "$_interactive_guard_dir/gh" <<'GH_EOF'
+#!/bin/bash
+_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$_dir/_lib.sh"
+
+_real_gh="$(_interactive_guard_real_bin gh)"
+if [ -z "$_real_gh" ]; then
+    echo "interactive-session-guard: real gh binary not found on PATH" >&2
+    exit 127
+fi
+
+if ! _interactive_guard_is_real_worker_context && _interactive_guard_gh_is_merge "$@"; then
+    echo "BLOCKED: gh pr merge (including the equivalent gh api PUT/PATCH .../pulls/N/merge call) must run through the dispatch pipeline (task-gateway.py), not an interactive session -- see ai-os/OWNER_DIRECTIVES/PROTOCOL_OWNER_AI.yaml" >&2
+    exit 1
+fi
+exec "$_real_gh" "$@"
+GH_EOF
+chmod +x "$_interactive_guard_dir/gh"
+
+# --- put the guard scripts earlier on PATH than the real binaries ----------
+case ":$PATH:" in
+    *":$_interactive_guard_dir:"*) ;;
+    *) export PATH="$_interactive_guard_dir:$PATH" ;;
+esac
+hash -r 2>/dev/null
+
+unset _interactive_guard_dir
+# === end interactive-session write gate =================================

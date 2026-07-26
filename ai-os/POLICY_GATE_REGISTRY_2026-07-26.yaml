@@ -1,0 +1,126 @@
+meta:
+  title: VERIDIAN Policy Gate Registry (Phase 2 extension, 2026-07-26)
+  created: '2026-07-26'
+  produced_by_task: task-20260726-154345-phase-2--policy-rule-decision-engine-uni
+  extends: ai-os/POLICY_DECISION_SCHEMA_2026-07-24.yaml (produced_by_task
+    task-20260724-115041-phase2-give-policy-engine-preflight-guar, phase_2_policy_rule_decision_unification)
+  scope_of_this_document: 'Phase 2 (task-20260724-115041) unified the OUTPUT CONTRACT of 2 real gates
+    (preflight-guard.py, policy-enforcement-engine.ts) into one shared policy_decision_schema envelope.
+    Between that task and this one, this session added 2 MORE disconnected gates
+    (scripts/ddl_authorization_check.py, the interactive-session write-gate) without registering either
+    anywhere queryable -- ai-os/MASTER_INDEX.yaml''s own registries.engines_gateways_architecture entry
+    (phase_2_scope_judgment_2026_07_26) already flagged this as a real gap and recommended a Phase 2
+    follow-up. This document is that follow-up: (1) a real, queryable REGISTRY of all 4 gates (so a future
+    session queries this instead of discovering them ad hoc, the literal problem statement), and (2) the
+    actual schema-port for the one gate whose shape genuinely matches Phase 2''s existing unification
+    (ddl_authorization_check.py) -- see gates[].schema_emission below for the honest, judged answer on
+    each of the 4, not a uniform "yes" applied without reading what each gate actually is.'
+
+# ============================================================================
+# GATE REGISTRY -- one row per real, live, enforced policy/rule/decision gate
+# found in this codebase as of 2026-07-26. Every path below was read directly
+# before this row was written (same discipline as engine_inventory /
+# gateway_inventory in 20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml) --
+# not assumed from an older document's description.
+# ============================================================================
+gates:
+  - gate_id: preflight_guard
+    path: scripts/preflight-guard.py
+    scope: server-dispatch
+    invoked_by: "scripts/task-gateway.py's cmd_start(), chained before every server-side AI-worker dispatch"
+    checks: "circuit_breaker, tight_task_schema, disk, memory, worktree_locked,
+      crontab_unauthorized_change, credit_accountant_rejected,
+      proxy_unreachable/budget_exhausted, openrouter_balance_exhausted, canary_call_failed"
+    schema_emission:
+      status: emits_policy_decision_schema
+      since: task-20260724-115041-phase2-give-policy-engine-preflight-guar
+      detail: "Refactored onto scripts/policy_decision.py's emit_allow/emit_deny helpers. Original
+        stdout contract ({proceed,reason,detail}) is byte-identical and still the ONLY thing
+        worker-entrypoint.sh actually reads -- the shared schema is additive metadata, not a
+        breaking change."
+  - gate_id: policy_enforcement_engine
+    path: repos/compliance-tracker/src/lib/policy-enforcement-engine.ts
+    scope: in-app-llm-call
+    invoked_by: "enforcePolicy(), a deterministic pre-LLM-call gate inside compliance-tracker
+      (personal-use/prompt-injection/out-of-domain categories)"
+    checks: "checkDomainValidity, checkPromptInjection, classifyBusinessPurpose -- first non-allowed wins"
+    schema_emission:
+      status: documented_not_yet_ported
+      detail: "ai-os/POLICY_DECISION_SCHEMA_2026-07-24.yaml documents its real current shape
+        ({allowed,category,reason}) and the field-for-field mapping onto policy_decision_schema, but
+        does not itself edit this file -- compliance-tracker's live checkout was found dirty with
+        unrelated in-flight changes at investigation time (both the original Phase 2 task and this one,
+        independently, re-confirmed this), so porting stays that repo's own PR to make, same
+        repo-boundary discipline Phase 1 used for capability-registry-service.ts's findSimilar(). The
+        schema is designed so that port is a direct field rename, not a redesign."
+  - gate_id: ddl_authorization_check
+    path: scripts/ddl_authorization_check.py
+    scope: live-ddl-authorization
+    invoked_by: "scripts/task-gateway.py's cmd_start(), the same chain point as preflight_guard --
+      scans a dispatch prompt-file's text for live-DDL-executing language before a worker is ever
+      dispatched"
+    checks: "DDL/DCL keyword scan (CREATE/DROP/ALTER TABLE, TRUNCATE, GRANT/REVOKE, CREATE/DROP/ALTER
+      ROLE/USER, SECURITY DEFINER, ...) + DDL-capable Supabase MCP tool-name scan
+      (apply_migration/execute_sql/merge_branch), overridable only by a PRE-APPROVED-LIVE-DDL: citation
+      that is verified to exist on disk, not just shaped correctly"
+    schema_emission:
+      status: emits_policy_decision_schema
+      since: task-20260726-154345-phase-2--policy-rule-decision-engine-uni (this task)
+      detail: "This was the one real gap ai-os/MASTER_INDEX.yaml's own
+        phase_2_scope_judgment_2026_07_26 note flagged: architecturally identical insertion point and
+        allow/deny shape to preflight_guard above, but shipped emitting its own ad hoc
+        {valid,reason,guidance} shape instead of the shared schema. Closed here: check_ddl_authorization()
+        now returns an additive `policy_decision` key (full policy_decision_schema envelope,
+        source_gate=\"ddl_authorization_check.py:check_ddl_authorization\") alongside its original
+        valid/reason/guidance/ddl_references_found/pre_approved_reference keys, unchanged -- all 28
+        existing tests in tests/test_ddl_authorization_check.py still pass unmodified."
+  - gate_id: interactive_session_write_gate
+    path: ai-os/OWNER_DIRECTIVES/interactive-session-guard.bashrc-snippet
+    scope: interactive-write-action
+    invoked_by: "sourced from ~/.bashrc/~/.profile on VERIDIAN-DEV for the rajat user's interactive
+      shells; installs git/gh wrapper scripts earlier on $PATH than the real binaries"
+    checks: "blocks `git push` to master/main (or --all/--mirror) and `gh pr merge` (or the equivalent
+      `gh api PUT|PATCH .../pulls/N/merge`) UNLESS both INVOCATION_ID is set AND this process's real
+      /proc/self/cgroup names a veridian-worker@*/veridian-supervisor@* systemd unit -- every other
+      git/gh subcommand passes through unchanged"
+    schema_emission:
+      status: not_applicable_by_design
+      detail: "Real investigation finding (matches ai-os/MASTER_INDEX.yaml's own
+        phase_2_scope_judgment_2026_07_26 reasoning, independently re-confirmed here): this gate never
+        runs inside the Python task-dispatch pipeline and emits no JSON any machine caller consumes --
+        it is a bash-level PATH-order interception of a human operator's own shell commands, gating an
+        interactive `git`/`gh` invocation before the real binary ever runs, not a function call any code
+        returns a decision object from. Wrapping it in policy_decision_schema would mean inventing a
+        machine consumer that doesn't exist, not generalizing a real shape the way Phase 2 did for the
+        other 3 gates. Closer to a G10 Infrastructure / operator-safety control than Engine 5 Policy
+        Engine's own machine-dispatch decision surface. Listed here so a future session discovers it in
+        one query instead of grep-hunting $HOME the way this session had to -- registry membership does
+        not require schema uniformity, only real, checked existence."
+    real_gap_closed_this_task: "This file's own real content had never been committed to git anywhere
+      before this task (it lived only at /home/rajat/.claude-interactive-session-guard.bashrc-snippet,
+      un-versioned) despite its own header comment citing this exact ai-os/OWNER_DIRECTIVES/ path and a
+      tests/interactive_session_guard_test.sh that also did not exist. Both gaps are closed by this task:
+      the file is now committed verbatim at this path (the live $HOME copy is untouched -- this is the
+      new canonical, reviewable source for future changes, not a live-infra edit), and
+      tests/interactive_session_guard_test.sh is a new, real end-to-end test that sources this exact
+      file and exercises its generated git/gh wrapper scripts under 8 scenarios (push-to-protected-branch
+      block, push-to-feature-branch passthrough, --all block, gh pr merge block, gh pr view passthrough,
+      gh api PUT .../pulls/N/merge block, real-worker-context allow, and the round-2
+      spoofed-INVOCATION_ID-without-matching-cgroup rejection) -- all 8 pass against the real,
+      unmodified snippet."
+
+coverage_summary:
+  total_real_gates_found: 4
+  emitting_policy_decision_schema: 2  # preflight_guard, ddl_authorization_check
+  documented_not_yet_ported: 1  # policy_enforcement_engine (compliance-tracker's own PR)
+  not_applicable_by_design: 1  # interactive_session_write_gate
+  before_this_task: 'Phase 2 (task-20260724-115041) unified 2 of what were, by then, already 3 real
+    gates -- ddl_authorization_check.py shipped after Phase 2 closed and was never folded in. The 4th
+    gate (interactive_session_write_gate) also shipped after Phase 2 closed.'
+  after_this_task: '3 of 4 real gates now schema-unified or honestly-documented-as-not-applicable; 1
+    (policy_enforcement_engine.ts) remains a real, live, enforced gate whose port to the shared schema
+    is compliance-tracker''s own PR to make, per repo_boundary discipline established in Phase 1/2.'
+
+registration:
+  master_index_registry_id: policy_gate_registry
+  knowledge_engine_query_command: 'python3 scripts/superboss-register.py query-knowledge "policy_gate_registry" --tag registry-id:policy_gate_registry'
