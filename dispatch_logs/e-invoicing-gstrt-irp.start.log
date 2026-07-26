@@ -1,0 +1,17 @@
+RC: 0
+STDOUT:
+{
+  "workflow_phase": "dispatched",
+  "task_id": "task-20260726-172009-e-invoicing-per-line-gstrt-fix---irp-for",
+  "systemd_active": true,
+  "work_item_id": "WRK-20260726-172012-7c68",
+  "credit_accountant_propose": {
+    "approved": false,
+    "increment_number": 1,
+    "reason": "existing software/mechanism already covers this (system_index match) -- use it instead of spending AI credits",
+    "reviewer": "deterministic"
+  }
+}
+
+STDERR:
+
