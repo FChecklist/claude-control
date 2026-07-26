@@ -50,10 +50,17 @@
 #       /tmp/fake > ~/.claude-interactive-session-guard.d/_cgroup_path;
 #       echo '0::/system.slice/veridian-worker@x.service' > /tmp/fake`), no
 #       root needed. Closed by removing the config-file indirection entirely:
-#       the cgroup path is now hardcoded to /proc/self/cgroup with no
-#       runtime-writable file in the loop. The one exception is a narrow,
-#       explicitly-named test seam -- see KNOWN LIMITATIONS below and
-#       _interactive_guard_cgroup_path() in _lib.sh.
+#       the cgroup path is now hardcoded to /proc/self/cgroup, unconditionally,
+#       with NO runtime override -- no config file, no environment variable,
+#       nothing external the production code path reads to redirect this
+#       check. (An early round-3 draft replaced the file with an
+#       INTERACTIVE_GUARD_TEST_CGROUP_FILE env-var override instead, which is
+#       the identical bug class in different clothing -- a runtime signal an
+#       ordinary interactive shell can set that the production check trusts.
+#       That draft was caught and rejected before landing; it does not exist
+#       in this version. See _interactive_guard_cgroup_path() in _lib.sh and
+#       tests/interactive_session_guard_test.sh for how the test suite
+#       simulates a matching worker cgroup without any such override.)
 #   (b) _interactive_guard_git_push_verdict() stripped `refs/heads/` from the
 #       destination ref but never stripped a leading `+` force-push marker,
 #       so `git push origin +master` (standard force-push refspec shorthand)
@@ -126,29 +133,37 @@
 #     OS-level exec hook), which is out of scope for a per-user shell-profile
 #     guard and is left for a future round if the Owner decides it is worth
 #     the operational cost of touching system binaries.
-#   - Test-only cgroup-path env var (new, round 3, disclosed honestly): the
-#     cgroup check reads the real, hardcoded /proc/self/cgroup in every
-#     normal code path. The ONE exception is
-#     INTERACTIVE_GUARD_TEST_CGROUP_FILE, an environment variable that
-#     _interactive_guard_cgroup_path() (in _lib.sh) consults before falling
-#     back to /proc/self/cgroup, which exists solely so
-#     tests/interactive_session_guard_test.sh can simulate a matching/
-#     non-matching cgroup without root/namespace privileges. Nothing in this
-#     installer or the wrapper scripts ever sets this variable -- only the
-#     test harness does, in its own subshell environment. If someone manually
-#     exports INTERACTIVE_GUARD_TEST_CGROUP_FILE in a real interactive shell,
-#     they can defeat the cgroup half of the check for that shell (still
-#     combined with the requirement to also spoof INVOCATION_ID, same as
-#     every other bypass on this list) -- this is a real, disclosed, narrow
-#     seam, not a silently-complete guarantee. It is a strict improvement
-#     over round 2's bug: there, the override was a plain file
-#     ($guard_dir/_cgroup_path) sitting in the guard's own install directory,
-#     always present and writable with no special knowledge required beyond
-#     finding the directory. Now, in the default case (this variable unset,
-#     true for every real interactive shell and every real dispatched
-#     worker/supervisor unit), there is no file-based indirection at all --
-#     the check reads the kernel-tracked /proc/self/cgroup directly, full
-#     stop.
+#   - Cgroup check has zero runtime override (round 3, corrected): the
+#     cgroup check reads the real, hardcoded /proc/self/cgroup
+#     unconditionally, in every code path, with no config file, no
+#     environment variable, and no other externally-settable indirection of
+#     any kind -- _interactive_guard_cgroup_path() in _lib.sh takes no
+#     input and always returns the literal string "/proc/self/cgroup". This
+#     is a strict improvement over both prior attempts: round 2's override
+#     was a plain file ($guard_dir/_cgroup_path) sitting in the guard's own
+#     install directory, always present and writable with no special
+#     knowledge required beyond finding the directory; an early round-3
+#     draft replaced that file with an INTERACTIVE_GUARD_TEST_CGROUP_FILE
+#     environment-variable override, which was the same bug class (a
+#     runtime signal an ordinary interactive shell can set that the
+#     production code path trusts) and was caught and removed before
+#     landing. Neither exists now. tests/interactive_session_guard_test.sh
+#     proves this two ways: (1) writing into the old
+#     $guard_dir/_cgroup_path file, and (2) setting
+#     INTERACTIVE_GUARD_TEST_CGROUP_FILE, both against the real, unmodified,
+#     shipped snippet -- both have zero effect on the outcome. To simulate a
+#     genuinely matching worker cgroup for its own "passes through"
+#     positive-path scenarios (impossible to produce for real without root/
+#     namespace privileges to fake /proc/self/cgroup's kernel-owned
+#     content), the test harness patches the literal hardcoded path in a
+#     throwaway, disk-scratch COPY of this file's own source text -- it
+#     never touches the deployed/committed snippet, and the production code
+#     path never reads any file or environment variable to decide this. If
+#     that residual test-only textual-patching seam is ever considered
+#     insufficiently separated, tightening it further is a future-round
+#     item; today it is structurally incapable of affecting a real
+#     interactive shell, which only ever sources the real, unmodified,
+#     committed copy of this file.
 #
 # This file is meant to be sourced from ~/.bashrc and ~/.profile on
 # VERIDIAN-DEV (167.233.220.35), for the rajat user's interactive shells
@@ -183,25 +198,25 @@ _interactive_guard_real_bin() {
 }
 
 # Path to the cgroup file to check for the real-worker signal. Hardcoded to
-# the real, kernel-tracked /proc/self/cgroup -- no file-based indirection of
-# any kind. ROUND 2 shipped this as a read of a plain config file
-# ("$guard_dir/_cgroup_path") sitting in the guard's own install directory;
-# that file was writable by any interactive session, so it was a total
-# bypass of the "kernel-verified" claim, not a test seam (reproduced live: 3
-# lines of shell, no root). It is gone now.
-#
-# The ONE remaining override is INTERACTIVE_GUARD_TEST_CGROUP_FILE, an
-# environment variable -- not a file -- that nothing in this installer or
-# either wrapper script ever sets. It exists solely so
-# tests/interactive_session_guard_test.sh can point this check at a fake
-# cgroup file to simulate a matching/non-matching kernel cgroup without
-# root/namespace privileges. Setting it manually in a real shell does defeat
-# this half of the check for that shell (still combined with the
-# requirement to also spoof INVOCATION_ID) -- disclosed honestly in this
-# file's KNOWN LIMITATIONS section, same standard as the other documented
-# residual bypasses. Nobody outside the test harness has a reason to set it.
+# the real, kernel-tracked /proc/self/cgroup -- unconditionally, with NO
+# override of any kind: no config file, no environment variable, nothing
+# read at runtime that could redirect this check anywhere else. ROUND 2
+# shipped this as a read of a plain config file ("$guard_dir/_cgroup_path")
+# sitting in the guard's own install directory; that file was writable by
+# any interactive session, so it was a total bypass of the "kernel-verified"
+# claim, not a test seam (reproduced live: 3 lines of shell, no root). An
+# early round-3 draft replaced that file with an
+# INTERACTIVE_GUARD_TEST_CGROUP_FILE environment-variable override instead
+# -- which is the exact same bug class wearing a different hat (a runtime,
+# externally-settable signal the production code path trusts) and was
+# rejected before landing. There is no such variable, or anything like it,
+# read here now. See tests/interactive_session_guard_test.sh for how the
+# test harness simulates a matching worker cgroup WITHOUT any runtime
+# override the shipped code reads (it patches a throwaway copy of this
+# file's own source text, never the deployed/committed copy, and never via
+# a file or env var this function consults).
 _interactive_guard_cgroup_path() {
-    printf '%s' "${INTERACTIVE_GUARD_TEST_CGROUP_FILE:-/proc/self/cgroup}"
+    printf '%s' /proc/self/cgroup
 }
 
 # Both signals required: (1) INVOCATION_ID -- the real env var systemd sets

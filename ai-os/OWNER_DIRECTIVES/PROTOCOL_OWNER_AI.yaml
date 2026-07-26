@@ -279,15 +279,19 @@ articles:
       (`feature-branch`) checked -- `master`, the second refspec in the same
       invocation, was never evaluated and the whole push went through
       unblocked; reproduced live. All three are closed: (a) the cgroup path
-      is now hardcoded to /proc/self/cgroup with no file-based indirection
-      -- the sole override is INTERACTIVE_GUARD_TEST_CGROUP_FILE, an
-      environment variable nothing outside the test harness ever sets
-      (disclosed in known_limitations below, not silently treated as a
-      closed gap); (b) a leading `+` is now stripped from each refspec
-      before comparison; (c) every positional refspec argument is now
-      checked, not just the first, and the push is blocked if ANY of them
-      resolves to a protected branch. Each has a dedicated, passing
-      regression-test scenario -- see
+      is now hardcoded to /proc/self/cgroup unconditionally, with NO
+      override of any kind -- no config file, no environment variable,
+      nothing external the production code path reads. (An early round-3
+      draft replaced the config file with an
+      INTERACTIVE_GUARD_TEST_CGROUP_FILE environment-variable override
+      instead, which is the identical bug class in different clothing -- a
+      runtime signal an ordinary interactive shell can set that the
+      production check trusts -- and was caught and removed before landing;
+      it does not exist in the shipped guard.) (b) a leading `+` is now
+      stripped from each refspec before comparison; (c) every positional
+      refspec argument is now checked, not just the first, and the push is
+      blocked if ANY of them resolves to a protected branch. Each has a
+      dedicated, passing regression-test scenario -- see
       tests/interactive_session_guard_test.sh's "ROUND 3" scenarios.
     implementation:
       deployed_at: "/home/rajat/.claude-interactive-session-guard.bashrc-snippet
@@ -348,24 +352,33 @@ articles:
         replacing the real system binaries or adding an OS-level exec hook,
         which is out of scope for a per-user shell-profile guard; left for a
         future round if the Owner decides the operational cost is worth it.
-        (3) Test-only cgroup-path env var (new, round 3, disclosed honestly):
-        the cgroup check reads /proc/self/cgroup directly in every normal
-        code path -- the sole exception is
-        INTERACTIVE_GUARD_TEST_CGROUP_FILE, an environment variable that
-        nothing in the installer or either wrapper script ever sets, which
-        exists only so the test suite can simulate a matching/non-matching
-        cgroup without root/namespace privileges. Manually exporting it in a
-        real shell defeats the cgroup half of the check for that shell --
-        still combined with the pre-existing requirement to also spoof
-        INVOCATION_ID, and disclosed here rather than silently glossed over,
-        same standard as limitation (2). This is a strict improvement over
-        the round-2 bug it replaces: round 2's override was a plain file
-        sitting in the guard's own install directory, always present and
-        writable with no special knowledge required; the round-3 default
-        (this variable unset, true for every real shell and every real
-        dispatched unit) has no file-based indirection at all. Documented
-        honestly rather than silently building something that only pretends
-        to be complete.
+        (3) Cgroup check has zero runtime override (round 3, corrected): the
+        cgroup check reads /proc/self/cgroup directly and unconditionally in
+        every code path -- no config file, no environment variable, nothing
+        external the production code path reads to redirect this check.
+        _interactive_guard_cgroup_path() in _lib.sh takes no input and
+        always returns the literal string "/proc/self/cgroup". This closes
+        both the round-2 bug (a plain file, $guard_dir/_cgroup_path, sitting
+        in the guard's own install directory, always present and writable
+        with no special knowledge required) and an early round-3 draft's
+        attempt to "fix" it with an INTERACTIVE_GUARD_TEST_CGROUP_FILE
+        environment-variable override -- the same bug class in different
+        clothing, caught and removed before landing. Neither exists in the
+        shipped guard. tests/interactive_session_guard_test.sh proves this
+        two ways against the real, unmodified, shipped snippet: writing a
+        fake matching-worker cgroup into the old $guard_dir/_cgroup_path
+        file has zero effect, and setting INTERACTIVE_GUARD_TEST_CGROUP_FILE
+        also has zero effect. The one residual, explicitly narrow test-only
+        seam is that the test suite, to simulate a genuinely matching worker
+        cgroup for its own positive-path scenarios (impossible to produce
+        for real without root/namespace privileges), sources a throwaway
+        disk-scratch COPY of this file's source text with the hardcoded
+        /proc/self/cgroup line replaced by a fixture path -- i.e. it edits a
+        copy of the guard's own source, never the deployed/committed file,
+        and the production code path itself never reads any file or
+        environment variable to make this decision. A real interactive
+        shell can never reach this seam because it only ever sources the
+        genuine, unmodified, committed snippet.
     source: This task's own real deliverable (server-side ~/.bashrc /
       ~/.profile-sourced snippet change + committed snippet + test),
       directly implementing A8_software_execution_only's standing rule with
