@@ -168,6 +168,16 @@ def _upsert_wiring_row(entity):
     with sbr._write_lock():
         conn = sbr._connect()
         sbr._ensure_wiring_registry_table(conn)
+        # _ensure_wiring_registry_table() above is a bare CREATE TABLE IF NOT
+        # EXISTS -- a no-op against a pre-existing table, so it never widens an
+        # already-created wiring_registry's entity_type CHECK constraint to
+        # allow 'dispatch_event'. _migrate_wiring_registry_entity_types() is
+        # the real migration that rebuilds the table in place when needed
+        # (see its own docstring); called directly (not via the broader
+        # _migrate_schema(), which also touches the unrelated system_index
+        # table) since only wiring_registry's schema matters on this write
+        # path. Both calls are idempotent no-ops once the table is current.
+        sbr._migrate_wiring_registry_entity_types(conn)
         sbr.register_entity_row(conn, entity)
         conn.commit()
         conn.close()
