@@ -6258,3 +6258,67 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260726-171939-delegation-expiry-enforcement-audit---te/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/579'
     last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-171420-phase5-browser-execution-lite-llm-npu-bu
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''phase5-browser-execution-lite-llm-npu-built'' on
+      compliance-tracker reached status=blocked. CLI HARD STOP (max_budget_usd): this
+      invocation''s own self-reported cost hit the $10 per-task cap (/opt/veridian/ai-os/tasks/task-20260726-171420-phase5-browser-execution-lite-llm-npu-bu/.claude-out-main.json).
+      Stopping rather than retrying -- a retry will very likely spend another $10 hitting
+      the identical wall. Needs human review: either the task is too large for one invocation
+      (split it) or it is genuinely stuck/looping.'
+    where: /opt/veridian/ai-os/tasks/task-20260726-171420-phase5-browser-execution-lite-llm-npu-bu/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-175957-rca-20260726-171946-chat-context
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: Server-worker task 'rca-task-20260726-171946-chat-context---terminology---mode-pill-a'
+      on claude-control reached status=blocked. supervisor could not resolve a real
+      PR for branch 'master' (gh pr create failed, no existing open PR found for it)
+      — refusing to proceed rather than risk operating on an unrelated PR via gh's empty-argument
+      fallback. See supervisor.log.
+    where: /opt/veridian/ai-os/tasks/task-20260726-175957-rca-task-20260726-171946-chat-context/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-180527-rca-20260726-171926-remove-anthropi
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: Server-worker task 'rca-task-20260726-171926-remove-anthropic-api-key-dead-code-path'
+      on claude-control reached status=blocked. supervisor could not resolve a real
+      PR for branch 'master' (gh pr create failed, no existing open PR found for it)
+      — refusing to proceed rather than risk operating on an unrelated PR via gh's empty-argument
+      fallback. See supervisor.log.
+    where: /opt/veridian/ai-os/tasks/task-20260726-180527-rca-task-20260726-171926-remove-anthropi/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-180540-rca-20260726-171939-delegation-expi
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''rca-task-20260726-171939-delegation-expiry-enforcement-audit---te''
+      on claude-control reached status=completed. tier1, Superboss-approved, merged
+      autonomously: https://github.com/FChecklist/claude-control/pull/99'
+    where: '/opt/veridian/ai-os/tasks/task-20260726-180540-rca-task-20260726-171939-delegation-expi/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/99'
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-180631-rca-20260726-171926-remove-anthropi
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: Server-worker task 'rca-task-20260726-171926-remove-anthropic-api-key-dead-code-path'
+      on claude-control reached status=blocked. supervisor could not resolve a real
+      PR for branch 'master' (gh pr create failed, no existing open PR found for it)
+      — refusing to proceed rather than risk operating on an unrelated PR via gh's empty-argument
+      fallback. See supervisor.log.
+    where: /opt/veridian/ai-os/tasks/task-20260726-180631-rca-task-20260726-171926-remove-anthropi/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-26'
