@@ -855,11 +855,127 @@ registries:
     registries.auditor_engine (Engines 19/20, Audit/Observability, cross-linked not re-planned) and
     unrelated to compliance-tracker/ai-os/engines/ENGINES.yaml (a namespace collision, confirmed this
     session, not prior art for this registry).'
-  status: phase_0_through_phase_5_complete_phase_6_plus_not_yet_dispatched
+  status: 'STALE AS OF 2026-07-26, CORRECTED THIS ENTRY: this field previously read
+    "phase_0_through_phase_5_complete_phase_6_plus_not_yet_dispatched" -- re-verified
+    false by task-20260726-102517 (this entry''s own update). Real current state,
+    confirmed via `git log --oneline --all -- <phase files>` + `git merge-base
+    --is-ancestor <commit> origin/master` for every phase commit (not assumed from
+    the phase-plan file''s own self-reported status: lines): phase_0 (b02d23e),
+    phase_1 (74b78ff), phase_2 (9b6bddd), phase_3 (a53e924), phase_4 (9e045c2),
+    phase_5 (2df7dea/64471f2), phase_6 (19e9c1d), phase_7 (44ba0d5), and
+    gateway_definition_and_inventory (06a7e46) are ALL real, merged commits on
+    origin/master -- every one of phases 0-7 plus the gateway-naming phase is done,
+    not just 0-5. The 10-gateway canonical list is also no longer an open gap: it was
+    recovered verbatim from instruction INS-20260724-053123-0e5a''s raw_text and
+    closed by phase gateway_definition_and_inventory (2026-07-24), producing a
+    real, live-verified 10-row gateway_inventory (G01-G10, see gateways: block in
+    the phase-plan file) -- confirmed still 0/10 drifted by this task''s own
+    independent os.path.exists() re-check, 2026-07-26.'
   query_command: python3 scripts/superboss-register.py query-knowledge "engines_gateways_architecture" --tag domain:engines_gateways_architecture
-  next_phase: 'phase_6_intent_context_planning_learning (depends_on phase_1 + phase_5, both now
-    done) and phase_7_ui_composition_analytics per ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml
-    phases[] -- each dispatched as a separate task, not part of this registry entry''s own scope.'
+  phase_6_7_and_gateway_summary: 'phase_6_intent_context_planning_learning (task-20260724-143010,
+    closes_engines [1,2,4,16]: scripts/intent_engine.py, context_engine.py,
+    plan_generator.py, learning_engine.py, all live-tested against the real DB) and
+    phase_7_ui_composition_analytics (task-20260724-144911, closes_engines [17,18]:
+    closed by honest finding, not by building -- both engines'' current narrow scope
+    judged acceptable-as-is, filed to the Owner as
+    OWNER_DECISIONS_NEEDED#ui-composition-analytics-engine-scope-confirmation,
+    status still awaiting_owner_decision as of 2026-07-26) and
+    gateway_definition_and_inventory (task-20260724-185145: recovered the canonical
+    10-gateway list, produced gateway_inventory) are all DONE, 2026-07-24 -- full
+    status_detail/real_evidence for each lives in
+    ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml phases[] (not duplicated
+    here verbatim, same convention phases_2_through_4_summary below already
+    established).'
+  reverification_2026_07_26: 'task-20260726-102517 (this update) independently
+    re-checked every engine_inventory (20 rows) and gateway_inventory (10 rows)
+    exists_as path with a live os.path.exists() script run against the real
+    filesystem, NOT by trusting either the phase-plan file''s own verified_on_disk
+    field or PR #83''s self-report: 0/30 rows drifted, all still real. A separate,
+    still-open PR (#83, branch worker/task-20260726-094625-re-verify-20-engine-inventory---confirm,
+    opened 2026-07-26 ~09:59 UTC, ~25 minutes before this task was dispatched) already
+    did a more thorough version of this same re-verification and additionally folded
+    in gap_description updates for Engine 8 (Workflow) and Engine 5 (Policy)
+    referencing this session''s new dispatch-gate PRs -- this entry deliberately does
+    NOT duplicate that diff (same file, would conflict) and instead cross-references
+    it here. One correction PR #83''s own commit message needs: it cites PR #81 for
+    the HOLD_FOR_OWNER_SIGNOFF fix; #81 was later closed unmerged and superseded by
+    PR #84 (merged 2026-07-26T10:19:37Z, see registries.task_lifecycle_branch_resolution_and_signoff_fix)
+    -- PR #83 should be rebased to cite #84 before merge, not fixed here (out of this
+    task''s CONSTRAINTS, which forbid merging/editing other open PRs).'
+  phase_2_scope_judgment_2026_07_26: 'The single most important judgment call this
+    update makes: should this session''s 4 new gates/integrations (see the 4 new
+    registries entries below) be folded into phase_2_policy_rule_decision_unification''s
+    objective rather than tracked as separate additions? Answer, per real code
+    architecture read directly (not assumed): ONLY the DDL pre-flight gate (PR #79,
+    scripts/ddl_authorization_check.py) belongs to Phase 2''s domain. It is
+    architecturally identical in shape and insertion point to the two gates Phase 2
+    already unified (preflight-guard.py, policy-enforcement-engine.ts) -- a
+    deterministic, pre-execution allow/deny decision chained into
+    task-gateway.py''s cmd_start() at the exact point tight_task_validation.py
+    already runs -- yet it emits its own ad hoc {"valid","reason","guidance"} shape
+    instead of Phase 2''s own scripts/policy_decision.py PolicyDecision
+    envelope/schema_version. Its existence as a genuine 3RD disconnected gate (after
+    Phase 2''s own finding of exactly 2) is live proof that "unify the schema" is not
+    the same as "enforce the schema going forward" -- Phase 2 shipped the shared
+    envelope but nothing stops a new gate from being built without it, and this one
+    was. Recommendation: a real Phase 2 follow-up task should port
+    ddl_authorization_check.py onto policy_decision.py''s emit_allow/emit_deny/
+    make_explanation() helpers (additive, non-breaking, same discipline Phase 2 used
+    on preflight-guard.py/risk-tier.py) -- NOT a new registries item, an extension of
+    phase_2''s own existing phases[] entry. The other 3 are real but NOT Phase 2
+    scope, and forcing them in would blur what Phase 2 actually unifies: (a) the
+    interactive-session write-gate (PR #80) is a bash-level guard on the Owner''s own
+    shell profile blocking `gh pr merge`/`git push` outside an automated
+    (INVOCATION_ID-bearing) invocation -- it never runs inside the Python task
+    pipeline, emits no policy_decision-shaped output, and gates a human operator
+    action, not a machine dispatch decision; closer to a G10 Infrastructure /
+    operator-safety concern. (b) the HOLD_FOR_OWNER_SIGNOFF fix (PR #84, merged) is a
+    correctness fix to an EXISTING task_lifecycle_state_machine field (making a
+    prose-only hold real and enforced) plus a branch-resolution bugfix -- Workflow
+    Engine (8) / Decision Engine (7) lifecycle-state territory, not a new policy
+    surface needing a shared decision schema. (c) the OWNER_ENGINE-to-task-gateway
+    integration (PR #82) bridges G01 Owner gateway and Engine 8 Workflow Engine
+    (task-gateway.py) so an AI session stops manually re-pasting OWNER_ENGINE output
+    -- real gateway/dispatch wiring, the domain gateway_definition_and_inventory''s
+    own "actually building G01-G10" follow-on (named but not started, per that
+    phase''s own what_remains_for_later_phases) would eventually cover, not Phase 2.'
+  honest_gap_list_2026_07_26: 'Per this task''s own SCOPE item 5. Engines with real
+    prior art but still genuinely thin (not "no prior art" -- the inventory''s own
+    0-NONE finding still holds, re-confirmed 2026-07-26): Engine 6 Rule Engine (only
+    ~5 of 111 real capability-tree leaves have a registered guardrail; 106 prioritized
+    candidates sit in ai-os/GUARDRAIL_COVERAGE_CANDIDATES_2026-07-24.yaml unactioned,
+    that repo''s own PR to make, out of this repo''s boundary); Engine 10 Integration
+    (webhook_receiver.py is real and live-tested but its systemd unit is deliberately
+    NOT enabled, blocked on OWNER_DECISIONS_NEEDED#webhook-receiver-network-exposure,
+    status: pending as of 2026-07-26); Engine 13 Data Engine (deliberately closed by
+    finding, not building -- zero ETL/pipeline layer exists by design, acceptable
+    only as long as no real multi-step data-movement need appears); Engines 17/18
+    (UI Composition / Analytics -- closed acceptable-as-is by finding, but that
+    finding is still awaiting a final Owner confirmation,
+    OWNER_DECISIONS_NEEDED#ui-composition-analytics-engine-scope-confirmation,
+    status: awaiting_owner_decision). No phase in phases_1-7 or
+    gateway_definition_and_inventory is stalled -- all are status: done with real,
+    live-tested evidence, verified via git log against origin/master by this task,
+    not assumed. What IS genuinely stalled is 3 Owner-decision items blocking further
+    real progress (not code gaps): webhook-receiver-network-exposure (pending),
+    supabase-management-api-token-refresh (awaiting_owner_decision, Knowledge Engine
+    still degrades to a fallback GoTrue healthcheck instead of real project data),
+    and ui-composition-analytics-engine-scope-confirmation (awaiting_owner_decision).
+    Actually building G01-G10 as real, unified Authenticate->...->Return gateway
+    boundaries (vs. today''s honestly-partial prior art) remains real, un-started
+    future work -- gateway_definition_and_inventory''s own phase text says a new
+    gateway_live_wiring phase would need to be added to phases[] first; not added by
+    this task (would be new build scope, outside this task''s CONSTRAINTS).'
+  next_phase: 'No further per-engine phase remains defined in
+    ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml phases[] -- phases 0
+    through 7 and gateway_definition_and_inventory are all status: done (re-verified
+    2026-07-26, see reverification_2026_07_26 above). Real remaining work is: (1)
+    merge PR #83 (engine re-verification, after rebasing its #81 citation to #84),
+    (2) a Phase 2 follow-up task porting ddl_authorization_check.py onto
+    policy_decision.py''s schema (see phase_2_scope_judgment_2026_07_26 above), (3)
+    the 3 pending/awaiting Owner decisions in honest_gap_list_2026_07_26 above, and
+    (4) a not-yet-defined gateway_live_wiring phase to actually build G01-G10 --
+    each dispatched as its own task, not part of this registry entry''s own scope.'
   phase_1_capability_registry_live_wiring: 'DONE (task-20260724-083420, 2026-07-24) -- real
     capability_registry table live in ai-os/memory/superboss-register.sqlite (extends the same DB as
     knowledge_engine, scripts/superboss-register.py register-capability/lookup-capability/
@@ -3069,6 +3185,104 @@ registries:
       and is the more reliable command for scripted use)'
     github_branch_protection: "gh api repos/FChecklist/<repo>/branches/<default-branch>/protection/required_status_checks
       --jq '.contexts'"
+- id: task_lifecycle_branch_resolution_and_signoff_fix
+  type: task_lifecycle_bugfix
+  path: scripts/supervisor-entrypoint.sh + scripts/veridian-task.py + scripts/tight_task_validation.py
+  scope: 'Real bugfix to the existing task_lifecycle_state_machine (Workflow Engine
+    (8) / Decision Engine (7) territory, not a new gate): fixes stale-PR-branch
+    resolution and makes HOLD_FOR_OWNER_SIGNOFF a real, mechanically enforced field
+    on the task record instead of prose-only guidance an auto-merge step could
+    silently skip. Originally shipped as PR #81, which was closed unmerged and
+    recreated/superseded by PR #84 after a real branch-resolution bug was found
+    against #81 itself -- #84 is the real, current, merged version, not #81.'
+  status: 'MERGED -- PR #84 (FChecklist/claude-control, branch
+    recovered-lifecycle-fix-e6c7049), merged into master 2026-07-26T10:19:37Z (commit
+    581e042, merging e6c7049). Live in this repo''s current master/HEAD, confirmed by
+    direct file presence (scripts/tight_task_validation.py and
+    scripts/supervisor-entrypoint.sh both carry HOLD_FOR_OWNER_SIGNOFF references on
+    master as of 2026-07-26).'
+  query_command: python3 scripts/superboss-register.py query-knowledge "task_lifecycle_branch_resolution_and_signoff_fix"
+    --tag registry-id:task_lifecycle_branch_resolution_and_signoff_fix
+- id: interactive_session_write_gate
+  type: operator_shell_guard
+  path: ai-os/OWNER_DIRECTIVES/interactive-session-guard.bashrc-snippet
+  scope: 'Real incident-driven fix, 2026-07-26: an interactive session ran `gh pr
+    merge`/direct `git push` against master outside the automated pipeline. Adds
+    `gh`/`git` bash function wrappers (deployed to the Owner''s own shell profile on
+    VERIDIAN-DEV, ~/.bashrc + ~/.profile, per the PR''s own test plan) that block
+    `gh pr merge` / `git push` to master/main unless the shell carries an
+    INVOCATION_ID env var (the real signal of a non-interactive/automated
+    invocation) -- a real technical guard, not just a documented rule. Documented as
+    protocol article A15_interactive_session_write_gate in
+    ai-os/OWNER_DIRECTIVES/PROTOCOL_OWNER_AI.yaml. Operates entirely at the shell
+    level, outside the Python task-dispatch pipeline -- NOT a policy_decision_schema
+    gate (see registries.engines_gateways_architecture''s own
+    phase_2_scope_judgment_2026_07_26 for why this is deliberately excluded from
+    Phase 2''s policy-unification scope). Real gap found and fixed during this PR''s
+    own verification: `bash -lc ''...''` (login, non-interactive) does not source
+    ~/.bashrc by default, which would have silently bypassed the guard.'
+  status: 'PR open, pending review -- PR #80 (FChecklist/claude-control), 3 rounds of
+    review as of 2026-07-26, mergeable: CONFLICTING (needs a rebase against current
+    master before merge; content itself is not rejected, the conflict is a stale
+    base). NOT yet merged into this repo''s tracked history -- the bashrc snippet
+    itself is reported as already deployed live to the Owner''s own shell profile on
+    VERIDIAN-DEV directly (per the PR''s own test plan), which is a separate action
+    from this repo''s git history and does not substitute for merging the PR.'
+  query_command: python3 scripts/superboss-register.py query-knowledge "interactive_session_write_gate"
+    --tag registry-id:interactive_session_write_gate
+- id: ddl_preflight_authorization_gate
+  type: policy_engine_gate
+  path: scripts/ddl_authorization_check.py
+  scope: 'Real incident-driven fix, 2026-07-26: task-20260726-071400''s own dispatch
+    prompt authorized live DROP TABLE/CREATE TABLE/ALTER TABLE/CREATE INDEX
+    statements against the production Supabase project via the Supabase MCP
+    apply_migration tool, executed entirely before any PR/CI/human review -- the
+    worker did exactly what its prompt authorized; the real gap was that nothing
+    checked what a dispatch prompt itself is allowed to authorize. Fixed by a new
+    dispatch-time gate chained into scripts/task-gateway.py''s cmd_start()
+    immediately after tight_task_validation.py: any prompt-file referencing a
+    DDL-capable Supabase MCP tool or a DDL/DCL keyword is dispatch-blocked unless it
+    also contains a `PRE-APPROVED-LIVE-DDL: <real citation>` line, and (round-3
+    hardening, real gap found and fixed) that citation is verified for real
+    EXISTENCE on disk (a KE-<date>-<time>-<hex> ID or an
+    OWNER_DECISIONS_NEEDED_<date>.yaml#<id> reference), not accepted on string shape
+    alone. Documented as protocol article A15_ddl_authorization_gate in
+    ai-os/OWNER_DIRECTIVES/PROTOCOL_OWNER_AI.yaml. Architecturally this IS a Policy
+    Engine (5) gate in the same shape Phase 2 already unified (deterministic
+    pre-execution allow/deny, same task-gateway.py insertion point as
+    tight_task_validation.py) -- see registries.engines_gateways_architecture''s own
+    phase_2_scope_judgment_2026_07_26 for the judgment that this one, unlike the
+    other 3 new items this session, should be folded into Phase 2''s unification as
+    a follow-up (it does not yet emit scripts/policy_decision.py''s shared schema).'
+  status: 'PR open, pending review -- PR #79 (FChecklist/claude-control), mergeable:
+    CONFLICTING as of 2026-07-26 (needs a rebase against current master; content
+    previously reported as approved, blocked at that time on PR #84 being unmerged --
+    #84 is now merged, so the current CONFLICTING state reflects a real, separate
+    stale-base rebase need, not the original blocker).'
+  query_command: python3 scripts/superboss-register.py query-knowledge "ddl_preflight_authorization_gate"
+    --tag registry-id:ddl_preflight_authorization_gate
+- id: owner_engine_task_gateway_integration
+  type: gateway_wiring_integration
+  path: scripts/prompt_gateway/gateway.py + scripts/task-gateway.py + scripts/tight_task_validation.py
+  scope: 'Real integration closing a manual-bridging gap the Owner flagged
+    repeatedly: an AI session previously had to manually read OWNER_ENGINE''s
+    (scripts/prompt_gateway/) output and re-paste it rather than the pipeline
+    calling it directly. Adds a new dispatch mode wiring scripts/prompt_gateway/gateway.py
+    directly into scripts/task-gateway.py, and separately fixes a real
+    credit-accountant.py gap found live this session: task-gateway.py''s cmd_start()
+    never called `credit-accountant.py propose`, so worker checkpoint reports always
+    failed "no matching approved plan". This is Workflow Engine (8) / G01 Owner
+    gateway dispatch-wiring, the kind of work gateway_definition_and_inventory''s own
+    what_remains_for_later_phases named as a future "actually build G01-G10" phase --
+    NOT Phase 2 policy/rule/decision scope (see
+    registries.engines_gateways_architecture''s own phase_2_scope_judgment_2026_07_26).'
+  status: 'PR open, pending review -- PR #82 (FChecklist/claude-control), round 2+ in
+    progress as of 2026-07-26, mergeable: MERGEABLE (no merge conflict, unlike #79/#80).
+    The PR''s own description flags itself for "a fresh, thorough audit pass" before
+    merge given its central role in the dispatch pipeline -- not merged by this task,
+    per CONSTRAINTS.'
+  query_command: python3 scripts/superboss-register.py query-knowledge "owner_engine_task_gateway_integration"
+    --tag registry-id:owner_engine_task_gateway_integration
 tree_lineage:
   tree1_audit_tree:
     path: /opt/veridian/repos/compliance-tracker/ai-os/audit-tree/

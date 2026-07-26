@@ -91,7 +91,16 @@ def run_query(chat_id: str, query: str) -> dict:
     confidence = classification.get("confidence", 0.0)
     intent = classification.get("intent", UNKNOWN_INTENT)
     category = classification.get("category")
-    low_confidence = confidence < LOW_CONFIDENCE_THRESHOLD
+    # Document-mode chat records (gateway.py's _process_document_chat, used
+    # for any multi-section input -- e.g. a full literal_template task spec)
+    # save confidence=None deliberately: there is no single per-message
+    # confidence score once classification runs per-section into a
+    # category_histogram instead. None means "not applicable", not "low" --
+    # treating it as < LOW_CONFIDENCE_THRESHOLD would force
+    # NEEDS_OWNER_CLARIFICATION=true for every document-mode chat
+    # unconditionally (and `confidence < LOW_CONFIDENCE_THRESHOLD` would
+    # itself raise TypeError on None before task-20260726-101257).
+    low_confidence = confidence is not None and confidence < LOW_CONFIDENCE_THRESHOLD
     unknown_intent = intent == UNKNOWN_INTENT
 
     if query == "GET_CATEGORY":

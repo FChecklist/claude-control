@@ -138,6 +138,52 @@ def test_branch_resolution_reflects_real_worker_pushed_branch():
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+def test_branch_resolution_prefers_upstream_over_local_alias():
+    """task-20260726-105110 repro: the worker checked out a LOCAL branch
+    ('pr80-work') that tracks the real remote branch
+    ('worker/task-...-083833-...') and pushed its real commits there via the
+    tracking relationship. `rev-parse --abbrev-ref HEAD` returns the local
+    alias, not the remote branch supervisor-entrypoint.sh actually needs for
+    `gh pr create --head`/`gh pr list --head` -- so the resolved branch must
+    come from the upstream tracking ref, not the local checked-out name."""
+    tmp = tempfile.mkdtemp(prefix="branch_resolution_test_")
+    try:
+        ai_os_root, task_dir, workspace, task_id, original_branch = _make_fixture(tmp)
+
+        # Simulate a real remote: a bare repo the workspace can push to and
+        # track, so `@{upstream}` reflects a genuine tracking relationship
+        # rather than just another local branch.
+        remote_dir = os.path.join(tmp, "remote.git")
+        _git("init", "-q", "--bare", remote_dir, cwd=tmp)
+        _git("remote", "add", "origin", remote_dir, cwd=workspace)
+        _git("push", "-q", "origin", f"{original_branch}:{original_branch}", cwd=workspace)
+
+        real_remote_branch = "worker/task-20260726-083833-build-interactive-session-write-gate--re"
+        _git("push", "-q", "origin", f"{original_branch}:{real_remote_branch}", cwd=workspace)
+
+        local_alias = "pr80-work"
+        _git("checkout", "-q", "-b", local_alias, f"origin/{real_remote_branch}", cwd=workspace)
+        with open(os.path.join(workspace, "fix.txt"), "w") as f:
+            f.write("real corrective commit pushed via tracking relationship\n")
+        _git("add", "-A", cwd=workspace)
+        _git("commit", "-q", "-m", "real corrective fix, pushed via tracked upstream", cwd=workspace)
+        _git("push", "-q", "origin", f"{local_alias}:{real_remote_branch}", cwd=workspace)
+
+        mod = _load_module()
+        _run_checkpoint(mod, ai_os_root, task_id, "pending_review", "quality gates passed, awaiting review")
+
+        with open(os.path.join(task_dir, "task.yaml")) as f:
+            saved = yaml.safe_load(f)
+
+        assert saved["branch"] == real_remote_branch, (
+            f"expected task.yaml branch to be updated to the REAL remote tracking "
+            f"branch '{real_remote_branch}', got '{saved['branch']}' (resolved to the "
+            f"local checked-out alias instead -- this is exactly the pr80-work bug)"
+        )
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
 def test_branch_resolution_noop_when_still_on_original_branch():
     """Baseline: a normal task that never diverges keeps its original branch
     (this fix must not corrupt the common, non-divergent case)."""
@@ -163,5 +209,6 @@ def test_branch_resolution_noop_when_still_on_original_branch():
 
 if __name__ == "__main__":
     test_branch_resolution_reflects_real_worker_pushed_branch()
+    test_branch_resolution_prefers_upstream_over_local_alias()
     test_branch_resolution_noop_when_still_on_original_branch()
     print("All branch_resolution scenarios passed.")

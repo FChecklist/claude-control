@@ -1283,3 +1283,45 @@ phases:
 registration:
   knowledge_engine_query_command: 'python3 scripts/superboss-register.py query-knowledge "engines_gateways_architecture" --tag domain:engines_gateways_architecture'
   master_index_registry_id: engines_gateways_architecture
+
+# ============================================================================
+# task-20260726-102517 REVERIFICATION -- analysis/update task, no new engine or
+# gateway built. Deliberately appended here rather than editing engine_inventory/
+# gateway_inventory/meta above, to avoid colliding with PR #83 (branch
+# worker/task-20260726-094625-re-verify-20-engine-inventory---confirm, opened
+# 2026-07-26, still unmerged as of this task), which independently edits exactly
+# those blocks (Engine 5/8 gap_description + exists_as, meta notes) for the same
+# 2-days-stale-inventory reason. Full detail and the Phase 2 scope judgment call
+# live in ai-os/MASTER_INDEX.yaml's registries.engines_gateways_architecture entry
+# (reverification_2026_07_26 / phase_2_scope_judgment_2026_07_26 /
+# honest_gap_list_2026_07_26 fields) -- not duplicated verbatim here.
+# ============================================================================
+reverification_2026_07_26:
+  finding: "This document's own phases[] block already showed phase_1 through
+    phase_7 and gateway_definition_and_inventory as status: done at the time this
+    task started -- but ai-os/MASTER_INDEX.yaml's own registries.engines_gateways_architecture
+    entry still read status: phase_0_through_phase_5_complete_phase_6_plus_not_yet_dispatched,
+    and this task's own dispatch prompt's KNOWN_CONTEXT repeated that stale claim
+    verbatim (phases 0-5 complete, phase 6+ not dispatched, gateway list
+    unresolved). All 3 were wrong as of 2026-07-26 -- corrected in MASTER_INDEX.yaml
+    by this same task, not here (this file's own phases[] block was already
+    correct and needed no phase-status edit)."
+  verification_method: "git log --oneline --all for every phase-identifying file,
+    then git merge-base --is-ancestor <commit> origin/master for each phase's
+    commit -- not a re-read of this file's own self-reported status: lines.
+    Confirmed real+merged: b02d23e (phase 0), 74b78ff (phase 1), 9b6bddd (phase 2),
+    a53e924 (phase 3), 9e045c2 (phase 4), 2df7dea/64471f2 (phase 5), 19e9c1d
+    (phase 6), 44ba0d5 (phase 7), 06a7e46 (gateway_definition_and_inventory) --
+    9/9 phase commits real and on origin/master."
+  engine_and_gateway_live_check: "Independent os.path.exists() re-check of all 20
+    engine_inventory exists_as path sets and all 10 gateway_inventory exists_as
+    path sets against the live filesystem: 0/30 rows drifted. Same zero-drift
+    finding as this document's own verified_on_disk fields and as PR #83's own
+    (still open) re-verification."
+  see_also: "ai-os/MASTER_INDEX.yaml registries.engines_gateways_architecture
+    (status/phase_6_7_and_gateway_summary/reverification_2026_07_26/
+    phase_2_scope_judgment_2026_07_26/honest_gap_list_2026_07_26/next_phase
+    fields) and registries.task_lifecycle_branch_resolution_and_signoff_fix /
+    interactive_session_write_gate / ddl_preflight_authorization_gate /
+    owner_engine_task_gateway_integration (the 4 new registries entries for this
+    session's real, additive dispatch-gate work)."
