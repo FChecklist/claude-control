@@ -6039,3 +6039,198 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260726-121633-adopted-write-gate-round-4--argv-position-fix/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/80'
     last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-154338-resolve-pr563-conflict-properly--v2--exp
+    project: veridian
+    type: worker-task
+    status: in-progress
+    summary: 'Server-worker task ''Resolve PR563 conflict properly (v2, explicit branch
+      instruction)'' on compliance-tracker reached status=awaiting_human_approval. tier2,
+      Superboss-approved, held for human merge: https://github.com/FChecklist/compliance-tracker/pull/570'
+    where: '/opt/veridian/ai-os/tasks/task-20260726-154338-resolve-pr563-conflict-properly--v2--exp/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/570'
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-154345-phase-2--policy-rule-decision-engine-uni
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Phase 2: Policy/Rule/Decision Engine unification
+      (Owner priority, wire everything)'' on claude-control reached status=blocked.
+      tier1, Superboss-approved, but the merge itself FAILED (gh pr view confirms state=OPEN,
+      mergedAt=; see supervisor.log) — needs manual attention, NOT actually merged:
+      https://github.com/FChecklist/claude-control/pull/89'
+    where: '/opt/veridian/ai-os/tasks/task-20260726-154345-phase-2--policy-rule-decision-engine-uni/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/89'
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-154348-complete-system-scan--server-supabase-ve
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Complete system scan: Server+Supabase+Vercel+GitHub
+      gap/duplication check'' on claude-control reached status=completed. tier1, Superboss-approved,
+      merged autonomously: https://github.com/FChecklist/claude-control/pull/90'
+    where: '/opt/veridian/ai-os/tasks/task-20260726-154348-complete-system-scan--server-supabase-ve/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/90'
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-160604-append-4-new-x-post-analyses-to-x-post-a
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: Server-worker task 'Append 4 new X post analyses to X_POST_AI_ANALYSIS
+      file' on claude-control reached status=blocked. supervisor could not resolve a
+      real PR for branch 'master' (gh pr create failed, no existing open PR found for
+      it) — refusing to proceed rather than risk operating on an unrelated PR via gh's
+      empty-argument fallback. See supervisor.log.
+    where: /opt/veridian/ai-os/tasks/task-20260726-160604-append-4-new-x-post-analyses-to-x-post-a/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-162246-resolve-pr89-merge-conflict--phase-2-pol
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Resolve PR89 merge conflict (Phase 2 policy unification)''
+      on claude-control reached status=blocked. Superboss rejected: https://github.com/FChecklist/claude-control/pull/91
+      — see review.json for issues'
+    where: '/opt/veridian/ai-os/tasks/task-20260726-162246-resolve-pr89-merge-conflict--phase-2-pol/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/91'
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-162252-extend-wiring-engine-to-full-system--ser
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Extend Wiring Engine to full system: Server+Supabase+Vercel+GitHub+Browser,
+      execute Phase 3 (live/auto-updating)'' on claude-control reached status=completed.
+      tier1, Superboss-approved, merged autonomously: https://github.com/FChecklist/claude-control/pull/92'
+    where: '/opt/veridian/ai-os/tasks/task-20260726-162252-extend-wiring-engine-to-full-system--ser/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/92'
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-163551-real-automated-verification-of-all-218-t
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Real automated verification of all 218 tasks from
+      last 7 days (Owner completion audit)'' on claude-control reached status=completed.
+      tier1, Superboss-approved, merged autonomously: https://github.com/FChecklist/claude-control/pull/93'
+    where: '/opt/veridian/ai-os/tasks/task-20260726-163551-real-automated-verification-of-all-218-t/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/93'
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-170131-tier1--redispatch-14-now-fixable-tasks
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Tier1: redispatch 14 now-fixable tasks (branch-mismatch/merge-fail/crontab)''
+      on claude-control reached status=completed. tier1, Superboss-approved, merged
+      autonomously: https://github.com/FChecklist/claude-control/pull/96'
+    where: '/opt/veridian/ai-os/tasks/task-20260726-170131-tier1--redispatch-14-now-fixable-tasks/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/96'
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-170145-tier2--fix-and-redispatch-14-real-audit
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Tier2: fix and redispatch 14 real audit-rejected
+      tasks'' on claude-control reached status=completed. tier1, Superboss-approved,
+      merged autonomously: https://github.com/FChecklist/claude-control/pull/94'
+    where: '/opt/veridian/ai-os/tasks/task-20260726-170145-tier2--fix-and-redispatch-14-real-audit/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/94'
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-170157-tier3--relevance-triage-45-stale-credit
+    project: veridian
+    type: worker-task
+    status: in-progress
+    summary: 'Server-worker task ''Tier3: relevance-triage 45 stale credit/openrouter-blocked
+      tasks'' on claude-control reached status=awaiting_human_approval. tier2, Superboss-approved,
+      held for human merge: https://github.com/FChecklist/claude-control/pull/97'
+    where: '/opt/veridian/ai-os/tasks/task-20260726-170157-tier3--relevance-triage-45-stale-credit/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/97'
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-170501-tier4--crash-no-changes-triage-for-12-ta
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Tier4: crash/no-changes triage for 12 tasks'' on
+      claude-control reached status=completed. tier1, Superboss-approved, merged autonomously:
+      https://github.com/FChecklist/claude-control/pull/95'
+    where: '/opt/veridian/ai-os/tasks/task-20260726-170501-tier4--crash-no-changes-triage-for-12-ta/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/95'
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-171200-tier2-fix--pr-566-pr-83-stale-pr-81-stil
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Tier2 fix: PR#566/PR#83 stale PR#81-still-open claim''
+      on compliance-tracker reached status=completed. tier1, Superboss-approved, merged
+      autonomously: https://github.com/FChecklist/compliance-tracker/pull/572'
+    where: '/opt/veridian/ai-os/tasks/task-20260726-171200-tier2-fix--pr-566-pr-83-stale-pr-81-stil/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/572'
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-171337-resolve-pr80-merge-conflict--write-gate
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Resolve PR80 merge conflict (write-gate round 3)''
+      on claude-control reached status=completed. tier1, Superboss-approved, merged
+      autonomously: https://github.com/FChecklist/claude-control/pull/80'
+    where: '/opt/veridian/ai-os/tasks/task-20260726-171337-resolve-pr80-merge-conflict--write-gate/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/80'
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-171405-append-4-new-x-post-analyses-to-x-post-a
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: Server-worker task 'Append 4 new X post analyses to X_POST_AI_ANALYSIS
+      file' on claude-control reached status=blocked. supervisor could not resolve a
+      real PR for branch 'master' (gh pr create failed, no existing open PR found for
+      it) — refusing to proceed rather than risk operating on an unrelated PR via gh's
+      empty-argument fallback. See supervisor.log.
+    where: /opt/veridian/ai-os/tasks/task-20260726-171405-append-4-new-x-post-analyses-to-x-post-a/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-171950-preview-deployment-spot-check
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Preview deployment spot-check'' on compliance-tracker
+      reached status=blocked. tier1, Superboss-approved, but the merge itself FAILED
+      (gh pr view confirms state=OPEN, mergedAt=; see supervisor.log) — needs manual
+      attention, NOT actually merged: https://github.com/FChecklist/compliance-tracker/pull/573'
+    where: '/opt/veridian/ai-os/tasks/task-20260726-171950-preview-deployment-spot-check/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/573'
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-172009-e-invoicing-per-line-gstrt-fix---irp-for
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''E-invoicing per-line GstRt fix + IRP format scaffolding''
+      on compliance-tracker reached status=blocked. tier1, Superboss-approved, but the
+      merge itself FAILED (gh pr view confirms state=OPEN, mergedAt=; see supervisor.log)
+      — needs manual attention, NOT actually merged: https://github.com/FChecklist/compliance-tracker/pull/574'
+    where: '/opt/veridian/ai-os/tasks/task-20260726-172009-e-invoicing-per-line-gstrt-fix---irp-for/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/574'
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-172013-cityline-ticketing-6-role-reverse-engine
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Cityline Ticketing 6-role reverse-engineering'' on
+      infisuite-reverse-engineering reached status=blocked. Superboss rejected: https://github.com/FChecklist/infisuite-reverse-engineering/pull/1
+      — see review.json for issues'
+    where: '/opt/veridian/ai-os/tasks/task-20260726-172013-cityline-ticketing-6-role-reverse-engine/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/infisuite-reverse-engineering/pull/1'
+    last_touched: '2026-07-26'
