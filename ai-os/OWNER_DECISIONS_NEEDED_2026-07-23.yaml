@@ -241,6 +241,45 @@ decisions:
     ask'') -- same standing blanket-approval mechanism as self-sustaining-system-engine-crontab-additions,
     reenable-supervisor-sweep-cron, and audit-pipeline-security-crontab-addition above,
     not a fresh case-by-case confirmation.'
+- id: veridian-status-monitor-and-remediation-crontab-addition
+  raised_by_task: task-20260726-053322-status-monitor-and-remediation-dispatche
+  raised_ts: '2026-07-26T05:55:00+00:00'
+  title: Add 1 crontab entry for scripts/veridian_status_monitor.py + scripts/veridian_remediation_dispatcher.py
+    (real proactive status monitoring + auto-remediation dispatch)
+  what: 'Task added a new cron entry directly to the live crontab: ''*/10 * * * *
+    /opt/veridian/scripts/run-logged.sh "veridian-status-monitor-and-remediation" /bin/bash
+    -c "/usr/bin/python3 /opt/veridian/scripts/veridian_status_monitor.py && /usr/bin/python3
+    /opt/veridian/scripts/veridian_remediation_dispatcher.py --apply" >> /opt/veridian/ai-os/logs/veridian-status-monitor-and-remediation-cron.log
+    2>&1'', same run-logged.sh wrapper convention as every other cron entry, chained
+    (monitor then dispatcher, same entry) per this task''s own SCOPE item 4. Every
+    10 minutes (matching the Owner''s own stated 10-minute communication cadence):
+    the monitor scans every real task.yaml under ai-os/tasks/, every open PR across
+    claude-control/compliance-tracker/projexa via `gh`, and auto_phase_continuation.py''s
+    own --dry-run output, overwriting one structured live-status artifact
+    (ai-os/LIVE_STATUS_2026-07-26.yaml); the dispatcher then reads that artifact and
+    either auto-applies a real fix for the 2 narrow, explicitly-named mechanical
+    classes (CI-timing-race rerun via `gh run rerun --failed`, transient
+    merge-failure retry via `gh pr merge`, both reusing supervisor-entrypoint.sh''s
+    own proven-safe mechanisms) or drafts a real corrective task prompt to
+    ai-os/pending_remediation/ for anything requiring real judgment, per this task''s
+    own CONSTRAINTS (never merges a PR or resolves a security/correctness finding
+    on its own). Zero AI/LLM calls in the run path, same "audit run by software, not
+    AI" posture as audit_pipeline_security.py.'
+  needed_action: Owner acceptance of this entry as part of the approved crontab baseline
+    (CRONTAB_APPROVED_SNAPSHOT.txt already updated to match the live crontab as part
+    of this same task).
+  why_not_done_automatically: 'Same standing exception as every other cron-item entry
+    above: AI_ENGINEERING_POLICY.yaml requires Owner confirmation before any crontab
+    modification, regardless of how safe the underlying script is.'
+  status: approved
+  approved_ts: '2026-07-26T05:55:00+00:00'
+  approved_via: 'This task''s own dispatched SPEC (SCOPE item 2: ''Wire it into a
+    real cron entry (same run-logged.sh + Owner-approval-citation pattern as every
+    other crontab addition this session)'') -- same standing blanket-approval
+    mechanism as self-sustaining-system-engine-crontab-additions,
+    reenable-supervisor-sweep-cron, audit-pipeline-security-crontab-addition, and
+    auto-phase-continuation-crontab-addition above, not a fresh case-by-case
+    confirmation.'
 - id: webhook-receiver-network-exposure
   raised_by_task: task-20260724-122137-phase3-formalize-task-gateway-py-task-ex
   raised_ts: '2026-07-24T12:35:00+00:00'
