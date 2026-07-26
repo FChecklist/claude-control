@@ -2785,6 +2785,59 @@ registries:
     ai-os/VERIDIAN_ARCHITECTURE_V2_PHASE_PLAN_2026-07-25.yaml phases[] -- dispatched as a separate
     task by scripts/auto_phase_continuation.py''s own cron cycle once this task''s PR merges, not
     part of this registry entry''s own scope.'
+- id: status_monitor_and_remediation
+  type: cron_pipeline
+  path: scripts/veridian_status_monitor.py + scripts/veridian_remediation_dispatcher.py
+  scope: 'Task task-20260726-053322-status-monitor-and-remediation-dispatche: closes 2 real,
+    confirmed gaps -- no proactive status-monitoring software (an Owner/AI asking "status" meant
+    manually running gh/task.yaml checks by hand, not reading real software output), and no
+    automatic remediation trigger when a real task/PR gets rejected or blocked. Built on tools
+    that already exist, no new framework: veridian_status_monitor.py scans every real task.yaml
+    under ai-os/tasks/ (in_progress with real elapsed time, blocked within the last 24h with the
+    real checkpoint-note/review.json reason), every real open PR across claude-control/
+    compliance-tracker/projexa via `gh` (real AUDIT: FAIL comments with no corrective commit
+    since, real non-transient mergeStateStatus=DIRTY conflicts), and
+    scripts/auto_phase_continuation.py''s own real --dry-run output (phases ready to
+    auto-advance), overwriting one live-snapshot artifact (ai-os/LIVE_STATUS_2026-07-26.yaml)
+    every run -- not an append log. veridian_remediation_dispatcher.py reads that artifact and
+    classifies each finding: the 2 narrow, explicitly-named mechanical/low-risk classes
+    (ci_timing_race -- the audit-check CI job started within
+    RACE_MAX_GAP_SECONDS=900 of the real AUDIT verdict comment, same root cause as
+    supervisor-entrypoint.sh''s own AUDIT-CHECK-RERUN-BLOCK; transient_merge_retry -- a
+    previously tier1-approved merge that failed, where a fresh mergeStateStatus check now shows
+    CLEAN not DIRTY) are auto-applied directly via the same proven-safe `gh run rerun --failed`
+    / `gh pr merge` mechanisms already live in supervisor-entrypoint.sh; everything else (a
+    genuine correlated AUDIT: FAIL finding, or a real DIRTY merge conflict) gets a real,
+    tight_task_validation.py-passing corrective task prompt drafted to
+    ai-os/pending_remediation/<id>.md and flagged in the status artifact''s remediation: section
+    as "drafted, needs assistant review before dispatch" -- never auto-dispatched, never merged,
+    per this task''s own CONSTRAINTS. Zero AI/LLM calls in either script''s run path.'
+  status: live
+  real_test_evidence: 'Real run against live production data (2026-07-26): correctly surfaced 3
+    real recently-blocked tasks (compliance-tracker PR #561/#562, claude-control PR #72, all
+    genuine Superboss-rejected findings), 5 real open PRs with an unfixed AUDIT: FAIL, and 16
+    real open PRs with a genuine DIRTY merge conflict across compliance-tracker/projexa -- none
+    of this had a structured, checkable artifact before this task. Judgment path proven for real
+    against compliance-tracker PR #562 (genuine architecture/security finding: a duplicated,
+    unwired prompt-security module) -- drafted prompt written to
+    ai-os/pending_remediation/audit-fail-compliance-tracker-562.md, independently verified to
+    pass `python3 scripts/tight_task_validation.py` for real, NOT auto-dispatched. Mechanical
+    path proven for real against compliance-tracker PR #410 (ci_timing_race, 21s gap) --
+    `gh run rerun --failed` applied for real via --apply, independently confirmed via a fresh
+    `gh run view` showing the job actually re-triggered (status changed to in_progress). A real
+    false positive was caught and fixed during testing: PR #484''s stale 2-day-old audit-check
+    run was initially misclassified as a race against an unrelated later re-review comment,
+    fixed by adding the same-review-cycle gap threshold, reverified against both the real race
+    (#410) and the real non-race (#484).'
+  query_command: python3 scripts/superboss-register.py query-knowledge "status_monitor_and_remediation"
+    --tag domain:status_monitor_and_remediation
+  cron_entry: '*/10 * * * * (ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml id
+    veridian-status-monitor-and-remediation-crontab-addition, status approved)'
+  still_needs_assistant_judgment: 'Every entry ai-os/pending_remediation/ ever accumulates --
+    this script deliberately never resolves a genuine AUDIT: FAIL finding or a real merge
+    conflict itself (per CONSTRAINTS); an assistant (or the Owner) must read the drafted prompt,
+    confirm the finding is real, and decide whether to dispatch it via task-gateway.py, same
+    review step this task''s own real test evidence exercised for compliance-tracker PR #562.'
 tree_lineage:
   tree1_audit_tree:
     path: /opt/veridian/repos/compliance-tracker/ai-os/audit-tree/
