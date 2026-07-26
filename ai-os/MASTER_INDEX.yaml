@@ -2979,6 +2979,212 @@ registries:
     conflict itself (per CONSTRAINTS); an assistant (or the Owner) must read the drafted prompt,
     confirm the finding is real, and decide whether to dispatch it via task-gateway.py, same
     review step this task''s own real test evidence exercised for compliance-tracker PR #562.'
+- id: vercel_github_state_census_2026_07_26
+  type: infrastructure_state_snapshot
+  path: ai-os/MASTER_INDEX.yaml (this entry -- inline census, no separate tracking
+    file created per this task's own CONSTRAINTS; SYSTEM_MAP.yaml and
+    MASTER_ARCHITECTURE_2026-07-22.yaml referenced by registries.system_map_2026_07_22
+    / registries.master_architecture_2026_07_22 do not exist on disk or in git history
+    for this repo -- confirmed via `git log --diff-filter=A --name-only` returning zero
+    hits -- so this file's own registries[] section is the correct, real existing home)
+  scope: 'Real, fresh (not from memory) census of everything live across the 3 linked
+    Vercel projects and 7 GitHub repos under FChecklist, built by direct `vercel` CLI
+    and `gh api`/`gh pr`/`gh repo` calls run 2026-07-26T10:33:37Z. Supersedes any
+    prior-session verbal/chat record of this same state (KNOWN_CONTEXT for this task
+    cited a prior session finding that Vercel plan is Hobby and blocks custom
+    environments, and described claude-control PR #84 as "being verified" -- both
+    checked fresh below; the Hobby-plan finding held up, the PR #84 status did not
+    (see discrepancies_vs_known_context).'
+  status: live_snapshot_2026_07_26
+  vercel:
+    team_scope: meet-track-s-projects (id team_Iqx3zyb7sDdsdzcNskCFFsHD)
+    plan_tier: 'Hobby -- reconfirmed real, current tier via `GET /v2/teams` (billing.plan=="hobby"),
+      queried 2026-07-26. Matches the prior-session finding cited in this task''s KNOWN_CONTEXT.
+      Vercel custom environments require a Team/Pro-or-above plan, so this team cannot use
+      them -- any existing doc describing a Vercel "custom environment" for
+      compliance-tracker/projexa/veda-advisors is describing something not actually
+      obtainable on the real current plan.'
+    projects:
+      veridian-compliance-ai:
+        project_id: prj_mRRWcMvhyuxgRZtcfp4ArSzcOvII
+        github_repo: FChecklist/compliance-tracker
+        framework: Next.js (bun run build / bun install)
+        latest_production_deployment: 'Ready, ~2h old as of the query (age is relative
+          to 2026-07-26T10:33:37Z query time), served at https://projexa-ai.com. A
+          Preview deployment was actively Building at query time (2m old), consistent
+          with the compliance-tracker PR #563 work happening in a parallel task this
+          same session.'
+        env_vars_present: [OPS_SYNC_SECRET, AI_TEAM_LOG_SECRET, CEREBRAS_API_KEY, GROQ_API_KEY,
+          APP_RUNTIME_DATABASE_URL, CRON_SECRET, OPENROUTER_API_KEY, DATABASE_URL,
+          AI_CONFIG_ENCRYPTION_KEY, NODE_ENV, NEXT_PUBLIC_APP_URL, RESEND_API_KEY,
+          SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, NEXT_PUBLIC_SUPABASE_ANON_KEY,
+          NEXT_PUBLIC_SUPABASE_URL]
+        env_var_staleness_note: 'All 21 rows (16 distinct keys, several duplicated per-environment)
+          are 6-28 days old as of this query -- none flagged as recently rotated. No
+          secret values were read or printed, only key names and per-environment presence,
+          per this task''s CONSTRAINTS.'
+      projexa:
+        project_id: prj_JA9mwUdOfW3SKSxjG4jdPo0R2iVM
+        github_repo: FChecklist/projexa
+        framework: Next.js (npm/yarn/pnpm/bun build, no custom command pinned)
+        latest_production_deployment: 'Ready, ~7d old, served at https://projexa-ai.com --
+          same production domain as veridian-compliance-ai (both projects share the
+          projexa-ai.com apex domain; this is real current Vercel domain-assignment state,
+          not a data-entry error in this census).'
+        env_vars_present: [VERIDIAN_PLATFORM_APPLICATION_KEY, SUPABASE_DB_PASSWORD,
+          VERIDIAN_API_KEY, VERIDIAN_API_BASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY,
+          NEXT_PUBLIC_SUPABASE_URL]
+        env_var_staleness_note: All 6 keys are Production-only (no Preview/Development
+          rows exist for this project) and 11-12 days old as of this query.
+      veda-advisors:
+        project_id: prj_sGnvct3DikYopNJ6G3lpmZFhsEJI
+        github_repo: FChecklist/veda-advisors
+        framework: Next.js (npm/yarn/pnpm/bun build, no custom command pinned)
+        latest_production_deployment: Ready, ~28d old, served at https://veda-advisors.vercel.app.
+        env_vars_present: [NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY,
+          SUPABASE_SERVICE_ROLE_KEY]
+        env_var_staleness_note: All 3 keys are 32 days old as of this query -- the
+          stalest of the 3 projects' env var sets.
+  github:
+    org_or_user_account: FChecklist is a personal User account (not a GitHub Organization
+      -- `gh api orgs/FChecklist` returns 404), confirmed real-plan-tier evidence below.
+    plan_tier_evidence: 'GitHub Free (private-repo tier), inferred from a real, reproducible
+      403 on every private repo''s branch-protection endpoint: `gh api
+      repos/FChecklist/<private-repo>/branches/<default>/protection` returns
+      {"message":"Upgrade to GitHub Pro or make this repository public to enable this
+      feature.","status":"403"} for claude-control, projexa, veridian-brain, and
+      sumeet-spec (all private). Only the 2 PUBLIC repos (compliance-tracker,
+      veda-advisors) return real branch-protection data -- see required_checks below.
+      This means required-status-checks cannot be mechanically verified via the REST
+      branch-protection API for any private repo on the current plan; PR mergeability
+      for those repos was instead confirmed via each PR''s own mergeable/mergeable_state
+      field plus check-runs, both queried fresh below.'
+    repos:
+      compliance-tracker:
+        visibility: PUBLIC
+        default_branch: main
+        open_pr_count: 30
+        required_status_checks_contexts: [Lint, Type Check, Build, audit-check,
+          Guardrail Presence Check, Asset Registry Coverage Check, Unit Tests]
+        required_checks_source: 'live `gh api repos/FChecklist/compliance-tracker/branches/main/protection/required_status_checks`
+          --jq ''.contexts'', queried 2026-07-26 -- no prior tracking file in this repo
+          documented an expected contexts list to diff against, so this is the first
+          real record of it, not a drift confirmation against a stale doc.'
+        active_workflows: [ai-dispatch.yml, ai-prompt-evals.yml, ai-team-workforce.yml,
+          browser-ux-test.yml, build-doc-processing-image.yml, ci.yml, claude.yml,
+          codeql.yml, doc-processing-job.yml, mandatory-audit-check.yml, sentinel.yml,
+          sync-vercel-env.yml]
+      claude-control:
+        visibility: PRIVATE
+        default_branch: master
+        open_pr_count: 7
+        required_status_checks_contexts: 'UNVERIFIABLE -- 403 (private repo, Free plan);
+          see plan_tier_evidence above. No CI workflow beyond claude.yml exists in this
+          repo (confirmed via `gh api .../actions/workflows` and via zero check-runs
+          returned for PR #79/#80/#82''s head SHAs), so there is no required-status-check
+          drift to detect here in practice -- PRs #79/#80 are blocked by real git merge
+          conflicts (mergeable_state=dirty), not by failing checks.'
+        active_workflows: [claude.yml]
+      projexa:
+        visibility: PRIVATE
+        default_branch: main
+        open_pr_count: 2
+        required_status_checks_contexts: 'UNVERIFIABLE -- 403 (private repo, Free plan);
+          see plan_tier_evidence above.'
+        active_workflows: [ci.yml, claude.yml]
+      veda-advisors:
+        visibility: PUBLIC
+        default_branch: main
+        open_pr_count: 11
+        required_status_checks_contexts: 'none configured (empty list) -- branch
+          protection on main requires 1 approving PR review but zero named status
+          checks, confirmed live via the same protection/required_status_checks
+          endpoint used for compliance-tracker above'
+        active_workflows: [ai-dispatch.yml, ci.yml, codeql.yml, sentinel.yml]
+      global-revenue-engine:
+        visibility: PRIVATE
+        default_branch: 'NONE -- repo is real but empty (size=0 bytes, zero commits,
+          confirmed via `gh api repos/FChecklist/global-revenue-engine`), so it has no
+          default branch, no PRs, no workflows, and branch-protection/required-checks
+          concepts do not apply. Listed in this task''s KNOWN_CONTEXT as one of the 7
+          repos to catalogue; this census confirms its real current state is "created,
+          never populated," not "populated but unreachable."'
+        open_pr_count: 0
+        active_workflows: []
+      veridian-brain:
+        visibility: PRIVATE
+        default_branch: main
+        open_pr_count: 0
+        required_status_checks_contexts: 'UNVERIFIABLE -- 403 (private repo, Free plan);
+          see plan_tier_evidence above.'
+        active_workflows: 'none -- no workflow files at all (dormant repo, last push
+          2026-07-09)'
+      sumeet-spec:
+        visibility: PRIVATE
+        default_branch: main
+        open_pr_count: 0
+        required_status_checks_contexts: 'UNVERIFIABLE -- 403 (private repo, Free plan);
+          see plan_tier_evidence above.'
+        active_workflows: 'none -- no workflow files at all (dormant repo, last push
+          2026-07-09)'
+    open_prs_confirmed_fresh_2026_07_26_via_gh_api_not_memory:
+      claude-control_79: 'DDL pre-flight authorization gate. state=open, draft=false,
+        mergeable=false, mergeable_state=dirty (real git conflict against master, not
+        a failing check -- claude-control has no CI check-runs configured at all). Matches
+        KNOWN_CONTEXT''s "content approved, merge blocked" characterization: real,
+        current blocker is the conflict, unchanged.'
+      claude-control_80: 'Interactive write-gate. state=open, draft=false, mergeable=false,
+        mergeable_state=dirty. Matches KNOWN_CONTEXT''s "round 3 in progress" -- still
+        open and still conflicting as of this query.'
+      claude-control_82: 'OWNER_ENGINE integration into task lifecycle. state=open,
+        draft=false, mergeable=true, mergeable_state=clean. Matches KNOWN_CONTEXT''s
+        "round 2 in progress" framing (open, not yet merged) but note the real current
+        mergeable_state is CLEAN, not blocked -- content review is what''s still
+        outstanding, not a merge conflict.'
+      claude-control_84: 'DISCREPANCY vs KNOWN_CONTEXT: KNOWN_CONTEXT described this as
+        "recovered lifecycle-fix, being verified" (implying still open). Real current
+        state, confirmed via `gh api repos/FChecklist/claude-control/pulls/84`:
+        state=closed, merged=true, merged_at=2026-07-26T10:19:37Z, merged_by=FChecklist.
+        It was merged during this same session, before this census ran (also visible
+        as commit 581e042 at the top of `git log` for this workspace). This census
+        records it as MERGED, not open/being-verified -- KNOWN_CONTEXT was already
+        stale by the time this task started.'
+      compliance-tracker_563: 'Migration-drift audit. state=open, draft=false,
+        mergeable=true, mergeable_state=blocked (GitHub''s "blocked" = required checks/reviews
+        not all green yet, distinct from a git conflict). Real check-runs as of this
+        query: audit-check=FAILURE, Metadata Index Coverage Check=FAILURE, E2E
+        Tests=in_progress, all 15 other checks=SUCCESS/neutral. Matches KNOWN_CONTEXT''s
+        "real conflict, being resolved in a parallel task this same session" -- this
+        census only catalogues that real current state and does not touch or resolve it,
+        per this task''s own explicit instruction not to duplicate that parallel work.'
+  discrepancies_vs_known_context:
+    - 'claude-control PR #84 was already merged (2026-07-26T10:19:37Z) by the time this
+      census ran, contradicting KNOWN_CONTEXT''s "being verified" framing -- see
+      open_prs_confirmed_fresh_2026_07_26_via_gh_api_not_memory.claude-control_84 above.'
+    - 'The prior-session Vercel Hobby-plan / custom-environments finding cited in
+      KNOWN_CONTEXT was NOT found recorded in any tracking file inside this
+      (claude-control) repo -- it may live in a different repo''s docs or only in a
+      prior chat session. This census independently reconfirms it is still real and
+      current regardless of where it was first recorded.'
+    - 'No existing tracking file in this repo previously documented an expected GitHub
+      required-status-checks list for any repo, so "matches what is documented" could
+      only be evaluated for compliance-tracker and veda-advisors going forward from this
+      census (the first real record) -- there was nothing stale to detect yet for those
+      two, and the other 5 repos are structurally unverifiable via API on the current
+      GitHub Free plan.'
+  verification_commands:
+    vercel_plan: "curl -s -H \"Authorization: Bearer $VERCEL_ACCESS_TOKEN\" https://api.vercel.com/v2/teams
+      | jq '.teams[] | select(.slug==\"meet-track-s-projects\") | .billing.plan'"
+    vercel_projects: "vercel project ls --token $VERCEL_ACCESS_TOKEN --scope meet-track-s-projects"
+    vercel_env: "vercel env ls --token $VERCEL_ACCESS_TOKEN --scope meet-track-s-projects
+      --project <name>"
+    github_prs: 'gh pr view <n> --repo FChecklist/<repo> --json state,mergeable,mergeStateStatus
+      (NOTE -- gh pr view --json silently truncated long string field values with a
+      literal "..." mid-string when several fields were requested together during this
+      task''s own execution; `gh api repos/<owner>/<repo>/pulls/<n>` did not exhibit this
+      and is the more reliable command for scripted use)'
+    github_branch_protection: "gh api repos/FChecklist/<repo>/branches/<default-branch>/protection/required_status_checks
+      --jq '.contexts'"
 - id: task_lifecycle_branch_resolution_and_signoff_fix
   type: task_lifecycle_bugfix
   path: scripts/supervisor-entrypoint.sh + scripts/veridian-task.py + scripts/tight_task_validation.py
