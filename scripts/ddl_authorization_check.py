@@ -91,6 +91,21 @@ Treat this gate as a real but partial control: it stops a prompt from
 authorizing live DDL up front with a fabricated or free-floating citation, it
 does not guarantee no live DDL happens after dispatch, and it does not
 semantically verify a cited real record actually approves this action.
+
+PHASE 2 UNIFICATION (2026-07-26): this gate was a genuine 3rd disconnected
+policy gate -- it shipped after
+ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml's phase_2_policy_rule_decision_unification
+closed with exactly 2 gates unified (preflight-guard.py, policy-enforcement-engine.ts),
+and it emitted its own ad hoc {valid,reason,guidance} shape instead of
+scripts/policy_decision.py's shared PolicyDecision envelope -- flagged by
+ai-os/MASTER_INDEX.yaml's own registries.engines_gateways_architecture.phase_2_scope_judgment_2026_07_26
+entry as the one real follow-up Phase 2 owed. Closed here: check_ddl_authorization()'s
+return dict now carries an additive "policy_decision" key (a full
+policy_decision_schema envelope, source_gate="ddl_authorization_check.py:check_ddl_authorization")
+alongside the original valid/reason/guidance/ddl_references_found/pre_approved_reference
+keys, unchanged -- same additive, non-breaking discipline Phase 2 used on
+preflight-guard.py/risk-tier.py. See ai-os/POLICY_GATE_REGISTRY_2026-07-26.yaml for
+the full gate registry this is now a member of.
 """
 import json
 import os
@@ -99,6 +114,11 @@ import sys
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 AI_OS_DIR = os.path.join(REPO_ROOT, "ai-os")
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from policy_decision import emit_allow, emit_deny, make_explanation  # noqa: E402
+
+SOURCE_GATE = "ddl_authorization_check.py:check_ddl_authorization"
 
 DDL_KEYWORD_PATTERNS = {
     "CREATE TABLE": re.compile(r"\bCREATE\s+TABLE\b", re.IGNORECASE),
@@ -263,12 +283,40 @@ def find_pre_approval(text):
 def check_ddl_authorization(text):
     hits = find_ddl_references(text)
     if not hits:
-        return {"valid": True}
+        decision = emit_allow(
+            source_gate=SOURCE_GATE, reason_code="no_ddl_language_found",
+            detail="No DDL/DCL keyword or DDL-capable Supabase MCP tool name found in this prompt-file.",
+        )
+        return {"valid": True, "policy_decision": decision.to_dict()}
 
     reference = find_pre_approval(text)
     if reference:
-        return {"valid": True, "ddl_references_found": hits, "pre_approved_reference": reference}
+        explanation = make_explanation(
+            summary="Live DDL pre-approved by a real, verified citation.",
+            reasoning=f"Matched DDL language ({', '.join(hits)}) but a valid PRE-APPROVED-LIVE-DDL citation ({reference}) was found and verified to exist.",
+        )
+        decision = emit_allow(
+            source_gate=SOURCE_GATE, reason_code="ddl_pre_approved",
+            detail=f"pre_approved_reference={reference}",
+            explanation=explanation, evidence=hits,
+        )
+        return {
+            "valid": True, "ddl_references_found": hits, "pre_approved_reference": reference,
+            "policy_decision": decision.to_dict(),
+        }
 
+    explanation = make_explanation(
+        summary="Live DDL language found with no valid pre-approval citation.",
+        reasoning=(
+            f"Matched DDL/DCL language ({', '.join(hits)}) and no PRE-APPROVED-LIVE-DDL: line cited a "
+            "real, existing decision-log record or a sufficiently detailed dated note."
+        ),
+        recommended_action="Remove the DDL instruction from SCOPE and open a migration PR for human review instead.",
+    )
+    decision = emit_deny(
+        source_gate=SOURCE_GATE, reason_code="ddl_authorization_required",
+        detail=f"ddl_references_found={hits}", explanation=explanation, evidence=hits,
+    )
     return {
         "valid": False,
         "reason": (
@@ -289,6 +337,7 @@ def check_ddl_authorization(text):
             "change."
         ),
         "ddl_references_found": hits,
+        "policy_decision": decision.to_dict(),
     }
 
 
