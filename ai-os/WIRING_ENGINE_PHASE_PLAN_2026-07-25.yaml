@@ -224,7 +224,35 @@ phases:
         git-diffable artifact, not a replacement for it."
       - "Confirm idempotency: two consecutive real runs produce 0 net new rows on the second run."
     depends_on: []
-    status: not_started
+    status: done
+    status_detail:
+      produced_by_task: task-20260726-162252-extend-wiring-engine-to-full-system--ser
+      completed_on: '2026-07-26'
+      what_shipped:
+        - "scripts/superboss-register.py: new `wiring_registry` table (entity_id PK, entity_type/source_system
+          CHECK-constrained against the schema's own closed enums, relationships/source_ref/metadata_json as
+          JSON text, same FTS5(path, entity_type, source_ref)+insert/update/delete-trigger+write-lock
+          convention as capability_registry) in both init_db()'s executescript and a standalone
+          _ensure_wiring_registry_table() for defensiveness. New register_entity_row(conn, entity) upsert
+          helper (single source of truth for the DDL/SQL) plus register-entity/lookup-entity/list-entities CLI
+          subcommands built on top of it."
+        - "scripts/generate_wiring_registry.py: imports superboss-register.py's table-creation/upsert helper
+          via importlib (hyphenated filename, can't `import` normally) and bulk-upserts every entity into
+          wiring_registry in one transaction after writing the JSON snapshot -- direct sqlite3 + the same
+          _write_lock, same bypass-the-CLI-for-bulk-writes convention scripts/batch-import-conversation-log.py
+          already established (a ~7700-row batch via one register-entity subprocess per row would be far too
+          slow for a 6h cron run)."
+      real_evidence:
+        - "python3 scripts/generate_wiring_registry.py run 1: entity_count=7709, live_wiring_registry_row_count=7709."
+        - "python3 scripts/generate_wiring_registry.py run 2 (immediately after): entity_count=7709,
+          live_wiring_registry_row_count=7709 -- 0 net new rows, confirmed idempotent."
+        - "python3 scripts/superboss-register.py list-entities --entity-type supabase_table|vercel_project|
+          github_repo|browser_component all return real, non-empty rows (444/3/7/4 respectively)."
+      note: 'This phase was executed together with this task''s own full-system entity_type extension (see
+        ai-os/MASTER_INDEX.yaml registries.wiring_engine and WIRING_ENGINE_SCHEMA_2026-07-25.yaml
+        meta.full_system_extension_2026_07_26) -- both landed in the same PR since the live table needed to
+        know about the 3 genuinely new entity types (vercel_project/github_repo/browser_component) plus the
+        supabase_table rename up front, not as a follow-up migration.'
 
   - id: phase_4_extend_gateway_coverage_beyond_first_proven_path
     name: "Extend Phase 1's one proven end-to-end path to the remaining live capability_registry rows"

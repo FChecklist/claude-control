@@ -43,6 +43,7 @@ CREDIT_ACCOUNTANT = f"{SCRIPTS}/credit-accountant.py"
 PROMPT_GATEWAY = f"{SCRIPTS}/prompt_gateway/gateway.py"
 POSTFLIGHT = f"{AI_OS}/scripts/postflight_audit_gate.py"
 TIGHT_VALIDATION = f"{SCRIPTS}/tight_task_validation.py"
+DDL_AUTHORIZATION_CHECK = f"{SCRIPTS}/ddl_authorization_check.py"
 DB_PATH = f"{AI_OS}/memory/superboss-register.sqlite"
 MASTER_INDEX_REGISTRIES_SYNC = f"{AI_OS}/scripts/sync_master_index_registries.py"
 
@@ -343,6 +344,30 @@ def cmd_start(args):
             "tight_task_validation.py rejected this prompt-file -- dispatch blocked until fixed",
             reason=tight_result.get("reason"),
             guidance=tight_result.get("guidance"),
+            prompt_file=args.prompt_file,
+        )
+
+    # Real fix for a real 2026-07-26 incident (task-20260726-071400-migration-drift-
+    # audit-and-reconciliation): its own dispatch prompt's SCOPE told a worker to call
+    # Supabase MCP's apply_migration directly against production, and nothing at
+    # dispatch time stopped that prompt from authorizing a live DDL run before any
+    # PR/CI/human review happened -- the standing "Supabase schema changes are always
+    # held for human sign-off" rule was only enforced at PR-merge time. This runs
+    # immediately after tight_task_validation.py, same run()/json.loads()/fail()
+    # pattern, before veridian-task.py create, so a prompt authorizing live DDL never
+    # reaches a worker without an explicit, citable Owner approval.
+    ddl_proc = run(["python3", DDL_AUTHORIZATION_CHECK, args.prompt_file])
+    try:
+        ddl_result = json.loads(ddl_proc.stdout)
+    except json.JSONDecodeError:
+        fail("ddl_authorization_check.py did not return parseable JSON",
+             stdout=ddl_proc.stdout, stderr=ddl_proc.stderr)
+    if not ddl_result.get("valid", False):
+        fail(
+            "ddl_authorization_check.py rejected this prompt-file -- dispatch blocked "
+            "until an explicit, citable Owner approval is added",
+            reason=ddl_result.get("reason"),
+            guidance=ddl_result.get("guidance"),
             prompt_file=args.prompt_file,
         )
 
