@@ -26,6 +26,27 @@ SCHEMA_VERSION = "1.0"
 # workflow_contract_schema.phases_enum, verbatim from the schema file.
 WORKFLOW_PHASES = ["submitted", "planned", "dispatched", "logged", "closed"]
 
+# Single source of truth for the literal_template's required ## SECTION headers.
+# Previously hardcoded independently in task-gateway.py's REQUIRED_SECTIONS list
+# AND tight_task_validation.py's FIELD_HEADER_RE alternation (task-20260726-092433
+# dedup audit, SCOPE item 3) -- both enforced the exact same 7-name set, just in
+# two different shapes (presence-check list vs regex alternation), and would have
+# silently drifted the moment one was updated without the other. Every caller that
+# needs to know "is this text a fully-labeled task spec" now imports from here.
+REQUIRED_TASK_SECTIONS = [
+    "OBJECTIVE", "SCOPE", "KNOWN_CONTEXT", "SUCCESS_CRITERIA",
+    "EXPECTED_OUTPUT", "CONSTRAINTS", "COMPLEXITY_TIER",
+]
+
+
+def has_all_required_sections(text):
+    """True iff every REQUIRED_TASK_SECTIONS name appears as a literal
+    '## NAME' header in text -- the same check task-gateway.py's cmd_start
+    used to do inline, now shared so gateway.py's lifecycle router (which
+    needs the identical "is this a complete task spec" answer to decide
+    whether a raw Owner message is start-ready) can't drift from it."""
+    return all(f"## {s}" in text for s in REQUIRED_TASK_SECTIONS)
+
 # task-gateway.py subcommand -> the phase it represents, per
 # WORKFLOW_CONTRACT_SCHEMA_2026-07-24.yaml's phase_mapping.task_gateway_py.
 TASK_GATEWAY_SUBCOMMAND_PHASE = {
