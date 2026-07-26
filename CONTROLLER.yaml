@@ -5791,3 +5791,120 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260726-092433-wire-owner-engine---task-lifecycle-into/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/82'
     last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-094625-re-verify-20-engine-inventory---confirm
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Re-verify 20-engine inventory + confirm zero duplication
+      + real AUDITOR_ENGINE status'' on compliance-tracker reached status=blocked. Superboss
+      rejected: https://github.com/FChecklist/compliance-tracker/pull/566 — see review.json
+      for issues'
+    where: '/opt/veridian/ai-os/tasks/task-20260726-094625-re-verify-20-engine-inventory---confirm/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/566'
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-101158-verify-and-land-recovered-lifecycle-fix
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Verify and land recovered lifecycle-fix commit e6c7049
+      (PR84)'' on claude-control reached status=completed. tier1, Superboss-approved,
+      merged autonomously: '
+    where: /opt/veridian/ai-os/tasks/task-20260726-101158-verify-and-land-recovered-lifecycle-fix/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-101201-fix-write-gate--real-cgroup-check---refs
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Fix write-gate: real cgroup check + refspec parsing
+      (round 3)'' on claude-control reached status=blocked. Superboss rejected:  — see
+      review.json for issues'
+    where: /opt/veridian/ai-os/tasks/task-20260726-101201-fix-write-gate--real-cgroup-check---refs/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-101257-fix-owner-engine-integration--clarificat
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Fix OWNER_ENGINE integration: clarification gate
+      + dup-check + credit-accountant contract (round 2)'' on claude-control reached
+      status=blocked. Superboss rejected:  — see review.json for issues'
+    where: /opt/veridian/ai-os/tasks/task-20260726-101257-fix-owner-engine-integration--clarificat/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-101817-fix-tier1-merge-not-executed-bug---regis
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Fix tier1 merge-not-executed bug + register orphan
+      recovery PR84 for real audit'' on claude-control reached status=completed. tier1,
+      Superboss-approved, merged autonomously: https://github.com/FChecklist/claude-control/pull/87'
+    where: '/opt/veridian/ai-os/tasks/task-20260726-101817-fix-tier1-merge-not-executed-bug---regis/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/87'
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-101954-fix-owner-engine-dispatch-safety-gaps--r
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: Server-worker task 'Fix OWNER_ENGINE dispatch safety gaps (round 2, real
+      AUDIT REJECT)' on claude-control reached status=blocked. supervisor could not
+      resolve a real PR for branch 'worker/task-20260726-101954-fix-owner-engine-dispatch-safety-gaps--r'
+      (gh pr create failed, no existing open PR found for it) — refusing to proceed
+      rather than risk operating on an unrelated PR via gh's empty-argument fallback.
+      See supervisor.log.
+    where: /opt/veridian/ai-os/tasks/task-20260726-101954-fix-owner-engine-dispatch-safety-gaps--r/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-102517-analyze-update--server-engines-registrie
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Analyze+update: server engines/registries current
+      state (no new builds)'' on claude-control reached status=completed. tier1, Superboss-approved,
+      merged autonomously: https://github.com/FChecklist/claude-control/pull/86'
+    where: '/opt/veridian/ai-os/tasks/task-20260726-102517-analyze-update--server-engines-registrie/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/86'
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-102520-analyze-update--supabase-schema-migratio
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Analyze+update: Supabase schema/migration current
+      state (no new builds)'' on compliance-tracker reached status=completed. tier1,
+      Superboss-approved, merged autonomously: https://github.com/FChecklist/compliance-tracker/pull/567'
+    where: '/opt/veridian/ai-os/tasks/task-20260726-102520-analyze-update--supabase-schema-migratio/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/567'
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-102523-analyze-update--vercel-github-current-st
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Analyze+update: Vercel+GitHub current state census
+      (no new builds)'' on claude-control reached status=blocked. tier1, Superboss-approved,
+      but the merge itself FAILED (gh pr view confirms state=OPEN, mergedAt=; see supervisor.log)
+      — needs manual attention, NOT actually merged: https://github.com/FChecklist/claude-control/pull/85'
+    where: '/opt/veridian/ai-os/tasks/task-20260726-102523-analyze-update--vercel-github-current-st/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/85'
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-103756-adopted-adopt-recovered-lifecycle-fix-pr84-for-r
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: Server-worker task 'Adopt recovered-lifecycle-fix PR84 for retroactive
+      audit' on claude-control reached status=blocked. supervisor could not resolve
+      a real PR for branch 'recovered-lifecycle-fix-e6c7049' (gh pr create failed, no
+      existing open PR found for it) — refusing to proceed rather than risk operating
+      on an unrelated PR via gh's empty-argument fallback. See supervisor.log.
+    where: /opt/veridian/ai-os/tasks/task-20260726-103756-adopted-adopt-recovered-lifecycle-fix-pr84-for-r/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-26'
