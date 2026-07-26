@@ -5497,3 +5497,48 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260725-231836-phase2-prompt-compiler-pipeline-core-non/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/560'
     last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-035742-phase3-business-rule-permission-policy-c
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''phase3-business-rule-permission-policy-compliance-governance''
+      on compliance-tracker reached status=blocked. Superboss rejected: https://github.com/FChecklist/compliance-tracker/pull/561
+      — see review.json for issues'
+    where: '/opt/veridian/ai-os/tasks/task-20260726-035742-phase3-business-rule-permission-policy-c/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/561'
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-040056-fix-auto-continuation-self-report-and-ci
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''fix-auto-continuation-self-report-and-ci-race-root-causes''
+      on claude-control reached status=completed. PR #76 merge blocked by a transient
+      GitHub 502, not a real conflict -- retried, merged clean. gh pr view confirms
+      state=MERGED.'
+    where: '/opt/veridian/ai-os/tasks/task-20260726-040056-fix-auto-continuation-self-report-and-ci/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/76'
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-042710-fix-pr561-cross-tenant-governance-bypass
+    project: veridian
+    type: worker-task
+    status: in-progress
+    summary: 'Server-worker task ''fix-pr561-cross-tenant-governance-bypass'' on compliance-tracker
+      reached status=awaiting_human_approval. tier2, Superboss-approved, held for human
+      merge: '
+    where: /opt/veridian/ai-os/tasks/task-20260726-042710-fix-pr561-cross-tenant-governance-bypass/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-043023-phase4-defense-in-depth-prompt-security
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''phase4-defense-in-depth-prompt-security-red'' on
+      compliance-tracker reached status=blocked. Superboss rejected: https://github.com/FChecklist/compliance-tracker/pull/562
+      — see review.json for issues'
+    where: '/opt/veridian/ai-os/tasks/task-20260726-043023-phase4-defense-in-depth-prompt-security/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/562'
+    last_touched: '2026-07-26'
