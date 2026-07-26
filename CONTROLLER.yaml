@@ -6234,3 +6234,27 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260726-172013-cityline-ticketing-6-role-reverse-engine/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/infisuite-reverse-engineering/pull/1'
     last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-171226-tier2-fix--pr-80-round-5----close-git-gh
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Tier2 fix: PR#80 round 5 -- close git/gh command-alias
+      bypass'' on claude-control reached status=blocked. supervisor could not resolve
+      a real PR for branch ''master'' (gh pr create failed, no existing open PR found
+      for it) — refusing to proceed rather than risk operating on an unrelated PR via
+      gh''s empty-argument fallback. See supervisor.log.'
+    where: /opt/veridian/ai-os/tasks/task-20260726-171226-tier2-fix--pr-80-round-5----close-git-gh/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-171939-delegation-expiry-enforcement-audit---te
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Delegation expiry enforcement audit + test'' on compliance-tracker
+      reached status=blocked. Superboss rejected: https://github.com/FChecklist/compliance-tracker/pull/579
+      — see review.json for issues'
+    where: '/opt/veridian/ai-os/tasks/task-20260726-171939-delegation-expiry-enforcement-audit---te/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/579'
+    last_touched: '2026-07-26'
