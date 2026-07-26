@@ -117,7 +117,19 @@ DISCOVERY = [
             "policy-enforcement-engine.ts is a deterministic pre-LLM-call gate (personal-use/prompt-injection/"
             "out-of-domain categories) in compliance-tracker. Both are real, enforced gates -- but two separate "
             "policy engines with no shared schema or single point of truth, and neither covers the other's domain "
-            "(server ops vs in-app LLM calls).",
+            "(server ops vs in-app LLM calls). "
+            "Re-verified 2026-07-26: two more real, tested Policy Engine gates were built this same session -- "
+            "scripts/ddl_authorization_check.py (a dispatch-time pre-flight gate blocking unauthorized DDL/DCL "
+            "statements, 3 real audit rounds, PR #79) and ai-os/OWNER_DIRECTIVES/interactive-session-guard.bashrc-"
+            "snippet (a bashrc-hook guard against an interactive session bypassing branch protection via manual "
+            "`gh pr merge`/`git push` to master/main, PR #80) -- both deterministic pre-execution gates against "
+            "standing policy, the same shape as preflight-guard.py. NOT added to exists_as above: as of this "
+            "verification pass both PRs are still OPEN/unmerged (confirmed via `gh pr view --json state,mergedAt`) "
+            "and neither file exists yet on the live filesystem this script verify()s against -- folding an "
+            "unmerged path into this row would incorrectly flip verified_on_disk to false for preflight-guard.py/"
+            "policy-enforcement-engine.ts too, which are still genuinely live today. Re-run this script (and "
+            "re-add these 2 paths) once PR #79/#80 merge and are deployed to /opt/veridian/scripts and "
+            "/opt/veridian/ai-os/OWNER_DIRECTIVES respectively.",
     ),
     dict(
         n=6, name="Rule Engine",
@@ -152,6 +164,8 @@ DISCOVERY = [
         exists_as=[
             "scripts/task-gateway.py",
             "repos/compliance-tracker/src/lib/task-execution-engine.ts",
+            "scripts/veridian-task.py",
+            "scripts/supervisor-entrypoint.sh",
         ],
         coverage="partial",
         gap="task-gateway.py's submit/start/log/close lifecycle is real, enforced process orchestration for "
@@ -159,7 +173,30 @@ DISCOVERY = [
             "chains. Neither is BPMN-modeled (confirmed zero bpmn-js/camunda dependency in any of the 3 repos' "
             "package.json, per AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml's own workflow-domain finding) -- "
             "VERIDIAN's 'workflows' today are status-enum transitions and task-gateway phases, not a modeled "
-            "process definition a workflow engine would normally execute against.",
+            "process definition a workflow engine would normally execute against. "
+            "Re-verified 2026-07-26: scripts/veridian-task.py (task create/checkpoint CLI) and "
+            "scripts/supervisor-entrypoint.sh (the real review -> merge/hold decision process) are two more "
+            "real, live pieces of this same lifecycle -- both deliberately excluded from git historically (same "
+            "'live-deployed but not git-tracked' class as scripts/credit-accountant.py, per PR #82's own "
+            "finding) but genuinely present on the live filesystem today, so added above. This session found and "
+            "fixed (open PR #81, not yet merged) a real gap in this lifecycle: HOLD_FOR_OWNER_SIGNOFF was "
+            "previously prose-only -- the PR563 incident auto-merged a task explicitly instructed 'must be held "
+            "for Owner sign-off, do not merge under any circumstance' because nothing in "
+            "supervisor-entrypoint.sh's pipeline read prompt-level prose, only risk-tier.py's tier plus the AI "
+            "reviewer's verdict. PR #81 threads a real hold_for_owner_signoff field task-gateway.py's cmd_start "
+            "-> veridian-task.py's cmd_create -> task.yaml -> supervisor-entrypoint.sh's merge-decision block, "
+            "which now unconditionally skips auto-merge when set. Also found and fixed (open PR #82, not yet "
+            "merged): task-gateway.py's cmd_start never called credit-accountant.py propose, so "
+            "worker-entrypoint.sh's later `report --increment 1` always failed with 'no matching approved plan' "
+            "-- cmd_start now proposes right after veridian-task.py create succeeds. GENUINE DUPLICATION RISK "
+            "found and NOT fixed (report-only per this re-verification's own constraints): preflight-guard.py's "
+            "check_credit_accountant_approval (already live today, invoked by worker-entrypoint.sh at a later "
+            "pipeline stage) ALREADY calls `credit-accountant.py propose --task-id <task_id> ...` for the same "
+            "task_id -- PR #82's new cmd_start call proposes for that same task_id earlier in the pipeline. Two "
+            "independent, uncoordinated propose call sites for what credit-accountant.py's own docstring "
+            "describes as a single per-task $1-increment gate is a real overlap neither PR's own scope "
+            "reconciles; needs its own follow-up task. None of PR #79/#80/#81/#82 are merged as of this "
+            "verification pass (all OPEN, confirmed via `gh pr view --json state,mergedAt`).",
     ),
     dict(
         n=9, name="Automation Engine",

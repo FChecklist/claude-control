@@ -33,6 +33,26 @@ meta:
     scripts/knowledge_registry_multisource.py''s own 6h cron and generate_software_catalog.py''s daily cron
     for precedent). No phase in this plan needs a fresh chat confirmation beyond citing that standing
     approval.'
+  reverification_log:
+    # No pre-existing changelog/versioning convention was found in this file or its close family
+    # (AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml, KNOWLEDGE_ENGINE_INVENTORY_2026-07-23.yaml) before this
+    # entry -- this is a minimal, additive log in this file's own existing prose-block style, not a new
+    # invented mechanism.
+    - produced_by_task: task-20260726-094625-re-verify-20-engine-inventory---confirm
+      date: '2026-07-26'
+      what_changed: 'Re-ran ai-os-scripts/generate_engines_gateways_inventory.py against live disk (2 days
+        stale as of this pass) -- 18/20 engine_inventory rows unchanged (re-verified true, zero drift).
+        Engine 5 (Policy) and Engine 8 (Workflow) exists_as/gap_description updated: Engine 8 gained 2 real,
+        live exists_as paths (scripts/veridian-task.py, scripts/supervisor-entrypoint.sh); Engine 5''s new
+        candidate files (scripts/ddl_authorization_check.py, ai-os/OWNER_DIRECTIVES/interactive-session-
+        guard.bashrc-snippet) were deliberately NOT added to exists_as (real code, but not yet live-verifiable
+        -- both still in open, unmerged PRs #79/#80 as of this pass) and documented in gap_description
+        instead, so as not to falsely flip verified_on_disk to false for the row''s other, still-genuinely-live
+        paths. No 21st engine added -- every new file this session touched was matched to one of the 20
+        existing roles. One genuine duplication risk found and reported, not fixed, per this task''s own
+        CONSTRAINTS: preflight-guard.py and (open PR #82) task-gateway.py''s cmd_start both independently
+        call credit-accountant.py propose for the same task_id -- see Engine 8''s gap_description.
+        gateway_inventory (all 10 rows) re-verified unchanged, zero drift.'
 
 # ============================================================================
 # ENGINE INVENTORY -- verbatim output of
@@ -91,7 +111,7 @@ engine_inventory:
       - repos/compliance-tracker/src/lib/policy-enforcement-engine.ts
     verified_on_disk: true
     coverage: partial
-    gap_description: "preflight-guard.py gates server-side task dispatch (resource/crontab/scope checks); policy-enforcement-engine.ts is a deterministic pre-LLM-call gate (personal-use/prompt-injection/out-of-domain categories) in compliance-tracker. Both are real, enforced gates -- but two separate policy engines with no shared schema or single point of truth, and neither covers the other's domain (server ops vs in-app LLM calls)."
+    gap_description: "preflight-guard.py gates server-side task dispatch (resource/crontab/scope checks); policy-enforcement-engine.ts is a deterministic pre-LLM-call gate (personal-use/prompt-injection/out-of-domain categories) in compliance-tracker. Both are real, enforced gates -- but two separate policy engines with no shared schema or single point of truth, and neither covers the other's domain (server ops vs in-app LLM calls). Re-verified 2026-07-26: two more real, tested Policy Engine gates were built this same session -- scripts/ddl_authorization_check.py (a dispatch-time pre-flight gate blocking unauthorized DDL/DCL statements, 3 real audit rounds, PR #79) and ai-os/OWNER_DIRECTIVES/interactive-session-guard.bashrc-snippet (a bashrc-hook guard against an interactive session bypassing branch protection via manual `gh pr merge`/`git push` to master/main, PR #80) -- both deterministic pre-execution gates against standing policy, the same shape as preflight-guard.py. NOT added to exists_as above: as of this verification pass both PRs are still OPEN/unmerged (confirmed via `gh pr view --json state,mergedAt`) and neither file exists yet on the live filesystem this script verify()s against -- folding an unmerged path into this row would incorrectly flip verified_on_disk to false for preflight-guard.py/policy-enforcement-engine.ts too, which are still genuinely live today. Re-run this script (and re-add these 2 paths) once PR #79/#80 merge and are deployed to /opt/veridian/scripts and /opt/veridian/ai-os/OWNER_DIRECTIVES respectively."
   - engine_no: 6
     engine_name: "Rule Engine"
     purpose: "Evaluate named business rules against inputs/outputs deterministically."
@@ -117,9 +137,11 @@ engine_inventory:
     exists_as:
       - scripts/task-gateway.py
       - repos/compliance-tracker/src/lib/task-execution-engine.ts
+      - scripts/veridian-task.py
+      - scripts/supervisor-entrypoint.sh
     verified_on_disk: true
     coverage: partial
-    gap_description: "task-gateway.py's submit/start/log/close lifecycle is real, enforced process orchestration for server-side AI tasks. task-execution-engine.ts dispatches VCEL engine calculations through named chains. Neither is BPMN-modeled (confirmed zero bpmn-js/camunda dependency in any of the 3 repos' package.json, per AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml's own workflow-domain finding) -- VERIDIAN's 'workflows' today are status-enum transitions and task-gateway phases, not a modeled process definition a workflow engine would normally execute against."
+    gap_description: "task-gateway.py's submit/start/log/close lifecycle is real, enforced process orchestration for server-side AI tasks. task-execution-engine.ts dispatches VCEL engine calculations through named chains. Neither is BPMN-modeled (confirmed zero bpmn-js/camunda dependency in any of the 3 repos' package.json, per AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml's own workflow-domain finding) -- VERIDIAN's 'workflows' today are status-enum transitions and task-gateway phases, not a modeled process definition a workflow engine would normally execute against. Re-verified 2026-07-26: scripts/veridian-task.py (task create/checkpoint CLI) and scripts/supervisor-entrypoint.sh (the real review -> merge/hold decision process) are two more real, live pieces of this same lifecycle -- both deliberately excluded from git historically (same 'live-deployed but not git-tracked' class as scripts/credit-accountant.py, per PR #82's own finding) but genuinely present on the live filesystem today, so added above. This session found and fixed (open PR #81, not yet merged) a real gap in this lifecycle: HOLD_FOR_OWNER_SIGNOFF was previously prose-only -- the PR563 incident auto-merged a task explicitly instructed 'must be held for Owner sign-off, do not merge under any circumstance' because nothing in supervisor-entrypoint.sh's pipeline read prompt-level prose, only risk-tier.py's tier plus the AI reviewer's verdict. PR #81 threads a real hold_for_owner_signoff field task-gateway.py's cmd_start -> veridian-task.py's cmd_create -> task.yaml -> supervisor-entrypoint.sh's merge-decision block, which now unconditionally skips auto-merge when set. Also found and fixed (open PR #82, not yet merged): task-gateway.py's cmd_start never called credit-accountant.py propose, so worker-entrypoint.sh's later `report --increment 1` always failed with 'no matching approved plan' -- cmd_start now proposes right after veridian-task.py create succeeds. GENUINE DUPLICATION RISK found and NOT fixed (report-only per this re-verification's own constraints): preflight-guard.py's check_credit_accountant_approval (already live today, invoked by worker-entrypoint.sh at a later pipeline stage) ALREADY calls `credit-accountant.py propose --task-id <task_id> ...` for the same task_id -- PR #82's new cmd_start call proposes for that same task_id earlier in the pipeline. Two independent, uncoordinated propose call sites for what credit-accountant.py's own docstring describes as a single per-task $1-increment gate is a real overlap neither PR's own scope reconciles; needs its own follow-up task. None of PR #79/#80/#81/#82 are merged as of this verification pass (all OPEN, confirmed via `gh pr view --json state,mergedAt`)."
   - engine_no: 9
     engine_name: "Automation Engine"
     purpose: "Execute a rule-triggered action without human intervention once conditions are met."
