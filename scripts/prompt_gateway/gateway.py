@@ -4,13 +4,25 @@ VERIDIAN Prompt Gateway - Raw Chat Pre-Processing Pipeline
 ============================================================
 MAIN ENTRY POINT: python3 /opt/veridian/scripts/prompt_gateway/gateway.py
 
-NOTE: this is a PRE-PROCESSING FILTER, not a task dispatcher. It is a
-completely separate program from the real, production task lifecycle
+This is a PRE-PROCESSING FILTER for the real, production task lifecycle
 dispatcher at /opt/veridian/scripts/task-gateway.py (submit/start/log/close/
-register-automation/status). This module's job ends at producing a
-compressed machine_prompt string; that string is then passed as the
---text value to a `task-gateway.py submit` call by the caller -- this
-module never calls task-gateway.py itself.
+register-automation/status), not a reimplementation of it. Two real,
+distinct integration points exist between the two programs:
+  - task-gateway.py cmd_submit's own run_owner_engine_gate() calls THIS
+    module (--mode stdin --json-only) to gate every --source owner
+    submission before its text reaches keyword extraction/dedup/search
+    (task-20260725-080900). That direction predates this file's own
+    task-lifecycle awareness.
+  - --mode owner-dispatch (task-20260726-092433) is the reverse and, until
+    this task, missing direction: THIS module classifies a raw Owner
+    message and, when that classification is a real task-dispatch/status-
+    query/completion-query request, calls task-gateway.py's submit/start/
+    status directly (route_and_dispatch() / dispatch_to_task_lifecycle()
+    below) -- so no AI turn or human has to read this module's classified
+    output and hand-construct a task-gateway.py invocation in between.
+    --mode stdin (used BY task-gateway.py's own gate, above) never calls
+    into task-gateway.py -- only --mode owner-dispatch does, avoiding any
+    recursion between the two integration points.
 
 Orchestrates the complete chat processing pipeline:
   1. Receive raw chat input
@@ -42,10 +54,13 @@ Usage:
 """
 
 import os
+import re
 import sys
 import json
 import argparse
 import logging
+import subprocess
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
@@ -53,8 +68,15 @@ from typing import Optional
 # Ensure the engine modules are importable
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 ENGINE_DIR = os.path.join(SCRIPT_DIR, "engine")
+# Parent of prompt_gateway/ -- the real scripts/ dir holding task-gateway.py and
+# workflow_contract.py. Derived from __file__, not from config.py's VERIDIAN_BASE,
+# so it resolves correctly both in a plain git checkout (tests) and at the live
+# deployed location (/opt/veridian/scripts/prompt_gateway/gateway.py) without
+# needing VERIDIAN_BASE set in either environment.
+SCRIPTS_ROOT_DIR = os.path.dirname(SCRIPT_DIR)
 sys.path.insert(0, SCRIPT_DIR)
 sys.path.insert(0, ENGINE_DIR)
+sys.path.insert(0, SCRIPTS_ROOT_DIR)
 
 from config import (
     VERIDIAN_BASE as BASE, DATA_DIR, CHATS_DIR, TAGS_DIR, LOGS_DIR,
@@ -66,6 +88,33 @@ from engine.prompt_engine import PromptEngine
 from engine.context_engine import ContextManager
 from engine.snip_engine import SnipEngine
 from engine import document_engine
+from workflow_contract import has_all_required_sections  # noqa: E402
+# The real, single "software could not tell -> ask the Owner" decision
+# procedure (OWNER_ENGINE_MANDATORY_GATE_IMPLEMENTATION_2026-07-25.yaml,
+# step_3) -- imported and reused here, not re-implemented, so --mode
+# owner-dispatch's real task-gateway.py calls are gated by the exact same
+# NEEDS_OWNER_CLARIFICATION logic query.py already exposes (task-20260726-
+# 101257 SCOPE item 1: this dispatch path previously skipped that gate
+# entirely).
+from query import run_query  # noqa: E402
+
+# The real, production task lifecycle dispatcher this module's new --mode
+# owner-dispatch calls into (task-20260726-092433 SCOPE item 1).
+TASK_GATEWAY_PY = os.path.join(SCRIPTS_ROOT_DIR, "task-gateway.py")
+
+# ai-os/OWNER_DIRECTIVES/PROTOCOL_OWNER_AI.yaml system_definition's own GITHUB repo
+# set -- reused here (not re-enumerated) as the deterministic --repo guess for a
+# full task-spec message that doesn't name its target repo any more explicitly.
+KNOWN_REPOS = ["claude-control", "compliance-tracker", "projexa"]
+DEFAULT_REPO = "claude-control"
+
+# Words that turn "a message naming an existing task_id" into a real status or
+# completion query, as opposed to e.g. a message merely referencing a task_id
+# in passing. Deliberately reuses ChatClassifier's own extract_entities() TASK_ID
+# pattern for the id half of this check rather than a second one here.
+STATUS_QUERY_WORDS_RE = re.compile(
+    r"\b(status|progress|done|complete|completed|finished|finish)\b", re.IGNORECASE
+)
 
 
 # =============================================================================
@@ -88,6 +137,193 @@ def setup_logging(log_file=None):
 
 
 logger = setup_logging()
+
+
+# =============================================================================
+# TASK LIFECYCLE ROUTING (task-20260726-092433 SCOPE item 1)
+# =============================================================================
+def determine_lifecycle_route(category: str, entities: list, raw_text: str) -> dict:
+    """
+    Decide which task-gateway.py subcommand (if any) a classified Owner
+    message should be routed to. Returns {"action": one of
+    "status"/"start"/"submit"/"none", "task_id": str or None}.
+
+    Order matters:
+      1. A message naming an existing TASK_ID entity together with a
+         status/completion word ("what's the status of task-...", "is
+         task-... done yet") is a status-or-completion query even if it
+         also scored into the TASK category -- checked first so a lookup
+         against an EXISTING task is never misrouted as a new dispatch.
+      2. A message that already carries every literal_template section
+         header (## OBJECTIVE / ## SCOPE / ...) is a complete, ready-to-
+         dispatch task spec. has_all_required_sections() is the exact same
+         check task-gateway.py's cmd_start applies to a prompt-file
+         (imported from workflow_contract.py, not re-implemented) --
+         routes to start.
+      3. Anything else classified into the TASK category with no existing
+         task_id is a new, not-yet-tightened task idea -- routes to submit
+         (the dedup/search/capability-lookup entrypoint; start is wrong
+         here, it requires the fully-authored spec case 2 already covers).
+      4. Everything else is not a task-lifecycle request -- action "none",
+         left for normal chat processing.
+    """
+    task_ids = [e["value"] for e in entities if e.get("type") == "TASK_ID"]
+    if task_ids and STATUS_QUERY_WORDS_RE.search(raw_text):
+        return {"action": "status", "task_id": task_ids[0]}
+    if has_all_required_sections(raw_text):
+        return {"action": "start", "task_id": None}
+    if category == "TASK" and not task_ids:
+        return {"action": "submit", "task_id": None}
+    return {"action": "none", "task_id": None}
+
+
+def _derive_title_from_spec(raw_text: str, fallback: str) -> str:
+    """First non-empty line of the ## OBJECTIVE section, truncated -- the
+    same section cmd_start's own audit trail treats as the task's real
+    intent. Falls back to `fallback` (the chat_id) if OBJECTIVE can't be
+    isolated, so --title is always non-empty."""
+    m = re.search(r"##\s*OBJECTIVE\s*\n+(.+)", raw_text)
+    if not m:
+        return fallback
+    line = m.group(1).strip().splitlines()[0].strip().lstrip("#").strip()
+    return line if len(line) <= 80 else line[:77] + "..."
+
+
+def _derive_repo_from_spec(raw_text: str) -> str:
+    """First of KNOWN_REPOS literally named in the spec text, else
+    DEFAULT_REPO. A real, disclosed heuristic -- not a guess dressed up as
+    certainty. Corrected 2026-07-26 (task-20260726-101257 SCOPE item 3):
+    this function's guess feeds straight into the SAME dispatch_to_task_
+    lifecycle() call that invokes `start` -- there is no downstream pause
+    where a caller could inspect derived_repo and correct a wrong guess
+    before anything runs; by the time a caller sees derived_repo in the
+    return value, `start` has already executed against it. The real
+    override checkpoint is dispatch_to_task_lifecycle()'s / route_and_
+    dispatch()'s repo_override param (--repo on --mode owner-dispatch):
+    supply it up front and this guess is never consulted at all."""
+    for repo in KNOWN_REPOS:
+        if repo in raw_text:
+            return repo
+    return DEFAULT_REPO
+
+
+def _default_subprocess_runner(cmd, input_text=None):
+    """Real invocation of task-gateway.py. Tests inject a fake runner with
+    the same (cmd, input_text) -> dict signature that records the
+    constructed argv instead of executing it -- see
+    tests/test_gateway_task_integration.py -- so the integration test
+    proves the command was built correctly without ever performing a live
+    production dispatch (real systemd start, real gh calls, real credit
+    spend)."""
+    proc = subprocess.run(cmd, input=input_text, capture_output=True, text=True)
+    try:
+        parsed = json.loads(proc.stdout) if proc.stdout else None
+    except json.JSONDecodeError:
+        parsed = None
+    return {
+        "command": cmd, "returncode": proc.returncode,
+        "stdout": proc.stdout, "stderr": proc.stderr, "parsed": parsed,
+    }
+
+
+def dispatch_to_task_lifecycle(route: dict, chat_result: dict, raw_text: str,
+                                session_id: Optional[str], runner=_default_subprocess_runner,
+                                repo_override: Optional[str] = None) -> dict:
+    """
+    The real, single trigger point from OWNER_ENGINE's own classification
+    into the real task-gateway.py CLI -- no AI turn or human hand-
+    constructs the command in between (task-20260726-092433 OBJECTIVE).
+
+    Text passed to task-gateway.py is always chat_result["final_output"]
+    (the ALREADY-gated machine prompt this same process just produced),
+    never raw_text, and --source is always ai_agent: this call is software
+    calling software, not a second raw-Owner-text gate. Using --source
+    owner here would make task-gateway.py's own run_owner_engine_gate()
+    re-run this exact classification a second time for no benefit, and
+    risks recursion if this function were ever reached from inside that
+    gate (it currently never is -- see gateway.py's module docstring).
+
+    repo_override (task-20260726-101257 SCOPE item 3): the real override
+    checkpoint for action "start"'s target repo. When given, takes
+    precedence over _derive_repo_from_spec()'s literal-name guess entirely
+    -- there is no later point in this same call where a wrong guess could
+    otherwise be corrected before `start` runs against it.
+    """
+    action = route["action"]
+    chat_id = chat_result["chat_id"]
+    final_output = chat_result["final_output"]
+    effective_session = session_id or chat_id
+
+    if action == "status":
+        cmd = ["python3", TASK_GATEWAY_PY, "status", "--task-id", route["task_id"]]
+        return {"action": action, "task_id": route["task_id"], "result": runner(cmd)}
+
+    if action == "submit":
+        cmd = ["python3", TASK_GATEWAY_PY, "submit",
+               "--text", final_output, "--source", "ai_agent",
+               "--session-id", effective_session]
+        return {"action": action, "task_id": None, "result": runner(cmd)}
+
+    if action == "start":
+        submit_cmd = ["python3", TASK_GATEWAY_PY, "submit",
+                      "--text", final_output, "--source", "ai_agent",
+                      "--session-id", effective_session]
+        submit_outcome = runner(submit_cmd)
+        submit_parsed = submit_outcome.get("parsed") or {}
+        instruction_id = submit_parsed.get("instruction_id")
+        if not instruction_id:
+            return {
+                "action": action, "task_id": None, "submit_result": submit_outcome,
+                "result": None,
+                "start_skipped_reason": "submit did not return an instruction_id",
+            }
+
+        # Real fix, task-20260726-101257 SCOPE item 2: submit's own
+        # check-duplicate call (cmd_submit in task-gateway.py) already
+        # reports duplicate_found/duplicate_evidence in its JSON response --
+        # auto-firing `start` right after submit regardless was a real
+        # duplicate-dispatch risk, directly opposite this whole initiative's
+        # "zero duplication" principle. Surface the finding instead of
+        # deciding on the Owner's/AI's behalf, matching how a manual
+        # dispatch would behave when a human notices duplicate_found: true.
+        if submit_parsed.get("duplicate_found"):
+            return {
+                "action": action, "task_id": None, "submit_result": submit_outcome,
+                "result": None,
+                "start_skipped_reason": "submit reported duplicate_found=true -- "
+                                         "surfacing for human/AI review instead of "
+                                         "auto-starting a possibly-duplicate task",
+                "duplicate_evidence": submit_parsed.get("duplicate_evidence", []),
+            }
+
+        title = _derive_title_from_spec(raw_text, fallback=chat_id)
+        repo = repo_override or _derive_repo_from_spec(raw_text)
+        fd, prompt_path = tempfile.mkstemp(suffix=".txt", prefix=f"owner_dispatch_{chat_id}_")
+        os.close(fd)
+        with open(prompt_path, "w") as f:
+            f.write(raw_text)
+
+        try:
+            start_cmd = ["python3", TASK_GATEWAY_PY, "start",
+                         "--instruction-id", instruction_id,
+                         "--title", title, "--repo", repo,
+                         "--prompt-file", prompt_path]
+            start_outcome = runner(start_cmd)
+        finally:
+            # veridian-task.py create (called inside cmd_start) persists the real,
+            # permanent copy at ai-os/tasks/<task_id>/prompt.txt -- this is only a
+            # transient CLI-argument staging file, same lifecycle as
+            # run_owner_engine_gate()'s own tempfile above.
+            if os.path.isfile(prompt_path):
+                os.remove(prompt_path)
+
+        return {
+            "action": action, "task_id": None,
+            "submit_result": submit_outcome, "result": start_outcome,
+            "derived_title": title, "derived_repo": repo,
+        }
+
+    return {"action": "none", "task_id": None, "result": None}
 
 
 # =============================================================================
@@ -247,6 +483,59 @@ class TaskGateway:
         self._save_chat_record(chat_id, result)
 
         return result
+
+    def route_and_dispatch(self, raw_text: str, session_id: str = None,
+                            runner=_default_subprocess_runner,
+                            repo_override: Optional[str] = None) -> dict:
+        """
+        task-20260726-092433 SCOPE item 1's single entrypoint: classify
+        raw_text via the same process_chat() pipeline every other mode
+        uses, decide whether it's a task-dispatch/status-query/completion-
+        query request (determine_lifecycle_route), and if so call the real
+        task-gateway.py directly (dispatch_to_task_lifecycle) -- closing
+        the manual "AI reads OWNER_ENGINE's output, then hand-constructs a
+        task-gateway.py command" gap. Returns process_chat()'s own result
+        dict with one added key, "lifecycle_dispatch".
+
+        Real fix, task-20260726-101257 SCOPE item 1: once a route decides a
+        real task-gateway.py action is actually warranted (status/submit/
+        start -- action "none" was never going to dispatch anything, so
+        there is nothing here for a clarifying question to protect against),
+        this now runs the exact same NEEDS_OWNER_CLARIFICATION check
+        query.py exposes (OWNER_ENGINE_MANDATORY_GATE_IMPLEMENTATION_2026-
+        07-25.yaml step_3) against the chat record process_chat() just
+        saved, BEFORE dispatch_to_task_lifecycle() is ever called.
+        Previously this whole dispatch path never consulted that gate at
+        all, so an ambiguous Owner message (low classification confidence
+        or unknown intent -- the exact two signals step_3 defines as
+        "software could not tell") could be auto-dispatched as a real
+        task-gateway.py submit/start instead of surfacing a clarifying
+        question first.
+        """
+        chat_result = self.process_chat(raw_text, role="user", session_id=session_id)
+        category = chat_result["classification"]["category"]
+        entities = chat_result.get("entities", [])
+        route = determine_lifecycle_route(category, entities, raw_text)
+
+        if route["action"] != "none":
+            clarification = run_query(chat_result["chat_id"], "NEEDS_OWNER_CLARIFICATION")
+            needs_clarification = bool(
+                (clarification.get("answer") or {}).get("needs_owner_clarification")
+            )
+            if needs_clarification:
+                chat_result["lifecycle_dispatch"] = {
+                    "action": "clarification_needed",
+                    "task_id": None,
+                    "result": None,
+                    "clarification": clarification,
+                }
+                return chat_result
+
+        chat_result["lifecycle_dispatch"] = dispatch_to_task_lifecycle(
+            route, chat_result, raw_text, session_id, runner=runner,
+            repo_override=repo_override,
+        )
+        return chat_result
 
     def _build_final_output(self, machine_prompt: str, pruned_context: str,
                              category: str, intent: str, chat_id: str,
@@ -496,9 +785,11 @@ Examples:
     
     parser.add_argument(
         "--mode", "-m",
-        choices=["stdin", "file", "interactive", "pipe", "init"],
+        choices=["stdin", "file", "interactive", "pipe", "init", "owner-dispatch"],
         default="stdin",
-        help="Processing mode (default: stdin)"
+        help="Processing mode (default: stdin). owner-dispatch is the single "
+             "entrypoint that also calls task-gateway.py submit/start/status "
+             "directly when the classified message is a task-lifecycle request."
     )
     parser.add_argument(
         "--input", "-i",
@@ -532,6 +823,16 @@ Examples:
         "--verbose", "-v",
         action="store_true",
         help="Enable verbose logging"
+    )
+    parser.add_argument(
+        "--repo",
+        type=str,
+        default=None,
+        help="For --mode owner-dispatch's 'start' action only: explicit target "
+             "repo, overriding _derive_repo_from_spec()'s literal-name guess "
+             "entirely. This is the real override checkpoint (task-20260726-"
+             "101257 SCOPE item 3) -- there is no later point after `start` "
+             "runs where a wrong guess could otherwise be corrected."
     )
 
     args = parser.parse_args()
@@ -576,6 +877,23 @@ Examples:
             sys.exit(1)
         result = gateway.process_chat(raw_text, role="user", session_id=args.session)
         _output_result(result, args)
+        return
+
+    # === MODE: OWNER-DISPATCH ===
+    # The single trigger point for a raw Owner message (task-20260726-092433):
+    # classify + route + call task-gateway.py submit/start/status directly.
+    if args.mode == "owner-dispatch":
+        raw_text = sys.stdin.read().strip()
+        if not raw_text:
+            print("Error: No input on stdin", file=sys.stderr)
+            sys.exit(1)
+        result = gateway.route_and_dispatch(raw_text, session_id=args.session,
+                                             repo_override=args.repo)
+        if args.output:
+            with open(args.output, "w") as f:
+                json.dump(result, f, indent=2, default=str)
+        else:
+            print(json.dumps(result, indent=2, default=str))
         return
 
     # === MODE: PIPE ===

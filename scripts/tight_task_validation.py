@@ -35,8 +35,12 @@ a real, runnable shell command, per the heuristic documented on that
 function.
 """
 import json
+import os
 import re
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from workflow_contract import REQUIRED_TASK_SECTIONS  # noqa: E402
 
 MIN_FIELD_LENGTH = 10
 
@@ -81,7 +85,25 @@ NEGATION_MARKER_WORDS = {"not", "never", "without", "excluding", "no"}
 
 VALID_TIERS = ["mechanical", "integrative", "judgment"]
 
-FIELD_HEADER_RE = re.compile(r"^##\s*(OBJECTIVE|SCOPE|SUCCESS_CRITERIA|EXPECTED_OUTPUT|CONSTRAINTS|COMPLEXITY_TIER|KNOWN_CONTEXT)\s*$", re.IGNORECASE | re.MULTILINE)
+# Built from the shared REQUIRED_TASK_SECTIONS list (workflow_contract.py) instead
+# of a second hardcoded name list -- task-20260726-092433 dedup audit, SCOPE item 3:
+# this regex and task-gateway.py's cmd_start section-presence check used to name the
+# same 7 sections independently and could silently drift.
+FIELD_HEADER_RE = re.compile(
+    r"^##\s*(" + "|".join(REQUIRED_TASK_SECTIONS) + r")\s*$", re.IGNORECASE | re.MULTILINE
+)
+
+# HOLD_FOR_OWNER_SIGNOFF marker (2026-07-26, root-caused against the PR563
+# incident): a dispatch prompt's prose instruction "must be held for Owner
+# sign-off, do not merge under any circumstance" had zero effect on the actual
+# merge decision -- nothing in the pipeline read prompt-level prose, so the
+# task auto-merged anyway. This is the real, machine-readable replacement: a
+# literal marker line inside EXPECTED_OUTPUT or CONSTRAINTS (the same two
+# sections dispatch prompts already use for hold/merge-affecting directives),
+# extracted here and threaded through task-gateway.py's cmd_start() into
+# task.yaml, so supervisor-entrypoint.sh's merge-decision block can enforce it
+# for real instead of trusting an AI reader to have honored the prose.
+HOLD_FOR_OWNER_SIGNOFF_RE = re.compile(r"^\s*HOLD_FOR_OWNER_SIGNOFF\s*:\s*(true|false)\s*$", re.IGNORECASE | re.MULTILINE)
 
 # --- SUCCESS_CRITERIA runnable-command heuristic -----------------------------
 # Concrete, testable rule (documented here, not just in the docstring above):
@@ -364,6 +386,20 @@ def parse_labeled_fields(prompt_text):
     return fields
 
 
+def extract_hold_for_owner_signoff(fields):
+    """Scans EXPECTED_OUTPUT and CONSTRAINTS (only -- the two sections a
+    dispatch prompt already uses for hold/merge-affecting directives) for a
+    literal `HOLD_FOR_OWNER_SIGNOFF: true` marker line. Returns False if
+    absent, or explicitly set to false -- callers must not assume a missing
+    marker means "hold", only an explicit true does."""
+    for key in ("expectedOutput", "constraints"):
+        text = fields.get(key) or ""
+        m = HOLD_FOR_OWNER_SIGNOFF_RE.search(text)
+        if m:
+            return m.group(1).lower() == "true"
+    return False
+
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print(json.dumps({"valid": True, "note": "usage: tight_task_validation.py <prompt_file>"}))
@@ -372,8 +408,13 @@ if __name__ == "__main__":
         text = f.read()
     fields = parse_labeled_fields(text)
     if fields is None:
-        print(json.dumps({"valid": True, "note": "legacy free-text prompt, no labeled fields found -- not validated, not blocked"}))
+        print(json.dumps({
+            "valid": True,
+            "note": "legacy free-text prompt, no labeled fields found -- not validated, not blocked",
+            "holdForOwnerSignoff": False,
+        }))
         sys.exit(0)
     result = validate_tight_task(fields)
+    result["holdForOwnerSignoff"] = extract_hold_for_owner_signoff(fields)
     print(json.dumps(result))
     sys.exit(0 if result.get("valid") else 1)
