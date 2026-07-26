@@ -443,6 +443,55 @@ def init_db():
     END;
     CREATE INDEX IF NOT EXISTS idx_route_replay_route_id ON route_replay(route_id);
     CREATE INDEX IF NOT EXISTS idx_route_replay_event_type ON route_replay(event_type);
+
+    -- 10th tree (2026-07-26, VERIDIAN WIRING ENGINE Phase 3,
+    -- task-20260726-162252-extend-wiring-engine-to-full-system--ser,
+    -- ai-os/WIRING_ENGINE_PHASE_PLAN_2026-07-25.yaml phase_3_wiring_registry_live_wiring).
+    -- Wires ai-os/WIRING_ENGINE_SCHEMA_2026-07-25.yaml's entity_record_schema live -- one
+    -- row per real entity in the wiring engine's cross-source graph (engine/gateway/
+    -- supabase_table/function/route/file/script/cron_job/ai_role/vercel_project/
+    -- github_repo/browser_component). Same table/FTS5/upsert-on-conflict convention as
+    -- capability_registry above, not a new pattern. Populated by
+    -- scripts/generate_wiring_registry.py's bulk upsert (direct sqlite3, same
+    -- bypass-the-CLI-for-bulk-writes convention scripts/batch-import-conversation-log.py
+    -- already established), not one register-entity CLI call per entity -- that CLI
+    -- subcommand exists for a single ad hoc row, not a ~7600-row batch.
+    CREATE TABLE IF NOT EXISTS wiring_registry (
+        entity_id TEXT PRIMARY KEY,
+        ts TEXT NOT NULL,
+        entity_type TEXT NOT NULL CHECK(entity_type IN (
+            'engine','gateway','supabase_table','function','route','file','script','cron_job',
+            'ai_role','vercel_project','github_repo','browser_component'
+        )),
+        source_system TEXT NOT NULL CHECK(source_system IN ('server','vercel','supabase','github')),
+        path TEXT,
+        relationships TEXT NOT NULL DEFAULT '[]',
+        last_verified_ts TEXT NOT NULL,
+        verification_status TEXT NOT NULL DEFAULT 'UNVERIFIED'
+            CHECK(verification_status IN ('VERIFIED_MATCH','HASH_DRIFTED','PATH_MISSING','UNVERIFIED')),
+        source_ref TEXT NOT NULL DEFAULT '[]',
+        metadata_json TEXT NOT NULL DEFAULT '{}'
+    );
+    CREATE VIRTUAL TABLE IF NOT EXISTS wiring_registry_fts USING fts5(
+        path, entity_type, source_ref,
+        content='wiring_registry', content_rowid='rowid'
+    );
+    CREATE TRIGGER IF NOT EXISTS wiring_registry_ai AFTER INSERT ON wiring_registry BEGIN
+        INSERT INTO wiring_registry_fts(rowid, path, entity_type, source_ref)
+        VALUES (new.rowid, new.path, new.entity_type, new.source_ref);
+    END;
+    CREATE TRIGGER IF NOT EXISTS wiring_registry_au AFTER UPDATE ON wiring_registry BEGIN
+        INSERT INTO wiring_registry_fts(wiring_registry_fts, rowid, path, entity_type, source_ref)
+        VALUES ('delete', old.rowid, old.path, old.entity_type, old.source_ref);
+        INSERT INTO wiring_registry_fts(rowid, path, entity_type, source_ref)
+        VALUES (new.rowid, new.path, new.entity_type, new.source_ref);
+    END;
+    CREATE TRIGGER IF NOT EXISTS wiring_registry_ad AFTER DELETE ON wiring_registry BEGIN
+        INSERT INTO wiring_registry_fts(wiring_registry_fts, rowid, path, entity_type, source_ref)
+        VALUES ('delete', old.rowid, old.path, old.entity_type, old.source_ref);
+    END;
+    CREATE INDEX IF NOT EXISTS idx_wiring_registry_entity_type ON wiring_registry(entity_type);
+    CREATE INDEX IF NOT EXISTS idx_wiring_registry_source_system ON wiring_registry(source_system);
     """)
     conn.commit()
     _migrate_schema(conn)
@@ -1567,6 +1616,167 @@ def list_capabilities(args):
     print(json.dumps({"count": len(matches), "capabilities": matches}, indent=2, default=str))
 
 
+WIRING_ENTITY_TYPES = (
+    "engine", "gateway", "supabase_table", "function", "route", "file", "script", "cron_job",
+    "ai_role", "vercel_project", "github_repo", "browser_component",
+)
+WIRING_SOURCE_SYSTEMS = ("server", "vercel", "supabase", "github")
+REQUIRED_WIRING_ENTITY_FIELDS = {
+    "entity_id", "entity_type", "source_system", "relationships", "last_verified_ts",
+    "verification_status", "source_ref",
+}
+
+
+def _ensure_wiring_registry_table(conn):
+    """Standalone idempotent create, same defensiveness convention as
+    _ensure_capability_registry_table/_ensure_route_replay_table -- works even
+    if init_db() was never run against this DB. Kept field-for-field identical
+    to the CREATE TABLE in init_db()'s own executescript (single source of
+    truth for the DDL; generate_wiring_registry.py's bulk upsert calls this
+    same function before writing, never redefines the table itself)."""
+    conn.execute(f"""CREATE TABLE IF NOT EXISTS wiring_registry (
+        entity_id TEXT PRIMARY KEY,
+        ts TEXT NOT NULL,
+        entity_type TEXT NOT NULL CHECK(entity_type IN ({",".join("'" + t + "'" for t in WIRING_ENTITY_TYPES)})),
+        source_system TEXT NOT NULL CHECK(source_system IN ({",".join("'" + s + "'" for s in WIRING_SOURCE_SYSTEMS)})),
+        path TEXT,
+        relationships TEXT NOT NULL DEFAULT '[]',
+        last_verified_ts TEXT NOT NULL,
+        verification_status TEXT NOT NULL DEFAULT 'UNVERIFIED'
+            CHECK(verification_status IN ('VERIFIED_MATCH','HASH_DRIFTED','PATH_MISSING','UNVERIFIED')),
+        source_ref TEXT NOT NULL DEFAULT '[]',
+        metadata_json TEXT NOT NULL DEFAULT '{{}}'
+    )""")
+    conn.execute("""CREATE VIRTUAL TABLE IF NOT EXISTS wiring_registry_fts USING fts5(
+        path, entity_type, source_ref,
+        content='wiring_registry', content_rowid='rowid'
+    )""")
+    conn.execute("""CREATE TRIGGER IF NOT EXISTS wiring_registry_ai AFTER INSERT ON wiring_registry BEGIN
+        INSERT INTO wiring_registry_fts(rowid, path, entity_type, source_ref)
+        VALUES (new.rowid, new.path, new.entity_type, new.source_ref);
+    END""")
+    conn.execute("""CREATE TRIGGER IF NOT EXISTS wiring_registry_au AFTER UPDATE ON wiring_registry BEGIN
+        INSERT INTO wiring_registry_fts(wiring_registry_fts, rowid, path, entity_type, source_ref)
+        VALUES ('delete', old.rowid, old.path, old.entity_type, old.source_ref);
+        INSERT INTO wiring_registry_fts(rowid, path, entity_type, source_ref)
+        VALUES (new.rowid, new.path, new.entity_type, new.source_ref);
+    END""")
+    conn.execute("""CREATE TRIGGER IF NOT EXISTS wiring_registry_ad AFTER DELETE ON wiring_registry BEGIN
+        INSERT INTO wiring_registry_fts(wiring_registry_fts, rowid, path, entity_type, source_ref)
+        VALUES ('delete', old.rowid, old.path, old.entity_type, old.source_ref);
+    END""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_wiring_registry_entity_type ON wiring_registry(entity_type)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_wiring_registry_source_system ON wiring_registry(source_system)")
+    conn.commit()
+
+
+def register_entity_row(conn, entity):
+    """Upsert ONE entity dict matching ai-os/WIRING_ENGINE_SCHEMA_2026-07-25.yaml's
+    entity_record_schema field-for-field (entity_id/entity_type/source_system/path/
+    relationships/last_verified_ts/verification_status/source_ref/metadata). Does
+    NOT commit or ensure the table -- callers doing a bulk run (generate_wiring_registry.py)
+    own one _ensure_wiring_registry_table() + one commit() around many calls to this;
+    the register-entity CLI (a single ad hoc row) owns both itself, see register_entity()."""
+    missing = sorted(REQUIRED_WIRING_ENTITY_FIELDS - set(entity))
+    if missing:
+        raise ValueError(f"entity dict missing required entity_record_schema field(s): {missing}")
+    now = _now_iso()
+    conn.execute(
+        "INSERT INTO wiring_registry (entity_id, ts, entity_type, source_system, path, relationships, "
+        "last_verified_ts, verification_status, source_ref, metadata_json) VALUES (?,?,?,?,?,?,?,?,?,?) "
+        "ON CONFLICT(entity_id) DO UPDATE SET ts=excluded.ts, entity_type=excluded.entity_type, "
+        "source_system=excluded.source_system, path=excluded.path, relationships=excluded.relationships, "
+        "last_verified_ts=excluded.last_verified_ts, verification_status=excluded.verification_status, "
+        "source_ref=excluded.source_ref, metadata_json=excluded.metadata_json",
+        (
+            entity["entity_id"], now, entity["entity_type"], entity["source_system"], entity.get("path"),
+            json.dumps(entity["relationships"]), entity["last_verified_ts"], entity["verification_status"],
+            json.dumps(entity["source_ref"]), json.dumps(entity.get("metadata") or {}),
+        ),
+    )
+
+
+def register_entity(args):
+    """CLI wrapper around register_entity_row for a single ad hoc row (--record-file
+    a JSON object matching entity_record_schema) -- the generate_wiring_registry.py
+    bulk run does NOT go through this CLI, see register_entity_row's own docstring."""
+    init_db_silent()
+    conn = _connect()
+    _ensure_wiring_registry_table(conn)
+    with open(args.record_file, encoding="utf-8") as f:
+        entity = json.load(f)
+    try:
+        register_entity_row(conn, entity)
+    except ValueError as e:
+        print(json.dumps({"error": str(e)}))
+        conn.close()
+        sys.exit(1)
+    conn.commit()
+    conn.close()
+    print(json.dumps({"entity_id": entity["entity_id"], "entity_type": entity["entity_type"]}))
+
+
+def _wiring_row_to_dict(row):
+    d = dict(row)
+    d["relationships"] = json.loads(d["relationships"]) if d.get("relationships") else []
+    d["source_ref"] = json.loads(d["source_ref"]) if d.get("source_ref") else []
+    d["metadata_json"] = json.loads(d["metadata_json"]) if d.get("metadata_json") else {}
+    return d
+
+
+def lookup_entity(args):
+    """--entity-id exact match first (O(1)), else an FTS match over
+    path/entity_type/source_ref -- same two-stage resolution_order convention
+    as lookup_capability, minus the embedding-similarity stage (no equivalent
+    exists for wiring entities)."""
+    init_db_silent()
+    conn = _connect()
+    _ensure_wiring_registry_table(conn)
+
+    matches = []
+    stage = "none"
+    if args.entity_id:
+        rows = conn.execute("SELECT * FROM wiring_registry WHERE entity_id = ?", (args.entity_id,)).fetchall()
+        if rows:
+            matches = [_wiring_row_to_dict(r) for r in rows]
+            stage = "exact_entity_id_match"
+
+    if not matches and args.query:
+        q = _fts_query(args.query)
+        try:
+            rows = conn.execute(
+                "SELECT t.* FROM wiring_registry_fts f JOIN wiring_registry t ON t.rowid = f.rowid "
+                "WHERE wiring_registry_fts MATCH ? ORDER BY rank",
+                (q,),
+            ).fetchall()
+        except sqlite3.OperationalError:
+            rows = []
+        if rows:
+            matches = [_wiring_row_to_dict(r) for r in rows]
+            stage = "keyword_match"
+
+    conn.close()
+    print(json.dumps({"found": bool(matches), "matches": matches, "resolution_stage_used": stage}, indent=2, default=str))
+
+
+def list_entities(args):
+    """Lists wiring_registry rows, optionally filtered to one --entity-type,
+    used for evidence/row-count verification -- same role list_capabilities
+    plays for capability_registry."""
+    init_db_silent()
+    conn = _connect()
+    _ensure_wiring_registry_table(conn)
+    if getattr(args, "entity_type", None):
+        rows = conn.execute(
+            "SELECT * FROM wiring_registry WHERE entity_type = ? ORDER BY entity_id", (args.entity_type,)
+        ).fetchall()
+    else:
+        rows = conn.execute("SELECT * FROM wiring_registry ORDER BY entity_id").fetchall()
+    conn.close()
+    matches = [_wiring_row_to_dict(r) for r in rows]
+    print(json.dumps({"count": len(matches), "entities": matches}, indent=2, default=str))
+
+
 def init_db_silent():
     if not os.path.exists(DB_PATH):
         conn = _connect()
@@ -1749,6 +1959,19 @@ if __name__ == "__main__":
     p_listr = sub.add_parser("list-replays")
     p_listr.add_argument("--route-id", dest="route_id", default=None)
 
+    p_rege = sub.add_parser("register-entity")
+    p_rege.add_argument("--record-file", dest="record_file", required=True,
+                         help="path to a JSON file matching WIRING_ENGINE_SCHEMA_2026-07-25.yaml's entity_record_schema")
+
+    p_looke = sub.add_parser("lookup-entity")
+    p_looke.add_argument("--entity-id", dest="entity_id", default=None)
+    p_looke.add_argument("--query", default=None, help="keyword query over path/entity_type/source_ref")
+
+    p_liste = sub.add_parser("list-entities")
+    p_liste.add_argument("--entity-type", dest="entity_type", default=None,
+                          help="engine|gateway|supabase_table|function|route|file|script|cron_job|"
+                               "ai_role|vercel_project|github_repo|browser_component")
+
     args = p.parse_args()
     if args.cmd == "init":
         with _write_lock():
@@ -1819,3 +2042,10 @@ if __name__ == "__main__":
             run_replay(args)
     elif args.cmd == "list-replays":
         list_replays(args)
+    elif args.cmd == "register-entity":
+        with _write_lock():
+            register_entity(args)
+    elif args.cmd == "lookup-entity":
+        lookup_entity(args)
+    elif args.cmd == "list-entities":
+        list_entities(args)
