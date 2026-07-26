@@ -359,11 +359,27 @@ def module_queue_tick(tasks):
             for item in doc.get("queue", []):
                 all_items_by_id[item["id"]] = item
 
-        candidates = []
+        # Round-robin across module queues so one module's queue can't starve
+        # another's within a single tick: one eligible item per module per
+        # round, cycling through modules, instead of draining one module's
+        # whole queue before moving to the next. (module-queue-dispatcher.py,
+        # this function's predecessor, had this exact same comment over
+        # module-by-module-not-interleaved code -- a pre-existing bug, not
+        # something this consolidation introduced. Fixed here.)
+        per_module_candidates = {}
         for path, doc in docs.items():
-            for item in doc.get("queue", []):
-                if item["status"] == "NEW" and dependency_met(item, all_items_by_id):
-                    candidates.append((path, doc, item))
+            eligible = [item for item in doc.get("queue", [])
+                        if item["status"] == "NEW" and dependency_met(item, all_items_by_id)]
+            if eligible:
+                per_module_candidates[path] = eligible
+
+        candidates = []
+        while per_module_candidates:
+            for path in list(per_module_candidates.keys()):
+                item = per_module_candidates[path].pop(0)
+                candidates.append((path, docs[path], item))
+                if not per_module_candidates[path]:
+                    del per_module_candidates[path]
 
         dispatched_ids = []
         for path, doc, item in candidates:

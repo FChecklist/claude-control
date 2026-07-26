@@ -119,6 +119,46 @@ def test_dispatch_tick_module_queue_shares_pool_with_gap_queue(tmp_path):
     assert module_after["queue"][0]["status"] == "NEW"  # cap reached -- correctly deferred, not dispatched
 
 
+def test_dispatch_tick_module_queue_round_robins_across_modules(tmp_path):
+    """Regression test for the pre-existing (not introduced by this task)
+    module-queue-dispatcher.py bug this task also fixes: candidates used to be
+    built module-by-module (drain module A's whole queue, then module B's),
+    contradicting the "round-robin across module queues" fairness the
+    original script's own comment claimed but its code never actually did.
+    With 2 items queued in each of 2 modules and cap headroom to dispatch all
+    4, the real dispatch order (recovered from the mock task-id counter, which
+    increments in real dispatch call order) must alternate between modules --
+    not drain one module's queue before starting the other's."""
+    work, env = build_fixture_tree(tmp_path)
+    _write_gap_queue(work, dispatch_paused=True, held_task_ids=[], queue=[])  # keep gap_queue out of the way
+    for module, item_ids in (("backend", ["b-item-1", "b-item-2"]), ("frontend", ["f-item-1", "f-item-2"])):
+        (work / "ai-os" / "queues" / f"{module}.yaml").write_text(yaml.safe_dump({
+            "module": module,
+            "queue": [{"id": iid, "module": module, "objective": "obj",
+                       "status": "NEW", "dependencies": [], "files_allowed": []} for iid in item_ids],
+        }, sort_keys=False))
+    env["VERIDIAN_DISPATCH_CONCURRENCY_CAP"] = "10"  # enough headroom to dispatch all 4 in one tick
+    env["MOCK_TASK_COUNTER_FILE"] = str(work / "task_counter.txt")
+    env["MOCK_RUNNING_UNITS_FILE"] = str(work / "units.txt")
+
+    result = run_script(work, env, "dispatch-tick.py")
+    assert result.returncode == 0, result.stderr
+
+    backend_after = yaml.safe_load((work / "ai-os" / "queues" / "backend.yaml").read_text())
+    frontend_after = yaml.safe_load((work / "ai-os" / "queues" / "frontend.yaml").read_text())
+    all_items = {it["id"]: it for it in backend_after["queue"] + frontend_after["queue"]}
+    for iid in ("b-item-1", "b-item-2", "f-item-1", "f-item-2"):
+        assert all_items[iid]["status"] == "RUNNING", f"{iid} did not dispatch"
+
+    dispatch_order = sorted(all_items, key=lambda iid: all_items[iid]["task_id"])
+    modules_in_order = ["backend" if iid.startswith("b-") else "frontend" for iid in dispatch_order]
+    assert modules_in_order == ["backend", "frontend", "backend", "frontend"], (
+        f"expected round-robin dispatch order alternating modules, got {dispatch_order} "
+        f"(modules: {modules_in_order}) -- module_queue_tick() drained one module's queue "
+        f"before starting the other's instead of interleaving"
+    )
+
+
 def test_dispatch_tick_writes_cron_job_wiring_registry_row(tmp_path):
     import sqlite3
     work, env = build_fixture_tree(tmp_path)
