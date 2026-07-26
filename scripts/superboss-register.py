@@ -461,7 +461,7 @@ def init_db():
         ts TEXT NOT NULL,
         entity_type TEXT NOT NULL CHECK(entity_type IN (
             'engine','gateway','supabase_table','function','route','file','script','cron_job',
-            'ai_role','vercel_project','github_repo','browser_component'
+            'ai_role','vercel_project','github_repo','browser_component','dispatch_event'
         )),
         source_system TEXT NOT NULL CHECK(source_system IN ('server','vercel','supabase','github')),
         path TEXT,
@@ -533,6 +533,59 @@ def _migrate_schema(conn):
     if "tags" not in cols:
         conn.execute("ALTER TABLE system_index ADD COLUMN tags TEXT")
         conn.commit()
+    _migrate_wiring_registry_entity_types(conn)
+
+
+def _migrate_wiring_registry_entity_types(conn):
+    """2026-07-27, dispatch-script consolidation: widens wiring_registry's entity_type
+    CHECK constraint to allow 'dispatch_event' (see WIRING_ENTITY_TYPES above). SQLite has
+    no ALTER TABLE for CHECK constraints, so a pre-existing table (this DB has one, created
+    before this addition, with 7000+ real rows) needs a real rebuild: create a new table with
+    the widened CHECK, copy every row across unchanged, drop the FTS5 index + its triggers
+    (they reference the table by name and do not survive a swap), swap the new table into
+    place, then recreate + fully rebuild the FTS5 index exactly like _ensure_wiring_registry_table
+    does for a fresh DB. No-op (checked via sqlite_master's own stored CREATE TABLE text) once
+    already migrated, so this is safe to call on every startup, same as the ADD COLUMN check
+    above."""
+    row = conn.execute(
+        "SELECT sql FROM sqlite_master WHERE type='table' AND name='wiring_registry'"
+    ).fetchone()
+    if row is None or "'dispatch_event'" in row["sql"]:
+        return  # table doesn't exist yet (a later CREATE TABLE IF NOT EXISTS covers that) or already migrated
+
+    conn.execute("DROP TRIGGER IF EXISTS wiring_registry_ai")
+    conn.execute("DROP TRIGGER IF EXISTS wiring_registry_au")
+    conn.execute("DROP TRIGGER IF EXISTS wiring_registry_ad")
+    conn.execute("DROP TABLE IF EXISTS wiring_registry_fts")
+
+    entity_types_sql = ",".join("'" + t + "'" for t in WIRING_ENTITY_TYPES)
+    conn.execute(f"""CREATE TABLE wiring_registry__migrate (
+        entity_id TEXT PRIMARY KEY,
+        ts TEXT NOT NULL,
+        entity_type TEXT NOT NULL CHECK(entity_type IN ({entity_types_sql})),
+        source_system TEXT NOT NULL CHECK(source_system IN ({",".join("'" + s + "'" for s in WIRING_SOURCE_SYSTEMS)})),
+        path TEXT,
+        relationships TEXT NOT NULL DEFAULT '[]',
+        last_verified_ts TEXT NOT NULL,
+        verification_status TEXT NOT NULL DEFAULT 'UNVERIFIED'
+            CHECK(verification_status IN ('VERIFIED_MATCH','HASH_DRIFTED','PATH_MISSING','UNVERIFIED')),
+        source_ref TEXT NOT NULL DEFAULT '[]',
+        metadata_json TEXT NOT NULL DEFAULT '{{}}'
+    )""")
+    conn.execute(
+        "INSERT INTO wiring_registry__migrate (entity_id, ts, entity_type, source_system, path, "
+        "relationships, last_verified_ts, verification_status, source_ref, metadata_json) "
+        "SELECT entity_id, ts, entity_type, source_system, path, relationships, last_verified_ts, "
+        "verification_status, source_ref, metadata_json FROM wiring_registry"
+    )
+    conn.execute("DROP TABLE wiring_registry")
+    conn.execute("ALTER TABLE wiring_registry__migrate RENAME TO wiring_registry")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_wiring_registry_entity_type ON wiring_registry(entity_type)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_wiring_registry_source_system ON wiring_registry(source_system)")
+
+    _ensure_wiring_registry_table(conn)  # recreates the FTS5 table + its 3 triggers (IF NOT EXISTS, safe)
+    conn.execute("INSERT INTO wiring_registry_fts(wiring_registry_fts) VALUES ('rebuild')")
+    conn.commit()
 
 
 def log_instruction(args):
@@ -1619,6 +1672,13 @@ def list_capabilities(args):
 WIRING_ENTITY_TYPES = (
     "engine", "gateway", "supabase_table", "function", "route", "file", "script", "cron_job",
     "ai_role", "vercel_project", "github_repo", "browser_component",
+    # 2026-07-27, dispatch-script consolidation (scripts/dispatch_core.py): one row per
+    # actually-dispatched task, written by dispatch-tick.py/phase-continuation-tick.py --
+    # distinct from 'cron_job' (the recurring script entity itself) so the wiring graph can
+    # tell "this cron job ran" apart from "this cron job dispatched task X". See
+    # _migrate_schema()'s wiring_registry CHECK-widening block for why a live DB created
+    # before this addition needs an explicit migration, not just this tuple edit.
+    "dispatch_event",
 )
 WIRING_SOURCE_SYSTEMS = ("server", "vercel", "supabase", "github")
 REQUIRED_WIRING_ENTITY_FIELDS = {
