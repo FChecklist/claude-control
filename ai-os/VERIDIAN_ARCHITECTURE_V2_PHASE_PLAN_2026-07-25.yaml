@@ -209,7 +209,7 @@ phases:
   depends_on:
   - phase_1_prompt_registry_lifecycle_foundation
   external_depends_on: []
-  status: not_started
+  status: done
   success_criteria:
   - 'python3 scripts/superboss-register.py query-knowledge "veridian_v2_compiler_pipeline"
     --tag domain:veridian_architecture_v2  # found=1'
@@ -223,6 +223,8 @@ phases:
     -- this phase writes application code outside this session''s own repo boundary
     once the target-repo decision resolves; must be dispatched as (or coordinate with)
     a compliance-tracker-scoped task.'
+  completed_by_task: task-20260725-231836-phase2-prompt-compiler-pipeline-core-non
+  evidence: 'compliance-tracker PR #560 merged 2026-07-26T03:56:55Z'
 - id: phase_3_governance_policy_cost_engines
   name: Business Rule, Permission, Policy, Compliance, Governance, Audit, Cost Optimization
     Engines + Lifecycle Governance Gates + GitOps
