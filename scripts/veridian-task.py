@@ -324,6 +324,115 @@ def cmd_create(args):
     print(f"workspace: {workspace}")
 
 
+def cmd_adopt(args):
+    """Registers a real, existing branch/PR that was created OUTSIDE the
+    normal task-gateway.py -> cmd_create dispatch flow (e.g. a manual
+    recovery/safety-net action) as a real task_dir/task.yaml entry -- the
+    only thing supervisor-sweep.sh's discovery loop (a glob over
+    /opt/veridian/ai-os/tasks/*/task.yaml) can find. Without this, such work
+    is permanently invisible to sweep/supervisor and never gets a real audit
+    (real incident: claude-control PR #84, the recovered-lifecycle-fix-e6c7049
+    branch-recovery PR, had zero task_dir entry until this command existed).
+
+    Unlike cmd_create, this does NOT spawn a fresh worker branch/service --
+    the real work already exists on args.branch. It wires that existing
+    branch into the same task.yaml shape cmd_create produces, with
+    status=pending_review and no review.json, so supervisor-sweep.sh picks
+    it up on its next run exactly like a worker task whose immediate
+    post-checkpoint supervisor trigger was missed.
+    """
+    ts = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    slug = "".join(c if c.isalnum() else "-" for c in args.title.lower())[:40].strip("-")
+    task_id = args.task_id or f"task-{ts}-adopted-{slug}"
+    task_dir = f"{AI_OS}/tasks/{task_id}"
+    workspace = f"{task_dir}/workspace"
+    repo_path = f"{REPOS}/{args.repo}"
+
+    if not os.path.isdir(repo_path):
+        print(f"ERROR: repo not found at {repo_path}")
+        sys.exit(1)
+    if os.path.isdir(task_dir):
+        print(f"ERROR: task_dir already exists at {task_dir} -- refusing to overwrite")
+        sys.exit(1)
+
+    subprocess.run(["git", "-C", repo_path, "fetch", "origin"], check=True)
+    verify = subprocess.run(
+        ["git", "-C", repo_path, "rev-parse", "--verify", f"origin/{args.branch}"],
+        capture_output=True, text=True,
+    )
+    if verify.returncode != 0:
+        print(f"ERROR: origin/{args.branch} does not exist -- nothing to adopt")
+        sys.exit(1)
+
+    os.makedirs(task_dir, exist_ok=True)
+
+    # A branch can only be checked out as a named ref in ONE worktree at a
+    # time; adopting a branch some other task's workspace already has
+    # checked out (as happened with PR #84's own recovery/verification task)
+    # must not fail here -- fall back to a detached-HEAD checkout of the same
+    # commit, which git always permits regardless of other worktrees.
+    result = subprocess.run(
+        ["git", "-C", repo_path, "worktree", "add", workspace, args.branch],
+        capture_output=True, text=True,
+    )
+    if result.returncode != 0:
+        subprocess.run(
+            ["git", "-C", repo_path, "worktree", "add", "--detach", workspace, f"origin/{args.branch}"],
+            check=True,
+        )
+
+    prompt_text = args.prompt or (
+        f"Adopted, pre-existing branch '{args.branch}'"
+        + (f" (PR: {args.pr_url})" if args.pr_url else "")
+        + " -- not a fresh worker dispatch. Real work already exists on this "
+        "branch; this task entry exists solely so supervisor-sweep.sh's "
+        "discovery loop can find it and give it a real audit."
+    )
+    with open(f"{task_dir}/prompt.txt", "w") as f:
+        f.write(prompt_text)
+
+    adopt_note = f"adopted existing branch '{args.branch}'" + (f" ({args.pr_url})" if args.pr_url else "") + " -- registered for real audit, not a fresh worker dispatch"
+    created_at = now()
+    task = {
+        "id": task_id,
+        "title": args.title,
+        "status": "pending_review",
+        "repo": args.repo,
+        "branch": args.branch,
+        "workspace": workspace,
+        "task_dir": task_dir,
+        "service": f"veridian-supervisor@{task_id}.service",
+        "created_at": created_at,
+        "last_checkpoint_at": created_at,
+        "completed_steps": [],
+        "remaining_steps": [],
+        "files_modified": [],
+        "checkpoints": [{
+            "at": created_at,
+            "status": "pending_review",
+            "files_modified": [],
+            "completed_steps": [],
+            "remaining_steps": [],
+            "recent_commits": [],
+            "note": adopt_note,
+        }],
+        "execution_seconds": 0,
+        "restart_count": 0,
+        "token_usage": None,
+        "hold_for_owner_signoff": False,
+        "adopted": True,
+        "adopted_pr_url": args.pr_url,
+    }
+    save_task(task_id, task)
+    sync_controller_entry(task)
+    _auto_log_task_event("create", task, extra_note=adopt_note)
+    _sync_to_app(task, extra_note=adopt_note)
+
+    print(f"ADOPTED: {task_id}")
+    print(f"branch: {args.branch}  workspace: {workspace}")
+    print("status: pending_review (no review.json) -- supervisor-sweep.sh will pick this up on its next run")
+
+
 def cmd_checkpoint(args):
     with task_lock(args.task_id):
         task = load_task(args.task_id)
@@ -499,6 +608,15 @@ if __name__ == "__main__":
     c.add_argument("--prompt", required=True)
     c.add_argument("--hold-for-owner-signoff", action="store_true", dest="hold_for_owner_signoff")
     c.set_defaults(func=cmd_create)
+
+    ad = sub.add_parser("adopt")
+    ad.add_argument("--title", required=True)
+    ad.add_argument("--repo", required=True)
+    ad.add_argument("--branch", required=True)
+    ad.add_argument("--pr-url", default=None, dest="pr_url")
+    ad.add_argument("--task-id", default=None, dest="task_id")
+    ad.add_argument("--prompt", default=None)
+    ad.set_defaults(func=cmd_adopt)
 
     ck = sub.add_parser("checkpoint")
     ck.add_argument("task_id")

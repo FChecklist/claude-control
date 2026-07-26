@@ -152,6 +152,32 @@ if [ -z "$PR_URL" ]; then
 fi
 echo "$PR_URL" > "$TASK_DIR/pr_url.txt"
 
+# --- PR-URL-RESOLUTION-GUARD-BLOCK-START (see tests/supervisor_pr_url_guard_test.sh) ---
+# Real incident (2026-07-26, claude-control PR #84): when `gh pr create --head
+# "$BRANCH"` fails (e.g. the worker made no commits relative to its own
+# recorded branch, or pushed to a differently-named branch) AND the `gh pr
+# list --head "$BRANCH"` fallback above also finds nothing (it only searches
+# OPEN PRs, so this also fires whenever $BRANCH's real PR is already
+# merged/closed), PR_URL is left as an empty string. Every `gh pr
+# comment/view/merge "$PR_URL"` call further down this script was then passed
+# that empty string — and `gh` does NOT error on an empty PR argument: it
+# silently resolves to "the PR associated with whatever branch is currently
+# checked out in $WORKSPACE" instead. In the real incident, $WORKSPACE
+# happened to be checked out on claude-control PR #84's own branch (the
+# worker had checked it out to review it), so the AUDIT comment meant for
+# THIS task's (empty) diff was posted to PR #84, and — because this task's
+# trivial empty-diff review was tier1+approve — `gh pr merge "" --merge`
+# went on to for-real merge PR #84 via the autonomous path, with no genuine
+# Superboss review of PR #84's own diff ever having run. Fail loudly and
+# stop here instead: never let an unresolved PR_URL reach any gh pr call.
+if [ -z "$PR_URL" ]; then
+  echo "PR_URL resolution FAILED for branch '$BRANCH': both 'gh pr create' and 'gh pr list --head' (open PRs only) found nothing — refusing to continue, since every later gh pr call in this script would silently fall back to whatever PR matches \$WORKSPACE's currently checked-out branch instead of this task's own PR (real incident: PR #84, 2026-07-26)." >> "$TASK_DIR/supervisor.log"
+  python3 /opt/veridian/scripts/veridian-task.py checkpoint "$TASK_ID" --status blocked --note "supervisor could not resolve a real PR for branch '$BRANCH' (gh pr create failed, no existing open PR found for it) — refusing to proceed rather than risk operating on an unrelated PR via gh's empty-argument fallback. See supervisor.log."
+  exit 1
+fi
+echo "PR_URL resolved: $PR_URL" >> "$TASK_DIR/supervisor.log"
+# --- PR-URL-RESOLUTION-GUARD-BLOCK-END ---
+
 # mandatory-audit-check.yml requires a structured "AUDIT: PASS/FAIL" PR
 # comment (8 labeled fields, see src/lib/audit-protocol.ts) before ANY merge
 # can pass required-status-checks — post it before attempting a tier1
@@ -266,6 +292,7 @@ fi
 # notice and manually hold it after the fact. HOLD_FOR_OWNER_SIGNOFF is
 # checked FIRST, before tier/verdict/scope are even considered, so it can
 # never be silently overridden by any combination of those.
+echo "Merge-decision inputs: HOLD_FOR_OWNER_SIGNOFF=$HOLD_FOR_OWNER_SIGNOFF VERDICT=$VERDICT TIER=$TIER SCOPE_OK=$SCOPE_OK PR_URL=$PR_URL" >> "$TASK_DIR/supervisor.log"
 if [ "$HOLD_FOR_OWNER_SIGNOFF" = "True" ]; then
   gh pr comment "$PR_URL" --body "Held for Owner sign-off: this task's dispatch prompt set HOLD_FOR_OWNER_SIGNOFF: true, so it is not auto-merged regardless of risk tier or review verdict. Please review and merge yourself when ready." >> "$TASK_DIR/supervisor.log" 2>&1
   python3 /opt/veridian/scripts/veridian-task.py checkpoint "$TASK_ID" --status awaiting_human_approval --note "HOLD_FOR_OWNER_SIGNOFF: true -- held for Owner sign-off regardless of tier/verdict: $PR_URL"
