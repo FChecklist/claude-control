@@ -213,20 +213,24 @@ articles:
       technical guard on VERIDIAN-DEV (167.233.220.35), not just written
       text an interactive session can choose not to follow. rajat's shell
       profile (~/.profile, ~/.bashrc, both sourcing the deployed
-      ~/.claude-interactive-session-guard.bashrc-snippet) defines `gh` and
-      `git` bash functions that intercept `gh pr merge` and `git push
-      <master|main>` specifically: if the real systemd-set INVOCATION_ID
-      environment variable is absent (i.e. this is not a genuine
-      veridian-worker@*/veridian-supervisor@* systemd unit -- systemd units
-      never source .bashrc/.profile, and INVOCATION_ID is not otherwise set
-      in a normal interactive shell), the command is blocked with a
-      non-zero exit and a clear "BLOCKED: ... must run through the dispatch
-      pipeline" message instead of executing. If INVOCATION_ID is set (a
-      real dispatched worker/supervisor), or the gh/git subcommand is
-      anything else (view, checks, pr list, pr comment, pr diff, run rerun,
-      status, log, diff, push to a non-protected branch, etc.), the command
-      passes through to the real binary unchanged -- verification and
-      status-checking work is never blocked.
+      ~/.claude-interactive-session-guard.bashrc-snippet) installs real
+      wrapper SCRIPTS named `gh` and `git` into a directory prepended to
+      PATH ahead of the real binaries. Those scripts intercept a PR merge
+      (`gh pr merge`, or the equivalent raw `gh api -X PUT|PATCH .../pulls/
+      <n>/merge` call) and `git push` to a protected branch (including
+      `push --all`/`--mirror`, which reach every ref -- protected branches
+      included -- regardless of which branch is currently checked out).
+      The command is blocked with a non-zero exit and a clear "BLOCKED: ...
+      must run through the dispatch pipeline" message unless BOTH of two
+      signals show this is a real dispatched worker/supervisor context: (1)
+      the real systemd-set INVOCATION_ID environment variable is present,
+      and (2) this process's real, kernel-tracked cgroup membership (read
+      from /proc/self/cgroup) actually names a veridian-worker@*/
+      veridian-supervisor@* systemd unit. Every other gh/git subcommand
+      (view, checks, pr list, pr comment, pr diff, run rerun, status, log,
+      diff, push to a non-protected branch, `gh api` calls that aren't a
+      merge, etc.) passes through to the real binary unchanged --
+      verification and status-checking work is never blocked.
     real_incident: >-
       2026-07-26: an interactive session ran `gh pr merge 78 --repo
       FChecklist/claude-control --merge --delete-branch` and a direct `git
@@ -235,32 +239,83 @@ articles:
       step failed -- instead of diagnosing and fixing the pipeline's real
       bug. This article and its guard are the real, technical fix for that
       gap.
+    round_2_hardening: >-
+      A real audit of the round-1 guard (plain `gh`/`git` bash functions
+      gated on a bare INVOCATION_ID env-var read) found two real, non-obscure
+      bypasses: (a) `export INVOCATION_ID=anything` alone satisfied the
+      whole check, since a plain env var has no cryptographic or kernel
+      binding to a genuine systemd unit; (b) `command git push origin
+      master` / `command gh pr merge ...` skipped the shell functions
+      entirely, since bash's `command` builtin is explicitly designed to
+      ignore functions and aliases. Two more real gaps were found in scope:
+      (c) only `gh pr merge` was intercepted, not the equivalent raw
+      `gh api PUT|PATCH .../pulls/<n>/merge` call; (d) only an explicit push
+      to a named protected branch was checked, not `git push --all`/
+      `--mirror`, which reach protected branches regardless of the current
+      branch. All four are closed in the implementation below and each has
+      a dedicated, passing regression-test scenario (not just a prose
+      assertion) -- see tests/interactive_session_guard_test.sh's
+      "BYPASS VECTOR 1-4" scenarios.
     implementation:
       deployed_at: "/home/rajat/.claude-interactive-session-guard.bashrc-snippet
         on VERIDIAN-DEV, sourced from both ~/.bashrc (interactive non-login
         shells) and ~/.profile (login shells, interactive or not -- added
         because ~/.bashrc's own top-of-file interactive-only check skips
-        login-but-non-interactive shells such as `bash -lc '...'`)."
+        login-but-non-interactive shells such as `bash -lc '...'`). Every
+        time it is sourced it rewrites the wrapper scripts (and the small
+        cgroup-path test-seam config file) it installs into
+        ~/.claude-interactive-session-guard.d/ and prepends that directory
+        to PATH (idempotent -- checked before prepending, and `hash -r` is
+        run afterward so bash's command-location cache can't serve a stale,
+        pre-guard path)."
       committed_copy: ai-os/OWNER_DIRECTIVES/interactive-session-guard.bashrc-snippet
         (this exact repo, for auditability -- kept byte-identical to the
         deployed copy).
+      mechanism_summary: >-
+        (1) Real, kernel-verified context check: INVOCATION_ID present AND
+        /proc/self/cgroup names a veridian-worker@*/veridian-supervisor@*
+        unit -- both required, neither alone is trusted. (2) PATH-based
+        wrapper scripts, not shell functions -- placed in a directory
+        prepended to PATH, so `command git`/`command gh` (which bypass
+        functions/aliases but not PATH search) still resolve to the guard.
+        (3) gh-merge detection extended to `gh api -X PUT|PATCH
+        .../pulls/<n>/merge` in addition to `gh pr merge`. (4) git-push
+        detection extended to `push --all`/`--mirror` in addition to an
+        explicit push naming a protected branch.
       test: tests/interactive_session_guard_test.sh (sources the real
-        committed snippet against faked gh/git binaries; 18 scenarios
-        covering block/pass-through for both gh pr merge and git push to
-        master/main vs. a feature branch, in both interactive and
+        committed snippet against faked gh/git binaries; 32 scenarios
+        covering block/pass-through for gh pr merge, gh api merge calls,
+        git push to master/main vs. a feature branch, git push --all/
+        --mirror, `command`-prefixed invocations of both, and the
+        spoofed-INVOCATION_ID-alone case, in both interactive and
         systemd-simulated contexts).
-      known_limitation: >-
-        This guard cannot distinguish the Owner's own interactive SSH
-        session from an AI session typing by hand -- both share the same
-        rajat account and the same shell profile. It is scoped to the AI
-        session's own discipline, not a security boundary against the
-        Owner; if the Owner runs `gh pr merge` or `git push origin master`
-        by hand, this guard blocks that too. Documented honestly rather
-        than silently building something that only pretends to restrict
-        the AI session.
+      known_limitations: >-
+        (1) Same-account limitation (unchanged from round 1): this guard
+        cannot distinguish the Owner's own interactive SSH session from an
+        AI session typing by hand -- both share the same rajat account and
+        the same shell profile, so both get blocked identically. It is
+        scoped to the AI session's own discipline, not a security boundary
+        against the Owner. (2) Residual PATH-search bypass (new, disclosed
+        honestly this round): the wrapper-script mechanism only intercepts
+        commands that go through a normal PATH search. An absolute-path
+        invocation of the real binary (e.g. `/usr/bin/git push origin
+        master`, `/usr/bin/gh pr merge ...`) or `command -p git`/
+        `command -p gh` (bash's `-p` flag explicitly searches a fixed
+        default system PATH, not the shell's guard-prepended $PATH) still
+        reaches the real binary directly. Both require the caller to
+        already know or go find the real absolute path rather than just
+        typing the ordinary command -- a real but modest deterrent, not a
+        hard technical stop. Fully closing this would mean replacing the
+        real system binaries or adding an OS-level exec hook, which is out
+        of scope for a per-user shell-profile guard; left for a future
+        round if the Owner decides the operational cost is worth it.
+        Documented honestly rather than silently building something that
+        only pretends to be complete.
     source: This task's own real deliverable (server-side ~/.bashrc /
-      ~/.profile change + committed snippet + test), directly implementing
-      A8_software_execution_only's standing rule with real enforcement.
+      ~/.profile-sourced snippet change + committed snippet + test),
+      directly implementing A8_software_execution_only's standing rule with
+      real enforcement, hardened in round 2 against four real bypasses a
+      fresh audit found.
     see_also: ai-os/OWNER_DIRECTIVES/interactive-session-guard.bashrc-snippet,
       tests/interactive_session_guard_test.sh
 
