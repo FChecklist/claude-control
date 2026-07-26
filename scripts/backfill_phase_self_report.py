@@ -35,6 +35,32 @@ auto_phase_continuation.is_phase_done() checks) is left untouched, so
 re-running this after a worker DID self-report correctly is a no-op, and
 re-running it on every tier1 merge / every 30-minute cron tick never
 double-writes or clobbers a worker's own good evidence text.
+
+--audit-plans (added 2026-07-26, real incident: VERIDIAN_ARCHITECTURE_V2
+phase_4, commit 4611924 -- a worker task wrote status: done directly into
+its own phase-plan entry, citing only a branch name, while the real PR
+#562 stayed OPEN/mergeStateStatus=DIRTY. This bypassed this script
+entirely: nothing about --task-id/--sweep above stops a worker's own PR
+commit from writing status/completed_by_task/evidence straight into the
+shared YAML, since the file itself has no protection. Caught only because
+a human happened to cross-check `gh pr view` by hand -- see commit
+a82ee2d, ai-os/OWNER_DIRECTIVES/MEMORY_OWNER_AI.yaml incident
+2026-07-26_worker_bypassed_self_report_backfill). --audit-plans closes
+this by treating every phase-plan file's already-"done" phases as
+untrusted input: it independently re-confirms each one via `gh pr
+list`/confirm_merge() (the exact same never-trust-the-file standard this
+script already applies to NEW self-reports), and any phase that fails
+re-verification is reverted -- via `git blame` on the status line to find
+the responsible commit, then diffed against that commit's own parent
+revision -- to its state immediately before that commit, with the
+incident recorded in the revert's own commit message (this repo's
+existing incident-record convention; no new incident-log file). A CI
+check gating worker PRs directly (the other option for this gap) is not
+available to a worker task: pushing `.github/workflows/**` is silently
+rejected for lack of the `workflow` OAuth scope (SUPERBOSS_DISPATCH_PROMPT.md's
+hard rule) -- this script, already the sole legitimate writer and already
+deployed live via deploy-live-scripts.sh + the existing
+supervisor-sweep.sh cron, is the real achievable enforcement point.
 """
 import argparse
 import json
@@ -196,6 +222,45 @@ def block_self_reports_done(lines, start, end):
     return bool(TASK_ID_RE.search(block_text))
 
 
+def _extract_field(lines, start, end, key):
+    """Raw scalar value of `<key>:` inside [start, end), or None -- same
+    lookup block_self_reports_done/patch_phase_block already do for
+    `status`, generalized for reading completed_by_task/target_repo too."""
+    idx, _indent = _find_field_indent(lines, start, end, key)
+    if idx is None:
+        return None
+    return lines[idx].split(":", 1)[1].strip().strip("'\"")
+
+
+def list_phase_blocks(lines):
+    """Enumerates every phase entry in a plan file as (phase_id, start, end)
+    -- the same two real schemas find_phase_block() already tolerates
+    (`- id: <string>` and `- phase: <int>`, normalized to `phase-<N>`), but
+    scanning the whole file instead of stopping at one target id. Used by
+    --audit-plans to independently re-check every already-"done" phase, not
+    just the one phase a --task-id/--sweep call is currently resolving."""
+    id_re = re.compile(r"^(\s*)- id:\s*(\S+)")
+    phase_re = re.compile(r"^(\s*)- phase:\s*(\d+)\s*$")
+    items = []
+    for i, line in enumerate(lines):
+        idm = id_re.match(line)
+        if idm:
+            items.append((idm.group(2), idm.group(1), i))
+            continue
+        pm = phase_re.match(line)
+        if pm:
+            items.append((f"phase-{pm.group(2)}", pm.group(1), i))
+    blocks = []
+    for idx, (phase_id, indent, start) in enumerate(items):
+        end = len(lines)
+        for j in range(idx + 1, len(items)):
+            if items[j][1] == indent:
+                end = items[j][2]
+                break
+        blocks.append((phase_id, start, end))
+    return blocks
+
+
 def yaml_scalar(value):
     """Renders value the same way PyYAML would render it as a mapping
     value, without dumping the surrounding structure (keeps the edit to
@@ -245,6 +310,38 @@ def patch_phase_block(lines, start, end, task_id, evidence):
     return changed
 
 
+def revert_block_fields(lines, start, end, parent_lines, parent_start, parent_end):
+    """Mutates lines[start:end] in place so status/completed_by_task/evidence
+    match whatever parent_lines[parent_start:parent_end] had for those same
+    keys (parent being the phase block's own state one commit before the
+    commit that wrote its current status line -- see blame_line()). A key
+    present in the parent overwrites (or, if missing from the current block,
+    appends -- matching patch_phase_block's own insertion convention); a key
+    absent from the parent is deleted from the current block outright. This
+    is a targeted revert of exactly the 3 self-report fields, not a full
+    block replacement, so any other real content a legitimate edit added to
+    the same phase (scope, depends_on, etc.) is left untouched."""
+    block = lines[start:end]
+    parent_block = parent_lines[parent_start:parent_end]
+    for key in ("status", "completed_by_task", "evidence"):
+        cur_idx, _cur_indent = _find_field_indent(block, 0, len(block), key)
+        par_idx, _par_indent = _find_field_indent(parent_block, 0, len(parent_block), key)
+        if par_idx is not None:
+            new_line = parent_block[par_idx]
+            if cur_idx is not None:
+                block[cur_idx] = new_line
+            else:
+                block.append(new_line)
+        elif cur_idx is not None:
+            if key == "status":
+                marker_indent_len = len(block[0]) - len(block[0].lstrip(" "))
+                field_indent = " " * (marker_indent_len + 2)
+                block[cur_idx] = f"{field_indent}status: not_started\n"
+            else:
+                del block[cur_idx]
+    lines[start:end] = block
+
+
 # ---------------------------------------------------------------------------
 # Repo sync + commit/push (direct to master, same place the two real
 # hand-backfills this session landed on -- see module docstring)
@@ -254,18 +351,40 @@ def fetch_master():
     run(["git", "-C", REPO_ROOT, "fetch", "origin", "master"])
 
 
-def read_master_plan_lines(plan_file):
-    """Read-only: the committed origin/master copy of ai-os/<plan_file>,
-    with zero working-tree mutation. Used as a cheap up-front check so the
-    far more expensive/invasive sync_repo_root() (a hard reset of the
-    shared REPO_ROOT checkout) only ever runs on the real, rare path where
-    a phase actually needs backfilling -- not on every awaiting_human_approval
-    task on every 30-minute cron tick, which is the common case once a
-    phase already self-reports correctly."""
-    proc = run(["git", "-C", REPO_ROOT, "show", f"origin/master:ai-os/{plan_file}"])
+def read_commit_plan_lines(plan_file, ref):
+    """Read-only: ai-os/<plan_file> as of git ref `ref` (a commit-ish, e.g.
+    "origin/master" or "<sha>^"), zero working-tree mutation."""
+    proc = run(["git", "-C", REPO_ROOT, "show", f"{ref}:ai-os/{plan_file}"])
     if proc.returncode != 0:
         return None
     return proc.stdout.splitlines(keepends=True)
+
+
+def read_master_plan_lines(plan_file):
+    """Read-only: the committed origin/master copy of ai-os/<plan_file>.
+    Used as a cheap up-front check so the far more expensive/invasive
+    sync_repo_root() (a hard reset of the shared REPO_ROOT checkout) only
+    ever runs on the real, rare path where a phase actually needs
+    backfilling -- not on every awaiting_human_approval task on every
+    30-minute cron tick, which is the common case once a phase already
+    self-reports correctly."""
+    return read_commit_plan_lines(plan_file, "origin/master")
+
+
+def blame_line(plan_file, line_no):
+    """Returns the full commit hash that introduced the current content of
+    1-indexed line `line_no` of ai-os/<plan_file> in REPO_ROOT's checked-out
+    HEAD (the branch sync_repo_root() just reset to origin/master), or None.
+    Used to find exactly which commit wrote a phase's current status line,
+    regardless of that commit's own message (a worker's commit can mimic
+    this script's real commit-message convention -- see module docstring --
+    so the message text alone is never trusted; only independent `gh`
+    re-verification, done by the caller, decides whether a revert happens)."""
+    proc = run(["git", "-C", REPO_ROOT, "blame", "-l", "-L", f"{line_no},{line_no}",
+                "HEAD", "--", f"ai-os/{plan_file}"])
+    if proc.returncode != 0 or not proc.stdout.strip():
+        return None
+    return proc.stdout.split()[0]
 
 
 def sync_repo_root():
@@ -423,6 +542,162 @@ def sweep(status_filter, dry_run=False, checkpoint_on_success=False):
     return results
 
 
+# ---------------------------------------------------------------------------
+# --audit-plans: independently re-verify every already-"done" phase against
+# a real gh-confirmed merged PR, and revert any that fails re-verification.
+# Closes the real 2026-07-26 phase_4/PR#562 gap (see module docstring) where
+# a worker's own PR commit wrote a false self-report directly into the
+# shared phase-plan file, bypassing backfill_one()/sweep() above entirely.
+# ---------------------------------------------------------------------------
+
+def find_first_unverified_done_block(lines, plan_file):
+    """Scans list_phase_blocks(lines) for the first phase that self-reports
+    done but whose completed_by_task/target_repo do NOT independently
+    confirm_merge() -- i.e. a self-report the file claims but `gh` itself
+    does not back up. Returns (phase_id, start, end, task_id, repo) or None.
+    Stops at the first violation (audit_and_correct_plan_file re-scans from
+    scratch after each revert, since a revert shifts every later line
+    index in the file)."""
+    for phase_id, start, end in list_phase_blocks(lines):
+        if not block_self_reports_done(lines, start, end):
+            continue
+        completed_raw = _extract_field(lines, start, end, "completed_by_task") or ""
+        m = TASK_ID_RE.search(completed_raw)
+        if not m:
+            continue
+        task_id = m.group(0)
+        repo = _extract_field(lines, start, end, "target_repo")
+        if not repo:
+            # No target_repo to independently check against -- nothing to
+            # re-verify, never treated as a violation by absence alone.
+            continue
+        merged, _pr_number, _merged_at = confirm_merge(task_id, repo)
+        if not merged:
+            return phase_id, start, end, task_id, repo
+    return None
+
+
+def audit_and_correct_plan_file(plan_file, incidents, dry_run=False):
+    """Repeatedly finds and reverts unverified done-self-reports in
+    ai-os/<plan_file> (REPO_ROOT must already be synced to origin/master by
+    the caller) until none remain. Returns True if anything changed (or, in
+    dry-run mode, would change)."""
+    plan_path = os.path.join(REPO_ROOT, "ai-os", plan_file)
+    if not os.path.isfile(plan_path):
+        return False
+    changed_any = False
+    while True:
+        with open(plan_path) as f:
+            lines = f.readlines()
+        violation = find_first_unverified_done_block(lines, plan_file)
+        if violation is None:
+            break
+        phase_id, start, end, task_id, repo = violation
+
+        status_idx, _indent = _find_field_indent(lines, start, end, "status")
+        blame_hash = blame_line(plan_file, status_idx + 1)
+        if not blame_hash:
+            log(f"  WARNING: could not blame status line for {phase_id} in {plan_file} "
+                f"-- skipping revert, needs manual attention")
+            break
+        parent_lines = read_commit_plan_lines(plan_file, f"{blame_hash}^")
+        if parent_lines is None:
+            log(f"  WARNING: could not read parent revision {blame_hash}^ of {plan_file} "
+                f"-- skipping revert, needs manual attention")
+            break
+        parent_start, parent_end = find_phase_block(parent_lines, phase_id)
+        if parent_start is None:
+            log(f"  WARNING: {phase_id} not found in parent revision {blame_hash}^ of "
+                f"{plan_file} -- skipping revert, needs manual attention")
+            break
+
+        note = (f"{plan_file}::{phase_id}: self-reported done via completed_by_task={task_id} "
+                f"target_repo={repo}, but independent `gh pr list --head worker/{task_id}` "
+                f"re-verification found no real MERGED PR on FChecklist/{repo}. Reverted "
+                f"status/completed_by_task/evidence to their state immediately before "
+                f"commit {blame_hash[:7]} (git blame on the status line).")
+        log(f"  INCIDENT: {note}")
+        incidents.append(note)
+        changed_any = True
+
+        if dry_run:
+            break
+
+        revert_block_fields(lines, start, end, parent_lines, parent_start, parent_end)
+        with open(plan_path, "w") as f:
+            f.writelines(lines)
+
+    return changed_any
+
+
+def commit_and_push_audit(plan_files, incidents):
+    if not plan_files:
+        return True, "no violations found"
+    msg_lines = [
+        "Automated self-report audit: reverted unverified phase self-report(s)",
+        "",
+        "backfill_phase_self_report.py --audit-plans independently re-confirmed every",
+        "phase currently self-reporting done against a real `gh pr` MERGED state (never",
+        "trusting the file -- the same standard already applied to new self-reports) and",
+        f"found {len(incidents)} that do not hold up:",
+        "",
+    ] + [f"- {n}" for n in incidents] + [
+        "",
+        "Closes the gap behind the 2026-07-26 VERIDIAN_ARCHITECTURE_V2 phase_4/PR#562",
+        "incident (commit 4611924): a worker's own PR commit wrote a false self-report",
+        "directly into a phase-plan file, bypassing this script's real merged-PR check",
+        "entirely. See ai-os/OWNER_DIRECTIVES/MEMORY_OWNER_AI.yaml incidents[] id",
+        "2026-07-26_worker_bypassed_self_report_backfill.",
+    ]
+    msg = "\n".join(msg_lines)
+    for pf in plan_files:
+        add = run(["git", "-C", REPO_ROOT, "add", f"ai-os/{pf}"])
+        if add.returncode != 0:
+            return False, f"git add failed for {pf}: {add.stderr}"
+    commit = run(["git", "-C", REPO_ROOT, "commit", "-m", msg])
+    if commit.returncode != 0:
+        if "nothing to commit" in (commit.stdout + commit.stderr):
+            return True, "nothing to commit (already up to date)"
+        return False, f"git commit failed: {commit.stderr}"
+    push = run(["git", "-C", REPO_ROOT, "push", "origin", "master"])
+    if push.returncode != 0:
+        return False, f"git push failed: {push.stderr}"
+    return True, None
+
+
+def audit_plans(dry_run=False):
+    result = {"audited": [], "incidents": [], "changed": False, "error": None}
+    ok, err = sync_repo_root()
+    if not ok:
+        result["error"] = err
+        return result
+
+    ai_os_dir = os.path.join(REPO_ROOT, "ai-os")
+    if not os.path.isdir(ai_os_dir):
+        return result
+    plan_files = sorted(f for f in os.listdir(ai_os_dir) if PLAN_GLOB_RE.match(f))
+
+    incidents = []
+    changed_files = []
+    for pf in plan_files:
+        result["audited"].append(pf)
+        if audit_and_correct_plan_file(pf, incidents, dry_run=dry_run):
+            changed_files.append(pf)
+    result["incidents"] = incidents
+
+    if changed_files and dry_run:
+        result["changed"] = True
+        result["dry_run"] = True
+    elif changed_files:
+        ok, err = commit_and_push_audit(changed_files, incidents)
+        if not ok:
+            result["error"] = err
+            return result
+        result["changed"] = True
+        result["commit_note"] = err
+    return result
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--task-id")
@@ -435,7 +710,19 @@ def main():
                     help="When --sweep finds a merged awaiting_human_approval (tier2) task, "
                          "also checkpoint it completed -- nothing else ever revisits a tier2 "
                          "task after a human merges its PR out-of-band.")
+    p.add_argument("--audit-plans", action="store_true",
+                    help="Independently re-verify every phase currently self-reporting done "
+                         "against a real gh-confirmed merged PR, and revert (with a logged "
+                         "incident) any that fails re-verification. Catches a worker's own PR "
+                         "commit writing a false self-report directly into a phase-plan file, "
+                         "bypassing --task-id/--sweep above entirely (real incident: "
+                         "2026-07-26 VERIDIAN_ARCHITECTURE_V2 phase_4 / PR #562).")
     args = p.parse_args()
+
+    if args.audit_plans:
+        result = audit_plans(dry_run=args.dry_run)
+        print(json.dumps(result, indent=2, default=str))
+        sys.exit(1 if result.get("error") else 0)
 
     if args.sweep:
         results = sweep({"completed", "awaiting_human_approval"}, dry_run=args.dry_run,
@@ -444,7 +731,7 @@ def main():
         return
 
     if not args.task_id:
-        p.error("--task-id is required unless --sweep is passed")
+        p.error("--task-id is required unless --sweep or --audit-plans is passed")
 
     result = backfill_one(args.task_id, repo_override=args.repo_override, dry_run=args.dry_run)
     print(json.dumps(result, indent=2, default=str))
