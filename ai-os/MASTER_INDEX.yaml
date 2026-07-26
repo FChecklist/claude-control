@@ -777,6 +777,31 @@ quick_reference:
   summary: Live alert surface. Written by health-check-15min.py (systemd unit failures,
     stalled checkpoints, Mother Router DB reachability, disk/mem,...
 registries:
+- id: owner_ai_protocol
+  type: owner_ai_protocol_and_memory_consolidation
+  path: ai-os/OWNER_DIRECTIVES/PROTOCOL_OWNER_AI.yaml + ai-os/OWNER_DIRECTIVES/MEMORY_OWNER_AI.yaml
+  scope: >
+    2026-07-26 server-side consolidation (task-20260726-051203, mirroring an
+    equivalent laptop-side consolidation already done): every real Owner<->AI
+    protocol/directive/rule file previously scattered under
+    ai-os/OWNER_DIRECTIVES/ (7 files) folded into exactly ONE protocol file
+    (PROTOCOL_OWNER_AI.yaml -- execution location, OWNER_ENGINE gate,
+    communication channels, traceability, completion discipline, 7-step
+    workflow, quality bars, software-execution-only rule, task lifecycle state
+    machine, Owner<->AI runbook) and exactly ONE lessons/incidents memory file
+    (MEMORY_OWNER_AI.yaml -- self-correction rules, dated real incidents,
+    open coordination gaps). 4 of the 7 original files (OWNER_ENGINE_MANDATORY_GATE_2026-07-25.txt,
+    CHATGPT_AUDIT_AND_PROMPT_LIBRARY_WORKSPACE_2026-07-24.txt,
+    WIRING_ENGINE_SOFTWARE_2026-07-24.txt, BROWSER_NATIVE_END_USER_ARCHITECTURE_2026-07-25.txt)
+    were RETAINED at their original path (not deleted) because they are cited
+    by exact path elsewhere in the real system -- each now carries a
+    "SUPERSEDED BY PROTOCOL_OWNER_AI.yaml" header note. Enforced going forward
+    by scripts/check_single_protocol_file.py, wired into
+    scripts/preflight-guard.py's check_single_protocol_file() (runs before
+    every real task dispatch).
+  status: consolidated_2_canonical_files_plus_4_citation_retained_2026-07-26
+  query_command: python3 scripts/superboss-register.py query-knowledge "owner_ai_protocol" --tag domain:owner_ai_protocol
+  verify_command: python3 scripts/check_single_protocol_file.py
 - id: owner_engine_document_accuracy_convergence
   type: accuracy_convergence_test_and_result
   path: ai-os/OWNER_ENGINE_DOCUMENT_ACCURACY_CONVERGENCE_2026-07-25.yaml
