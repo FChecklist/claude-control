@@ -21,11 +21,11 @@
 #      a second, kernel-tracked cgroup signal is now required too. Real
 #      /proc/self/cgroup can't be fabricated from userspace without root/
 #      namespace privileges (verified unavailable in this sandbox), so this
-#      test drives the guard's cgroup check through the small
-#      "$guard_dir/_cgroup_path" config file the installer itself writes
-#      (reset to the real /proc/self/cgroup path every time the snippet is
-#      sourced) -- exactly the seam the snippet documents as being for this
-#      purpose, not a generic env-var override.
+#      test drives the guard's cgroup check through
+#      INTERACTIVE_GUARD_TEST_CGROUP_FILE, the narrow env-var test seam the
+#      snippet documents as existing for exactly this purpose (see ROUND 3
+#      note below -- this used to be a writable config file in round 2,
+#      which was itself a real bypass).
 #   2. `command git ...` / `command gh ...` no longer bypasses the guard --
 #      the guard is now PATH-resolved wrapper scripts, not shell functions,
 #      so `command` (which only skips functions/aliases, never PATH search)
@@ -35,6 +35,25 @@
 #   4. `git push --all` / `git push --mirror` are now blocked unconditionally
 #      (they reach every ref, protected branches included, regardless of the
 #      branch currently checked out).
+#
+# ROUND 3 additions (each proven blocked here, not just asserted in prose):
+#   1. Round 2's cgroup check read a path out of a plain, user-writable
+#      config file ($guard_dir/_cgroup_path) that the installer wrote into
+#      its own install directory -- any interactive session could overwrite
+#      it to point at a fake cgroup and bypass the "kernel-verified" check
+#      entirely. This is now closed: the guard hardcodes /proc/self/cgroup
+#      and only reads INTERACTIVE_GUARD_TEST_CGROUP_FILE (an env var, never
+#      set by the installer or either wrapper script) as a test-only
+#      override. The "config-file bypass no longer works" scenario below
+#      reproduces the exact old attack (writing into $guard_dir/_cgroup_path)
+#      and proves it now has zero effect.
+#   2. `git push origin +master` (force-push shorthand) is now blocked -- the
+#      leading `+` force marker is stripped before comparing the destination
+#      ref against the protected-branch pattern.
+#   3. `git push origin feature-branch master` (a real, valid multi-refspec
+#      single push) is now blocked because of `master` specifically, even
+#      though it's the second refspec, not the first -- every positional
+#      refspec is checked, not just the first one.
 set -uo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -83,10 +102,14 @@ echo '0::/system.slice/veridian-worker@task-example.service' > "$FAKE_WORKER_CGR
 # $1=label $2=INVOCATION_ID value ("" = unset) $3=command line to run
 # $4=expected exit code $5=expect real binary called (0/1)
 # $6=expected substring in stderr ("" = don't check) $7=FAKE_CURRENT_BRANCH ("" = unset)
-# $8=fake cgroup file to point the guard's check at ("" = leave the
-#    installer's real-/proc/self/cgroup default in place)
+# $8=fake cgroup file to point the guard's check at via the sanctioned
+#    INTERACTIVE_GUARD_TEST_CGROUP_FILE test seam ("" = leave the real
+#    /proc/self/cgroup default in place)
+# $9=fake cgroup file to write into the OLD, now-inert
+#    "$guard_dir/_cgroup_path" location, simulating an attacker attempting
+#    the round-2 config-file bypass ("" = don't attempt it)
 run_case() {
-  local label="$1" invocation="$2" cmdline="$3" expected_exit="$4" expect_called="$5" expect_stderr="$6" fake_branch="$7" fake_cgroup="${8:-}"
+  local label="$1" invocation="$2" cmdline="$3" expected_exit="$4" expect_called="$5" expect_stderr="$6" fake_branch="$7" fake_cgroup="${8:-}" legacy_attacker_cgroup="${9:-}"
   local call_log out_file err_file guard_dir
   call_log="$(mktemp)"; out_file="$(mktemp)"; err_file="$(mktemp)"
   rm -f "$call_log"
@@ -103,13 +126,16 @@ run_case() {
   if [ -n "$fake_branch" ]; then
     env_args+=(FAKE_CURRENT_BRANCH="$fake_branch")
   fi
-
-  local cgroup_override=""
   if [ -n "$fake_cgroup" ]; then
-    cgroup_override="echo '$fake_cgroup' > '$guard_dir/_cgroup_path';"
+    env_args+=(INTERACTIVE_GUARD_TEST_CGROUP_FILE="$fake_cgroup")
   fi
 
-  env "${env_args[@]}" bash -c "source '$SNIPPET' && $cgroup_override $cmdline" >"$out_file" 2>"$err_file"
+  local legacy_attack=""
+  if [ -n "$legacy_attacker_cgroup" ]; then
+    legacy_attack="cat '$legacy_attacker_cgroup' > '$guard_dir/_cgroup_path';"
+  fi
+
+  env "${env_args[@]}" bash -c "source '$SNIPPET' && $legacy_attack $cmdline" >"$out_file" 2>"$err_file"
   local actual_exit=$?
 
   local called=0
@@ -260,6 +286,61 @@ run_case "BYPASS VECTOR 4: 'git push --mirror' is BLOCKED even from a non-protec
 
 run_case "BYPASS VECTOR 4: systemd-simulated 'git push --all' passes through" \
   "test-unit-123" "git push --all" 0 1 "" "" "$FAKE_WORKER_CGROUP"
+
+# =========================================================================
+# ROUND 3: bypass vector 5 -- the round-2 config-file cgroup bypass is closed
+# =========================================================================
+# This reproduces the exact round-2 reviewer's live bypass sequence: spoof
+# INVOCATION_ID, then write a fake worker cgroup into the
+# "$guard_dir/_cgroup_path" file the round-2 installer used to read. The
+# guard's real signal here is simulated (via the sanctioned
+# INTERACTIVE_GUARD_TEST_CGROUP_FILE seam) as a genuine non-worker cgroup,
+# same as any real interactive shell would have -- so this proves the old
+# config file is now completely inert, not merely "harder to reach".
+run_case "ROUND 3 BYPASS CLOSED: writing a fake worker cgroup into the old _cgroup_path config file no longer bypasses the guard -- git push" \
+  "fake123" "git push origin master" 1 0 \
+  "BLOCKED: git push to protected branch/ref 'master'" "" "$FAKE_NONWORKER_CGROUP" "$FAKE_WORKER_CGROUP"
+
+run_case "ROUND 3 BYPASS CLOSED: writing a fake worker cgroup into the old _cgroup_path config file no longer bypasses the guard -- gh pr merge" \
+  "fake123" "gh pr merge 1 --repo some/repo --merge" 1 0 \
+  "BLOCKED: gh pr merge" "" "$FAKE_NONWORKER_CGROUP" "$FAKE_WORKER_CGROUP"
+
+run_case "sanity: INTERACTIVE_GUARD_TEST_CGROUP_FILE (the sanctioned test seam) pointed at a genuine matching worker cgroup DOES pass through" \
+  "test-unit-123" "git push origin master" 0 1 "" "" "$FAKE_WORKER_CGROUP"
+
+# =========================================================================
+# ROUND 3: bypass vector 6 -- leading '+' force-push marker now stripped
+# =========================================================================
+run_case "BYPASS VECTOR 6: 'git push origin +master' (force-push shorthand) is BLOCKED" \
+  "" "git push origin +master" 1 0 \
+  "BLOCKED: git push to protected branch/ref 'master'" "" ""
+
+run_case "BYPASS VECTOR 6: 'git push origin +HEAD:master' (force-push colon refspec) is BLOCKED" \
+  "" "git push origin +HEAD:master" 1 0 \
+  "BLOCKED: git push to protected branch/ref 'master'" "" ""
+
+run_case "BYPASS VECTOR 6: 'git push origin +feature-branch' (force-push, non-protected) still passes through" \
+  "" "git push origin +feature-branch" 0 1 "" "" ""
+
+run_case "BYPASS VECTOR 6: systemd-simulated 'git push origin +master' passes through" \
+  "test-unit-123" "git push origin +master" 0 1 "" "" "$FAKE_WORKER_CGROUP"
+
+# =========================================================================
+# ROUND 3: bypass vector 7 -- every positional refspec is now checked
+# =========================================================================
+run_case "BYPASS VECTOR 7: 'git push origin feature-branch master' (multi-refspec) is BLOCKED because of 'master' as the second refspec" \
+  "" "git push origin feature-branch master" 1 0 \
+  "BLOCKED: git push to protected branch/ref 'master'" "" ""
+
+run_case "BYPASS VECTOR 7: 'git push origin master feature-branch' (multi-refspec, protected branch listed first) is BLOCKED" \
+  "" "git push origin master feature-branch" 1 0 \
+  "BLOCKED: git push to protected branch/ref 'master'" "" ""
+
+run_case "sanity: 'git push origin feature-branch other-feature' (multi-refspec, neither protected) passes through" \
+  "" "git push origin feature-branch other-feature" 0 1 "" "" ""
+
+run_case "BYPASS VECTOR 7: systemd-simulated 'git push origin feature-branch master' passes through" \
+  "test-unit-123" "git push origin feature-branch master" 0 1 "" "" "$FAKE_WORKER_CGROUP"
 
 if [ "$FAILURES" -eq 0 ]; then
   echo "All scenarios passed."

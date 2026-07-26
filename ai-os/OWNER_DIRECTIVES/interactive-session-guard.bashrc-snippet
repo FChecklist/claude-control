@@ -37,6 +37,40 @@
 # theorized) in tests/interactive_session_guard_test.sh's "command git" /
 # "command gh" scenarios.
 #
+# ROUND 3 (this version): a fresh audit of round 2, verified by direct live
+# reproduction (not just review), found the "kernel-verified cgroup" claim
+# above did not actually hold, plus two real git-push refspec parsing gaps:
+#   (a) the round-2 cgroup check did not read /proc/self/cgroup directly --
+#       it read a path stored in a plain, user-writable config file
+#       ($guard_dir/_cgroup_path) that this installer itself wrote into its
+#       own install directory. Any interactive session could overwrite that
+#       file to point at a fake, attacker-authored cgroup file and satisfy
+#       the "kernel-tracked" check with zero kernel involvement -- reproduced
+#       live with a 3-line shell sequence (`export INVOCATION_ID=x; echo
+#       /tmp/fake > ~/.claude-interactive-session-guard.d/_cgroup_path;
+#       echo '0::/system.slice/veridian-worker@x.service' > /tmp/fake`), no
+#       root needed. Closed by removing the config-file indirection entirely:
+#       the cgroup path is now hardcoded to /proc/self/cgroup with no
+#       runtime-writable file in the loop. The one exception is a narrow,
+#       explicitly-named test seam -- see KNOWN LIMITATIONS below and
+#       _interactive_guard_cgroup_path() in _lib.sh.
+#   (b) _interactive_guard_git_push_verdict() stripped `refs/heads/` from the
+#       destination ref but never stripped a leading `+` force-push marker,
+#       so `git push origin +master` (standard force-push refspec shorthand)
+#       evaluated dest as the literal string `+master`, which doesn't match
+#       the `master|main` pattern and went through unblocked -- reproduced
+#       live. Closed by stripping a leading `+` before comparison.
+#   (c) the same function only inspected the FIRST positional refspec
+#       argument, so `git push origin feature-branch master` (a real, valid
+#       multi-refspec single push) pushed both branches in one invocation but
+#       only `feature-branch` was checked -- `master` in the same command was
+#       never evaluated and the whole push went through unblocked --
+#       reproduced live. Closed by iterating over every positional refspec
+#       argument and blocking if ANY of them resolves to a protected branch.
+# All three are verified with dedicated, passing regression-test scenarios,
+# not just prose -- see tests/interactive_session_guard_test.sh's "ROUND 3"
+# scenarios.
+#
 # MECHANISM (dual signal, both required):
 #   1. INVOCATION_ID -- the real environment variable systemd sets for every
 #      unit it launches (present for veridian-worker@*.service /
@@ -92,15 +126,37 @@
 #     OS-level exec hook), which is out of scope for a per-user shell-profile
 #     guard and is left for a future round if the Owner decides it is worth
 #     the operational cost of touching system binaries.
+#   - Test-only cgroup-path env var (new, round 3, disclosed honestly): the
+#     cgroup check reads the real, hardcoded /proc/self/cgroup in every
+#     normal code path. The ONE exception is
+#     INTERACTIVE_GUARD_TEST_CGROUP_FILE, an environment variable that
+#     _interactive_guard_cgroup_path() (in _lib.sh) consults before falling
+#     back to /proc/self/cgroup, which exists solely so
+#     tests/interactive_session_guard_test.sh can simulate a matching/
+#     non-matching cgroup without root/namespace privileges. Nothing in this
+#     installer or the wrapper scripts ever sets this variable -- only the
+#     test harness does, in its own subshell environment. If someone manually
+#     exports INTERACTIVE_GUARD_TEST_CGROUP_FILE in a real interactive shell,
+#     they can defeat the cgroup half of the check for that shell (still
+#     combined with the requirement to also spoof INVOCATION_ID, same as
+#     every other bypass on this list) -- this is a real, disclosed, narrow
+#     seam, not a silently-complete guarantee. It is a strict improvement
+#     over round 2's bug: there, the override was a plain file
+#     ($guard_dir/_cgroup_path) sitting in the guard's own install directory,
+#     always present and writable with no special knowledge required beyond
+#     finding the directory. Now, in the default case (this variable unset,
+#     true for every real interactive shell and every real dispatched
+#     worker/supervisor unit), there is no file-based indirection at all --
+#     the check reads the kernel-tracked /proc/self/cgroup directly, full
+#     stop.
 #
 # This file is meant to be sourced from ~/.bashrc and ~/.profile on
 # VERIDIAN-DEV (167.233.220.35), for the rajat user's interactive shells
 # only -- systemd units do not source .bashrc/.profile, so this guard never
 # runs for real dispatched workers/supervisors regardless of INVOCATION_ID.
-# Every time it is sourced it rewrites the wrapper scripts (and the small
-# cgroup-path config file used only for testing, see below) from scratch, so
-# a fresh interactive shell always gets the guard exactly as committed here
-# -- no manual sync step, no drift between "deployed" and "committed".
+# Every time it is sourced it rewrites the wrapper scripts from scratch, so a
+# fresh interactive shell always gets the guard exactly as committed here --
+# no manual sync step, no drift between "deployed" and "committed".
 
 _interactive_guard_dir="${INTERACTIVE_GUARD_DIR:-$HOME/.claude-interactive-session-guard.d}"
 mkdir -p "$_interactive_guard_dir" 2>/dev/null
@@ -126,28 +182,26 @@ _interactive_guard_real_bin() {
     ( PATH="$rest" type -P "$name" )
 }
 
-# Path to the cgroup file to check for the real-worker signal. Defaults to
-# the real /proc/self/cgroup. Overridable ONLY by editing the small
-# "$guard_dir/_cgroup_path" config file this same installer writes (reset to
-# the real path every time the snippet is re-sourced) -- this exists so the
-# check is testable end-to-end without root/namespace tricks to fabricate a
-# real kernel cgroup. It is not an environment variable, so it cannot be
-# spoofed the way INVOCATION_ID can: changing it requires filesystem write
-# access to this guard directory, which is the same access level as editing
-# ~/.bashrc directly to remove the guard entirely (already the documented
-# same-account limitation, not a new gap).
+# Path to the cgroup file to check for the real-worker signal. Hardcoded to
+# the real, kernel-tracked /proc/self/cgroup -- no file-based indirection of
+# any kind. ROUND 2 shipped this as a read of a plain config file
+# ("$guard_dir/_cgroup_path") sitting in the guard's own install directory;
+# that file was writable by any interactive session, so it was a total
+# bypass of the "kernel-verified" claim, not a test seam (reproduced live: 3
+# lines of shell, no root). It is gone now.
+#
+# The ONE remaining override is INTERACTIVE_GUARD_TEST_CGROUP_FILE, an
+# environment variable -- not a file -- that nothing in this installer or
+# either wrapper script ever sets. It exists solely so
+# tests/interactive_session_guard_test.sh can point this check at a fake
+# cgroup file to simulate a matching/non-matching kernel cgroup without
+# root/namespace privileges. Setting it manually in a real shell does defeat
+# this half of the check for that shell (still combined with the
+# requirement to also spoof INVOCATION_ID) -- disclosed honestly in this
+# file's KNOWN LIMITATIONS section, same standard as the other documented
+# residual bypasses. Nobody outside the test harness has a reason to set it.
 _interactive_guard_cgroup_path() {
-    local dir cfg p
-    dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    cfg="$dir/_cgroup_path"
-    if [ -r "$cfg" ]; then
-        p="$(cat "$cfg" 2>/dev/null)"
-        if [ -n "$p" ]; then
-            printf '%s' "$p"
-            return
-        fi
-    fi
-    printf '%s' "/proc/self/cgroup"
+    printf '%s' "${INTERACTIVE_GUARD_TEST_CGROUP_FILE:-/proc/self/cgroup}"
 }
 
 # Both signals required: (1) INVOCATION_ID -- the real env var systemd sets
@@ -204,9 +258,20 @@ _interactive_guard_gh_is_merge() {
 # push every ref -- including protected branches -- regardless of the
 # current checked-out branch, so they are always flagged without needing to
 # resolve a single destination branch.
+#
+# `git push [<repository> [<refspec>...]]` accepts MULTIPLE refspecs in one
+# invocation (e.g. `git push origin feature-branch master` pushes both in a
+# single push) -- every positional arg after the repository name is a
+# refspec of its own and must be checked; checking only the first one lets a
+# protected branch riding alongside a feature branch through unblocked
+# (round-3 fix, reproduced live). A leading `+` on a refspec is git's
+# force-push marker (e.g. `+master`, `+master:master`) and belongs to the
+# refspec as a whole, not to either side of a `:` -- it must be stripped
+# before comparison, or `git push origin +master` evaluates dest as the
+# literal string "+master" and never matches (round-3 fix, reproduced live).
 _interactive_guard_git_push_verdict() {
     local real_git="$1"; shift
-    local args=("$@") positional=() arg refspec="" dest
+    local args=("$@") positional=() arg refspec dest
     for arg in "${args[@]}"; do
         case "$arg" in
             --all|--mirror)
@@ -217,24 +282,28 @@ _interactive_guard_git_push_verdict() {
             *) positional+=("$arg") ;;
         esac
     done
+    _interactive_guard_push_verdict=""
     if [ "${#positional[@]}" -ge 2 ]; then
-        refspec="${positional[1]}"
+        for refspec in "${positional[@]:1}"; do
+            refspec="${refspec#+}"
+            dest="${refspec##*:}"
+            dest="${dest#refs/heads/}"
+            case "$dest" in
+                master|main)
+                    _interactive_guard_push_verdict="$dest"
+                    return
+                    ;;
+            esac
+        done
+        return
     fi
-    if [ -n "$refspec" ]; then
-        dest="${refspec##*:}"
-    else
-        dest="$("$real_git" symbolic-ref --short HEAD 2>/dev/null)"
-    fi
+    dest="$("$real_git" symbolic-ref --short HEAD 2>/dev/null)"
     dest="${dest#refs/heads/}"
     case "$dest" in
         master|main) _interactive_guard_push_verdict="$dest" ;;
-        *) _interactive_guard_push_verdict="" ;;
     esac
 }
 LIB_EOF
-
-# --- the real, honest default: reset every time this snippet is sourced ---
-printf '%s\n' "/proc/self/cgroup" > "$_interactive_guard_dir/_cgroup_path"
 
 # --- git wrapper script -----------------------------------------------------
 cat > "$_interactive_guard_dir/git" <<'GIT_EOF'

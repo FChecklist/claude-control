@@ -256,38 +256,78 @@ articles:
       a dedicated, passing regression-test scenario (not just a prose
       assertion) -- see tests/interactive_session_guard_test.sh's
       "BYPASS VECTOR 1-4" scenarios.
+    round_3_hardening: >-
+      A round-3 audit, verified by direct live reproduction rather than
+      review alone, found round 2's "kernel-verified cgroup" claim did not
+      actually hold, plus two real git-push refspec parsing gaps: (a) the
+      round-2 cgroup check did not read /proc/self/cgroup directly -- it
+      read a path stored in a plain, user-writable config file
+      ($guard_dir/_cgroup_path) that the installer itself wrote into its own
+      install directory, so any interactive session could overwrite that
+      file to point at a fake, attacker-authored cgroup and satisfy the
+      check with zero kernel involvement; reproduced live with a 3-line
+      shell sequence (`export INVOCATION_ID=x; echo /tmp/fake >
+      ~/.claude-interactive-session-guard.d/_cgroup_path; echo
+      '0::/system.slice/veridian-worker@x.service' > /tmp/fake`), no root
+      needed. (b) `git push origin +master` (the standard force-push
+      refspec shorthand) was not recognized as targeting `master`, because
+      the destination-ref parser stripped `refs/heads/` but never stripped
+      the leading `+` force-push marker, so it compared the literal string
+      "+master" against the protected-branch pattern and let the push
+      through; reproduced live. (c) `git push origin feature-branch master`
+      (a real, valid multi-refspec single push) only had its first refspec
+      (`feature-branch`) checked -- `master`, the second refspec in the same
+      invocation, was never evaluated and the whole push went through
+      unblocked; reproduced live. All three are closed: (a) the cgroup path
+      is now hardcoded to /proc/self/cgroup with no file-based indirection
+      -- the sole override is INTERACTIVE_GUARD_TEST_CGROUP_FILE, an
+      environment variable nothing outside the test harness ever sets
+      (disclosed in known_limitations below, not silently treated as a
+      closed gap); (b) a leading `+` is now stripped from each refspec
+      before comparison; (c) every positional refspec argument is now
+      checked, not just the first, and the push is blocked if ANY of them
+      resolves to a protected branch. Each has a dedicated, passing
+      regression-test scenario -- see
+      tests/interactive_session_guard_test.sh's "ROUND 3" scenarios.
     implementation:
       deployed_at: "/home/rajat/.claude-interactive-session-guard.bashrc-snippet
         on VERIDIAN-DEV, sourced from both ~/.bashrc (interactive non-login
         shells) and ~/.profile (login shells, interactive or not -- added
         because ~/.bashrc's own top-of-file interactive-only check skips
         login-but-non-interactive shells such as `bash -lc '...'`). Every
-        time it is sourced it rewrites the wrapper scripts (and the small
-        cgroup-path test-seam config file) it installs into
+        time it is sourced it rewrites the wrapper scripts it installs into
         ~/.claude-interactive-session-guard.d/ and prepends that directory
         to PATH (idempotent -- checked before prepending, and `hash -r` is
         run afterward so bash's command-location cache can't serve a stale,
-        pre-guard path)."
+        pre-guard path). As of round 3 there is no cgroup-path config file
+        written into that directory at all -- the cgroup check reads
+        /proc/self/cgroup directly, hardcoded."
       committed_copy: ai-os/OWNER_DIRECTIVES/interactive-session-guard.bashrc-snippet
         (this exact repo, for auditability -- kept byte-identical to the
         deployed copy).
       mechanism_summary: >-
         (1) Real, kernel-verified context check: INVOCATION_ID present AND
-        /proc/self/cgroup names a veridian-worker@*/veridian-supervisor@*
-        unit -- both required, neither alone is trusted. (2) PATH-based
-        wrapper scripts, not shell functions -- placed in a directory
-        prepended to PATH, so `command git`/`command gh` (which bypass
-        functions/aliases but not PATH search) still resolve to the guard.
-        (3) gh-merge detection extended to `gh api -X PUT|PATCH
-        .../pulls/<n>/merge` in addition to `gh pr merge`. (4) git-push
-        detection extended to `push --all`/`--mirror` in addition to an
-        explicit push naming a protected branch.
+        /proc/self/cgroup -- read directly, hardcoded, no file-based
+        indirection -- names a veridian-worker@*/veridian-supervisor@* unit;
+        both required, neither alone is trusted. (2) PATH-based wrapper
+        scripts, not shell functions -- placed in a directory prepended to
+        PATH, so `command git`/`command gh` (which bypass functions/aliases
+        but not PATH search) still resolve to the guard. (3) gh-merge
+        detection extended to `gh api -X PUT|PATCH .../pulls/<n>/merge` in
+        addition to `gh pr merge`. (4) git-push detection extended to `push
+        --all`/`--mirror` in addition to an explicit push naming a protected
+        branch. (5) [round 3] every positional refspec argument of a `git
+        push` is checked (not just the first), and a leading `+` force-push
+        marker is stripped from each before comparison against the
+        protected-branch pattern.
       test: tests/interactive_session_guard_test.sh (sources the real
-        committed snippet against faked gh/git binaries; 32 scenarios
-        covering block/pass-through for gh pr merge, gh api merge calls,
-        git push to master/main vs. a feature branch, git push --all/
-        --mirror, `command`-prefixed invocations of both, and the
-        spoofed-INVOCATION_ID-alone case, in both interactive and
+        committed snippet against faked gh/git binaries; scenarios covering
+        block/pass-through for gh pr merge, gh api merge calls, git push to
+        master/main vs. a feature branch, git push --all/--mirror,
+        `command`-prefixed invocations of both, the
+        spoofed-INVOCATION_ID-alone case, the round-3 config-file cgroup
+        bypass (now closed), `git push origin +master`, and multi-refspec
+        `git push origin feature-branch master`, in both interactive and
         systemd-simulated contexts).
       known_limitations: >-
         (1) Same-account limitation (unchanged from round 1): this guard
@@ -295,27 +335,44 @@ articles:
         AI session typing by hand -- both share the same rajat account and
         the same shell profile, so both get blocked identically. It is
         scoped to the AI session's own discipline, not a security boundary
-        against the Owner. (2) Residual PATH-search bypass (new, disclosed
-        honestly this round): the wrapper-script mechanism only intercepts
-        commands that go through a normal PATH search. An absolute-path
-        invocation of the real binary (e.g. `/usr/bin/git push origin
-        master`, `/usr/bin/gh pr merge ...`) or `command -p git`/
-        `command -p gh` (bash's `-p` flag explicitly searches a fixed
-        default system PATH, not the shell's guard-prepended $PATH) still
-        reaches the real binary directly. Both require the caller to
-        already know or go find the real absolute path rather than just
-        typing the ordinary command -- a real but modest deterrent, not a
-        hard technical stop. Fully closing this would mean replacing the
-        real system binaries or adding an OS-level exec hook, which is out
-        of scope for a per-user shell-profile guard; left for a future
-        round if the Owner decides the operational cost is worth it.
-        Documented honestly rather than silently building something that
-        only pretends to be complete.
+        against the Owner. (2) Residual PATH-search bypass (disclosed since
+        round 2): the wrapper-script mechanism only intercepts commands that
+        go through a normal PATH search. An absolute-path invocation of the
+        real binary (e.g. `/usr/bin/git push origin master`, `/usr/bin/gh pr
+        merge ...`) or `command -p git`/`command -p gh` (bash's `-p` flag
+        explicitly searches a fixed default system PATH, not the shell's
+        guard-prepended $PATH) still reaches the real binary directly. Both
+        require the caller to already know or go find the real absolute path
+        rather than just typing the ordinary command -- a real but modest
+        deterrent, not a hard technical stop. Fully closing this would mean
+        replacing the real system binaries or adding an OS-level exec hook,
+        which is out of scope for a per-user shell-profile guard; left for a
+        future round if the Owner decides the operational cost is worth it.
+        (3) Test-only cgroup-path env var (new, round 3, disclosed honestly):
+        the cgroup check reads /proc/self/cgroup directly in every normal
+        code path -- the sole exception is
+        INTERACTIVE_GUARD_TEST_CGROUP_FILE, an environment variable that
+        nothing in the installer or either wrapper script ever sets, which
+        exists only so the test suite can simulate a matching/non-matching
+        cgroup without root/namespace privileges. Manually exporting it in a
+        real shell defeats the cgroup half of the check for that shell --
+        still combined with the pre-existing requirement to also spoof
+        INVOCATION_ID, and disclosed here rather than silently glossed over,
+        same standard as limitation (2). This is a strict improvement over
+        the round-2 bug it replaces: round 2's override was a plain file
+        sitting in the guard's own install directory, always present and
+        writable with no special knowledge required; the round-3 default
+        (this variable unset, true for every real shell and every real
+        dispatched unit) has no file-based indirection at all. Documented
+        honestly rather than silently building something that only pretends
+        to be complete.
     source: This task's own real deliverable (server-side ~/.bashrc /
       ~/.profile-sourced snippet change + committed snippet + test),
       directly implementing A8_software_execution_only's standing rule with
-      real enforcement, hardened in round 2 against four real bypasses a
-      fresh audit found.
+      real enforcement, hardened in round 2 against four real bypasses and in
+      round 3 against three more (a false "kernel-verified" cgroup claim and
+      two git-push refspec parsing gaps) that fresh, live-reproduced audits
+      found.
     see_also: ai-os/OWNER_DIRECTIVES/interactive-session-guard.bashrc-snippet,
       tests/interactive_session_guard_test.sh
 
