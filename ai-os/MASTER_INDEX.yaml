@@ -3364,6 +3364,129 @@ registries:
     call), re-checked directly by this task, not assumed from git log alone.'
   query_command: python3 scripts/superboss-register.py query-knowledge "owner_engine_task_gateway_integration"
     --tag registry-id:owner_engine_task_gateway_integration
+- id: cross_system_verification_summary_2026_07_26
+  type: cross_system_verification_and_gap_report
+  path: ai-os/MASTER_INDEX.yaml (this entry -- per this task's own CONSTRAINTS, no
+    new tracking file created; findings folded into the existing entries they
+    correct, this entry is only the required dated roll-up)
+  scope: 'Task-20260726-154348''s own real, live-command verification pass across
+    Server (this repo + compliance-tracker on-disk state) + Supabase (MCP) + Vercel
+    + GitHub, run after PR #84/#86/#567/#79/#80(open)/#82 -- confirming what genuinely
+    changed since the session''s own prior census (registries.vercel_github_state_census_2026_07_26)
+    and engine inventory (registries.engines_gateways_architecture), and finding/fixing
+    2 real, previously-undetected mis-citations plus 4 stale PR/catalog statuses.
+    Not a rebuild of either prior artifact -- a fresh, independent re-check that
+    updated them in place where they had drifted.'
+  status: real_findings_2026_07_26
+  engine_coverage_summary: 'Per registries.engines_gateways_architecture (re-confirmed,
+    not re-run from scratch by this task -- its own 2026-07-26 reverification stands):
+    20/20 named engines have real prior art (0 NONE), 1/20 full coverage (Knowledge
+    Engine), 19/20 partial. All 8 phases (0-7) plus gateway_definition_and_inventory
+    are status: done. 3 Owner-decision items remain the real blocker to further
+    engine-coverage progress (webhook-receiver-network-exposure, pending;
+    supabase-management-api-token-refresh and ui-composition-analytics-engine-scope-confirmation,
+    both awaiting_owner_decision) -- unchanged by this task, not this task''s to resolve.'
+  registries_verified_summary: 'This repo''s MASTER_INDEX.yaml carries 111 real entries
+    under registries: (plus 42 short-form entries under quick_reference:, confirmed
+    a by-design summary/detail split of a subset of the same ids, not duplication --
+    zero duplicate ids exist within registries: itself, checked directly against the
+    parsed YAML). `python3 scripts/metadata_reconciliation.py report`, re-run fresh
+    by this task, reads the separate, non-git live-runtime copy at
+    /opt/veridian/ai-os/MASTER_INDEX.yaml (97 registries -- fewer than this git-tracked
+    copy''s 111 because the live-runtime copy lags several of this session''s own
+    merges, itself a real, minor, already-documented-below finding) and reports
+    registries_no_path_field=6, matching the exact 6 by-design no-path ids
+    METADATA_ENGINE_RECONCILIATION_2026-07-24.yaml''s known_limitations already
+    names, plus exactly 1 non-file-only entry (audit198_framework''s directory path,
+    also already documented as a deliberate exclusion in that same known_limitations
+    list) -- 0 new, unexplained path failures beyond what was already documented.'
+  new_findings_and_remediation_2026_07_26:
+  - finding: 'registries.audit198_framework''s path field said ai-os/scripts/audit198/
+      (does not exist) while ai-os/STANDING_DIRECTIVE.yaml was already corrected to the
+      real ai-os/audit198/ on 2026-07-22 -- a 4-day-old, real cross-file drift this
+      file itself never got fixed for.'
+    remediation: 'FIXED by this task -- path and the embedded run command in
+      registries.audit198_framework corrected to ai-os/audit198/.'
+  - finding: 'registries.engine_registry has always cited ai-os/engines/ENGINES.yaml
+      as the "247-engine VCEL registry" -- that file is actually a Z.ai/Claude-Code
+      agent-authorization grant (confirmed via git log --follow: one unrelated commit,
+      ever) and always has been, not real path drift over time. The real VCEL registry
+      (~247 functions across 25 files) is compliance-tracker/src/lib/engines/*.ts, per
+      ai-os/system-tree/10-compliance-tracker-governance.yaml#GOV-07. Distinct from,
+      and not a collision with, registries.engines_gateways_architecture -- that
+      non-collision (SCOPE item 2''s own premise) still holds; this is a mis-citation
+      inside engine_registry itself, not a collision between two registries.'
+    remediation: 'FIXED in this repo''s copy by this task (path + scope text
+      corrected, correction note added). compliance-tracker''s own ai-os/MASTER_INDEX.yaml
+      carries the byte-for-byte identical wrong path/summary -- outside this repo''s
+      boundary to edit directly; recommend a small follow-up task in that repo mirror
+      this same correction.'
+  - finding: 'registries.ddl_preflight_authorization_gate (PR #79) and
+      registries.owner_engine_task_gateway_integration (PR #82) both still recorded
+      "PR open" states that this task''s fresh gh api calls found were already MERGED
+      (2026-07-26T11:59:10Z and 2026-07-26T11:02:41Z respectively) -- both merges
+      landed after registries.vercel_github_state_census_2026_07_26 ran the same day
+      but before this task started.'
+    remediation: 'FIXED -- both entries updated to MERGED with merge commit/timestamp
+      evidence and a direct on-disk confirmation (scripts/ddl_authorization_check.py
+      and the scripts/prompt_gateway/gateway.py wiring are both live on this repo''s
+      current master/HEAD).'
+  - finding: 'registries.database_catalog''s live-runtime path
+      (/opt/veridian/ai-os/DATABASE_CATALOG.json) and compliance-tracker''s own
+      on-server clone both still read table_count=444/enum_count=124 even though
+      compliance-tracker PR #567 (merged 2026-07-26T10:40:04Z) regenerated the real
+      count to 449/124. The on-server compliance-tracker clone is checked out to a
+      stale branch 7 commits behind origin/main (PR #567''s merge commit not in its
+      ancestry), and the non-git live-runtime copy under /opt/veridian/ai-os/ syncs
+      from git on its own schedule, not instantly on merge.'
+    remediation: 'NOT fixed by this task (both are live-server state outside this
+      repo''s own git history, and CONSTRAINTS forbid building/running a new sync
+      mechanism) -- recorded with full evidence in registries.database_catalog''s own
+      regen_2026_07_26 field; recommend the next real edit to that compliance-tracker
+      clone first fast-forward it to origin/main, and that the live-runtime sync
+      mechanism (registries.system_sync_mechanism) be checked for why this lag
+      exists if it recurs.'
+  policy_gate_fragmentation_cross_reference: 'This task''s own re-check of the 4 new
+    gates/integrations this session (DDL gate PR #79 now merged, write-gate PR #80
+    still open, OWNER_ENGINE integration PR #82 now merged, lifecycle fix PR #84
+    already merged) did not find any NEW disconnected policy/gate mechanism beyond
+    the 3 (preflight-guard.py, policy-enforcement-engine.ts, ddl_authorization_check.py)
+    registries.engines_gateways_architecture''s own phase_2_scope_judgment_2026_07_26
+    already identified and judged in-scope for the parallel Phase 2 policy-unification
+    task. Per this task''s own CONSTRAINTS, that fragmentation finding is
+    cross-referenced here, not re-solved -- see
+    registries.engines_gateways_architecture''s phase_2_scope_judgment_2026_07_26 for
+    the actual remediation recommendation (port ddl_authorization_check.py onto
+    policy_decision.py''s shared schema).'
+  supabase_verification_2026_07_26: 'Fresh, read-only `SELECT COUNT(*) FROM
+    drizzle.__drizzle_migrations` against the live compliance-tracker Supabase
+    project (pcrjmlpuqsbocqfwoxod), run directly by this task via the Supabase MCP:
+    261 rows. Matches compliance-tracker PR #563/#569''s own claimed count exactly --
+    no drift found. PR #563 itself remains open (not yet merged into compliance-tracker
+    main) as of this task''s check; PR #569 (a separate, already-merged PR) resolved
+    a merge conflict on PR #563''s own branch and re-confirmed the same count.'
+  github_branch_protection_verification_2026_07_26: 'Fresh `gh api
+    repos/FChecklist/<repo>/branches/<default>/protection/required_status_checks`
+    for the 2 repos where it is queryable on the current GitHub Free plan
+    (compliance-tracker, veda-advisors -- the other 5 repos remain 403 UNVERIFIABLE,
+    unchanged, per registries.vercel_github_state_census_2026_07_26''s own
+    plan_tier_evidence): compliance-tracker''s contexts list and veda-advisors''
+    empty list both match exactly what that census already recorded -- 0 drift found
+    for either of the 2 mechanically-checkable repos.'
+  cross_system_single_source_confirmation: 'Server (this repo + compliance-tracker),
+    Supabase (drizzle.__drizzle_migrations + DATABASE_CATALOG.json), Vercel (3
+    projects), and GitHub (7 repos) are each independently re-verifiable via a live
+    command cited directly from this one file (see verification_commands under
+    registries.vercel_github_state_census_2026_07_26, generator_script under
+    registries.database_catalog, and query_command under most other entries) --
+    MASTER_INDEX.yaml itself is the one real cross-reference point for all 4 systems
+    as of this task''s run, not 4 separately-tracked systems each with their own
+    entrypoint doc. This was already true before this task (the prior census/catalog
+    tasks built it that way); this task''s contribution is confirming it still holds
+    and correcting the 6 stale entries found above so the single source stays
+    trustworthy rather than silently drifting.'
+  query_command: python3 scripts/superboss-register.py query-knowledge "cross_system_verification_summary_2026_07_26"
+    --tag registry-id:cross_system_verification_summary_2026_07_26
 tree_lineage:
   tree1_audit_tree:
     path: /opt/veridian/repos/compliance-tracker/ai-os/audit-tree/
