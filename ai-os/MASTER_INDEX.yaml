@@ -784,6 +784,37 @@ quick_reference:
   summary: Live alert surface. Written by health-check-15min.py (systemd unit failures,
     stalled checkpoints, Mother Router DB reachability, disk/mem,...
 registries:
+- id: task_completion_audit_7day
+  type: independent_task_completion_verification
+  path: ai-os/TASK_COMPLETION_AUDIT_2026-07-26.md + ai-os/TASK_COMPLETION_AUDIT_2026-07-26.json
+  scope: >
+    task-20260726-163551 (Owner directive: real automated verification of all
+    218 real task IDs created in ai-os/tasks/ in the last 7 days, cross-referenced
+    against independently-verifiable outcomes -- never task.yaml's own
+    self-reported status field). Built ai-os-scripts/verify_7day_task_completion.py,
+    which for every task-*/task.yaml created in the last 7 days (219 as of this
+    run) resolves its real PR via pr_url.txt / worker-log grep / a
+    `gh pr list --repo <repo> --state all` headRefName match (one paginated
+    gh pr list call per repo, not per-task gh pr view calls), reads that PR's
+    real live state (MERGED/OPEN/CLOSED) from GitHub, and falls back to real
+    commit-ancestry evidence (git log origin/<default-branch> --grep=<task_id>
+    against the repo's local clone at /opt/veridian/repos/<repo>) when no PR
+    exists, or to genuine checkpoint-terminal-state evidence for pure
+    investigation/analysis tasks with no code deliverable. Cross-references the
+    6 named *_PHASE_PLAN_*.yaml files (20-Engine, Wiring, Auditor, Testing,
+    Terminology Standardization, VERIDIAN Architecture v2) for any task whose
+    title names a matching phase. Confirmed and generalized (via automatic
+    title-vs-actual-PR-number mismatch detection, not hardcoding) both
+    already-known real cases this session found: task-20260726-081117 and
+    task-20260726-115425 each self-reported "completed, merged autonomously"
+    while actually merging an unrelated trivial PR (#565, #569) instead of the
+    PR their own title named (#563), which the audit confirms is still OPEN.
+    Real result distribution: MERGED 109, NO_PR_FOUND 76, OPEN_NOT_DONE 18,
+    INVESTIGATION_ONLY 16 (of 219; 4 task dirs omitted for having no task.yaml
+    at all, listed by name in the report, not silently dropped).
+  status: audit_generated_2026-07-26_rerunnable
+  query_command: python3 ai-os-scripts/verify_7day_task_completion.py --count-only
+  verify_command: python3 ai-os-scripts/verify_7day_task_completion.py --out-md ai-os/TASK_COMPLETION_AUDIT_2026-07-26.md --out-json ai-os/TASK_COMPLETION_AUDIT_2026-07-26.json
 - id: owner_ai_protocol
   type: owner_ai_protocol_and_memory_consolidation
   path: ai-os/OWNER_DIRECTIVES/PROTOCOL_OWNER_AI.yaml + ai-os/OWNER_DIRECTIVES/MEMORY_OWNER_AI.yaml
