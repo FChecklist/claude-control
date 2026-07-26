@@ -81,6 +81,32 @@ line/parent-lookup failure -- including a worker fabricating an entirely
 new phase block from scratch with no prior state to revert to, the most
 direct reproduction of the original phase_4/PR#562 incident -- now
 records a real incident instead of a silent stderr-only warning.
+
+--audit-plans fix #2 (2026-07-26, real AUDIT: REJECT, live-reproduced): a
+plan file with MORE THAN ONE phase falsely self-reporting done desynced
+audit_and_correct_plan_file()'s line numbers from blame_line()'s `git
+blame HEAD` lookup -- reverting the first violation can delete lines
+in-place (revert_block_fields, when the parent lacked completed_by_task/
+evidence), and the old while-loop re-read that mutated, shorter file to
+compute the next violation's status-line number, then blamed it against
+HEAD, which still pointed at the larger pre-revert commit (the revert
+wasn't committed yet). The offset landed blame on the wrong line,
+occasionally the repo's own root commit, which `git blame` (no --root)
+prefixes with its boundary-commit '^' marker -- corrupting the "hash",
+failing the `{hash}^` parent lookup, and silently leaving that violation
+un-reverted while still auto-committing+pushing the first revert. Fixed by
+resolving EVERY violation's blame/parent lookup in one pass against the
+same unmutated `lines` snapshot (== HEAD, since REPO_ROOT was just synced)
+before any revert is applied, then applying all reverts bottom-to-top in a
+single pass so an earlier block's [start, end) is never invalidated by a
+later block's line-count change. Also: a violation found but not
+auto-corrected (blame/parent-lookup/fabricated-block failure) previously
+left changed_any False for that file, so if no OTHER file in the same run
+had a real revert, the incident was recorded only in that invocation's own
+stdout/stderr and vanished once the process exited. commit_and_push_audit
+now runs (with --allow-empty when nothing was reverted) whenever any
+incident was recorded at all, so a found-but-uncorrected violation is
+always persisted to master's history.
 """
 import argparse
 import json
@@ -588,14 +614,21 @@ def sweep(status_filter, dry_run=False, checkpoint_on_success=False):
 # shared phase-plan file, bypassing backfill_one()/sweep() above entirely.
 # ---------------------------------------------------------------------------
 
-def find_first_unverified_done_block(lines, plan_file, warnings=None):
-    """Scans list_phase_blocks(lines) for the first phase that self-reports
-    done but whose completed_by_task/target_repo do NOT independently
+def find_all_unverified_done_blocks(lines, plan_file, warnings=None):
+    """Scans list_phase_blocks(lines) for every phase that self-reports done
+    but whose completed_by_task/target_repo do NOT independently
     confirm_merge() -- i.e. a self-report the file claims but `gh` itself
-    does not back up. Returns (phase_id, start, end, task_id, repo) or None.
-    Stops at the first violation (audit_and_correct_plan_file re-scans from
-    scratch after each revert, since a revert shifts every later line
-    index in the file).
+    does not back up. Returns a list of (phase_id, start, end, task_id,
+    repo), one entry per violation found in a single pass over `lines`.
+
+    Deliberately returns ALL violations in one pass (not just the first):
+    audit_and_correct_plan_file() needs every violation's blame lookup
+    computed against this SAME, unmutated `lines` state (== HEAD, since the
+    caller reads it fresh right after sync_repo_root()) before any revert
+    is applied -- reverting one violation can delete lines from the file
+    (see revert_block_fields), which would shift every later violation's
+    line numbers out of sync with a `git blame HEAD` lookup performed
+    against the not-yet-committed, still-original HEAD.
 
     Two cases are deliberately NOT treated as a violation, but ARE recorded
     into `warnings` (if given) so they stay visible rather than silently
@@ -610,6 +643,7 @@ def find_first_unverified_done_block(lines, plan_file, warnings=None):
         merged is a real violation; an ambiguous gh failure is not -- it
         must skip-with-warning like blame_line/parent-lookup failures
         below, never silently collapse into a revert."""
+    violations = []
     for phase_id, start, end in list_phase_blocks(lines):
         if not block_self_reports_done(lines, start, end):
             continue
@@ -640,37 +674,57 @@ def find_first_unverified_done_block(lines, plan_file, warnings=None):
             if warnings is not None:
                 warnings.append(w)
             continue
-        return phase_id, start, end, task_id, repo
-    return None
+        violations.append((phase_id, start, end, task_id, repo))
+    return violations
 
 
 def audit_and_correct_plan_file(plan_file, incidents, warnings, dry_run=False):
-    """Repeatedly finds and reverts unverified done-self-reports in
-    ai-os/<plan_file> (REPO_ROOT must already be synced to origin/master by
-    the caller) until none remain. Returns True if anything changed (or, in
-    dry-run mode, would change).
+    """Finds every unverified done-self-report in ai-os/<plan_file> (REPO_
+    ROOT must already be synced to origin/master by the caller, and this is
+    the first time this run touches this particular file, so its on-disk
+    content still equals HEAD) and reverts all of them. Returns True if
+    anything changed (or, in dry-run mode, would change).
+
+    All violations are found in ONE pass over the original, unmutated file
+    (find_all_unverified_done_blocks), and every violation's git-blame/
+    parent-revision lookup is resolved BEFORE any revert is applied to
+    `lines`. This is deliberate: reverting a violation can delete lines
+    from the block (revert_block_fields deletes completed_by_task/evidence
+    entirely when the parent revision never had them), which shifts every
+    later violation's line numbers. A prior revision of this function
+    resolved+applied one violation at a time in a loop, re-reading the
+    mutated on-disk file each iteration but still blaming against `git
+    blame HEAD` -- HEAD hadn't advanced yet (the revert wasn't committed),
+    so the second violation's blame lookup ran with a stale, too-large line
+    number against the original (pre-revert) HEAD tree, occasionally
+    landing on the repo's root commit and getting back a boundary-commit
+    line (git blame's own '^' prefix) as the "hash" -- which then failed
+    the `{hash}^` parent lookup and silently left that violation
+    un-reverted. Resolving every lookup up front against a single,
+    unmutated `lines` snapshot removes the desync entirely. Reverts are
+    then applied bottom-to-top (highest start index first) so an
+    earlier-in-the-file violation's own [start, end) range is never
+    invalidated by a later-in-the-file violation's line-count change.
 
     A violation that is found but cannot be auto-corrected (git blame can't
     find the responsible commit, its parent revision can't be read, or --
     the most direct reproduction of the original phase_4/PR#562 incident --
     the phase block doesn't exist at all in the parent revision because it
-    was fabricated from scratch with no prior state to revert to) now
-    records a real incident and keeps scanning-and-breaking as before, so a
-    human/future audit sees a possible violation was found rather than the
-    prior silent stderr-only warning with no incident and no non-zero
-    signal anywhere."""
+    was fabricated from scratch with no prior state to revert to) records a
+    real incident but does NOT block resolution of the other, independent
+    violations in the same file."""
     plan_path = os.path.join(REPO_ROOT, "ai-os", plan_file)
     if not os.path.isfile(plan_path):
         return False
-    changed_any = False
-    while True:
-        with open(plan_path) as f:
-            lines = f.readlines()
-        violation = find_first_unverified_done_block(lines, plan_file, warnings=warnings)
-        if violation is None:
-            break
-        phase_id, start, end, task_id, repo = violation
+    with open(plan_path) as f:
+        lines = f.readlines()
 
+    violations = find_all_unverified_done_blocks(lines, plan_file, warnings=warnings)
+    if not violations:
+        return False
+
+    resolved = []
+    for phase_id, start, end, task_id, repo in violations:
         status_idx, _indent = _find_field_indent(lines, start, end, "status")
         blame_hash = blame_line(plan_file, status_idx + 1)
         if not blame_hash:
@@ -681,7 +735,7 @@ def audit_and_correct_plan_file(plan_file, incidents, warnings, dry_run=False):
                     f"auto-revert. Needs manual review.")
             log(f"  INCIDENT (found, NOT auto-corrected): {note}")
             incidents.append(note)
-            break
+            continue
         parent_lines = read_commit_plan_lines(plan_file, f"{blame_hash}^")
         if parent_lines is None:
             note = (f"{plan_file}::{phase_id}: self-reported done via completed_by_task={task_id} "
@@ -691,7 +745,7 @@ def audit_and_correct_plan_file(plan_file, incidents, warnings, dry_run=False):
                     f"auto-revert. Needs manual review.")
             log(f"  INCIDENT (found, NOT auto-corrected): {note}")
             incidents.append(note)
-            break
+            continue
         parent_start, parent_end = find_phase_block(parent_lines, phase_id)
         if parent_start is None:
             note = (f"{plan_file}::{phase_id}: self-reported done via completed_by_task={task_id} "
@@ -703,7 +757,7 @@ def audit_and_correct_plan_file(plan_file, incidents, warnings, dry_run=False):
                     f"Could NOT auto-revert. Needs manual review.")
             log(f"  INCIDENT (found, NOT auto-corrected): {note}")
             incidents.append(note)
-            break
+            continue
 
         note = (f"{plan_file}::{phase_id}: self-reported done via completed_by_task={task_id} "
                 f"target_repo={repo}, but independent `gh pr list --head worker/{task_id}` "
@@ -712,23 +766,41 @@ def audit_and_correct_plan_file(plan_file, incidents, warnings, dry_run=False):
                 f"commit {blame_hash[:7]} (git blame on the status line).")
         log(f"  INCIDENT: {note}")
         incidents.append(note)
-        changed_any = True
+        resolved.append((start, end, parent_lines, parent_start, parent_end))
 
-        if dry_run:
-            break
+    if not resolved:
+        return False
+    if dry_run:
+        return True
 
+    for start, end, parent_lines, parent_start, parent_end in sorted(resolved, key=lambda r: r[0], reverse=True):
         revert_block_fields(lines, start, end, parent_lines, parent_start, parent_end)
-        with open(plan_path, "w") as f:
-            f.writelines(lines)
+    with open(plan_path, "w") as f:
+        f.writelines(lines)
 
-    return changed_any
+    return True
 
 
 def commit_and_push_audit(plan_files, incidents):
-    if not plan_files:
+    """Commits+pushes whatever audit_and_correct_plan_file() found. `incidents`
+    can be non-empty even when `plan_files` is empty -- a violation that was
+    found but could NOT be auto-corrected (blame/parent-lookup failure, or a
+    fabricated block with no parent to revert to) never touches the working
+    tree, so there is nothing to `git add`. That case still gets a real
+    commit (--allow-empty) so the incident text is recorded permanently in
+    master's history instead of only ever appearing in this invocation's own
+    stdout/stderr and then vanishing once the process exits -- the same
+    persistent-record convention already used for real reverts, just with an
+    empty diff."""
+    if not plan_files and not incidents:
         return True, "no violations found"
+    reverted = bool(plan_files)
+    title = ("Automated self-report audit: reverted unverified phase self-report(s)"
+             if reverted else
+             "Automated self-report audit: found unverified phase self-report(s), "
+             "could NOT auto-revert (see incident(s) below)")
     msg_lines = [
-        "Automated self-report audit: reverted unverified phase self-report(s)",
+        title,
         "",
         "backfill_phase_self_report.py --audit-plans independently re-confirmed every",
         "phase currently self-reporting done against a real `gh pr` MERGED state (never",
@@ -748,7 +820,11 @@ def commit_and_push_audit(plan_files, incidents):
         add = run(["git", "-C", REPO_ROOT, "add", f"ai-os/{pf}"])
         if add.returncode != 0:
             return False, f"git add failed for {pf}: {add.stderr}"
-    commit = run(["git", "-C", REPO_ROOT, "commit", "-m", msg])
+    commit_cmd = ["git", "-C", REPO_ROOT, "commit"]
+    if not reverted:
+        commit_cmd.append("--allow-empty")
+    commit_cmd += ["-m", msg]
+    commit = run(commit_cmd)
     if commit.returncode != 0:
         if "nothing to commit" in (commit.stdout + commit.stderr):
             return True, "nothing to commit (already up to date)"
@@ -781,10 +857,16 @@ def audit_plans(dry_run=False):
     result["incidents"] = incidents
     result["warnings"] = warnings
 
-    if changed_files and dry_run:
-        result["changed"] = True
-        result["dry_run"] = True
-    elif changed_files:
+    if dry_run:
+        if changed_files:
+            result["changed"] = True
+            result["dry_run"] = True
+    elif changed_files or incidents:
+        # incidents can be non-empty with changed_files empty: a violation
+        # was found but could not be auto-corrected. That must still be
+        # persisted (commit_and_push_audit --allow-empty's when there's
+        # nothing to revert) rather than silently vanishing once this
+        # process exits -- see commit_and_push_audit's own docstring.
         ok, err = commit_and_push_audit(changed_files, incidents)
         if not ok:
             result["error"] = err

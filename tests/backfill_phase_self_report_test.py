@@ -671,8 +671,8 @@ def scenario_audit_records_incident_for_fabricated_block_no_parent():
         proc = run(["python3", SCRIPT, "--audit-plans"], env=env)
         out = json.loads(proc.stdout)
         check("fabricated block: audit exits 0", proc.returncode == 0)
-        check("fabricated block: reports changed=False (nothing to revert to)",
-              out.get("changed") is False)
+        check("fabricated block: reports changed=True (incident-only commit persists the finding)",
+              out.get("changed") is True)
         check("fabricated block: exactly one real incident recorded",
               len(out.get("incidents") or []) == 1)
         check("fabricated block: incident names the bypassing task id",
@@ -686,7 +686,227 @@ def scenario_audit_records_incident_for_fabricated_block_no_parent():
               "status: done" in content and "task-20260726-050000-fabricated-bypass" in content)
 
         log_after = run(["git", "log", "--oneline"], cwd=repo_root).stdout
-        check("fabricated block: no new commit was pushed", log_before == log_after)
+        check("fabricated block: an incident-only commit landed (persists past process exit)",
+              len(log_after.strip().splitlines()) == len(log_before.strip().splitlines()) + 1)
+        check("fabricated block: the incident-only commit changed no files (nothing to revert to)",
+              run(["git", "diff", "--stat", "HEAD~1", "HEAD"], cwd=repo_root).stdout.strip() == "")
+        check("fabricated block: incident-only commit message names the bypassing task id",
+              "task-20260726-050000-fabricated-bypass" in
+              run(["git", "log", "-1", "--format=%B"], cwd=repo_root).stdout)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def scenario_audit_reverts_two_violations_in_one_file():
+    """Reviewer-reproduced regression (AUDIT: REJECT on this same fix's
+    previous round): a single plan file with TWO separate phases both
+    falsely self-reporting done, where the FIRST violation's revert
+    deletes lines -- its parent revision has no completed_by_task/evidence
+    fields at all, so revert_block_fields() deletes those 2 lines outright
+    rather than overwriting them in place.
+
+    The real bug: audit_and_correct_plan_file()'s while-loop reverted the
+    first violation (phase_b), wrote the now-shorter file to disk, then
+    re-read that mutated file and computed the SECOND violation's (phase_c)
+    status-line number against it -- but blamed that line via `git blame
+    HEAD`, where HEAD still pointed at the larger, pre-revert commit (the
+    revert hadn't been committed yet). The 2-line offset meant the "status
+    line" blame_line() actually blamed was, in HEAD's real tree, a
+    different line entirely (phase_c's own untouched `depends_on: []`
+    line) -- which had last been touched by this repo's own root/init
+    commit. Since blame_line() passes `-l` (full hash) but no `--root`,
+    `git blame` prefixed that line's hash with its own boundary-commit '^'
+    marker, producing a corrupted "hash" string. The `{hash}^` parent
+    lookup on that corrupted string then failed, phase_c's false
+    self-report was left un-reverted, and the run still auto-committed and
+    pushed phase_b's real revert plus a misleading "could not auto-revert"
+    incident for phase_c straight to master.
+
+    This locks in the fix: both violations must be correctly reverted, in
+    one pass, each attributed to its OWN real, well-formed (non-'^') commit
+    hash -- not the other's, not a corrupted boundary marker.
+    """
+    tmp = tempfile.mkdtemp(prefix="backfill_audit_twoviol_test_")
+    try:
+        repo_root = os.path.join(tmp, "repo_root")
+        remote = os.path.join(tmp, "remote.git")
+        tasks_dir = os.path.join(tmp, "tasks")
+        bin_dir = os.path.join(tmp, "bin")
+        os.makedirs(os.path.join(repo_root, "ai-os"))
+        os.makedirs(tasks_dir)
+        os.makedirs(bin_dir)
+        run(["git", "init", "-q", "-b", "master"], cwd=repo_root)
+        run(["git", "config", "user.email", "test@test.com"], cwd=repo_root)
+        run(["git", "config", "user.name", "Test"], cwd=repo_root)
+
+        plan_path = os.path.join(repo_root, "ai-os", "FAKE_TWOVIOL_PHASE_PLAN_2026-07-25.yaml")
+        with open(plan_path, "w") as f:
+            f.write(textwrap.dedent("""\
+                meta:
+                  title: Fake Two-violation Initiative
+                phases:
+                - id: phase_a_legit
+                  name: Legit phase
+                  depends_on: []
+                  status: done
+                  target_repo: fake-target-repo
+                  completed_by_task: task-20260101-000030-legit
+                  evidence: 'fake-target-repo PR #4000 merged 2026-07-26T07:00:00Z'
+                - id: phase_b_bypass
+                  name: First bypassed phase (revert deletes lines)
+                  depends_on: []
+                  status: not_started
+                  target_repo: fake-target-repo
+                - id: phase_c_bypass
+                  name: Second bypassed phase (must still get correct blame)
+                  depends_on: []
+                  status: not_started
+                  target_repo: fake-target-repo
+                """))
+        run(["git", "add", "-A"], cwd=repo_root)
+        run(["git", "commit", "-q", "-m", "init"], cwd=repo_root)
+
+        # Bypass commit #1: phase_b, its own separate commit (own distinct
+        # blame hash). Its parent (the init commit above) has no
+        # completed_by_task/evidence fields at all, so reverting it deletes
+        # those 2 lines outright -- the exact shape that shrinks the file.
+        with open(plan_path) as f:
+            content = f.read()
+        content = content.replace(
+            "- id: phase_b_bypass\n"
+            "  name: First bypassed phase (revert deletes lines)\n"
+            "  depends_on: []\n"
+            "  status: not_started\n"
+            "  target_repo: fake-target-repo\n",
+            "- id: phase_b_bypass\n"
+            "  name: First bypassed phase (revert deletes lines)\n"
+            "  depends_on: []\n"
+            "  status: done\n"
+            "  target_repo: fake-target-repo\n"
+            "  completed_by_task: task-20260726-060000-bypass-b\n"
+            "  evidence: 'fake-target-repo branch worker/task-20260726-060000-bypass-b'\n",
+        )
+        with open(plan_path, "w") as f:
+            f.write(content)
+        run(["git", "add", "-A"], cwd=repo_root)
+        run(["git", "commit", "-q", "-m",
+             "phase_b bypass: status done (fake-target-repo branch worker/task-20260726-060000-bypass-b)"],
+            cwd=repo_root)
+        bypass_b_hash = run(["git", "rev-parse", "--short=7", "HEAD"], cwd=repo_root).stdout.strip()
+
+        # Bypass commit #2: phase_c, its own separate commit (own distinct
+        # blame hash) -- must still resolve correctly after phase_b's
+        # revert shrinks the file.
+        with open(plan_path) as f:
+            content = f.read()
+        content = content.replace(
+            "- id: phase_c_bypass\n"
+            "  name: Second bypassed phase (must still get correct blame)\n"
+            "  depends_on: []\n"
+            "  status: not_started\n"
+            "  target_repo: fake-target-repo\n",
+            "- id: phase_c_bypass\n"
+            "  name: Second bypassed phase (must still get correct blame)\n"
+            "  depends_on: []\n"
+            "  status: done\n"
+            "  target_repo: fake-target-repo\n"
+            "  completed_by_task: task-20260726-060500-bypass-c\n"
+            "  evidence: 'fake-target-repo branch worker/task-20260726-060500-bypass-c'\n",
+        )
+        with open(plan_path, "w") as f:
+            f.write(content)
+        run(["git", "add", "-A"], cwd=repo_root)
+        run(["git", "commit", "-q", "-m",
+             "phase_c bypass: status done (fake-target-repo branch worker/task-20260726-060500-bypass-c)"],
+            cwd=repo_root)
+        bypass_c_hash = run(["git", "rev-parse", "--short=7", "HEAD"], cwd=repo_root).stdout.strip()
+
+        run(["git", "init", "-q", "--bare", remote])
+        run(["git", "remote", "add", "origin", remote], cwd=repo_root)
+        run(["git", "push", "-q", "-u", "origin", "master"], cwd=repo_root)
+
+        gh_path = os.path.join(bin_dir, "gh")
+        with open(gh_path, "w") as f:
+            f.write(textwrap.dedent("""\
+                #!/bin/bash
+                if [ "$1" = "pr" ] && [ "$2" = "list" ]; then
+                  head=""
+                  prev=""
+                  for arg in "$@"; do
+                    if [ "$prev" = "--head" ]; then
+                      head="$arg"
+                    fi
+                    prev="$arg"
+                  done
+                  if [ "$head" = "worker/task-20260101-000030-legit" ]; then
+                    echo '[{"state":"MERGED","number":4000,"mergedAt":"2026-07-26T07:00:00Z"}]'
+                  else
+                    echo '[{"state":"OPEN","number":4001,"mergedAt":null}]'
+                  fi
+                  exit 0
+                fi
+                exit 0
+                """))
+        os.chmod(gh_path, 0o755)
+
+        env = dict(os.environ)
+        env["PATH"] = f"{bin_dir}:{env.get('PATH', '')}"
+        env["VERIDIAN_REPO_ROOT_OVERRIDE"] = repo_root
+        env["VERIDIAN_TASKS_DIR_OVERRIDE"] = tasks_dir
+
+        log_before = run(["git", "log", "--oneline", "--", "ai-os/FAKE_TWOVIOL_PHASE_PLAN_2026-07-25.yaml"],
+                          cwd=repo_root).stdout
+        check("two-violation fixture: 3 real commits touched the plan file before the audit runs",
+              len(log_before.strip().splitlines()) == 3)
+
+        proc = run(["python3", SCRIPT, "--audit-plans"], env=env)
+        out = json.loads(proc.stdout)
+        check("two-violation audit: exits 0", proc.returncode == 0)
+        check("two-violation audit: reports changed=True", out.get("changed") is True)
+
+        incidents = out.get("incidents") or []
+        check("two-violation audit: exactly two incidents recorded (both reverted, none un-corrected)",
+              len(incidents) == 2)
+        check("two-violation audit: no incident reports a failed auto-revert",
+              all("could NOT" not in inc for inc in incidents))
+
+        b_incident = next((i for i in incidents if "task-20260726-060000-bypass-b" in i), None)
+        c_incident = next((i for i in incidents if "task-20260726-060500-bypass-c" in i), None)
+        check("two-violation audit: phase_b's incident recorded", b_incident is not None)
+        check("two-violation audit: phase_c's incident recorded", c_incident is not None)
+        if b_incident:
+            b_hash_cited = b_incident.split("commit ")[-1].split(" ")[0]
+            check("two-violation audit: phase_b's incident cites its OWN real, well-formed commit hash",
+                  b_hash_cited == bypass_b_hash and "^" not in b_hash_cited)
+        if c_incident:
+            c_hash_cited = c_incident.split("commit ")[-1].split(" ")[0]
+            check("two-violation audit: phase_c's incident cites its OWN real, well-formed commit hash "
+                  "(not corrupted, not phase_b's hash)",
+                  c_hash_cited == bypass_c_hash and c_hash_cited != bypass_b_hash and "^" not in c_hash_cited)
+
+        with open(plan_path) as f:
+            content = f.read()
+        b_block = content.split("phase_b_bypass")[1].split("phase_c_bypass")[0]
+        c_block = content.split("phase_c_bypass")[1]
+        check("two-violation audit: phase_b reverted to not_started", "status: not_started\n" in b_block)
+        check("two-violation audit: phase_b's fake completed_by_task removed",
+              "task-20260726-060000-bypass-b" not in content)
+        check("two-violation audit: phase_c reverted to not_started", "status: not_started\n" in c_block)
+        check("two-violation audit: phase_c's fake completed_by_task removed",
+              "task-20260726-060500-bypass-c" not in content)
+        check("two-violation audit: phase_a (real merged PR) left completely untouched",
+              "status: done" in content.split("phase_b_bypass")[0]
+              and "task-20260101-000030-legit" in content)
+
+        log_after = run(["git", "log", "--oneline", "--", "ai-os/FAKE_TWOVIOL_PHASE_PLAN_2026-07-25.yaml"],
+                         cwd=repo_root).stdout
+        check("two-violation audit: exactly one new revert commit landed (both reverts, one commit)",
+              len(log_after.strip().splitlines()) == 4)
+
+        proc2 = run(["python3", SCRIPT, "--audit-plans"], env=env)
+        out2 = json.loads(proc2.stdout)
+        check("two-violation audit idempotency: re-running after both reverts finds nothing more to fix",
+              out2.get("changed") is False and out2.get("incidents") == [])
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
@@ -702,6 +922,7 @@ ALL_SCENARIOS = [
     scenario_audit_skips_ambiguous_gh_failure,
     scenario_audit_flags_missing_target_repo,
     scenario_audit_records_incident_for_fabricated_block_no_parent,
+    scenario_audit_reverts_two_violations_in_one_file,
 ]
 
 
@@ -761,6 +982,10 @@ def test_audit_flags_missing_target_repo():
 
 def test_audit_records_incident_for_fabricated_block_no_parent():
     _run_scenario_for_pytest(scenario_audit_records_incident_for_fabricated_block_no_parent)
+
+
+def test_audit_reverts_two_violations_in_one_file():
+    _run_scenario_for_pytest(scenario_audit_reverts_two_violations_in_one_file)
 
 
 if __name__ == "__main__":
