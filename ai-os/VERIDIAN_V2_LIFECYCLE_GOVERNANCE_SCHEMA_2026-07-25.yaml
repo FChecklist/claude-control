@@ -1,0 +1,46 @@
+meta:
+  title: VERIDIAN Prompt Lifecycle Governance -- Approval Gate / Eval Threshold / Canary Duration Schema (Phase 0 deliverable)
+  created: '2026-07-26'
+  produced_by_task: task-20260726-035742-phase3-business-rule-permission-policy-c
+  scope_of_this_document: 'Schema design only, mirroring CAPABILITY_REGISTRY_SCHEMA_2026-07-24.yaml''s
+    own Phase-0-schema/Phase-1-live-wiring split. Phase 1 (live enforcement code) is DONE, not deferred
+    -- this is the config/schema-only half of phase_3_governance_policy_cost_engines
+    (VERIDIAN_ARCHITECTURE_V2_PHASE_PLAN_2026-07-25.yaml), the compliance-tracker-side code is the
+    other half (compliance-tracker PR #561: transitionPromptLifecycle() +
+    prompt-governance-service.ts).'
+  builds_on: 'phase_1''s bare Draft/Review/Staging/Production/Deprecated state machine
+    (ALLOWED_LIFECYCLE_TRANSITIONS, prompt-os-service.ts) -- this schema names the CONTRACT the
+    live gate function (runLifecycleTransitionGates, prompt-governance-service.ts) implements against.'
+
+approval_gate_schema:
+  description: 'Every promotion transition (Review->Staging, Staging->Production) requires the
+    approving actor to differ from the version''s createdById (maker-checker) -- enforced at the
+    service layer, not a DB CHECK constraint (self-referential cross-row constraints aren''t
+    expressible in Postgres). approvedById/approvedAt (prompt_versions, drizzle/0263) record the
+    real approver + timestamp on every successful promotion.'
+  fields: '{ transition: "Review->Staging"|"Staging->Production", requires_role: "veridian_admin",
+    requires_different_actor_than: "createdById", records: ["approvedById", "approvedAt"] }'
+
+eval_threshold_schema:
+  description: 'Review->Staging requires at least one completed prompt_eval_run against the
+    version, with a pass rate >= module_rule_configs (moduleKey=prompt_lifecycle,
+    ruleKey=min_eval_pass_rate). Zero eval runs fails closed (no evidence != passing evidence).'
+  fields: '{ rule_key: "min_eval_pass_rate", scope: "org overridable, platform default", default: 0.8,
+    computed_from: "compliance.prompt_eval_runs WHERE prompt_version_id=? AND status=completed" }'
+
+canary_duration_schema:
+  description: 'Staging->Production requires stagingEnteredAt (prompt_versions, drizzle/0263, set
+    the moment a version first enters Staging) to be at least module_rule_configs
+    (ruleKey=min_canary_duration_hours) hours in the past.'
+  fields: '{ rule_key: "min_canary_duration_hours", scope: "org overridable, platform default",
+    default: 24, computed_from: "now() - prompt_versions.staging_entered_at" }'
+
+compliance_and_governance_gates:
+  description: 'Staging->Production additionally requires: (1) a deterministic PII scan of the
+    version content finds nothing (Compliance Engine); (2) the owning prompt_templates row has a
+    non-null ownerId (Governance Engine). Both fail closed.'
+
+live_wiring: 'compliance-tracker PR #561 (this task): src/lib/services/prompt-governance-service.ts''s
+  runLifecycleTransitionGates(), called from prompt-os-service.ts''s transitionPromptLifecycle().
+  Real, not a stub -- this document records the contract that code implements, per this session''s
+  own scope note that live-wiring is in THIS phase''s sub-scope, not deferred further.'

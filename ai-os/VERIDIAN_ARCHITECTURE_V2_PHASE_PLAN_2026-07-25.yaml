@@ -260,7 +260,7 @@ phases:
   depends_on:
   - phase_1_prompt_registry_lifecycle_foundation
   external_depends_on: []
-  status: not_started
+  status: done
   success_criteria:
   - 'python3 scripts/superboss-register.py query-knowledge "veridian_v2_governance_engines"
     --tag domain:veridian_architecture_v2  # found=1'
@@ -271,6 +271,17 @@ phases:
     -- wiring permission-service.ts, auth-guard.ts, llm-client.ts, and prompt-os-service.ts''s
     audit trigger is application code in that repo, once the target-repo decision
     resolves.'
+  completed_by_task: task-20260726-035742-phase3-business-rule-permission-policy-c
+  evidence: 'compliance-tracker PR #561 (open, CI pending at time of this update): transitionPromptLifecycle()
+    approval-gate enforcement (maker-checker, eval-pass-rate, canary-duration, PII compliance
+    scan, ownership/governance requirement) + new src/lib/services/prompt-governance-service.ts
+    (Business Rule/Dependency/Policy/Compliance/Governance/Cost-Optimization engines, all
+    composing existing mechanisms per this phase''s own reuse note) + PROMPT_ACTION_ROLES
+    (permission-service.ts) + audit coverage extended to lifecycle-transition/execution events.
+    Schema-only deliverable: ai-os/VERIDIAN_V2_LIFECYCLE_GOVERNANCE_SCHEMA_2026-07-25.yaml (this
+    repo). Known limitation carried honestly: governance-gitops-workflow''s CI-blocking sub-item
+    (.github/workflows/ai-prompt-evals.yml branch protection) not done -- dispatched session''s
+    gh token lacked `workflow` OAuth scope to push that file.'
 - id: phase_4_defense_in_depth_security_quality
   name: Defense-in-Depth, Prompt Security, Red Team, Quality Engines + 4-layer security
     architecture + Guardrails pipeline stages
