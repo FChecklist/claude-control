@@ -441,14 +441,331 @@ def scenario_audit_reverts_worker_bypass_self_report():
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+def scenario_audit_skips_ambiguous_gh_failure():
+    """Real regression this locks in: a prior --audit-plans revision
+    collapsed 'gh confirmed this PR/branch is NOT merged' and 'the gh call
+    itself failed' (non-zero returncode from auth failure/rate-limiting/
+    a transient network error) into the same False result, and treated
+    any False as a violation eligible for revert. On an unattended cron
+    sweep, a transient gh failure would therefore auto-revert a genuinely-
+    done phase and auto-commit+push a factually false incident straight
+    to master. The ambiguous case must skip-with-warning -- same pattern
+    already used correctly for blame_line/parent-lookup failures in this
+    file -- and must NOT revert or push anything.
+    """
+    tmp = tempfile.mkdtemp(prefix="backfill_audit_ambiguous_test_")
+    try:
+        repo_root = os.path.join(tmp, "repo_root")
+        remote = os.path.join(tmp, "remote.git")
+        tasks_dir = os.path.join(tmp, "tasks")
+        bin_dir = os.path.join(tmp, "bin")
+        os.makedirs(os.path.join(repo_root, "ai-os"))
+        os.makedirs(tasks_dir)
+        os.makedirs(bin_dir)
+        run(["git", "init", "-q", "-b", "master"], cwd=repo_root)
+        run(["git", "config", "user.email", "test@test.com"], cwd=repo_root)
+        run(["git", "config", "user.name", "Test"], cwd=repo_root)
+
+        plan_path = os.path.join(repo_root, "ai-os", "FAKE_AMBIGUOUS_PHASE_PLAN_2026-07-25.yaml")
+        with open(plan_path, "w") as f:
+            f.write(textwrap.dedent("""\
+                meta:
+                  title: Fake Ambiguous-gh-failure Initiative
+                phases:
+                - id: phase_x_maybe_bypass
+                  name: Phase whose gh check will fail transiently
+                  depends_on: []
+                  status: done
+                  target_repo: fake-target-repo
+                  completed_by_task: task-20260101-000020-ambiguous
+                  evidence: 'fake-target-repo branch worker/task-20260101-000020-ambiguous'
+                """))
+        run(["git", "add", "-A"], cwd=repo_root)
+        run(["git", "commit", "-q", "-m", "init"], cwd=repo_root)
+        run(["git", "init", "-q", "--bare", remote])
+        run(["git", "remote", "add", "origin", remote], cwd=repo_root)
+        run(["git", "push", "-q", "-u", "origin", "master"], cwd=repo_root)
+
+        gh_path = os.path.join(bin_dir, "gh")
+        with open(gh_path, "w") as f:
+            f.write(textwrap.dedent("""\
+                #!/bin/bash
+                if [ "$1" = "pr" ] && [ "$2" = "list" ]; then
+                  echo "simulated: authentication failed" >&2
+                  exit 1
+                fi
+                exit 0
+                """))
+        os.chmod(gh_path, 0o755)
+
+        env = dict(os.environ)
+        env["PATH"] = f"{bin_dir}:{env.get('PATH', '')}"
+        env["VERIDIAN_REPO_ROOT_OVERRIDE"] = repo_root
+        env["VERIDIAN_TASKS_DIR_OVERRIDE"] = tasks_dir
+
+        log_before = run(["git", "log", "--oneline"], cwd=repo_root).stdout
+
+        proc = run(["python3", SCRIPT, "--audit-plans"], env=env)
+        out = json.loads(proc.stdout)
+        check("ambiguous gh failure: audit exits 0", proc.returncode == 0)
+        check("ambiguous gh failure: reports changed=False (no revert)",
+              out.get("changed") is False)
+        check("ambiguous gh failure: no incidents recorded",
+              out.get("incidents") == [])
+        check("ambiguous gh failure: a warning is recorded instead",
+              any("task-20260101-000020-ambiguous" in w for w in (out.get("warnings") or [])))
+
+        with open(plan_path) as f:
+            content = f.read()
+        check("ambiguous gh failure: phase left untouched (still done)",
+              "status: done" in content and "task-20260101-000020-ambiguous" in content)
+
+        log_after = run(["git", "log", "--oneline"], cwd=repo_root).stdout
+        check("ambiguous gh failure: no new commit was pushed", log_before == log_after)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def scenario_audit_flags_missing_target_repo():
+    """Real gap this locks in: ai-os/AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml
+    (a real existing file in this repo) has zero target_repo fields on any
+    phase, so --audit-plans provides no real gh coverage there. A phase
+    self-reporting done with no target_repo at all must not be silently
+    treated as 'nothing to check' -- it must be logged/flagged so the
+    absence of coverage stays visible instead of reading as "audited
+    clean"."""
+    tmp = tempfile.mkdtemp(prefix="backfill_audit_notarget_test_")
+    try:
+        repo_root = os.path.join(tmp, "repo_root")
+        remote = os.path.join(tmp, "remote.git")
+        tasks_dir = os.path.join(tmp, "tasks")
+        bin_dir = os.path.join(tmp, "bin")
+        os.makedirs(os.path.join(repo_root, "ai-os"))
+        os.makedirs(tasks_dir)
+        os.makedirs(bin_dir)
+        run(["git", "init", "-q", "-b", "master"], cwd=repo_root)
+        run(["git", "config", "user.email", "test@test.com"], cwd=repo_root)
+        run(["git", "config", "user.name", "Test"], cwd=repo_root)
+
+        plan_path = os.path.join(repo_root, "ai-os", "FAKE_NOTARGET_PHASE_PLAN_2026-07-24.yaml")
+        with open(plan_path, "w") as f:
+            f.write(textwrap.dedent("""\
+                meta:
+                  title: Fake No-target-repo Initiative
+                phases:
+                  - phase: 0
+                    name: Entry phase
+                    depends_on: []
+                    status: done
+                    completed_by_task: task-20260101-000021-notarget
+                """))
+        run(["git", "add", "-A"], cwd=repo_root)
+        run(["git", "commit", "-q", "-m", "init"], cwd=repo_root)
+        run(["git", "init", "-q", "--bare", remote])
+        run(["git", "remote", "add", "origin", remote], cwd=repo_root)
+        run(["git", "push", "-q", "-u", "origin", "master"], cwd=repo_root)
+
+        gh_path = os.path.join(bin_dir, "gh")
+        with open(gh_path, "w") as f:
+            f.write("#!/bin/bash\nexit 0\n")
+        os.chmod(gh_path, 0o755)
+
+        env = dict(os.environ)
+        env["PATH"] = f"{bin_dir}:{env.get('PATH', '')}"
+        env["VERIDIAN_REPO_ROOT_OVERRIDE"] = repo_root
+        env["VERIDIAN_TASKS_DIR_OVERRIDE"] = tasks_dir
+
+        proc = run(["python3", SCRIPT, "--audit-plans"], env=env)
+        out = json.loads(proc.stdout)
+        check("no target_repo: audit exits 0", proc.returncode == 0)
+        check("no target_repo: reports changed=False (no revert)",
+              out.get("changed") is False)
+        check("no target_repo: no incidents recorded", out.get("incidents") == [])
+        check("no target_repo: a warning flags the missing coverage",
+              any("task-20260101-000021-notarget" in w and "target_repo" in w
+                  for w in (out.get("warnings") or [])))
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def scenario_audit_records_incident_for_fabricated_block_no_parent():
+    """The most direct reproduction of the original phase_4/PR#562
+    incident: a worker fabricates an entirely new phase block from
+    scratch (the block does not exist at all in the parent revision --
+    there is no prior state to revert to), citing a merge that gh does
+    not confirm. audit_and_correct_plan_file() cannot auto-correct this
+    (nothing to revert TO), but it must still record a real, visible
+    incident rather than silently breaking with a stderr-only warning and
+    result['changed'] staying False with zero trace anywhere else."""
+    tmp = tempfile.mkdtemp(prefix="backfill_audit_fabricated_test_")
+    try:
+        repo_root = os.path.join(tmp, "repo_root")
+        remote = os.path.join(tmp, "remote.git")
+        tasks_dir = os.path.join(tmp, "tasks")
+        bin_dir = os.path.join(tmp, "bin")
+        os.makedirs(os.path.join(repo_root, "ai-os"))
+        os.makedirs(tasks_dir)
+        os.makedirs(bin_dir)
+        run(["git", "init", "-q", "-b", "master"], cwd=repo_root)
+        run(["git", "config", "user.email", "test@test.com"], cwd=repo_root)
+        run(["git", "config", "user.name", "Test"], cwd=repo_root)
+
+        plan_path = os.path.join(repo_root, "ai-os", "FAKE_FABRICATED_PHASE_PLAN_2026-07-25.yaml")
+        with open(plan_path, "w") as f:
+            f.write(textwrap.dedent("""\
+                meta:
+                  title: Fake Fabricated-block Initiative
+                phases:
+                - id: phase_a_legit
+                  name: Pre-existing legit phase
+                  depends_on: []
+                  status: not_started
+                  target_repo: fake-target-repo
+                """))
+        run(["git", "add", "-A"], cwd=repo_root)
+        run(["git", "commit", "-q", "-m", "init"], cwd=repo_root)
+
+        # Worker's own PR commit fabricates an entirely new phase block
+        # from scratch, self-reporting done with no gh-confirmed merge.
+        with open(plan_path, "a") as f:
+            f.write(textwrap.dedent("""\
+                - id: phase_z_fabricated
+                  name: Phase fabricated whole-cloth by a bypassing worker
+                  depends_on: []
+                  status: done
+                  target_repo: fake-target-repo
+                  completed_by_task: task-20260726-050000-fabricated-bypass
+                  evidence: 'fake-target-repo branch worker/task-20260726-050000-fabricated-bypass'
+                """))
+        run(["git", "add", "-A"], cwd=repo_root)
+        run(["git", "commit", "-q", "-m",
+             "phase_z: status done (fake-target-repo branch "
+             "worker/task-20260726-050000-fabricated-bypass)"],
+            cwd=repo_root)
+
+        run(["git", "init", "-q", "--bare", remote])
+        run(["git", "remote", "add", "origin", remote], cwd=repo_root)
+        run(["git", "push", "-q", "-u", "origin", "master"], cwd=repo_root)
+
+        gh_path = os.path.join(bin_dir, "gh")
+        with open(gh_path, "w") as f:
+            f.write(textwrap.dedent("""\
+                #!/bin/bash
+                if [ "$1" = "pr" ] && [ "$2" = "list" ]; then
+                  echo '[{"state":"OPEN","number":3001,"mergedAt":null}]'
+                  exit 0
+                fi
+                exit 0
+                """))
+        os.chmod(gh_path, 0o755)
+
+        env = dict(os.environ)
+        env["PATH"] = f"{bin_dir}:{env.get('PATH', '')}"
+        env["VERIDIAN_REPO_ROOT_OVERRIDE"] = repo_root
+        env["VERIDIAN_TASKS_DIR_OVERRIDE"] = tasks_dir
+
+        log_before = run(["git", "log", "--oneline"], cwd=repo_root).stdout
+        check("fabricated block fixture: 2 real commits before the audit runs",
+              len(log_before.strip().splitlines()) == 2)
+
+        proc = run(["python3", SCRIPT, "--audit-plans"], env=env)
+        out = json.loads(proc.stdout)
+        check("fabricated block: audit exits 0", proc.returncode == 0)
+        check("fabricated block: reports changed=False (nothing to revert to)",
+              out.get("changed") is False)
+        check("fabricated block: exactly one real incident recorded",
+              len(out.get("incidents") or []) == 1)
+        check("fabricated block: incident names the bypassing task id",
+              "task-20260726-050000-fabricated-bypass" in (out.get("incidents") or [""])[0])
+        check("fabricated block: incident explains no parent state exists",
+              "fabricated" in (out.get("incidents") or [""])[0].lower())
+
+        with open(plan_path) as f:
+            content = f.read()
+        check("fabricated block: file left untouched (nothing to revert to)",
+              "status: done" in content and "task-20260726-050000-fabricated-bypass" in content)
+
+        log_after = run(["git", "log", "--oneline"], cwd=repo_root).stdout
+        check("fabricated block: no new commit was pushed", log_before == log_after)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+ALL_SCENARIOS = [
+    scenario_merged_missing_self_report,
+    scenario_already_self_reported_untouched,
+    scenario_not_merged_skipped,
+    scenario_dry_run_makes_no_commit,
+    scenario_indented_phase_int_schema,
+    scenario_sweep_tier2_checkpoints,
+    scenario_audit_reverts_worker_bypass_self_report,
+    scenario_audit_skips_ambiguous_gh_failure,
+    scenario_audit_flags_missing_target_repo,
+    scenario_audit_records_incident_for_fabricated_block_no_parent,
+]
+
+
+# ---------------------------------------------------------------------------
+# pytest entry points -- `python3 -m pytest tests/backfill_phase_self_report_
+# test.py` collects functions matching `test_*` by default; the scenarios
+# above are intentionally named `scenario_*` (this file's own convention,
+# predating pytest use, still run directly via `python3 tests/....py` in
+# the __main__ block below) so these thin wrappers are what pytest actually
+# discovers and runs. Each wrapper only asserts on the failures its own
+# scenario adds to the shared FAILURES list, so one scenario's failure
+# doesn't fail every other test in the same run.
+# ---------------------------------------------------------------------------
+
+def _run_scenario_for_pytest(fn):
+    start = len(FAILURES)
+    fn()
+    new_failures = FAILURES[start:]
+    assert not new_failures, f"{fn.__name__}: {new_failures}"
+
+
+def test_merged_missing_self_report():
+    _run_scenario_for_pytest(scenario_merged_missing_self_report)
+
+
+def test_already_self_reported_untouched():
+    _run_scenario_for_pytest(scenario_already_self_reported_untouched)
+
+
+def test_not_merged_skipped():
+    _run_scenario_for_pytest(scenario_not_merged_skipped)
+
+
+def test_dry_run_makes_no_commit():
+    _run_scenario_for_pytest(scenario_dry_run_makes_no_commit)
+
+
+def test_indented_phase_int_schema():
+    _run_scenario_for_pytest(scenario_indented_phase_int_schema)
+
+
+def test_sweep_tier2_checkpoints():
+    _run_scenario_for_pytest(scenario_sweep_tier2_checkpoints)
+
+
+def test_audit_reverts_worker_bypass_self_report():
+    _run_scenario_for_pytest(scenario_audit_reverts_worker_bypass_self_report)
+
+
+def test_audit_skips_ambiguous_gh_failure():
+    _run_scenario_for_pytest(scenario_audit_skips_ambiguous_gh_failure)
+
+
+def test_audit_flags_missing_target_repo():
+    _run_scenario_for_pytest(scenario_audit_flags_missing_target_repo)
+
+
+def test_audit_records_incident_for_fabricated_block_no_parent():
+    _run_scenario_for_pytest(scenario_audit_records_incident_for_fabricated_block_no_parent)
+
+
 if __name__ == "__main__":
-    scenario_merged_missing_self_report()
-    scenario_already_self_reported_untouched()
-    scenario_not_merged_skipped()
-    scenario_dry_run_makes_no_commit()
-    scenario_indented_phase_int_schema()
-    scenario_sweep_tier2_checkpoints()
-    scenario_audit_reverts_worker_bypass_self_report()
+    for scenario in ALL_SCENARIOS:
+        scenario()
 
     if FAILURES:
         print(f"\n{len(FAILURES)} scenario(s) failed.")

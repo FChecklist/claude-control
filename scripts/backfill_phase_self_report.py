@@ -61,6 +61,26 @@ rejected for lack of the `workflow` OAuth scope (SUPERBOSS_DISPATCH_PROMPT.md's
 hard rule) -- this script, already the sole legitimate writer and already
 deployed live via deploy-live-scripts.sh + the existing
 supervisor-sweep.sh cron, is the real achievable enforcement point.
+
+--audit-plans fix (2026-07-26, real AUDIT: REJECT on this same PR): the
+first cut of confirm_merge() collapsed "gh confirmed this PR/branch is
+NOT merged" and "the gh call itself failed" (auth failure, rate-limiting,
+transient network error, bad target_repo) into the same False result, and
+find_first_unverified_done_block() treated any False as a violation. On
+an unattended cron sweep, a transient gh failure would therefore auto-
+revert a genuinely-done phase and auto-commit+push a false incident
+straight to master -- worse than the bug --audit-plans was meant to fix.
+confirm_merge() now returns a 4th `ambiguous` flag; only a definitive
+non-merge triggers a revert, an ambiguous gh failure skips-with-warning
+like the existing blame_line/parent-lookup failure paths. Two more real
+gaps from the same review, closed in the same pass: a phase with no
+target_repo field at all (e.g. every phase in
+ai-os/AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml) now logs a visible
+warning instead of silently passing as "nothing to check"; and a blame_
+line/parent-lookup failure -- including a worker fabricating an entirely
+new phase block from scratch with no prior state to revert to, the most
+direct reproduction of the original phase_4/PR#562 incident -- now
+records a real incident instead of a silent stderr-only warning.
 """
 import argparse
 import json
@@ -130,24 +150,36 @@ def resolve_phase_ref(task_dir):
 # ---------------------------------------------------------------------------
 
 def confirm_merge(task_id, repo, branch=None):
-    """Returns (merged: bool, pr_number, merged_at) for task_id's PR on
-    FChecklist/<repo>. branch defaults to worker/<task_id> (this
-    pipeline's universal convention -- task.yaml's own branch field, task-
-    gateway.py, and auto_phase_continuation.py's gh_pr_merged_for_task all
-    agree on it)."""
+    """Returns (merged: bool, pr_number, merged_at, ambiguous: bool) for
+    task_id's PR on FChecklist/<repo>. branch defaults to worker/<task_id>
+    (this pipeline's universal convention -- task.yaml's own branch field,
+    task-gateway.py, and auto_phase_continuation.py's gh_pr_merged_for_task
+    all agree on it).
+
+    ambiguous=True means `gh` itself could not answer the question (non-
+    zero returncode from auth failure/rate-limiting/transient network
+    error/a bad repo value, or unparseable JSON) -- this is NOT the same
+    as ambiguous=False, merged=False, which means gh definitively answered
+    and no MERGED PR exists for this branch. Collapsing the two into one
+    False was the real gap in a prior --audit-plans revision: a transient
+    gh failure would be treated identically to a confirmed non-merge and
+    trigger an auto-revert + auto-push to master. Callers doing anything
+    destructive (revert, commit) must check `ambiguous` and skip-with-
+    warning instead, the same way this file already treats blame_line()/
+    parent-revision-lookup failures."""
     branch = branch or f"worker/{task_id}"
     proc = run(["gh", "pr", "list", "--repo", f"FChecklist/{repo}", "--head", branch,
                 "--state", "all", "--json", "state,number,mergedAt"])
     if proc.returncode != 0:
-        return False, None, None
+        return False, None, None, True
     try:
         rows = json.loads(proc.stdout)
     except json.JSONDecodeError:
-        return False, None, None
+        return False, None, None, True
     for r in rows:
         if r.get("state") == "MERGED" and r.get("mergedAt"):
-            return True, r.get("number"), r.get("mergedAt")
-    return False, None, None
+            return True, r.get("number"), r.get("mergedAt"), False
+    return False, None, None, False
 
 
 # ---------------------------------------------------------------------------
@@ -450,9 +482,15 @@ def backfill_one(task_id, task_dir=None, repo_override=None, dry_run=False, chec
     result["plan_file"] = plan_file
     result["phase_id"] = phase_id
 
-    merged, pr_number, merged_at = confirm_merge(task_id, repo, branch=branch)
+    merged, pr_number, merged_at, ambiguous = confirm_merge(task_id, repo, branch=branch)
     if not merged:
-        result["skipped_reason"] = f"no confirmed MERGED PR for {branch} on FChecklist/{repo}"
+        if ambiguous:
+            result["skipped_reason"] = (
+                f"could not verify merge state for {branch} on FChecklist/{repo} "
+                f"(gh call failed or returned unparseable output) -- treating as "
+                f"not-yet-confirmed, no write attempted")
+        else:
+            result["skipped_reason"] = f"no confirmed MERGED PR for {branch} on FChecklist/{repo}"
         return result
     result["pr_number"] = pr_number
     result["merged_at"] = merged_at
@@ -550,14 +588,28 @@ def sweep(status_filter, dry_run=False, checkpoint_on_success=False):
 # shared phase-plan file, bypassing backfill_one()/sweep() above entirely.
 # ---------------------------------------------------------------------------
 
-def find_first_unverified_done_block(lines, plan_file):
+def find_first_unverified_done_block(lines, plan_file, warnings=None):
     """Scans list_phase_blocks(lines) for the first phase that self-reports
     done but whose completed_by_task/target_repo do NOT independently
     confirm_merge() -- i.e. a self-report the file claims but `gh` itself
     does not back up. Returns (phase_id, start, end, task_id, repo) or None.
     Stops at the first violation (audit_and_correct_plan_file re-scans from
     scratch after each revert, since a revert shifts every later line
-    index in the file)."""
+    index in the file).
+
+    Two cases are deliberately NOT treated as a violation, but ARE recorded
+    into `warnings` (if given) so they stay visible rather than silently
+    passing as "nothing to check":
+      - no target_repo field at all: this phase has zero independent gh
+        coverage under this audit, full stop -- flagged rather than
+        silently skipped, so a plan file like AUDITOR_ENGINE_PHASE_PLAN
+        (no target_repo on any phase) doesn't read as "audited clean" when
+        nothing was actually checked.
+      - confirm_merge() ambiguous=True: gh itself could not answer (auth/
+        rate-limit/network failure, bad target_repo). A confirmed NOT-
+        merged is a real violation; an ambiguous gh failure is not -- it
+        must skip-with-warning like blame_line/parent-lookup failures
+        below, never silently collapse into a revert."""
     for phase_id, start, end in list_phase_blocks(lines):
         if not block_self_reports_done(lines, start, end):
             continue
@@ -568,20 +620,45 @@ def find_first_unverified_done_block(lines, plan_file):
         task_id = m.group(0)
         repo = _extract_field(lines, start, end, "target_repo")
         if not repo:
-            # No target_repo to independently check against -- nothing to
-            # re-verify, never treated as a violation by absence alone.
+            w = (f"{plan_file}::{phase_id}: self-reports done via completed_by_task={task_id} "
+                 f"but has no target_repo field -- cannot independently verify, no real gh "
+                 f"coverage for this phase under --audit-plans")
+            log(f"  WARNING: {w}")
+            if warnings is not None:
+                warnings.append(w)
             continue
-        merged, _pr_number, _merged_at = confirm_merge(task_id, repo)
-        if not merged:
-            return phase_id, start, end, task_id, repo
+        merged, _pr_number, _merged_at, ambiguous = confirm_merge(task_id, repo)
+        if merged:
+            continue
+        if ambiguous:
+            w = (f"{plan_file}::{phase_id}: self-reports done via completed_by_task={task_id} "
+                 f"target_repo={repo}, but `gh pr list --head worker/{task_id}` itself failed or "
+                 f"returned unparseable output (transient auth/rate-limit/network failure, or a "
+                 f"bad target_repo value) -- could NOT confirm this is a real bypass, skipping "
+                 f"without revert; needs re-audit once gh is reachable")
+            log(f"  WARNING: {w}")
+            if warnings is not None:
+                warnings.append(w)
+            continue
+        return phase_id, start, end, task_id, repo
     return None
 
 
-def audit_and_correct_plan_file(plan_file, incidents, dry_run=False):
+def audit_and_correct_plan_file(plan_file, incidents, warnings, dry_run=False):
     """Repeatedly finds and reverts unverified done-self-reports in
     ai-os/<plan_file> (REPO_ROOT must already be synced to origin/master by
     the caller) until none remain. Returns True if anything changed (or, in
-    dry-run mode, would change)."""
+    dry-run mode, would change).
+
+    A violation that is found but cannot be auto-corrected (git blame can't
+    find the responsible commit, its parent revision can't be read, or --
+    the most direct reproduction of the original phase_4/PR#562 incident --
+    the phase block doesn't exist at all in the parent revision because it
+    was fabricated from scratch with no prior state to revert to) now
+    records a real incident and keeps scanning-and-breaking as before, so a
+    human/future audit sees a possible violation was found rather than the
+    prior silent stderr-only warning with no incident and no non-zero
+    signal anywhere."""
     plan_path = os.path.join(REPO_ROOT, "ai-os", plan_file)
     if not os.path.isfile(plan_path):
         return False
@@ -589,7 +666,7 @@ def audit_and_correct_plan_file(plan_file, incidents, dry_run=False):
     while True:
         with open(plan_path) as f:
             lines = f.readlines()
-        violation = find_first_unverified_done_block(lines, plan_file)
+        violation = find_first_unverified_done_block(lines, plan_file, warnings=warnings)
         if violation is None:
             break
         phase_id, start, end, task_id, repo = violation
@@ -597,18 +674,35 @@ def audit_and_correct_plan_file(plan_file, incidents, dry_run=False):
         status_idx, _indent = _find_field_indent(lines, start, end, "status")
         blame_hash = blame_line(plan_file, status_idx + 1)
         if not blame_hash:
-            log(f"  WARNING: could not blame status line for {phase_id} in {plan_file} "
-                f"-- skipping revert, needs manual attention")
+            note = (f"{plan_file}::{phase_id}: self-reported done via completed_by_task={task_id} "
+                    f"target_repo={repo}, but independent `gh pr list --head worker/{task_id}` "
+                    f"re-verification found no real MERGED PR on FChecklist/{repo}, AND `git blame` "
+                    f"could not identify the commit that wrote the status line -- could NOT "
+                    f"auto-revert. Needs manual review.")
+            log(f"  INCIDENT (found, NOT auto-corrected): {note}")
+            incidents.append(note)
             break
         parent_lines = read_commit_plan_lines(plan_file, f"{blame_hash}^")
         if parent_lines is None:
-            log(f"  WARNING: could not read parent revision {blame_hash}^ of {plan_file} "
-                f"-- skipping revert, needs manual attention")
+            note = (f"{plan_file}::{phase_id}: self-reported done via completed_by_task={task_id} "
+                    f"target_repo={repo}, but independent `gh pr list --head worker/{task_id}` "
+                    f"re-verification found no real MERGED PR on FChecklist/{repo}, AND the parent "
+                    f"revision {blame_hash}^ of {plan_file} could not be read -- could NOT "
+                    f"auto-revert. Needs manual review.")
+            log(f"  INCIDENT (found, NOT auto-corrected): {note}")
+            incidents.append(note)
             break
         parent_start, parent_end = find_phase_block(parent_lines, phase_id)
         if parent_start is None:
-            log(f"  WARNING: {phase_id} not found in parent revision {blame_hash}^ of "
-                f"{plan_file} -- skipping revert, needs manual attention")
+            note = (f"{plan_file}::{phase_id}: self-reported done via completed_by_task={task_id} "
+                    f"target_repo={repo}, but independent `gh pr list --head worker/{task_id}` "
+                    f"re-verification found no real MERGED PR on FChecklist/{repo}, AND {phase_id} "
+                    f"does not exist at all in parent revision {blame_hash}^ of {plan_file} -- this "
+                    f"phase block was fabricated from scratch with no prior state to revert to "
+                    f"(the most direct reproduction of the 2026-07-26 phase_4/PR#562 incident). "
+                    f"Could NOT auto-revert. Needs manual review.")
+            log(f"  INCIDENT (found, NOT auto-corrected): {note}")
+            incidents.append(note)
             break
 
         note = (f"{plan_file}::{phase_id}: self-reported done via completed_by_task={task_id} "
@@ -666,7 +760,7 @@ def commit_and_push_audit(plan_files, incidents):
 
 
 def audit_plans(dry_run=False):
-    result = {"audited": [], "incidents": [], "changed": False, "error": None}
+    result = {"audited": [], "incidents": [], "warnings": [], "changed": False, "error": None}
     ok, err = sync_repo_root()
     if not ok:
         result["error"] = err
@@ -678,12 +772,14 @@ def audit_plans(dry_run=False):
     plan_files = sorted(f for f in os.listdir(ai_os_dir) if PLAN_GLOB_RE.match(f))
 
     incidents = []
+    warnings = []
     changed_files = []
     for pf in plan_files:
         result["audited"].append(pf)
-        if audit_and_correct_plan_file(pf, incidents, dry_run=dry_run):
+        if audit_and_correct_plan_file(pf, incidents, warnings, dry_run=dry_run):
             changed_files.append(pf)
     result["incidents"] = incidents
+    result["warnings"] = warnings
 
     if changed_files and dry_run:
         result["changed"] = True
