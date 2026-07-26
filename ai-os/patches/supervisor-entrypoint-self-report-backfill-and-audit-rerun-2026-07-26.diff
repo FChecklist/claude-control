@@ -1,0 +1,91 @@
+--- a/scripts/supervisor-entrypoint.sh
++++ b/scripts/supervisor-entrypoint.sh
+@@ -176,6 +176,67 @@
+ Re-Audit Scheduled: $AUDIT_REAUDIT"
+ gh pr comment "$PR_URL" --body "$AUDIT_BODY" >> "$TASK_DIR/supervisor.log" 2>&1
+ 
++# --- AUDIT-CHECK-RERUN-BLOCK-START (see tests/supervisor_audit_rerun_test.sh) ---
++# mandatory-audit-check.yml (compliance-tracker's own required CI gate, and
++# any other repo using the same job name) triggers on pull_request
++# opened/synchronize -- i.e. the instant this script's own `gh pr create`
++# above fired, well before the AUDIT: PASS/FAIL comment just above existed
++# (that required this script's own real LLM review call to finish first).
++# It fails immediately with "No structured audit verdict found" every single
++# time as a result -- not a one-off flake, a guaranteed race on every PR.
++# Real incident: PR #560, audit-check failed at 23:39:15Z, a human had to
++# manually re-run the same job by hand after the AUDIT comment existed.
++# Fixed HERE rather than by adding an issue_comment trigger to
++# compliance-tracker's own workflow file: this script's GitHub token lacks
++# the `workflow` OAuth scope (SUPERBOSS_DISPATCH_PROMPT.md's hard rule --
++# any push touching .github/workflows/** is silently rejected by GitHub
++# itself), so a workflow-file change is not actually deployable with this
++# token; re-triggering the existing, already-correct job from here is.
++# Gated on the target repo actually having this workflow (`gh workflow
++# list`) so this costs ~0 time for repos (e.g. claude-control itself) that
++# don't use it -- no blind retry-poll loop on every tier1 merge everywhere.
++if gh workflow list --repo "FChecklist/$REPO" --json name 2>>"$TASK_DIR/supervisor.log" \
++     | grep -q '"Mandatory Audit Check"'; then
++  AUDIT_HEAD_SHA=$(gh pr view "$PR_URL" --json headRefOid -q .headRefOid 2>>"$TASK_DIR/supervisor.log")
++  AUDIT_RUN_ID=""
++  AUDIT_RUN_JSON="[]"
++  for _ in $(seq 1 8); do
++    AUDIT_RUN_JSON=$(gh run list --repo "FChecklist/$REPO" --branch "$BRANCH" \
++      --workflow mandatory-audit-check.yml --json databaseId,status,conclusion,headSha \
++      --limit 5 2>>"$TASK_DIR/supervisor.log") || AUDIT_RUN_JSON="[]"
++    # Data passed via env vars, never interpolated into the python source
++    # string itself -- the JSON payload contains double quotes, which would
++    # otherwise break out of this bash double-quoted -c argument.
++    AUDIT_RUN_ID=$(AUDIT_RUN_JSON="$AUDIT_RUN_JSON" AUDIT_HEAD_SHA="$AUDIT_HEAD_SHA" python3 -c "
++import json, os
++runs = json.loads(os.environ.get('AUDIT_RUN_JSON') or '[]')
++head_sha = os.environ.get('AUDIT_HEAD_SHA', '')
++for r in runs:
++    if r.get('headSha') == head_sha and r.get('status') == 'completed':
++        print(r.get('databaseId') or '')
++        break
++" 2>>"$TASK_DIR/supervisor.log")
++    [ -n "$AUDIT_RUN_ID" ] && break
++    sleep 10
++  done
++  if [ -n "$AUDIT_RUN_ID" ]; then
++    AUDIT_RUN_CONCLUSION=$(AUDIT_RUN_JSON="$AUDIT_RUN_JSON" AUDIT_RUN_ID="$AUDIT_RUN_ID" python3 -c "
++import json, os
++runs = json.loads(os.environ.get('AUDIT_RUN_JSON') or '[]')
++run_id = os.environ.get('AUDIT_RUN_ID', '')
++for r in runs:
++    if str(r.get('databaseId')) == run_id:
++        print(r.get('conclusion') or '')
++        break
++" 2>>"$TASK_DIR/supervisor.log")
++    if [ "$AUDIT_RUN_CONCLUSION" = "failure" ]; then
++      echo "Re-running mandatory-audit-check.yml run $AUDIT_RUN_ID for $PR_URL (CI-timing race: it ran before this script's own AUDIT comment existed)" >> "$TASK_DIR/supervisor.log"
++      gh run rerun "$AUDIT_RUN_ID" --repo "FChecklist/$REPO" --failed >> "$TASK_DIR/supervisor.log" 2>&1 || true
++    fi
++  fi
++fi
++# --- AUDIT-CHECK-RERUN-BLOCK-END ---
++
+ # Master/Supervisor pilot: if this task was dispatched through a module
+ # queue (module-queue-dispatcher.py), a module_scope.yaml sidecar declares
+ # its module + files_allowed. Deterministic scope-check.py enforcement --
+@@ -232,6 +293,20 @@
+       --content "$REPO" --term "${MERGE_COMMIT_SHA:-unknown}" --result merged \
+       >> "$TASK_DIR/supervisor.log" 2>&1 || true
+     python3 /opt/veridian/scripts/veridian-task.py checkpoint "$TASK_ID" --status completed --note "tier1, Superboss-approved, merged autonomously: $PR_URL"
++    # Root cause 1 (real incidents: VERIDIAN_ARCHITECTURE_V2 phase_1/PR #559,
++    # phase_2/PR #560 -- both merged for real, neither worker updated its own
++    # phase-plan entry, both needed a human to hand-edit the YAML afterward,
++    # permanently blocking auto_phase_continuation.py's is_phase_done() from
++    # ever seeing them as done). Making this SOFTWARE's job instead of relying
++    # on worker discipline: now that a real MERGED state is independently
++    # confirmed above (never a self-report), backfill_phase_self_report.py
++    # writes status/completed_by_task/evidence into the correct phase-plan
++    # entry itself if -- and only if -- the worker didn't already do it
++    # correctly (idempotent, see its own module docstring). Best-effort: this
++    # must never affect the merge result already recorded above, and it no-ops
++    # silently for the (large) majority of tasks that aren't a phase-plan
++    # dispatch at all (no phase reference resolvable).
++    timeout 120 python3 /opt/veridian/scripts/backfill_phase_self_report.py --task-id "$TASK_ID" >> "$TASK_DIR/supervisor.log" 2>&1 || true
+   else
+     python3 /opt/veridian/scripts/veridian-task.py checkpoint "$TASK_ID" --status blocked --note "tier1, Superboss-approved, but the merge itself FAILED (gh pr view confirms state=$PR_STATE, mergedAt=$MERGED_AT; see supervisor.log) — needs manual attention, NOT actually merged: $PR_URL"
+   fi

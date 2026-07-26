@@ -62,6 +62,8 @@ import sys
 
 import yaml
 
+import backfill_phase_self_report
+
 VERIDIAN_ROOT = "/opt/veridian"
 SCRIPTS = f"{VERIDIAN_ROOT}/scripts"
 TASK_GATEWAY = f"{SCRIPTS}/task-gateway.py"
@@ -495,7 +497,25 @@ judgment
 # Dispatch
 # ---------------------------------------------------------------------------
 
-def dispatch(prompt_text, title, repo=DEFAULT_REPO):
+def write_phase_plan_sidecar(task_id, plan_filename, phase_id, initiative_name):
+    """Structured pointer from a dispatched task back to the exact
+    phase-plan entry it was generated from -- mirrors the existing
+    module_scope.yaml sidecar convention (task_dir/module_scope.yaml,
+    read by supervisor-entrypoint.sh's own scope-check). Lets
+    backfill_phase_self_report.py resolve plan_file+phase_id reliably
+    without regex-parsing prompt.txt (kept as a fallback for tasks
+    dispatched before this sidecar existed)."""
+    task_dir = os.path.join("/opt/veridian/ai-os/tasks", task_id)
+    try:
+        os.makedirs(task_dir, exist_ok=True)
+        with open(os.path.join(task_dir, "phase_plan.yaml"), "w") as f:
+            yaml.safe_dump({"plan_file": plan_filename, "phase_id": phase_id,
+                             "initiative": initiative_name}, f)
+    except OSError as e:
+        log(f"  WARNING: could not write phase_plan.yaml sidecar for {task_id}: {e}")
+
+
+def dispatch(prompt_text, title, repo=DEFAULT_REPO, plan_filename=None, phase_id=None, initiative_name=None):
     prompt_path = f"/tmp/auto_phase_continuation_{title}.txt"
     with open(prompt_path, "w") as f:
         f.write(prompt_text)
@@ -541,7 +561,11 @@ def dispatch(prompt_text, title, repo=DEFAULT_REPO):
     except json.JSONDecodeError:
         return {"dispatched": False, "step": "start", "stdout": start_proc.stdout, "stderr": start_proc.stderr}
 
-    return {"dispatched": True, "instruction_id": instruction_id, "task_id": start_result.get("task_id"),
+    dispatched_task_id = start_result.get("task_id")
+    if dispatched_task_id and plan_filename and phase_id:
+        write_phase_plan_sidecar(dispatched_task_id, plan_filename, phase_id, initiative_name)
+
+    return {"dispatched": True, "instruction_id": instruction_id, "task_id": dispatched_task_id,
             "systemd_active": start_result.get("systemd_active")}
 
 
@@ -560,6 +584,20 @@ def main():
                               "run that leaves the remainder for the next cron tick.")
     args = parser.parse_args()
     dispatched_count = 0
+
+    # Root cause 1, tier2 half (real incident: VERIDIAN_ARCHITECTURE_V2 phase_1,
+    # compliance-tracker PR #559 -- tier2, merged by a human out-of-band, but
+    # nothing ever revisited that task afterward: its own checkpoint stayed
+    # `awaiting_human_approval` and its phase-plan self-report stayed missing
+    # forever). supervisor-entrypoint.sh only ever backfills its OWN tier1
+    # auto-merges since it's the one confirming those merges in real time; a
+    # tier2 PR's merge happens after this script's own dispatch call already
+    # returned, so this cron tick (every 30 min) is what re-checks every
+    # outstanding tier2 task for a real merge that's since landed.
+    sweep_result = backfill_phase_self_report.sweep(
+        {"awaiting_human_approval"}, dry_run=args.dry_run, checkpoint_on_success=True)
+    if sweep_result:
+        log(f"tier2 self-report sweep: backfilled {len(sweep_result)} task(s)")
 
     by_name = discover_plan_paths()
     if not by_name:
@@ -620,7 +658,8 @@ def main():
             entry["deferred_reason"] = f"--limit {args.limit} reached this run; left for the next cron tick"
         else:
             phase_repo = next_praw.get("target_repo") or args.repo
-            result = dispatch(prompt_text, title, repo=phase_repo)
+            result = dispatch(prompt_text, title, repo=phase_repo,
+                               plan_filename=name, phase_id=next_id, initiative_name=initiative_name)
             entry["dispatch_result"] = result
             if result.get("dispatched"):
                 dispatched_count += 1
@@ -633,7 +672,8 @@ def main():
 
         report.append(entry)
 
-    print(json.dumps({"dry_run": args.dry_run, "initiatives": report}, indent=2, default=str))
+    print(json.dumps({"dry_run": args.dry_run, "tier2_self_report_sweep": sweep_result,
+                       "initiatives": report}, indent=2, default=str))
 
 
 if __name__ == "__main__":
