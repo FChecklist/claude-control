@@ -714,10 +714,13 @@ quick_reference:
   summary: Pre-existing "start here" stub for the ai-os/ tree. Rewritten 2026-07-13
     after being found stale/wrong (false Prisma claim). This...
 - id: engine_registry
-  status: live
-  path: /opt/veridian/repos/compliance-tracker/ai-os/engines/ENGINES.yaml
-  summary: VCEL deterministic-computation engine registry (247 engines catalogued,
-    41 implemented per prior session record).
+  status: 'MISCITED PATH, corrected 2026-07-26 -- see the full registries.engine_registry
+    entry below for the real path and evidence.'
+  path: /opt/veridian/repos/compliance-tracker/src/lib/engines/*.ts (see correction below;
+    ai-os/engines/ENGINES.yaml is NOT this registry)
+  summary: VCEL deterministic-computation engine registry (25 files, ~247 functions,
+    per ai-os/system-tree/10-compliance-tracker-governance.yaml#GOV-07). 41 implemented
+    is a prior-session record not re-verified by this task.
 - id: file_ownership_rules
   status: live
   path: /opt/veridian/ai-os/file-ownership.yaml
@@ -1129,10 +1132,18 @@ registries:
     scoring against this exact file)
 - id: audit198_framework
   type: verification_mechanism
-  path: ai-os/scripts/audit198/ (run-audit.mjs, evidence-engine.mjs, category-checkers.mjs,
+  path: ai-os/audit198/ (run-audit.mjs, evidence-engine.mjs, category-checkers.mjs,
     rules-taxonomy.mjs, constitution-index.mjs, results/audit198-results.json, results/audit198-summary.md)
+  path_correction_2026_07_26: 'This entry''s path field previously read ai-os/scripts/audit198/
+    (with a "scripts/" segment that does not exist on disk) -- found stale by this task''s fresh
+    `python3 scripts/metadata_reconciliation.py report` run, which flagged it under
+    registries_with_non_file_only as not_found_on_disk. ai-os/STANDING_DIRECTIVE.yaml''s own
+    verification.mechanism field was already corrected to the real path (ai-os/audit198/run-audit.mjs)
+    on 2026-07-22 per its own mechanism_correction_note, but this MASTER_INDEX.yaml entry was never
+    updated to match, leaving a real cross-file drift for ~4 days. Corrected here to the same real,
+    live-verified path (confirmed via direct ls of /opt/veridian/ai-os/audit198/ on the live server).'
   scope: 'Re-runnable, software-driven gap-audit engine for rules_articles_198 (above)
-    -- run: node ai-os/scripts/audit198/run-audit.mjs. Groups the 198 items into 33
+    -- run: node ai-os/audit198/run-audit.mjs. Groups the 198 items into 33
     thematic categories, each backed by a generic evidence- gathering + verdict engine
     (file-marker checks, repo-wide grep with file:line citations, cross-reference
     against ai-os/CONSTITUTION.yaml''s own status vocabulary). Verdict vocabulary:
@@ -1836,9 +1847,33 @@ registries:
     not done this pass.
 - id: engine_registry
   type: yaml_file
-  path: /opt/veridian/repos/compliance-tracker/ai-os/engines/ENGINES.yaml
-  scope: VCEL deterministic-computation engine registry (247 engines catalogued, 41
-    implemented per prior session record).
+  path: /opt/veridian/repos/compliance-tracker/src/lib/engines/*.ts (25 files, see
+    ai-os/system-tree/10-compliance-tracker-governance.yaml#GOV-07 for the per-file
+    function breakdown -- NOT ai-os/engines/ENGINES.yaml, see path_correction_2026_07_26)
+  scope: VCEL deterministic-computation engine registry (~247 functions across 25 files,
+    per GOV-07 -- "engines" in the count is a functions count, not a file/engine count).
+    41 implemented is a prior-session record, not independently re-verified by this task.
+  path_correction_2026_07_26: 'Real, mechanically-confirmed finding by this task: the
+    path this entry has always carried (/opt/veridian/repos/compliance-tracker/ai-os/engines/ENGINES.yaml)
+    is NOT the VCEL engine registry and never has been -- `git log --follow` on that
+    file shows exactly one commit (33b615ba, 2026-07-19, an unrelated ACTIVE-CLAIMS.yaml
+    edit) and its real content is a Z.ai/Claude-Code FULL_ACCESS agent-authorization
+    grant (repos/permissions for the zai and claude_code AI agents), confirmed by
+    direct read of the live file. This is not path drift over time -- the citation
+    was wrong from the start. The real VCEL computation-engine inventory (accounting,
+    banking, costing, inventory, hr, payroll, sales, security, etc., src/lib/engines/*.ts,
+    25 files) is documented in ai-os/system-tree/10-compliance-tracker-governance.yaml''s
+    GOV-07 entry ("VCEL Computation Engine registry -- 25 files, ~247 functions, all
+    deterministic") and referenced from ai-os/CONSTITUTION.yaml. This is a genuine,
+    previously-undetected duplication-adjacent gap for this task''s SCOPE item 2: not
+    a collision between registries.engine_registry and registries.engines_gateways_architecture
+    (those two remain correctly non-colliding, as already documented in
+    registries.engines_gateways_architecture''s own scope text) but a mis-citation
+    inside registries.engine_registry itself that this task''s cross-reference check
+    surfaced. compliance-tracker''s own ai-os/MASTER_INDEX.yaml carries the identical
+    wrong path/summary (same text, byte-for-byte) -- out of this repo''s boundary to
+    fix directly; flagged here as a real remediation recommendation for a follow-up
+    task in that repo, not duplicated by editing that repo from here.'
   status: live
 - id: file_ownership_rules
   type: yaml_file
