@@ -5542,3 +5542,90 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260726-043023-phase4-defense-in-depth-prompt-security/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/562'
     last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-051203-server-owner-ai-protocol-memory-consolid
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''server-owner-ai-protocol-memory-consolidation'' on
+      claude-control reached status=completed. tier1, Superboss-approved, merged autonomously:
+      https://github.com/FChecklist/claude-control/pull/77'
+    where: '/opt/veridian/ai-os/tasks/task-20260726-051203-server-owner-ai-protocol-memory-consolid/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/77'
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-053322-status-monitor-and-remediation-dispatche
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''status-monitor-and-remediation-dispatcher'' on claude-control
+      reached status=blocked. SUPERVISOR PRE-FLIGHT REJECTED (crontab_unauthorized_change):
+      live crontab differs from the last-known-approved snapshot at /opt/veridian/ai-os/CRONTAB_APPROVED_SNAPSHOT.txt,
+      and prompt.txt does not cite a verified-approved OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      entry for this exact change. Per AI_ENGINEERING_POLICY.yaml''s genuinely_irreversible_actions
+      standing exception, crontab modifications require explicit Owner confirmation
+      before execution -- this is not a code bug, it is the policy working as designed.
+      If this change was Owner-approved, cite it in prompt.txt as: ''OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      entry id=<id> status=approved'' and ensure that entry''s status is actually ''approved''
+      in the live decisions file.'
+    where: /opt/veridian/ai-os/tasks/task-20260726-053322-status-monitor-and-remediation-dispatche/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-055454-migration-drift-audit-and-reconciliation
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''migration-drift-audit-and-reconciliation'' on compliance-tracker
+      reached status=failed. PRE-FLIGHT REJECTED (crontab_unauthorized_change, transient):
+      live crontab differs from the last-known-approved snapshot at /opt/veridian/ai-os/CRONTAB_APPROVED_SNAPSHOT.txt,
+      and prompt.txt does not cite a verified-approved OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      entry for this exact change. Per AI_ENGINEERING_POLICY.yaml''s genuinely_irreversible_actions
+      standing exception, crontab modifications require explicit Owner confirmation
+      before execution -- this is not a code bug, it is the policy working as designed.
+      If this change was Owner-approved, cite it in prompt.txt as: ''OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      entry id=<id> status=approved'' and ensure that entry''s status is actually ''approved''
+      in the live decisions file. -- no model call made, no cost incurred'
+    where: /opt/veridian/ai-os/tasks/task-20260726-055454-migration-drift-audit-and-reconciliation/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-055619-phase5-browser-execution-lite-llm-npu-bu
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''phase5-browser-execution-lite-llm-npu-built'' on
+      compliance-tracker reached status=failed. PRE-FLIGHT REJECTED (crontab_unauthorized_change,
+      transient): live crontab differs from the last-known-approved snapshot at /opt/veridian/ai-os/CRONTAB_APPROVED_SNAPSHOT.txt,
+      and prompt.txt does not cite a verified-approved OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      entry for this exact change. Per AI_ENGINEERING_POLICY.yaml''s genuinely_irreversible_actions
+      standing exception, crontab modifications require explicit Owner confirmation
+      before execution -- this is not a code bug, it is the policy working as designed.
+      If this change was Owner-approved, cite it in prompt.txt as: ''OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      entry id=<id> status=approved'' and ensure that entry''s status is actually ''approved''
+      in the live decisions file. -- no model call made, no cost incurred'
+    where: /opt/veridian/ai-os/tasks/task-20260726-055619-phase5-browser-execution-lite-llm-npu-bu/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-063532-fix-pr562-defense-in-depth-integration-g
+    project: veridian
+    type: worker-task
+    status: in-progress
+    summary: 'Server-worker task ''Fix PR562 defense-in-depth integration gaps (real
+      AUDIT FAIL findings)'' on compliance-tracker reached status=awaiting_human_approval.
+      tier2, Superboss-approved, held for human merge: '
+    where: /opt/veridian/ai-os/tasks/task-20260726-063532-fix-pr562-defense-in-depth-integration-g/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-071221-close-worker-false-self-report-gap-in-ph
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Close worker false-self-report gap in phase-plan
+      YAML (real CI gate)'' on claude-control reached status=blocked. Superboss rejected:
+      https://github.com/FChecklist/claude-control/pull/78 — see review.json for issues'
+    where: '/opt/veridian/ai-os/tasks/task-20260726-071221-close-worker-false-self-report-gap-in-ph/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/78'
+    last_touched: '2026-07-26'
