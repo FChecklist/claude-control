@@ -67,6 +67,62 @@ JUDGMENT CALLS (per this task's own OBJECTIVE -- these are not mechanical):
      watchdog performs no automated system action for it beyond that record
      -- action_taken in watchdog.jsonl says so explicitly, never fabricates
      a recovery that did not happen.
+
+  4. RCA-escalation dedup (2026-07-26, root-caused against
+     task-20260726-171939-delegation-expiry-enforcement-audit---te): escalate()
+     used to shell out to `veridian-task.py create` unconditionally every time
+     it was reached, with no memory of a prior escalation for the same
+     task_id. This watchdog runs every ~60s and STALL is pure elapsed-time
+     since the last checkpoint -- it has no floor for how long a genuinely
+     healthy long invocation (a big quality-gate/test run, or an async wait
+     on supervisor PR review) can legitimately take. Task-171939 was never
+     actually stuck -- it reached 'blocked' on its own via a normal
+     supervisor PR-review rejection shortly after -- but stayed past the
+     20-minute staleness threshold for several ticks in a row, and each tick
+     created a brand-new RCA task: task-20260726-175954-rca-... and
+     task-20260726-180540-rca-... both exist for the identical task_id and
+     signature, 5m46s apart (see ai-os/logs/watchdog.jsonl). find_in_flight_rca()
+     now checks for an existing, non-terminal RCA task dir for this task_id
+     before escalate() creates another one.
+
+  5. known_fixes lookup was dead code for any signature not ALSO
+     independently present in ATTENTION.md/task_audits (2026-07-26,
+     root-caused against task-20260726-172004-search-performance-explain-
+     analyze---gin, RCA task-20260726-183201): process_task() only called
+     lookup_known_fix() when search_prior_occurrence() (step_1, which only
+     greps ATTENTION.md and the task_audits table) had already returned
+     found=True. superboss-register.py's log-fix command -- the ONLY writer
+     of the known_fixes table -- never writes to ATTENTION.md or
+     task_audits, so a signature registered purely via log-fix (exactly
+     what every RCA task's own SUCCESS_CRITERIA instructs it to do) could
+     never be found on a future occurrence: found stayed False forever,
+     known_fix was never looked up, and step_3 escalated a brand-new
+     billed RCA task on every single recurrence of an already-fixed
+     signature -- the opposite of what known_fixes exists for. Fixed by
+     looking up known_fixes independently of step_1's search; step_1's
+     result is now purely informational (kept in the log line for
+     provenance) and no longer gates step_2.
+
+     Real root cause of task-20260726-172004 itself, registered under
+     signature "periodic checkpoint": its worker was OOM-killed mid
+     quality-gate (systemd journal: "A process of this unit has been
+     killed by the OOM killer" / "Failed with result 'oom-kill'") under
+     real memory contention from concurrent workers on this shared box --
+     confirmed via `systemctl --user status`/`journalctl`, not a guess.
+     The OOM kill took down the periodic-checkpoint heartbeat along with
+     the rest of its cgroup, freezing task.yaml on a stale "periodic
+     checkpoint" note. systemd's own Restart=on-failure had ALREADY
+     restarted the unit (invocation 2 resuming cleanly from checkpoint,
+     confirmed live) before this fix existed, making the escalation pure
+     waste -- the same class of false escalation `find_in_flight_rca()`
+     above was built for, just triggered by OOM-then-auto-restart instead
+     of a merely-long-but-healthy invocation. Registered fix_action
+     "wait_and_recheck" (see FIX_ACTIONS below) takes no destructive
+     system action -- restarting an already-recovering unit would only
+     interrupt it -- and instead relies on the existing apply -> sleep
+     RECHECK_DELAY_SECONDS -> recheck flow to observe the self-heal (or,
+     if it turns out the task is genuinely stuck and not just mid-recovery,
+     still fall through to step_3 exactly as before).
 """
 import argparse
 import glob
@@ -96,6 +152,11 @@ SIGNATURE_LEN = 60
 LOOP_EXCLUDED_NOTES = {
     "periodic checkpoint",
 }
+
+# Same convention as sync-controller-back.py's own TERMINAL set (each script
+# keeps its own copy rather than importing a shared module -- these are
+# independent cron/timer-invoked scripts, not a package).
+TERMINAL = {"completed", "blocked", "failed", "awaiting_human_approval"}
 
 
 def _now():
@@ -244,9 +305,24 @@ def _fix_reset_failed_and_start(task_id):
     return f"reset-failed + started {unit}"
 
 
+def _fix_wait_and_recheck(task_id):
+    """No destructive system action -- see JUDGMENT CALL 5 in this module's
+    docstring. A stale "periodic checkpoint" note this watchdog only ever
+    sees on an ACTIVE unit (list_active_task_ids() filters to --state=active)
+    is frequently either a long-running-but-healthy quality-gate/build phase,
+    or a very recent OOM-kill that systemd's own Restart=on-failure is
+    already recovering -- forcing a restart here would just interrupt
+    whichever of those is genuinely in flight. process_task()'s existing
+    apply -> sleep(RECHECK_DELAY_SECONDS) -> recheck flow already exists to
+    give real transient recovery a window before escalating; this action's
+    only job is to take part in that flow without doing anything itself."""
+    return "no destructive action taken -- deferring to systemd's own Restart=on-failure / in-flight work; recheck will confirm"
+
+
 FIX_ACTIONS = {
     "restart_unit": _fix_restart_unit,
     "reset_failed_and_start": _fix_reset_failed_and_start,
+    "wait_and_recheck": _fix_wait_and_recheck,
 }
 
 
@@ -281,7 +357,49 @@ judgment
 """
 
 
+def find_in_flight_rca(task_id):
+    """Real root cause of the 2026-07-26 task-20260726-171939 double-escalation
+    incident: this watchdog runs every 60s (systemd OnUnitActiveSec=60) and
+    escalate() had no memory of a prior escalation, so a task that stays
+    "stalled" for several ticks in a row (STALL is pure elapsed-time-since-
+    checkpoint, with no floor on how long a *genuinely healthy* long
+    invocation -- a big quality-gate/test run, or a wait on supervisor PR
+    review -- can legitimately take) got a fresh RCA task created on every
+    single tick until its own checkpoint finally advanced. Confirmed live:
+    task-20260726-175954-rca-... and task-20260726-180540-rca-... both exist
+    for the exact same original task_id, 5m46s apart, while task-171939 was
+    simply still busy (it finished on its own shortly after, reaching
+    'blocked' via a normal supervisor PR-review rejection -- never actually
+    stuck).
+
+    Escalation titles are always exactly f"rca-{task_id}" (see escalate()
+    below), and veridian-task.py's cmd_create slugifies+truncates that title
+    to 40 chars for the new task_id (task-{ts}-{slug}) -- so for a long
+    original task_id the literal substring "rca-{task_id}" will NOT appear
+    intact in the new dir name. Matching therefore has to tolerate that
+    truncation: split each candidate dir name on its first "-rca-" and treat
+    the remainder as a (possibly truncated) prefix of task_id.
+    """
+    marker = "-rca-"
+    for path in sorted(glob.glob(f"{TASKS_DIR}/*")):
+        dir_name = os.path.basename(path)
+        if dir_name == task_id or marker not in dir_name:
+            continue
+        candidate_task_id = dir_name.split(marker, 1)[1]
+        if not candidate_task_id or not task_id.startswith(candidate_task_id):
+            continue
+        rca_task = load_task_yaml(dir_name)
+        status = (rca_task or {}).get("status")
+        if status not in TERMINAL:
+            return True, dir_name
+    return False, None
+
+
 def escalate(task_id, signature, dry_run=False):
+    in_flight, existing_task_id = find_in_flight_rca(task_id)
+    if in_flight:
+        return f"skipped: RCA already in flight for {task_id} ({existing_task_id}, not yet terminal) -- not creating a duplicate"
+
     title = f"rca-{task_id}"
     prompt = RCA_PROMPT_TEMPLATE.format(original_task_id=task_id, signature=signature)
     cmd = ["python3", VERIDIAN_TASK, "create", "--title", title, "--repo", "claude-control", "--prompt", prompt]
@@ -318,19 +436,26 @@ def process_task(task_id, task, dry_run_escalation=False):
         return entry
 
     signature = signature_of(last_note)
+    # step_1 (informational only, kept for provenance in the log line below)
+    # -- must NOT gate step_2: search_prior_occurrence() only greps
+    # ATTENTION.md/task_audits, and log-fix (the only writer of known_fixes)
+    # never writes to either, so gating the lookup behind `found` made every
+    # log-fix-registered signature unreachable on its next real occurrence.
+    # See JUDGMENT CALL 5 in this module's docstring for the full incident.
     found, source = search_prior_occurrence(signature)
-    known_fix = lookup_known_fix(signature) if found else None
+    known_fix = lookup_known_fix(signature)
 
-    if found and known_fix:
+    if known_fix:
         applied_desc = apply_known_fix(task_id, known_fix["fix_action"])
         record_fix_applied(signature, known_fix["fix_action"])
+        provenance = f"signature seen before via {source}" if found else "signature on record in known_fixes (no independent ATTENTION.md/task_audits match)"
         time.sleep(RECHECK_DELAY_SECONDS)
         recheck_task = load_task_yaml(task_id)
         still_bad, still_loop, _ = evaluate(recheck_task, task_id)
         if not (still_bad or still_loop):
-            entry["action_taken"] = f"step_2: {applied_desc} (signature seen before via {source}); recheck after {RECHECK_DELAY_SECONDS}s: recovered"
+            entry["action_taken"] = f"step_2: {applied_desc} ({provenance}); recheck after {RECHECK_DELAY_SECONDS}s: recovered"
             return entry
-        entry["action_taken"] = f"step_2: {applied_desc} (signature seen before via {source}); recheck after {RECHECK_DELAY_SECONDS}s: still stalled/looping -> "
+        entry["action_taken"] = f"step_2: {applied_desc} ({provenance}); recheck after {RECHECK_DELAY_SECONDS}s: still stalled/looping -> "
         esc = escalate(task_id, signature, dry_run=dry_run_escalation)
         entry["action_taken"] += f"step_3: {esc}"
         return entry
