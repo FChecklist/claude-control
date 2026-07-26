@@ -39,6 +39,14 @@ meta:
     shared by engine-15 (Knowledge Engine) and gateway-G01/gateway-G07. This is the honest state of real
     wiring today, which is exactly what this initiative''s Phase 1 (real end-to-end gateway verification) is
     for.'
+  full_system_extension_2026_07_26: 'task-20260726-162252-extend-wiring-engine-to-full-system--ser extended this
+    schema''s entity_type enum beyond the original server-engines-only vocabulary (supabase_table replacing
+    table, + vercel_project/github_repo/browser_component, see entity_type''s own description for the real
+    check behind each) and executed this plan''s phase_3_wiring_registry_live_wiring (wiring_registry live sqlite
+    table + register-entity/lookup-entity/list-entities CLI in scripts/superboss-register.py, upsert-based
+    generation). It did NOT attempt phase_1 (already status: done, completed by an earlier task,
+    task-20260725-055333) or phase_2 (still not_started) -- see ai-os/WIRING_ENGINE_PHASE_PLAN_2026-07-25.yaml
+    phases[] for the real, current status of each.'
 
 # ============================================================================
 # ENTITY RECORD SCHEMA -- one record per real, mechanically-discovered entity.
@@ -51,16 +59,28 @@ entity_record_schema:
     type: string
     required: true
     description: 'Stable identifier, format <entity_type>-<slug>: engine-<2-digit engine_no>,
-      gateway-<gateway_id e.g. G01>, table-<schema>__<table_name>, function-<12-hex sha1 of file:line:name>,
+      gateway-<gateway_id e.g. G01>, supabase_table-<schema>__<table_name>, function-<12-hex sha1 of file:line:name>,
       route-<route_id from ROUTE_REGISTRY_SCHEMA>, file-<12-hex sha1 of the real absolute path>,
-      script-<sanitized basename>, cron_job-<index>_<sanitized job_name>, ai_role-<roleKey>.'
+      script-<sanitized basename>, cron_job-<index>_<sanitized job_name>, ai_role-<roleKey>,
+      vercel_project-<sanitized project key from the vercel census>, github_repo-<sanitized owner__repo>,
+      browser_component-<sanitized basename, extension stripped>.'
   entity_type:
     type: enum
-    values: [engine, gateway, table, function, route, file, script, cron_job, ai_role]
+    values: [engine, gateway, supabase_table, function, route, file, script, cron_job, ai_role,
+      vercel_project, github_repo, browser_component]
     required: true
-    description: 'Closed vocabulary per this task''s own SCOPE item 1. Every entity_type maps to exactly one
-      of the 8 real sources in generation.sources (see mapping there) -- no entity_type is populated by
-      hand-authored rows.'
+    description: 'Closed vocabulary. Every entity_type maps to exactly one of this schema''s real sources
+      (see generation.sources for the mapping) -- no entity_type is populated by hand-authored rows.
+      Renamed from the Phase 0 vocabulary''s plain `table` to `supabase_table` as part of this task''s full-system
+      extension (task-20260726-162252-extend-wiring-engine-to-full-system--ser): a real check at extension time
+      (per this task''s own KNOWN_CONTEXT instruction to verify before adding, not assume) found every `table` row
+      the Phase 0 registry ever emitted already carried source_system=supabase (100% of them, sourced from
+      DATABASE_CATALOG.json -- VERIDIAN has exactly one live DB engine today) -- so a *separate* `supabase_table`
+      type sourced from the same catalog would have been a pure duplicate of already-modeled entities, which this
+      task''s "don''t duplicate" instruction forbids. Renaming instead of adding a parallel type keeps the same
+      444 real rows as one entity each, while making the name accurately source-scoped and consistent with the
+      other 3 new source-system-named types added by this same task: vercel_project, github_repo,
+      browser_component (see their generation.sources entries below for what real data backs each).'
   source_system:
     type: enum
     values: [server, vercel, supabase, github]
@@ -68,17 +88,24 @@ entity_record_schema:
     description: 'Where the entity physically lives: server = a script/file/db-row that only exists on this
       box (ai-os/, scripts/, superboss-register.sqlite -- no separate repo); github = a file inside one of the
       mirrored repos (repos/compliance-tracker/...), reused verbatim from knowledge_registry_multisource.py''s
-      own source:GITHUB/source:SERVER split; supabase = a live Postgres table (DATABASE_CATALOG.json rows);
-      vercel = reserved for a future entity_type sourced from Vercel project state (none populated this run --
-      no vercel-hosted entity exists among the 8 sources this task reads).'
+      own source:GITHUB/source:SERVER split, and now also the github_repo entity itself; supabase = a live
+      Postgres table (DATABASE_CATALOG.json rows, entity_type=supabase_table); vercel = a live Vercel project
+      (entity_type=vercel_project, sourced from the real vercel_github_state_census_2026_07_26 census in
+      ai-os/MASTER_INDEX.yaml -- previously reserved for a future entity_type with none populated; now real,
+      3 rows, as of this task''s extension).'
   path:
     type: string, nullable
     required: true
     description: 'Real file path (verified live via os.path.exists() against /opt/veridian at generation time)
-      for file/script/engine/gateway/route/table/function/ai_role entities that have one. For table/ai_role
-      entities the identifier is logical (schema.table_name / roleKey) rather than a filesystem path -- the
-      real filesystem path of the file that DEFINES that logical entity is instead carried via a defined_in
-      relationship (see relationship_type_vocabulary), never invented as a fake path field value.'
+      for file/script/engine/gateway/route/function/ai_role/browser_component entities that have one. For
+      supabase_table/ai_role entities the identifier is logical (schema.table_name / roleKey) rather than a
+      filesystem path -- the real filesystem path of the file that DEFINES that logical entity is instead
+      carried via a defined_in relationship (see relationship_type_vocabulary), never invented as a fake path
+      field value. github_repo entities carry the real local mirror directory path (repos/<repo>, verified via
+      os.path.isdir), kept current by the existing sync-repos.sh cron. vercel_project entities carry no
+      filesystem path (a Vercel project is not a local path) -- their logical identifier (the census''s own
+      project key, e.g. veridian-compliance-ai) is carried in metadata.project_key instead, same convention
+      ai_role uses for its roleKey.'
   relationships:
     type: array
     item_schema: '{ target_entity_id: string|null, relationship_type: string, evidence: string }'
@@ -133,9 +160,12 @@ entity_record_schema:
 # ============================================================================
 relationship_type_vocabulary:
   - name: defined_in
-    applies_to: 'table|function|ai_role -> file'
+    applies_to: 'supabase_table|function|ai_role|browser_component -> file'
     evidence_basis: 'The real source file (DATABASE_CATALOG.json source_file / FUNCTION_CATALOG.json file /
-      AI_ROSTER_CATALOG.json source_file) that defines this logical entity.'
+      AI_ROSTER_CATALOG.json source_file) that defines this logical entity. For browser_component, the target
+      is the SAME file entity already emitted for that exact path by engine_inventory''s own exists_as list
+      (e.g. VeriComposer.tsx) -- browser_component adds a component-level logical node above that file entity,
+      it never creates a second, duplicate file entity for the same path.'
   - name: implemented_by
     applies_to: 'engine|gateway -> file'
     evidence_basis: 'One of that engine/gateway''s own exists_as paths in ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml,
@@ -174,6 +204,23 @@ relationship_type_vocabulary:
       (scripts/superboss-register.py add-relationship), prefixed ke: only to make the passthrough visually
       distinguishable from a relationship this script itself computed -- the original relationship_type string
       is otherwise untouched, never renamed.'
+  - name: deployed_from
+    applies_to: 'vercel_project -> github_repo'
+    evidence_basis: 'The real github_repo field the vercel_github_state_census_2026_07_26 census records for
+      that exact Vercel project (ai-os/MASTER_INDEX.yaml, .vercel.projects.<key>.github_repo) -- a live census
+      fact (`vercel project ls` + `gh api`), not an inferred pairing.'
+  - name: deployed_to
+    applies_to: 'github_repo -> vercel_project'
+    evidence_basis: 'Reciprocal of deployed_from, emitted only for the 3 of 7 repos the same census actually
+      names as a Vercel project''s github_repo (compliance-tracker, projexa, veda-advisors) -- the other 4
+      (claude-control, global-revenue-engine, veridian-brain, sumeet-spec) genuinely have no linked Vercel
+      project per the census and get no deployed_to relationship, not a fabricated one.'
+  - name: contains
+    applies_to: 'github_repo -> file (or engine|gateway, via that entity''s own file relationships)'
+    evidence_basis: 'The target file/engine/gateway entity''s own real path is a prefix match under this
+      repo''s real local mirror directory (repos/<repo>/...) -- a live path-prefix check against entities this
+      same run already collected from engine_inventory/gateway_inventory/route_registry_schema/software_catalog/
+      function_catalog, never a separate repo-tree scan invented for this relationship.'
 
 # ============================================================================
 # GENERATION -- how the registry file is actually produced, real and re-runnable.
@@ -182,13 +229,36 @@ generation:
   script: scripts/generate_wiring_registry.py
   output_path: ai-os/WIRING_ENGINE_REGISTRY_2026-07-25.json
   idempotent: true
-  note: 'Each run reads all 8 sources fresh and rewrites the output file from scratch (a full snapshot, not an
-    incremental diff-and-patch) -- there is no separate live table for this registry yet in Phase 0 (see
-    meta.scope_of_this_document). Safe to schedule on a recurring cron (see registration.cron_entry below).'
+  note: 'Each run reads all real sources fresh and rewrites the output JSON snapshot from scratch (git-diffable,
+    human-readable), AND upserts every entity into the live `wiring_registry` sqlite table
+    (ai-os/memory/superboss-register.sqlite, ON CONFLICT(entity_id) DO UPDATE) -- Phase 3 of
+    ai-os/WIRING_ENGINE_PHASE_PLAN_2026-07-25.yaml (task-20260726-162252-extend-wiring-engine-to-full-system--ser).
+    Re-running twice in a row produces 0 net new rows in wiring_registry the second time (verified). Safe to
+    schedule on a recurring cron (see registration.cron_entry below) -- the existing cron entry (unchanged, added
+    at Phase 0) already covers this extended behavior since it just re-invokes this same script.'
   sources:
     - name: database_catalog
       path: /opt/veridian/ai-os/DATABASE_CATALOG.json
-      produces: entity_type=table
+      produces: entity_type=supabase_table
+    - name: vercel_github_state_census
+      path: 'ai-os/MASTER_INDEX.yaml, registries[id=vercel_github_state_census_2026_07_26]'
+      produces: 'entity_type=vercel_project (.vercel.projects, 3 real rows), entity_type=github_repo
+        (.github.repos, 7 real rows) -- added by this task''s full-system extension
+        (task-20260726-162252-extend-wiring-engine-to-full-system--ser). Both parsed straight out of
+        MASTER_INDEX.yaml''s own registries[] list (yaml.safe_load), the same real fresh `vercel`/`gh` CLI census
+        already committed there -- never a separate hand-typed catalog.'
+    - name: engines_gateways_phase_plan_browser_components
+      path: /opt/veridian/ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml
+      produces: 'entity_type=browser_component -- added by this task''s full-system extension. Sourced from the
+        real, already-cited client-side file paths in engine_inventory''s own exists_as lists, restricted to
+        engine_no 1 (Intent Engine: IntentCommandPalette.tsx, browser-intent-cache.ts, ChainSelector.tsx) and
+        engine_no 17 (UI Composition Engine: VeriComposer.tsx, ChainSelector.tsx) -- confirmed by a live grep of
+        every engine_inventory row for these 4 exact filenames at extension time (engine_no 2/Context Engine
+        does NOT cite any of them, despite this task''s own SPEC mentioning "row 1/2/17" -- the real inventory
+        data, not that SPEC text, is what this generator matches against). 4 distinct real files, not 5, since
+        ChainSelector.tsx is cited by both rows and collapses to one browser_component entity with two
+        implements_engine relationships, same file-collapsing convention Registry.get_or_create_file already
+        uses.'
     - name: function_catalog
       path: /opt/veridian/ai-os/FUNCTION_CATALOG.json
       produces: entity_type=function
