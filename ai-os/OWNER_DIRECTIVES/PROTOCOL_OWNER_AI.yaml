@@ -219,18 +219,24 @@ articles:
       (`gh pr merge`, or the equivalent raw `gh api -X PUT|PATCH .../pulls/
       <n>/merge` call) and `git push` to a protected branch (including
       `push --all`/`--mirror`, which reach every ref -- protected branches
-      included -- regardless of which branch is currently checked out).
+      included -- regardless of which branch is currently checked out),
+      regardless of how many real global flags (`git -C`, `git --git-dir`,
+      `gh --repo`/`-R`, etc.) precede the subcommand on the command line.
       The command is blocked with a non-zero exit and a clear "BLOCKED: ...
-      must run through the dispatch pipeline" message unless BOTH of two
-      signals show this is a real dispatched worker/supervisor context: (1)
-      the real systemd-set INVOCATION_ID environment variable is present,
-      and (2) this process's real, kernel-tracked cgroup membership (read
-      from /proc/self/cgroup) actually names a veridian-worker@*/
-      veridian-supervisor@* systemd unit. Every other gh/git subcommand
-      (view, checks, pr list, pr comment, pr diff, run rerun, status, log,
-      diff, push to a non-protected branch, `gh api` calls that aren't a
-      merge, etc.) passes through to the real binary unchanged --
-      verification and status-checking work is never blocked.
+      must run through the dispatch pipeline" message unless ALL THREE of
+      the following signals show this is a real dispatched worker/
+      supervisor context: (1) the real systemd-set INVOCATION_ID
+      environment variable is present; (2) this process's real,
+      kernel-tracked cgroup membership (read from /proc/self/cgroup)
+      actually names a veridian-worker@*/veridian-supervisor@* systemd
+      unit; (3) the task_id parsed out of that unit name corresponds to a
+      REAL, currently in_progress task
+      (/opt/veridian/ai-os/tasks/<task_id>/task.yaml exists with
+      `status: in_progress`). Every other gh/git subcommand (view, checks,
+      pr list, pr comment, pr diff, run rerun, status, log, diff, push to
+      a non-protected branch, `gh api` calls that aren't a merge, etc.)
+      passes through to the real binary unchanged -- verification and
+      status-checking work is never blocked.
     real_incident: >-
       2026-07-26: an interactive session ran `gh pr merge 78 --repo
       FChecklist/claude-control --merge --delete-branch` and a direct `git
@@ -293,6 +299,54 @@ articles:
       blocked if ANY of them resolves to a protected branch. Each has a
       dedicated, passing regression-test scenario -- see
       tests/interactive_session_guard_test.sh's "ROUND 3" scenarios.
+    round_4_hardening: >-
+      A round-4 audit, again verified by live reproduction, found one real
+      bypass and investigated one structural concern about the cgroup-check
+      premise itself. (a) both wrapper scripts detected the guarded
+      subcommand by checking ONLY argv[1] literally (`[ "$1" = "push" ]`
+      for git; `$1=pr $2=merge` or `$1=api` for gh) -- any invocation with
+      a real, ordinary global flag before the subcommand walked straight
+      past detection undetected; reproduced live with
+      `git -C /tmp push origin master`,
+      `git --git-dir=/tmp/.git push origin master`, and
+      `gh --repo some/repo pr merge 1 --merge`, none of which are
+      adversarial tricks -- `-C`, `--git-dir`, and `--repo`/`-R` are real,
+      commonly-used flags confirmed against `man git` and
+      `gh <cmd> --help`'s INHERITED FLAGS. Closed by replacing the
+      argv[1]-only check with functions that scan the FULL argument list
+      and skip every real global flag documented for the installed git
+      2.43 / gh 2.45 (both `--flag value` and `--flag=value` forms, plus
+      git's space-only `-C`/`-c` and gh's attached `-Rvalue` short form)
+      before looking for the actual subcommand token. (b) a live test of
+      whether an ordinary interactive process can run `systemd-run --user
+      --unit=veridian-worker@<fake>.service --scope <command>` to obtain a
+      genuinely kernel-tracked cgroup + INVOCATION_ID that would satisfy
+      the round-3 cgroup check found that this SPECIFIC attempt is
+      currently rejected by systemd on VERIDIAN-DEV ("was already loaded or
+      has a fragment file"), because the real veridian-worker@.service /
+      veridian-supervisor@.service template unit files are installed in
+      ~/.config/systemd/user/ and systemd refuses to create a transient
+      unit whose name collides with an existing one (confirmed this is a
+      name-collision effect, not systemd-run being broken here, by
+      succeeding with an unrelated `--unit=` name). This is real evidence,
+      but it is a side effect of what happens to be installed on this
+      machine, not a fundamental property of cgroups/systemd-run -- the
+      same-account limitation already means an interactive session could
+      plausibly delete/rename its own copy of those unit files and remove
+      this collision protection, so it is NOT relied upon as the fix. The
+      actual fix is a third, independent signal added regardless: the
+      task_id parsed from a matching cgroup unit name must correspond to a
+      REAL, currently in_progress task
+      (/opt/veridian/ai-os/tasks/<task_id>/task.yaml exists with
+      `status: in_progress`) -- a `systemd-run`-forged instance name has no
+      such entry, closing the gap regardless of how a matching-but-fake
+      cgroup name might be produced. (a) has dedicated, passing
+      regression-test scenarios; the task cross-reference mitigation for
+      (b) has a dedicated regression scenario simulating a forged-but-
+      pattern-matching cgroup with no corresponding real task (the live
+      systemd-run collision itself is not re-run in the automated suite,
+      since it mutates real systemd unit state) -- see
+      tests/interactive_session_guard_test.sh's "ROUND 4" scenarios.
     implementation:
       deployed_at: "/home/rajat/.claude-interactive-session-guard.bashrc-snippet
         on VERIDIAN-DEV, sourced from both ~/.bashrc (interactive non-login
@@ -310,29 +364,42 @@ articles:
         (this exact repo, for auditability -- kept byte-identical to the
         deployed copy).
       mechanism_summary: >-
-        (1) Real, kernel-verified context check: INVOCATION_ID present AND
-        /proc/self/cgroup -- read directly, hardcoded, no file-based
-        indirection -- names a veridian-worker@*/veridian-supervisor@* unit;
-        both required, neither alone is trusted. (2) PATH-based wrapper
-        scripts, not shell functions -- placed in a directory prepended to
-        PATH, so `command git`/`command gh` (which bypass functions/aliases
-        but not PATH search) still resolve to the guard. (3) gh-merge
-        detection extended to `gh api -X PUT|PATCH .../pulls/<n>/merge` in
-        addition to `gh pr merge`. (4) git-push detection extended to `push
+        (1) Real, kernel-verified context check, THREE signals all
+        required: INVOCATION_ID present AND /proc/self/cgroup -- read
+        directly, hardcoded, no file-based indirection -- names a
+        veridian-worker@*/veridian-supervisor@* unit AND [round 4] the
+        task_id parsed from that unit name has a real, in_progress
+        /opt/veridian/ai-os/tasks/<task_id>/task.yaml; none alone is
+        trusted. (2) PATH-based wrapper scripts, not shell functions --
+        placed in a directory prepended to PATH, so `command git`/
+        `command gh` (which bypass functions/aliases but not PATH search)
+        still resolve to the guard. (3) gh-merge detection extended to
+        `gh api -X PUT|PATCH .../pulls/<n>/merge` in addition to
+        `gh pr merge`. (4) git-push detection extended to `push
         --all`/`--mirror` in addition to an explicit push naming a protected
         branch. (5) [round 3] every positional refspec argument of a `git
         push` is checked (not just the first), and a leading `+` force-push
         marker is stripped from each before comparison against the
-        protected-branch pattern.
+        protected-branch pattern. (6) [round 4] subcommand detection scans
+        the FULL argv for both git and gh, skipping every real global flag
+        for the installed git/gh version, so a global flag before the
+        subcommand (`git -C`, `git --git-dir`, `gh --repo`/`-R`) can no
+        longer walk past detection.
       test: tests/interactive_session_guard_test.sh (sources the real
         committed snippet against faked gh/git binaries; scenarios covering
         block/pass-through for gh pr merge, gh api merge calls, git push to
         master/main vs. a feature branch, git push --all/--mirror,
         `command`-prefixed invocations of both, the
         spoofed-INVOCATION_ID-alone case, the round-3 config-file cgroup
-        bypass (now closed), `git push origin +master`, and multi-refspec
-        `git push origin feature-branch master`, in both interactive and
-        systemd-simulated contexts).
+        bypass (now closed), `git push origin +master`, multi-refspec
+        `git push origin feature-branch master`, [round 4] global-flag-
+        prefixed invocations (`git -C`, `git --git-dir=`, `gh --repo`/`-R`
+        in space/`=`/attached forms), and [round 4] a forged-but-pattern-
+        matching cgroup naming a task_id with no corresponding real,
+        in_progress task -- in both interactive and systemd-simulated
+        contexts). Also runnable via
+        `python3 -m pytest tests/ -k write_gate -v`
+        (tests/write_gate_test.py wraps this shell suite as a subprocess).
       known_limitations: >-
         (1) Same-account limitation (unchanged from round 1): this guard
         cannot distinguish the Owner's own interactive SSH session from an
@@ -378,16 +445,49 @@ articles:
         and the production code path itself never reads any file or
         environment variable to make this decision. A real interactive
         shell can never reach this seam because it only ever sources the
-        genuine, unmodified, committed snippet.
+        genuine, unmodified, committed snippet. (4) [round 4, new] Detection
+        is a finite, version-tied global-flag allowlist:
+        _interactive_guard_git_find_subcommand()/
+        _interactive_guard_gh_strip_globals() in _lib.sh recognize the real
+        global-flag sets of the git 2.43 / gh 2.45 confirmed live on
+        VERIDIAN-DEV. A future git/gh upgrade adding a new global flag not
+        in these lists would leave the *detection* unable to see past it --
+        but the wrapper always execs the untouched original argv either
+        way, and the real binary itself rejects flags it doesn't recognize,
+        so this degrades to "no worse than before round 4", not a new
+        silent bypass; there is no automatic staleness detection for this
+        today. (5) [round 4, new] Task cross-reference has zero runtime
+        override, same pattern as the cgroup check:
+        _interactive_guard_tasks_dir() is hardcoded to
+        "/opt/veridian/ai-os/tasks" with no config file or environment
+        variable, for the identical reason the cgroup path has none --
+        letting an interactive shell redirect this check would let it point
+        at a directory of its own choosing with a forged task.yaml. (6)
+        [round 4, new, honestly disclosed] The systemd-run impersonation
+        question is NOT claimed fully closed: live testing found
+        `systemd-run --user --unit=veridian-worker@<fake>.service` is
+        currently rejected by systemd on VERIDIAN-DEV because it collides
+        with the real installed template unit files -- but this is
+        deployment-specific (what happens to be installed on this machine),
+        not a fundamental property of cgroups/systemd-run, and the
+        same-account limitation above means an interactive session could
+        plausibly remove that collision protection by deleting/renaming its
+        own copy of those unit files. What actually closes the gap
+        (regardless of how a matching-but-fake cgroup name might be
+        produced) is signal 3, the live task cross-reference -- a
+        `systemd-run`-forged instance name has no corresponding real,
+        in_progress task directory.
     source: This task's own real deliverable (server-side ~/.bashrc /
       ~/.profile-sourced snippet change + committed snippet + test),
       directly implementing A8_software_execution_only's standing rule with
-      real enforcement, hardened in round 2 against four real bypasses and in
+      real enforcement, hardened in round 2 against four real bypasses, in
       round 3 against three more (a false "kernel-verified" cgroup claim and
-      two git-push refspec parsing gaps) that fresh, live-reproduced audits
-      found.
+      two git-push refspec parsing gaps), and in round 4 against an
+      argv-position detection bypass plus a task-registry cross-reference
+      added to reduce reliance on the cgroup-name-pattern check alone -- all
+      found and verified by fresh, live-reproduced audits.
     see_also: ai-os/OWNER_DIRECTIVES/interactive-session-guard.bashrc-snippet,
-      tests/interactive_session_guard_test.sh
+      tests/interactive_session_guard_test.sh, tests/write_gate_test.py
 
   - id: A16_hold_for_owner_signoff
     rule: >-

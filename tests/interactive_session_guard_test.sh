@@ -81,6 +81,46 @@
 #      single push) is now blocked because of `master` specifically, even
 #      though it's the second refspec, not the first -- every positional
 #      refspec is checked, not just the first one.
+#
+# ROUND 4 additions (each proven blocked here, not just asserted in prose):
+#   1. Both wrapper scripts used to detect the guarded subcommand by
+#      checking ONLY argv[1] literally, so any real global flag before the
+#      subcommand (`git -C /tmp push ...`, `git --git-dir=/tmp/.git push
+#      ...`, `gh --repo some/repo pr merge ...`) walked straight past
+#      detection undetected -- reproduced live, not an adversarial trick.
+#      Closed by scanning the full argv and skipping every real global flag
+#      documented for the installed git/gh version before looking for the
+#      subcommand. Scenarios below cover git's `-C`/`--git-dir=` and gh's
+#      `--repo`/`-R` in all its real forms (`--repo value`, `--repo=value`,
+#      `-R value`, `-Rvalue` attached), for both the blocked and
+#      passes-through cases, and in the systemd-simulated context too (to
+#      prove the fix doesn't accidentally start blocking a REAL worker that
+#      happens to use a global flag).
+#   2. A lower-confidence structural question was investigated live: can an
+#      ordinary interactive process run `systemd-run --user
+#      --unit=veridian-worker@<fake>.service --scope <command>` to obtain a
+#      genuinely kernel-tracked cgroup (and a genuine INVOCATION_ID) that
+#      would satisfy round 3's cgroup check without being a real dispatched
+#      worker? Live testing on VERIDIAN-DEV found this SPECIFIC attempt is
+#      currently rejected by systemd itself (name collision with the real
+#      installed veridian-worker@.service/veridian-supervisor@.service
+#      template unit files) -- but that is a deployment-specific side
+#      effect, not proof the underlying premise is sound in general, and is
+#      NOT relied upon as the fix (see the snippet's own KNOWN LIMITATIONS
+#      for why). The actual fix, added regardless: the task_id parsed from
+#      a matching cgroup unit name must correspond to a REAL, currently
+#      in_progress task -- <tasks_dir>/<task_id>/task.yaml must exist with
+#      `status: in_progress`. This is testable and IS tested here: a
+#      pattern-matching-but-forged cgroup naming a task_id with no
+#      corresponding fixture task directory must still be BLOCKED even with
+#      a real-looking INVOCATION_ID present, simulating what a successful
+#      `systemd-run` impersonation attempt (of the kind investigated above)
+#      would actually look like from the guard's point of view. This test
+#      does not itself invoke real `systemd-run` (it would mutate real
+#      systemd unit state, which an automated regression suite must not
+#      do) -- see the interactive-session-guard.bashrc-snippet's ROUND 4
+#      section for how the live systemd-run collision test was actually run
+#      and what it did and did not prove.
 set -uo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -106,7 +146,15 @@ EOF
 
 cat > "$FAKE_BIN/git" <<'EOF'
 #!/bin/bash
-if [ "$1" = "symbolic-ref" ] && [ "$2" = "--short" ] && [ "$3" = "HEAD" ]; then
+# Tolerates an optional leading "-C <path>" prefix before the symbolic-ref
+# check, so ROUND 4 scenarios can prove the guard forwards a skipped global
+# flag (like -C) through to its internal current-branch lookup, not just to
+# the final passthrough exec.
+args=("$@")
+if [ "${args[0]:-}" = "-C" ]; then
+  args=("${args[@]:2}")
+fi
+if [ "${args[0]:-}" = "symbolic-ref" ] && [ "${args[1]:-}" = "--short" ] && [ "${args[2]:-}" = "HEAD" ]; then
   echo "${FAKE_CURRENT_BRANCH:-master}"
   exit 0
 fi
@@ -131,40 +179,90 @@ echo '0::/user.slice/user-1000.slice/session-3.scope' > "$FAKE_NONWORKER_CGROUP"
 FAKE_WORKER_CGROUP="$FIXTURE_ROOT/cgroup.worker"
 echo '0::/system.slice/veridian-worker@task-example.service' > "$FAKE_WORKER_CGROUP"
 
+# [ROUND 4] A fake, matching cgroup whose task_id ("fake-test", chosen to
+# mirror the exact `systemd-run --user
+# --unit=veridian-worker@fake-test.service` example from the round-4 audit)
+# has NO corresponding entry in $FIXTURE_TASKS_DIR below -- this is what a
+# successful systemd-run impersonation attempt would look like from the
+# guard's point of view: a genuinely pattern-matching cgroup with nothing
+# real behind it.
+FAKE_WORKER_CGROUP_FORGED="$FIXTURE_ROOT/cgroup.worker-forged"
+echo '0::/system.slice/veridian-worker@fake-test.service' > "$FAKE_WORKER_CGROUP_FORGED"
+
+# [ROUND 4] Same shape, but the task_id DOES have a fixture task directory,
+# just not with status in_progress -- proves the cross-reference checks the
+# status, not merely the directory's existence.
+FAKE_WORKER_CGROUP_WRONG_STATUS="$FIXTURE_ROOT/cgroup.worker-wrong-status"
+echo '0::/system.slice/veridian-worker@task-done-example.service' > "$FAKE_WORKER_CGROUP_WRONG_STATUS"
+
+# [ROUND 4] Fixture "tasks directory" standing in for the real, hardcoded
+# /opt/veridian/ai-os/tasks the shipped guard's _interactive_guard_tasks_dir()
+# reads -- built the same sanctioned way as the cgroup fixtures above (a
+# source-patched scratch copy, never a runtime override the production code
+# reads; see _interactive_guard_tasks_dir()'s own comment in the snippet for
+# why it has none). Contains exactly two entries: "task-example" (matches
+# $FAKE_WORKER_CGROUP above, real and in_progress -- the positive-path case)
+# and "task-done-example" (matches $FAKE_WORKER_CGROUP_WRONG_STATUS, real
+# but completed, not in_progress). "fake-test"
+# ($FAKE_WORKER_CGROUP_FORGED's task_id) deliberately has no entry at all.
+FIXTURE_TASKS_DIR="$FIXTURE_ROOT/tasks_dir"
+mkdir -p "$FIXTURE_TASKS_DIR/task-example" "$FIXTURE_TASKS_DIR/task-done-example"
+printf 'id: task-example\nstatus: in_progress\n' > "$FIXTURE_TASKS_DIR/task-example/task.yaml"
+printf 'id: task-done-example\nstatus: completed\n' > "$FIXTURE_TASKS_DIR/task-done-example/task.yaml"
+
 # --- throwaway, disk-scratch copy of the real snippet, source-patched so its
-# hardcoded /proc/self/cgroup read points at $FAKE_WORKER_CGROUP instead.
-# This is the ONLY place this test ever edits the guard's logic, it never
-# touches $SNIPPET itself, and it exists solely because a genuinely matching
-# /proc/self/cgroup cannot be produced from userspace without root/namespace
-# privileges. See the ROUND 3 note above and the snippet's own KNOWN
+# hardcoded /proc/self/cgroup AND tasks-dir reads point at fixture paths
+# instead. This is the ONLY place this test ever edits the guard's logic, it
+# never touches $SNIPPET itself, and it exists solely because a genuinely
+# matching /proc/self/cgroup cannot be produced from userspace without root/
+# namespace privileges, and because the real, hardcoded tasks dir
+# (/opt/veridian/ai-os/tasks) is real production data this test must not
+# depend on. See the ROUND 3/4 notes above and the snippet's own KNOWN
 # LIMITATIONS section for why this is the sanctioned test-only seam.
+# $1=cgroup fixture file $2=output path
+_build_patched_snippet() {
+  local cgroup_fixture="$1" out="$2"
+  sed -e "s#printf '%s' /proc/self/cgroup#printf '%s' '$cgroup_fixture'#" \
+      -e "s#printf '%s' /opt/veridian/ai-os/tasks#printf '%s' '$FIXTURE_TASKS_DIR'#" \
+      "$SNIPPET" > "$out"
+  if ! grep -qF "printf '%s' '$cgroup_fixture'" "$out"; then
+    echo "FAIL: could not build the source-patched scratch snippet -- the" \
+      "hardcoded /proc/self/cgroup line in the real snippet may have" \
+      "changed; update the sed pattern above to match."
+    exit 1
+  fi
+  if ! grep -qF "printf '%s' '$FIXTURE_TASKS_DIR'" "$out"; then
+    echo "FAIL: could not build the source-patched scratch snippet -- the" \
+      "hardcoded /opt/veridian/ai-os/tasks line in the real snippet may" \
+      "have changed; update the sed pattern above to match."
+    exit 1
+  fi
+}
+
 PATCHED_SNIPPET_MATCHING_WORKER="$FIXTURE_ROOT/snippet.patched-matching-worker"
-sed "s#printf '%s' /proc/self/cgroup#printf '%s' '$FAKE_WORKER_CGROUP'#" \
-  "$SNIPPET" > "$PATCHED_SNIPPET_MATCHING_WORKER"
-if ! grep -qF "printf '%s' '$FAKE_WORKER_CGROUP'" "$PATCHED_SNIPPET_MATCHING_WORKER"; then
-  echo "FAIL: could not build the source-patched scratch snippet used for" \
-    "positive-path ('passes through') scenarios -- the hardcoded" \
-    "/proc/self/cgroup line in the real snippet may have changed; update" \
-    "the sed pattern above to match."
-  exit 1
-fi
+_build_patched_snippet "$FAKE_WORKER_CGROUP" "$PATCHED_SNIPPET_MATCHING_WORKER"
+
+# [ROUND 4] simulates a successful systemd-run-style impersonation attempt:
+# cgroup name matches the worker pattern, but no real task backs it.
+PATCHED_SNIPPET_FORGED_WORKER="$FIXTURE_ROOT/snippet.patched-forged-worker"
+_build_patched_snippet "$FAKE_WORKER_CGROUP_FORGED" "$PATCHED_SNIPPET_FORGED_WORKER"
+
+# [ROUND 4] cgroup name matches a REAL task directory, but that task is not
+# in_progress.
+PATCHED_SNIPPET_WRONG_STATUS="$FIXTURE_ROOT/snippet.patched-wrong-status"
+_build_patched_snippet "$FAKE_WORKER_CGROUP_WRONG_STATUS" "$PATCHED_SNIPPET_WRONG_STATUS"
 
 # Same mechanism, other direction: a throwaway copy simulating a genuine
 # real (non-worker) interactive shell's own cgroup -- used for scenarios
 # that spoof INVOCATION_ID and must still be BLOCKED because the (simulated)
 # real cgroup does not name a veridian-worker/veridian-supervisor unit. Not
 # used for any scenario where INVOCATION_ID is unset, since the guard never
-# even reaches the cgroup check in that case.
+# even reaches the cgroup check in that case. The cgroup regex never matches
+# here, so the tasks-dir cross-reference is never reached either -- no need
+# for a fixture task entry, but the tasks-dir line is still patched for
+# consistency with the other scratch copies (it is simply unused).
 PATCHED_SNIPPET_NONWORKER="$FIXTURE_ROOT/snippet.patched-nonworker"
-sed "s#printf '%s' /proc/self/cgroup#printf '%s' '$FAKE_NONWORKER_CGROUP'#" \
-  "$SNIPPET" > "$PATCHED_SNIPPET_NONWORKER"
-if ! grep -qF "printf '%s' '$FAKE_NONWORKER_CGROUP'" "$PATCHED_SNIPPET_NONWORKER"; then
-  echo "FAIL: could not build the source-patched scratch snippet used to" \
-    "simulate a real non-worker interactive shell -- the hardcoded" \
-    "/proc/self/cgroup line in the real snippet may have changed; update" \
-    "the sed pattern above to match."
-  exit 1
-fi
+_build_patched_snippet "$FAKE_NONWORKER_CGROUP" "$PATCHED_SNIPPET_NONWORKER"
 
 # $1=label $2=INVOCATION_ID value ("" = unset) $3=command line to run
 # $4=expected exit code $5=expect real binary called (0/1)
@@ -441,6 +539,99 @@ run_case "sanity: 'git push origin feature-branch other-feature' (multi-refspec,
 
 run_case_matching_worker "BYPASS VECTOR 7: systemd-simulated 'git push origin feature-branch master' passes through" \
   "test-unit-123" "git push origin feature-branch master"
+
+# =========================================================================
+# ROUND 4: bypass vector 8 -- argv-position bypass via a global flag before
+# the subcommand is now closed (git -C / --git-dir=, gh --repo / -R)
+# =========================================================================
+run_case "BYPASS VECTOR 8: 'git -C /tmp push origin master' is BLOCKED (was a total bypass pre-round-4)" \
+  "" "git -C /tmp push origin master" 1 0 \
+  "BLOCKED: git push to protected branch/ref 'master'" ""
+
+run_case "BYPASS VECTOR 8: 'git --git-dir=/tmp/.git push origin master' is BLOCKED (was a total bypass pre-round-4)" \
+  "" "git --git-dir=/tmp/.git push origin master" 1 0 \
+  "BLOCKED: git push to protected branch/ref 'master'" ""
+
+run_case "BYPASS VECTOR 8: 'git --git-dir /tmp/.git push origin master' (space form) is BLOCKED" \
+  "" "git --git-dir /tmp/.git push origin master" 1 0 \
+  "BLOCKED: git push to protected branch/ref 'master'" ""
+
+run_case "BYPASS VECTOR 8: 'gh --repo some/repo pr merge 1 --merge' is BLOCKED (was a total bypass pre-round-4)" \
+  "" "gh --repo some/repo pr merge 1 --merge" 1 0 \
+  "BLOCKED: gh pr merge" ""
+
+run_case "BYPASS VECTOR 8: 'gh --repo=some/repo pr merge 1 --merge' (= form) is BLOCKED" \
+  "" "gh --repo=some/repo pr merge 1 --merge" 1 0 \
+  "BLOCKED: gh pr merge" ""
+
+run_case "BYPASS VECTOR 8: 'gh -R some/repo pr merge 1 --merge' (short-flag space form) is BLOCKED" \
+  "" "gh -R some/repo pr merge 1 --merge" 1 0 \
+  "BLOCKED: gh pr merge" ""
+
+run_case "BYPASS VECTOR 8: 'gh -Rsome/repo pr merge 1 --merge' (short-flag attached form) is BLOCKED" \
+  "" "gh -Rsome/repo pr merge 1 --merge" 1 0 \
+  "BLOCKED: gh pr merge" ""
+
+run_case "BYPASS VECTOR 8: 'gh --repo some/repo api -X PUT repos/x/y/pulls/1/merge' is BLOCKED" \
+  "" "gh --repo some/repo api -X PUT repos/x/y/pulls/1/merge" 1 0 \
+  "BLOCKED: gh pr merge" ""
+
+# sanity: a global flag before a NON-guarded subcommand must still pass
+# through unaffected -- proves the fix only changes subcommand DETECTION,
+# not which subcommands are guarded.
+run_case "BYPASS VECTOR 8 sanity: 'git -C /tmp status' (global flag, non-guarded subcommand) passes through" \
+  "" "git -C /tmp status" 0 1 "" ""
+
+run_case "BYPASS VECTOR 8 sanity: 'gh --repo some/repo pr view 1' (global flag, non-guarded subcommand) passes through" \
+  "" "gh --repo some/repo pr view 1" 0 1 "" ""
+
+run_case "BYPASS VECTOR 8 sanity: 'git -C /tmp push origin feature-branch' (global flag, non-protected branch) passes through" \
+  "" "git -C /tmp push origin feature-branch" 0 1 "" ""
+
+# proves the global-flag prefix is forwarded to the guard's own internal
+# current-branch resolution too (bare `git push`, no explicit refspec), not
+# just used for detection -- see _interactive_guard_git_push_verdict()'s
+# ROUND 4 comment and the fake $FAKE_BIN/git's tolerance for a leading -C.
+run_case "BYPASS VECTOR 8: bare 'git -C /tmp push' on protected current branch is BLOCKED (global-flag-aware branch resolution)" \
+  "" "git -C /tmp push" 1 0 \
+  "BLOCKED: git push to protected branch/ref 'master'" "master"
+
+run_case "BYPASS VECTOR 8 sanity: bare 'git -C /tmp push' on own feature branch passes through" \
+  "" "git -C /tmp push" 0 1 "" "worker/some-task-branch"
+
+run_case_matching_worker "BYPASS VECTOR 8: systemd-simulated 'git -C /tmp push origin master' passes through" \
+  "test-unit-123" "git -C /tmp push origin master"
+
+run_case_matching_worker "BYPASS VECTOR 8: systemd-simulated 'gh --repo some/repo pr merge 1 --merge' passes through" \
+  "test-unit-123" "gh --repo some/repo pr merge 1 --merge"
+
+# =========================================================================
+# ROUND 4: bypass vector 9 -- cgroup-name-pattern match alone is no longer
+# trusted; it must cross-reference a REAL, in_progress task (closes the
+# systemd-run impersonation concern regardless of how a matching-but-fake
+# cgroup name might be produced -- see the ROUND 4 section in
+# interactive-session-guard.bashrc-snippet for what was and was not proven
+# live about the specific `systemd-run --user
+# --unit=veridian-worker@<fake>.service` attempt).
+# =========================================================================
+run_case "BYPASS VECTOR 9: a cgroup naming a pattern-matching but NON-EXISTENT task (simulating a systemd-run-forged unit) is still BLOCKED -- git push" \
+  "real-looking-invocation-id" "git push origin master" 1 0 \
+  "BLOCKED: git push to protected branch/ref 'master'" "" "" "" "$PATCHED_SNIPPET_FORGED_WORKER"
+
+run_case "BYPASS VECTOR 9: a cgroup naming a pattern-matching but NON-EXISTENT task (simulating a systemd-run-forged unit) is still BLOCKED -- gh pr merge" \
+  "real-looking-invocation-id" "gh pr merge 1 --repo some/repo --merge" 1 0 \
+  "BLOCKED: gh pr merge" "" "" "" "$PATCHED_SNIPPET_FORGED_WORKER"
+
+run_case "BYPASS VECTOR 9: a cgroup naming a REAL task that is NOT in_progress (status: completed) is still BLOCKED -- git push" \
+  "real-looking-invocation-id" "git push origin master" 1 0 \
+  "BLOCKED: git push to protected branch/ref 'master'" "" "" "" "$PATCHED_SNIPPET_WRONG_STATUS"
+
+run_case "BYPASS VECTOR 9: a cgroup naming a REAL task that is NOT in_progress (status: completed) is still BLOCKED -- gh pr merge" \
+  "real-looking-invocation-id" "gh pr merge 1 --repo some/repo --merge" 1 0 \
+  "BLOCKED: gh pr merge" "" "" "" "$PATCHED_SNIPPET_WRONG_STATUS"
+
+run_case_matching_worker "sanity: a cgroup naming a REAL, in_progress task DOES pass through (both name-pattern AND task cross-reference genuinely satisfied)" \
+  "test-unit-123" "git push origin master"
 
 if [ "$FAILURES" -eq 0 ]; then
   echo "All scenarios passed."

@@ -78,7 +78,72 @@
 # not just prose -- see tests/interactive_session_guard_test.sh's "ROUND 3"
 # scenarios.
 #
-# MECHANISM (dual signal, both required):
+# ROUND 4 (this version): a fresh audit of round 3, verified by direct live
+# reproduction, found one real bypass and investigated one structural
+# concern about the cgroup-check premise itself:
+#   (a) both wrapper scripts detected the guarded subcommand by checking
+#       ONLY argv[1] literally (`[ "$1" = "push" ]` for git; `$1=pr $2=merge`
+#       or `$1=api` for gh). Any invocation with a real, ordinary global flag
+#       before the subcommand walked straight past that check undetected --
+#       reproduced live with `git -C /tmp push origin master`,
+#       `git --git-dir=/tmp/.git push origin master`, and
+#       `gh --repo some/repo pr merge 1 --merge`, none of which are
+#       adversarial tricks; they are everyday command forms (`git -C`,
+#       `git --git-dir`, and `gh --repo`/`-R` are all real, commonly-used
+#       flags, confirmed against `man git` and `gh <cmd> --help`'s INHERITED
+#       FLAGS). Closed by replacing the argv[1]-only check with
+#       _interactive_guard_git_find_subcommand() / _interactive_guard_gh_strip_globals()
+#       in _lib.sh, which scan the FULL argument list and skip past every
+#       real global flag documented for this git/gh version (both the
+#       `--flag value` and `--flag=value` forms, plus git's `-C`/`-c`
+#       space-separated forms and gh's `-Rvalue` attached short form) before
+#       looking for the actual subcommand token -- verified against a live
+#       git 2.43 / gh 2.45 install, not guessed (see the functions'
+#       comments in _lib.sh for the exact, cited flag lists and how each
+#       was confirmed). An unrecognized flag before any subcommand token is
+#       left undetected by the scan, but this creates no bypass: the real
+#       git/gh binary itself rejects unknown global flags before ever
+#       running a subcommand, and the wrapper always execs the ORIGINAL,
+#       untouched argv either way -- the scan only decides whether to
+#       apply the block, never what is actually executed.
+#   (b) lower-confidence structural question: does the round-3 "kernel-
+#       tracked cgroup membership cannot be forged" claim actually hold
+#       against an ordinary interactive process running
+#       `systemd-run --user --unit=veridian-worker@<fake>.service --scope
+#       <command>`, which creates a genuinely kernel-tracked cgroup AND a
+#       genuine INVOCATION_ID? Tested live on VERIDIAN-DEV: this specific
+#       attempt currently FAILS with "Unit veridian-worker@<fake>.service
+#       was already loaded or has a fragment file" -- systemd refuses to
+#       create a transient scope whose name collides with the real,
+#       installed `veridian-worker@.service` / `veridian-supervisor@.service`
+#       template unit files in ~/.config/systemd/user/ on THIS machine (a
+#       plain, unrelated `--unit=` name, e.g. `totally-unrelated-test-unit`,
+#       succeeds normally with a real cgroup and INVOCATION_ID, proving
+#       systemd-run itself works fine here -- the failure is specific to the
+#       name colliding with the installed template, not systemd-run being
+#       broken or blocked outright). This is real evidence, but it is a
+#       deployment-specific side effect (the template unit files happen to
+#       be installed) rather than something structurally impossible -- the
+#       SAME-ACCOUNT limitation below already means an interactive session
+#       shares enough privilege with a real worker that it could plausibly
+#       remove/rename its own `~/.config/systemd/user/veridian-worker@.service`
+#       and try again, and this guard makes no claim that every such avenue
+#       has been enumerated and closed. Given that uncertainty, the
+#       cgroup-membership check is no longer trusted as sufficient on its
+#       own even when it matches the right unit-name pattern: it is now
+#       cross-referenced against a THIRD, independent signal -- a real,
+#       currently-registered task. See MECHANISM below.
+# (a) is verified with dedicated, passing regression-test scenarios, not
+# just prose -- see tests/interactive_session_guard_test.sh's "ROUND 4"
+# scenarios. (b)'s live systemd-run test is not itself a regression-test
+# scenario (it requires a real systemd --user session and mutates real unit
+# state, not appropriate for an automated test run) -- the mitigation it
+# motivated (the task cross-reference) IS covered by a dedicated regression
+# test that simulates a forged worker cgroup with no matching real task,
+# which is what would actually happen if a `systemd-run --user` impersonation
+# attempt of this kind ever did succeed against the cgroup check alone.
+#
+# MECHANISM (three signals, all required):
 #   1. INVOCATION_ID -- the real environment variable systemd sets for every
 #      unit it launches (present for veridian-worker@*.service /
 #      veridian-supervisor@*.service units spawned by scripts/veridian-task.py's
@@ -96,8 +161,27 @@
 #      running under. A real interactive SSH/login shell's cgroup names
 #      `session-N.scope`/`user@<uid>.service`, never a veridian-worker/
 #      veridian-supervisor unit.
-# The command is only treated as "real dispatched worker context" when BOTH
-# signals agree; either one alone is not enough.
+#   3. [ROUND 4] The task_id parsed out of that matching cgroup unit name
+#      (the text between `@` and `.service`) names a REAL, currently
+#      in_progress task: /opt/veridian/ai-os/tasks/<task_id>/task.yaml
+#      exists and its `status:` field reads `in_progress`. Signal 2 alone
+#      answers "does this process's cgroup carry the right NAME PATTERN" --
+#      it does not answer "does that name correspond to something real",
+#      and ROUND 4's audit could not rule out an ordinary interactive
+#      process using `systemd-run --user --unit=veridian-worker@<fake>.service`
+#      to obtain a genuinely kernel-tracked cgroup with a name matching
+#      signal 2's pattern but no real dispatched work behind it (see ROUND 4
+#      above for what was and was not proven live about that specific
+#      attempt). Cross-referencing against the real, live task registry
+#      closes that gap regardless of how a matching-but-fake cgroup was
+#      produced: a `systemd-run`-forged unit's instance name is whatever the
+#      caller typed (e.g. `fake-test`), which has no corresponding, real,
+#      in_progress entry under /opt/veridian/ai-os/tasks/ -- a genuine
+#      dispatched worker's instance name always does, because
+#      scripts/veridian-task.py names the unit after the real task_id it
+#      just created the task directory for.
+# The command is only treated as "real dispatched worker context" when ALL
+# THREE signals agree; any one or two alone are not enough.
 #
 # SCOPE: only a PR merge (`gh pr merge`, or `gh api -X PUT|PATCH` against a
 # `.../pulls/<n>/merge` path) and `git push` to a protected branch (or
@@ -164,6 +248,61 @@
 #     item; today it is structurally incapable of affecting a real
 #     interactive shell, which only ever sources the real, unmodified,
 #     committed copy of this file.
+#   - Subcommand detection is a finite, version-tied allowlist (round 4,
+#     new): _interactive_guard_git_find_subcommand() and
+#     _interactive_guard_gh_strip_globals() in _lib.sh recognize the real,
+#     current global-flag sets of git 2.43 and gh 2.45 (confirmed live
+#     against those exact installed versions, not guessed from memory --
+#     see the functions' own comments for the cited flag lists). If a future
+#     git/gh release adds a new global flag not in these lists, an
+#     invocation using that new flag before the subcommand would fall
+#     through the "unrecognized flag" path -- which leaves the *detection*
+#     unable to see past it, but still execs the untouched original argv,
+#     so the real binary either runs the (now undetected) push/merge, or
+#     itself rejects a flag it doesn't recognize either. This is a real,
+#     narrower version of the same "unknown becomes silent passthrough"
+#     shape as the pre-round-4 bug, mitigated by staying current with `git
+#     --help`/`gh <cmd> --help --repo` when either binary is upgraded on
+#     VERIDIAN-DEV -- there is no automatic staleness detection for this
+#     today, and this file makes no claim that there is.
+#   - Task cross-reference has zero runtime override, same pattern as the
+#     cgroup check (round 4, new): _interactive_guard_tasks_dir() in
+#     _lib.sh is hardcoded to the literal string
+#     "/opt/veridian/ai-os/tasks" with no config file, environment
+#     variable, or other externally-settable indirection -- for the exact
+#     same reason the cgroup path has none (see round 3 above): if an
+#     ordinary interactive shell could redirect where this check looks, it
+#     could point it at a directory of its own choosing containing a
+#     forged task.yaml claiming status in_progress, which would defeat the
+#     entire purpose of this round's fix. tests/interactive_session_guard_test.sh
+#     simulates this check's fixture data the same sanctioned way as the
+#     cgroup path -- by source-patching a throwaway scratch copy of this
+#     file's text, never the committed snippet, and never via a runtime
+#     override the shipped code reads.
+#   - The systemd-run impersonation question is disclosed honestly, not
+#     claimed fully closed (round 4, new): live testing on VERIDIAN-DEV
+#     found that `systemd-run --user --unit=veridian-worker@<fake>.service`
+#     is currently rejected by systemd itself ("was already loaded or has a
+#     fragment file"), because the real `veridian-worker@.service` /
+#     `veridian-supervisor@.service` template unit files are installed in
+#     ~/.config/systemd/user/ on this machine, and systemd refuses to create
+#     a transient unit whose name collides with an existing one. This is
+#     real, live-verified evidence -- but it is a side effect of what
+#     happens to be installed on this specific machine, not a fundamental
+#     property of cgroups or systemd-run, and the same-account limitation
+#     above already establishes that an interactive session run by rajat
+#     has enough privilege to delete or rename its own copy of those unit
+#     files and remove that collision protection. This file does NOT claim
+#     that avenue is impossible. What it does claim, and what is actually
+#     load-bearing here, is signal 3 above (the live task cross-reference):
+#     even if a matching-named fake cgroup were successfully produced by
+#     whatever means, it would still need a real, in_progress
+#     /opt/veridian/ai-os/tasks/<task_id>/task.yaml to pass, and a
+#     `systemd-run`-forged instance name has no such entry. This is the
+#     actual, tested mitigation for the impersonation concern, not the
+#     unit-name collision (which is real, but incidental and not relied
+#     upon) -- see tests/interactive_session_guard_test.sh's "ROUND 4"
+#     forged-cgroup-no-matching-task scenario.
 #
 # This file is meant to be sourced from ~/.bashrc and ~/.profile on
 # VERIDIAN-DEV (167.233.220.35), for the rajat user's interactive shells
@@ -219,24 +358,60 @@ _interactive_guard_cgroup_path() {
     printf '%s' /proc/self/cgroup
 }
 
-# Both signals required: (1) INVOCATION_ID -- the real env var systemd sets
-# for every unit it launches, and (2) this process's own real, kernel-
+# [ROUND 4] Directory of real, currently-registered tasks, to cross-check a
+# matching cgroup unit name against a REAL task rather than trusting the
+# name pattern alone. Hardcoded, no override -- same reasoning as
+# _interactive_guard_cgroup_path() above: any config file or environment
+# variable this read would be an ordinary interactive shell's ticket to
+# point this check at a directory of its own choosing containing a forged
+# task.yaml, which would defeat the whole point of this check. See
+# tests/interactive_session_guard_test.sh for how the test harness
+# simulates fixture task data without any runtime override the shipped code
+# reads (same source-patched-scratch-copy technique as the cgroup path).
+_interactive_guard_tasks_dir() {
+    printf '%s' /opt/veridian/ai-os/tasks
+}
+
+# All three signals required: (1) INVOCATION_ID -- the real env var systemd
+# sets for every unit it launches; (2) this process's own real, kernel-
 # tracked cgroup membership actually names a
-# veridian-worker@*/veridian-supervisor@* systemd unit. (1) alone is a plain
-# env var and can be spoofed by anyone with `export INVOCATION_ID=anything`;
-# (2) cannot be set by an env var -- it comes from /proc/self/cgroup, which
-# reflects the kernel's real process hierarchy, inherited from whatever real
-# unit (or login session) actually spawned this process tree.
+# veridian-worker@*/veridian-supervisor@* systemd unit; (3) [ROUND 4] the
+# task_id parsed out of that matching unit name (the text between `@` and
+# `.service`) names a REAL, currently in_progress task --
+# <tasks_dir>/<task_id>/task.yaml exists and its `status:` field reads
+# in_progress. (1) alone is a plain env var and can be spoofed by anyone
+# with `export INVOCATION_ID=anything`; (2) cannot be set by an env var --
+# it comes from /proc/self/cgroup, which reflects the kernel's real process
+# hierarchy -- but ROUND 4's audit could not prove that an ordinary
+# interactive process is structurally unable to obtain a genuinely
+# kernel-tracked cgroup whose NAME matches this pattern without actually
+# being a real dispatched worker (see the ROUND 4 section above for exactly
+# what was and was not verified live about `systemd-run --user
+# --unit=veridian-worker@<fake>.service`); (3) closes that gap regardless of
+# how a matching-but-fake cgroup name might be produced, because a forged
+# unit's instance name is whatever the caller chose and has no
+# corresponding real, in_progress task directory, whereas a genuine
+# dispatched worker's unit is always named after the real task_id
+# scripts/veridian-task.py just created.
 _interactive_guard_is_real_worker_context() {
     [ -n "${INVOCATION_ID:-}" ] || return 1
-    local cgroup_file
+    local cgroup_file cgroup_content task_id task_yaml
     cgroup_file="$(_interactive_guard_cgroup_path)"
     [ -r "$cgroup_file" ] || return 1
-    grep -Eq '(veridian-worker|veridian-supervisor)@[^[:space:]/]+\.service' "$cgroup_file"
+    cgroup_content="$(cat "$cgroup_file" 2>/dev/null)"
+    [[ "$cgroup_content" =~ (veridian-worker|veridian-supervisor)@([^[:space:]/]+)\.service ]] || return 1
+    task_id="${BASH_REMATCH[2]}"
+    task_yaml="$(_interactive_guard_tasks_dir)/$task_id/task.yaml"
+    [ -r "$task_yaml" ] || return 1
+    grep -Eq '^status:[[:space:]]*"?in_progress"?[[:space:]]*$' "$task_yaml"
 }
 
 # gh: does this argv perform (or attempt) a PR merge -- either the direct
-# subcommand or the equivalent raw API call?
+# subcommand or the equivalent raw API call? Callers must pass the argv with
+# any leading global flags already stripped by
+# _interactive_guard_gh_strip_globals() below, so $1/$2 here are always the
+# real subcommand tokens regardless of how many recognized global flags
+# preceded them in the original command line.
 _interactive_guard_gh_is_merge() {
     if [ "$1" = "pr" ] && [ "$2" = "merge" ]; then
         return 0
@@ -267,6 +442,133 @@ _interactive_guard_gh_is_merge() {
     return 1
 }
 
+# [ROUND 4] gh: strip gh's real global flags from the front of a raw gh
+# argv, so the subcommand-detection above always sees the real subcommand
+# tokens regardless of how many recognized global flags preceded them.
+# `-R`/`--repo` is gh's one real global repository-override flag -- per
+# `gh <subcommand> --help`'s own INHERITED FLAGS listing and confirmed live
+# against a real gh 2.45 install, it can precede the subcommand
+# (`gh --repo OWNER/REPO pr merge ...` reproduced live in the round-4 audit
+# that found this bug) even though gh's own root `gh --help` does not list
+# it among its top-level FLAGS (gh re-parses `-R`/`--repo` per-subcommand
+# rather than registering it as a literal root persistent flag, confirmed by
+# `gh --repo OWNER/REPO --help` itself failing with "unknown flag: --repo"
+# at the bare-root level while `gh --repo OWNER/REPO pr view 1` and
+# `gh --repo OWNER/REPO pr merge ...` both work). Both `--repo value` /
+# `--repo=value` / `-R value` / `-Rvalue` (attached short-flag form) are
+# real, live-confirmed forms. `--help`/`--version` are gh's only other true
+# root-level flags (`gh --help`'s own FLAGS section lists exactly these
+# two).
+_interactive_guard_gh_strip_globals() {
+    _interactive_guard_gh_stripped=()
+    local arg
+    while [ $# -gt 0 ]; do
+        arg="$1"
+        case "$arg" in
+            -R|--repo)
+                shift 2
+                ;;
+            --repo=*)
+                shift
+                ;;
+            -R?*)
+                shift
+                ;;
+            --help|--version)
+                shift
+                ;;
+            *)
+                _interactive_guard_gh_stripped=("$@")
+                return
+                ;;
+        esac
+    done
+}
+
+# [ROUND 4] git: is $1 one of git's real no-argument global boolean flags?
+# Per `man git`'s SYNOPSIS/OPTIONS for this git version, confirmed live
+# against a real git 2.43 install.
+_interactive_guard_git_global_noarg() {
+    case "$1" in
+        -v|--version|-h|--help|-p|--paginate|-P|--no-pager|--no-replace-objects|--bare|--no-optional-locks|--literal-pathspecs|--glob-pathspecs|--noglob-pathspecs|--icase-pathspecs|--html-path|--man-path|--info-path)
+            return 0
+            ;;
+    esac
+    return 1
+}
+
+# [ROUND 4] git: scan the FULL `git <args...>` argv (everything after the
+# "git"/wrapper name itself, i.e. NOT including it) and skip past every
+# recognized real global flag that can precede the subcommand, so the
+# guard's subcommand check sees the actual subcommand token regardless of
+# how many global flags (`git -C /tmp push ...`, `git --git-dir=/tmp/.git
+# push ...`, both reproduced live in the round-4 audit that found this bug)
+# came before it. Sets _interactive_guard_subcommand (the real subcommand,
+# "" if none found), _interactive_guard_subcommand_args (argv after the
+# subcommand), and _interactive_guard_global_prefix (the global-flag tokens
+# that were skipped, in original form -- needed so a bare `git push` whose
+# current-branch resolution depends on -C/--git-dir/--work-tree can still
+# resolve the right branch; see the git wrapper script below).
+#
+# Confirmed live against a real git 2.43 install: `-C <path>` and
+# `-c <name>=<value>` only accept a SPACE-separated value (an attached form
+# like `-C/tmp` or `-cfoo=bar` is rejected by git itself with "unknown
+# option") -- so only the space form is handled here. The long options
+# (--git-dir, --work-tree, --namespace, --config-env, --list-cmds,
+# --attr-source, --exec-path) each accept EITHER `--opt value` or
+# `--opt=value` -- both handled. Bare `--exec-path` (no `=`) takes no
+# separate following argument and is a print-and-exit action in real git (it
+# never reaches any subcommand at all) -- treated here as consuming zero
+# following args, which matches real git's own behavior.
+_interactive_guard_git_find_subcommand() {
+    _interactive_guard_subcommand=""
+    _interactive_guard_subcommand_args=()
+    _interactive_guard_global_prefix=()
+    local arg
+    while [ $# -gt 0 ]; do
+        arg="$1"
+        case "$arg" in
+            -C|-c|--config-env|--git-dir|--work-tree|--namespace|--list-cmds|--attr-source)
+                if [ $# -ge 2 ]; then
+                    _interactive_guard_global_prefix+=("$arg" "$2")
+                    shift 2
+                else
+                    shift
+                fi
+                ;;
+            --config-env=*|--git-dir=*|--work-tree=*|--namespace=*|--list-cmds=*|--attr-source=*|--exec-path=*)
+                _interactive_guard_global_prefix+=("$arg")
+                shift
+                ;;
+            --exec-path)
+                _interactive_guard_global_prefix+=("$arg")
+                shift
+                ;;
+            *)
+                if _interactive_guard_git_global_noarg "$arg"; then
+                    _interactive_guard_global_prefix+=("$arg")
+                    shift
+                elif [ "${arg#-}" != "$arg" ]; then
+                    # Unrecognized flag before any subcommand token -- not a
+                    # global-option form `man git` documents for this git
+                    # version. Real git itself rejects unknown global
+                    # options ("unknown option: ...") before ever running a
+                    # subcommand, and the wrapper always execs the ORIGINAL,
+                    # untouched argv regardless of what this scan decides --
+                    # so leaving detection empty here creates no bypass; see
+                    # KNOWN LIMITATIONS in the installer file.
+                    return
+                else
+                    _interactive_guard_subcommand="$arg"
+                    shift
+                    _interactive_guard_subcommand_args=("$@")
+                    return
+                fi
+                ;;
+        esac
+    done
+}
+
 # git: sets _interactive_guard_push_verdict to "" (allow) or a label
 # describing the protected ref this push argv (the args *after* "push")
 # would reach, for the args of a `git push` invocation. `--all`/`--mirror`
@@ -284,8 +586,23 @@ _interactive_guard_gh_is_merge() {
 # refspec as a whole, not to either side of a `:` -- it must be stripped
 # before comparison, or `git push origin +master` evaluates dest as the
 # literal string "+master" and never matches (round-3 fix, reproduced live).
+#
+# [ROUND 4] Call as: _interactive_guard_git_push_verdict <real-git-argv...>
+# -- <push-args...>. The args before the literal `--` sentinel are the full
+# real-git invocation prefix to use if a bare `git push` needs to resolve
+# the current branch (the real git binary's path, plus any global flags
+# like -C/--git-dir/--work-tree that were skipped over to find "push" in
+# the original command line -- carrying them forward here means `git -C
+# /some/other/repo push` resolves the current branch INSIDE that repo, not
+# the wrapper's own cwd). The args after `--` are everything the original
+# command line had after "push" itself.
 _interactive_guard_git_push_verdict() {
-    local real_git="$1"; shift
+    local real_git_argv=()
+    while [ "$1" != "--" ]; do
+        real_git_argv+=("$1")
+        shift
+    done
+    shift
     local args=("$@") positional=() arg refspec dest
     for arg in "${args[@]}"; do
         case "$arg" in
@@ -312,7 +629,7 @@ _interactive_guard_git_push_verdict() {
         done
         return
     fi
-    dest="$("$real_git" symbolic-ref --short HEAD 2>/dev/null)"
+    dest="$("${real_git_argv[@]}" symbolic-ref --short HEAD 2>/dev/null)"
     dest="${dest#refs/heads/}"
     case "$dest" in
         master|main) _interactive_guard_push_verdict="$dest" ;;
@@ -332,14 +649,13 @@ if [ -z "$_real_git" ]; then
     exit 127
 fi
 
-if [ "$1" = "push" ] && ! _interactive_guard_is_real_worker_context; then
-    shift
-    _interactive_guard_git_push_verdict "$_real_git" "$@"
+_interactive_guard_git_find_subcommand "$@"
+if [ "$_interactive_guard_subcommand" = "push" ] && ! _interactive_guard_is_real_worker_context; then
+    _interactive_guard_git_push_verdict "$_real_git" "${_interactive_guard_global_prefix[@]}" -- "${_interactive_guard_subcommand_args[@]}"
     if [ -n "$_interactive_guard_push_verdict" ]; then
         echo "BLOCKED: git push to protected branch/ref '$_interactive_guard_push_verdict' must run through the dispatch pipeline (task-gateway.py), not an interactive session -- see ai-os/OWNER_DIRECTIVES/PROTOCOL_OWNER_AI.yaml" >&2
         exit 1
     fi
-    exec "$_real_git" push "$@"
 fi
 exec "$_real_git" "$@"
 GIT_EOF
@@ -357,7 +673,8 @@ if [ -z "$_real_gh" ]; then
     exit 127
 fi
 
-if ! _interactive_guard_is_real_worker_context && _interactive_guard_gh_is_merge "$@"; then
+_interactive_guard_gh_strip_globals "$@"
+if ! _interactive_guard_is_real_worker_context && _interactive_guard_gh_is_merge "${_interactive_guard_gh_stripped[@]}"; then
     echo "BLOCKED: gh pr merge (including the equivalent gh api PUT/PATCH .../pulls/N/merge call) must run through the dispatch pipeline (task-gateway.py), not an interactive session -- see ai-os/OWNER_DIRECTIVES/PROTOCOL_OWNER_AI.yaml" >&2
     exit 1
 fi
