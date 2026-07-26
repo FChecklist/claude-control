@@ -1,0 +1,36 @@
+diff --git a/scripts/worker-entrypoint.sh b/scripts/worker-entrypoint.sh
+index e1a8394..0000000 100755
+--- a/scripts/worker-entrypoint.sh
++++ b/scripts/worker-entrypoint.sh
+@@ -239,9 +239,28 @@
+   exit 0
+ fi
+
+-kill "$CHECKPOINT_PID" 2>/dev/null || true
+-wait "$CHECKPOINT_PID" 2>/dev/null || true
+-
++# NOTE: the periodic-checkpoint heartbeat (started above, CHECKPOINT_PID) is
++# deliberately NOT killed here anymore. It used to be killed at this exact
++# point -- right after the main claude invocation returns but BEFORE the
++# quality-gate + auto-fix loop below, which has no time bound (bun
++# install/lint/build/test, plus up to 2 more `claude -p --continue` auto-fix
++# invocations). With the heartbeat dead across that whole phase, ANY task
++# whose gate+auto-fix phase runs longer than veridian-task-watchdog.py's
++# STALL_MINUTES (20) got misdiagnosed as stalled off a frozen last checkpoint
++# -- confirmed root cause of task-20260726-171926's watchdog escalation
++# (RCA task-20260726-175009): invocation 1's quality-gate phase ran long
++# under real memory contention from concurrent workers (invocation 2's own
++# preflight-guard.py memory_low rejection, "resource contention from
++# concurrent workers (Group B failure pattern)", confirms the contention was
++# real, not a guess), the watchdog saw the same frozen "periodic checkpoint"
++# note for >20 minutes and escalated a brand-new billed RCA task even though
++# systemd's Restart=on-failure + preflight-guard's memory_low transient
++# handling were already self-healing it (invocation 3 resumed cleanly).
++# The trap set at CHECKPOINT_PID's definition ('trap ... EXIT') still reaps
++# this background loop whenever the script actually exits, from any of the
++# exit points below -- removing the early kill/wait here just lets it keep
++# ticking (and keep last_checkpoint_at fresh) through the rest of this
++# script's real, possibly-long-running work instead of stopping short.
+
+ END_TS=$(date +%s)
+ ELAPSED=$((END_TS - START_TS))
