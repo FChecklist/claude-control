@@ -5485,3 +5485,15 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260725-184840-veridian-architecture-v2-ux-amendment-co/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/74'
     last_touched: '2026-07-25'
+
+  - id: WORKER-20260725-231836-phase2-prompt-compiler-pipeline-core-non
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''phase2-prompt-compiler-pipeline-core-non-browser''
+      on compliance-tracker reached status=blocked. tier1, Superboss-approved, but the
+      merge itself FAILED (gh pr view confirms state=OPEN, mergedAt=; see supervisor.log)
+      — needs manual attention, NOT actually merged: https://github.com/FChecklist/compliance-tracker/pull/560'
+    where: '/opt/veridian/ai-os/tasks/task-20260725-231836-phase2-prompt-compiler-pipeline-core-non/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/560'
+    last_touched: '2026-07-26'
