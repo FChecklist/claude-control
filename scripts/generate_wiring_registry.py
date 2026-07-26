@@ -92,11 +92,27 @@ AI_ROSTER_CATALOG = f"{VERIDIAN_ROOT}/ai-os/AI_ROSTER_CATALOG.json"
 ENGINES_GATEWAYS_PLAN = resolve_doc_path("20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml")
 ROUTE_REGISTRY_SCHEMA = resolve_doc_path("ROUTE_REGISTRY_SCHEMA_2026-07-24.yaml")
 SOFTWARE_CATALOG = resolve_doc_path("SOFTWARE_CATALOG.yaml")
+# vercel_project/github_repo source (task-20260726-162252-extend-wiring-engine-to-full-system--ser,
+# full-system extension) -- the real, fresh `vercel`/`gh` CLI census is an inline registries[]
+# entry in MASTER_INDEX.yaml itself (no separate tracking file, per that census's own path note),
+# so this generator reads it the same resolve_doc_path()-aware way as every other doc source above.
+MASTER_INDEX = resolve_doc_path("MASTER_INDEX.yaml")
 DB_PATH = f"{VERIDIAN_ROOT}/ai-os/memory/superboss-register.sqlite"
 
 DEFAULT_OUT = os.path.join(REPO_AI_OS, "WIRING_ENGINE_REGISTRY_2026-07-25.json")
 
 VALID_VERIFICATION = {"VERIFIED_MATCH", "HASH_DRIFTED", "PATH_MISSING", "UNVERIFIED"}
+
+# Phase 3 live-wiring (ai-os/WIRING_ENGINE_PHASE_PLAN_2026-07-25.yaml
+# phase_3_wiring_registry_live_wiring): reuse scripts/superboss-register.py's own
+# wiring_registry table DDL + upsert logic as the single source of truth (never
+# redefine the schema here) -- loaded via importlib since its filename has a
+# hyphen and can't be a normal `import` target.
+import importlib.util as _ilu
+
+_sbr_spec = _ilu.spec_from_file_location("superboss_register", os.path.join(SCRIPT_DIR, "superboss-register.py"))
+_sbr = _ilu.module_from_spec(_sbr_spec)
+_sbr_spec.loader.exec_module(_sbr)
 
 
 def now_iso():
@@ -180,6 +196,11 @@ def load_software_catalog():
         return yaml.safe_load(f)
 
 
+def load_master_index():
+    with open(MASTER_INDEX) as f:
+        return yaml.safe_load(f)
+
+
 def build_engines_and_gateways(reg, doc):
     """entity_type=engine, entity_type=gateway + shares_implementation_with
     whenever two engine/gateway entities cite the exact same real file."""
@@ -254,8 +275,13 @@ def build_engines_and_gateways(reg, doc):
 
 
 def build_tables(reg):
+    """entity_type=supabase_table (renamed from Phase 0's plain `table` by this
+    task's full-system extension -- every row this function has ever emitted
+    already carried source_system=supabase, so a separate supabase_table type
+    sourced from this same catalog would have duplicated an already-modeled
+    entity; see WIRING_ENGINE_SCHEMA_2026-07-25.yaml meta.full_system_extension_2026_07_26)."""
     if not os.path.isfile(DATABASE_CATALOG):
-        print(f"  ! {DATABASE_CATALOG} not found, skipping table entities", file=sys.stderr)
+        print(f"  ! {DATABASE_CATALOG} not found, skipping supabase_table entities", file=sys.stderr)
         return 0
     with open(DATABASE_CATALOG) as f:
         cat = json.load(f)
@@ -263,13 +289,13 @@ def build_tables(reg):
     file_id = reg.get_or_create_file(source_file, "database_catalog") if source_file else None
     count = 0
     for t in cat.get("tables", []):
-        eid = f"table-{slug(t.get('schema', 'public'))}__{slug(t['table_name'])}"
+        eid = f"supabase_table-{slug(t.get('schema', 'public'))}__{slug(t['table_name'])}"
         rels = []
         if file_id:
             rels.append({"target_entity_id": file_id, "relationship_type": "defined_in", "evidence": source_file})
         reg.add({
             "entity_id": eid,
-            "entity_type": "table",
+            "entity_type": "supabase_table",
             "source_system": "supabase",
             "path": f"{t.get('schema', 'public')}.{t['table_name']}",
             "relationships": rels,
@@ -568,6 +594,188 @@ def build_from_knowledge_engine(reg):
     return count
 
 
+BROWSER_COMPONENT_BASENAMES = {
+    "VeriComposer.tsx", "ChainSelector.tsx", "IntentCommandPalette.tsx", "browser-intent-cache.ts",
+}
+
+
+def build_browser_components(reg, engine_inventory, engine_ids_by_no):
+    """entity_type=browser_component -- full-system extension
+    (task-20260726-162252-extend-wiring-engine-to-full-system--ser). A new logical
+    layer above the existing `file` entities engine_inventory's own exists_as lists
+    already produce for these exact 4 real paths (never a duplicate file entity --
+    see WIRING_ENGINE_SCHEMA_2026-07-25.yaml relationship_type_vocabulary.defined_in).
+    Restricted to whichever engine_inventory rows actually cite one of these 4 real
+    basenames -- a live match against engine_inventory data, not the 3 engine_no's
+    (1/2/17) this task's own SPEC mentioned (engine_no 2/Context Engine's exists_as
+    was checked and does not cite any of them)."""
+    seen = set()
+    count = 0
+    for row in engine_inventory:
+        engine_no = row["engine_no"]
+        for p in row.get("exists_as", []):
+            base = os.path.basename(p)
+            if base not in BROWSER_COMPONENT_BASENAMES:
+                continue
+            eid = f"browser_component-{slug(os.path.splitext(base)[0])}"
+            file_id = reg.path_to_id.get(normalize_path(p))
+            implements_rel = {
+                "target_entity_id": engine_ids_by_no.get(engine_no),
+                "relationship_type": "implements_engine",
+                "evidence": f"engine_inventory engine_no={engine_no} ({row['engine_name']}) exists_as cites {p}",
+            }
+            if eid not in seen:
+                seen.add(eid)
+                reg.add({
+                    "entity_id": eid,
+                    "entity_type": "browser_component",
+                    "source_system": "github",
+                    "path": p,
+                    "relationships": [
+                        {"target_entity_id": file_id, "relationship_type": "defined_in", "evidence": p},
+                        implements_rel,
+                    ],
+                    "last_verified_ts": now_iso(),
+                    "verification_status": "VERIFIED_MATCH" if path_exists(p) else "PATH_MISSING",
+                    "source_ref": ["engines_gateways_phase_plan_browser_components"],
+                    "metadata": {"basename": base},
+                })
+                count += 1
+            else:
+                reg.find_by_id(eid)["relationships"].append(implements_rel)
+    return count
+
+
+def build_vercel_and_github(reg, master_index_doc):
+    """entity_type=vercel_project, entity_type=github_repo -- full-system extension
+    (task-20260726-162252-extend-wiring-engine-to-full-system--ser). Sourced from the
+    real, fresh vercel/gh CLI census already committed at
+    ai-os/MASTER_INDEX.yaml registries[id=vercel_github_state_census_2026_07_26] --
+    never a separate hand-typed catalog. Also emits the real `contains` relationship
+    from each github_repo to any file/engine/gateway entity this run already
+    collected whose own path is a real prefix match under that repo's local mirror
+    directory (repos/<repo>/...) -- run LAST in main() so path_to_id is maximally
+    populated first."""
+    entry = None
+    for r in master_index_doc.get("registries", []):
+        if r.get("id") == "vercel_github_state_census_2026_07_26":
+            entry = r
+            break
+    if not entry:
+        print("  ! vercel_github_state_census_2026_07_26 not found in MASTER_INDEX.yaml, "
+              "skipping vercel_project/github_repo entities", file=sys.stderr)
+        return 0, 0
+
+    master_index_rel = "ai-os/MASTER_INDEX.yaml"
+    master_index_file_id = reg.get_or_create_file(master_index_rel, "vercel_github_state_census")
+    master_index_exists = path_exists(master_index_rel)
+
+    github_repos = entry.get("github", {}).get("repos", {}) or {}
+    vercel_projects = entry.get("vercel", {}).get("projects", {}) or {}
+    OWNER = "FChecklist"  # real, per this census's own github.org_or_user_account finding
+
+    github_ids_by_repo_name = {}
+    github_count = 0
+    for repo_name, row in github_repos.items():
+        eid = f"github_repo-{slug(OWNER)}__{slug(repo_name)}"
+        github_ids_by_repo_name[repo_name] = eid
+        mirror_rel_path = f"repos/{repo_name}"
+        mirror_exists = os.path.isdir(normalize_path(mirror_rel_path))
+        reg.add({
+            "entity_id": eid,
+            "entity_type": "github_repo",
+            "source_system": "github",
+            "path": mirror_rel_path if mirror_exists else None,
+            "relationships": [{
+                "target_entity_id": master_index_file_id, "relationship_type": "defined_in",
+                "evidence": f"{master_index_rel} registries[id=vercel_github_state_census_2026_07_26].github.repos.{repo_name}",
+            }],
+            "last_verified_ts": now_iso(),
+            "verification_status": "VERIFIED_MATCH" if mirror_exists else "PATH_MISSING",
+            "source_ref": ["vercel_github_state_census"],
+            "metadata": {
+                "owner": OWNER, "visibility": row.get("visibility"), "default_branch": row.get("default_branch"),
+                "open_pr_count": row.get("open_pr_count"), "active_workflows": row.get("active_workflows"),
+                "required_status_checks_contexts": row.get("required_status_checks_contexts"),
+            },
+        })
+        github_count += 1
+
+    vercel_count = 0
+    for project_key, row in vercel_projects.items():
+        eid = f"vercel_project-{slug(project_key)}"
+        repo_full = row.get("github_repo")
+        repo_name = repo_full.split("/")[-1] if repo_full else None
+        target_repo_id = github_ids_by_repo_name.get(repo_name) if repo_name else None
+        rels = [{
+            "target_entity_id": master_index_file_id, "relationship_type": "defined_in",
+            "evidence": f"{master_index_rel} registries[id=vercel_github_state_census_2026_07_26].vercel.projects.{project_key}",
+        }]
+        if target_repo_id:
+            rels.append({"target_entity_id": target_repo_id, "relationship_type": "deployed_from",
+                         "evidence": f"github_repo={repo_full}"})
+            reg.find_by_id(target_repo_id)["relationships"].append({
+                "target_entity_id": eid, "relationship_type": "deployed_to", "evidence": f"github_repo={repo_full}",
+            })
+        reg.add({
+            "entity_id": eid,
+            "entity_type": "vercel_project",
+            "source_system": "vercel",
+            "path": None,
+            "relationships": rels,
+            "last_verified_ts": now_iso(),
+            "verification_status": "VERIFIED_MATCH" if master_index_exists else "UNVERIFIED",
+            "source_ref": ["vercel_github_state_census"],
+            "metadata": {
+                "project_key": project_key, "project_id": row.get("project_id"), "github_repo": repo_full,
+                "framework": row.get("framework"),
+                "latest_production_deployment": row.get("latest_production_deployment"),
+                "env_vars_present": row.get("env_vars_present"),
+            },
+        })
+        vercel_count += 1
+
+    for repo_name, gid in github_ids_by_repo_name.items():
+        prefix = normalize_path(f"repos/{repo_name}").rstrip("/") + "/"
+        repo_entity = reg.find_by_id(gid)
+        for e in reg.entities:
+            if e["entity_id"] == gid or e["entity_type"] not in ("file", "engine", "gateway"):
+                continue
+            candidate = e.get("path")
+            if not candidate:
+                continue
+            sub_paths = candidate.split("; ") if e["entity_type"] in ("engine", "gateway") else [candidate]
+            for p in sub_paths:
+                if normalize_path(p).startswith(prefix):
+                    repo_entity["relationships"].append({
+                        "target_entity_id": e["entity_id"], "relationship_type": "contains", "evidence": p,
+                    })
+                    break
+
+    return vercel_count, github_count
+
+
+def upsert_live_wiring_registry(entities):
+    """Phase 3 (ai-os/WIRING_ENGINE_PHASE_PLAN_2026-07-25.yaml
+    phase_3_wiring_registry_live_wiring): bulk-upsert every entity into the live
+    wiring_registry sqlite table -- direct sqlite3 + the register's own
+    _write_lock/_ensure_wiring_registry_table/register_entity_row (imported, single
+    source of truth for the DDL/upsert SQL), one open transaction for the whole
+    batch, same bypass-the-CLI-for-bulk-writes convention
+    scripts/batch-import-conversation-log.py already established for exactly this
+    reason (a ~7600-row batch via one register-entity subprocess per row would be
+    far too slow). Returns the live row count after the upsert."""
+    with _sbr._write_lock():
+        conn = _sbr._connect()
+        _sbr._ensure_wiring_registry_table(conn)
+        for entity in entities:
+            _sbr.register_entity_row(conn, entity)
+        conn.commit()
+        live_count = conn.execute("SELECT COUNT(*) FROM wiring_registry").fetchone()[0]
+        conn.close()
+    return live_count
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--out", default=DEFAULT_OUT)
@@ -585,6 +793,9 @@ def main():
     route_count = build_routes(reg, engine_ids_by_no, gateway_ids_by_id, cap_by_name)
     script_count, cron_count = build_scripts_and_cron(reg)
     ke_count = build_from_knowledge_engine(reg)
+    browser_component_count = build_browser_components(reg, ge_doc.get("engine_inventory", []), engine_ids_by_no)
+    master_index_doc = load_master_index()
+    vercel_project_count, github_repo_count = build_vercel_and_github(reg, master_index_doc)
 
     counts_by_type = {}
     counts_by_rel = {}
@@ -606,16 +817,19 @@ def main():
     with open(args.out, "w") as f:
         json.dump(output, f, indent=2)
 
+    live_row_count = upsert_live_wiring_registry(reg.entities)
+
     summary = {
         "ok": True,
         "output_path": args.out,
         "entity_count": len(reg.entities),
+        "live_wiring_registry_row_count": live_row_count,
         "counts_by_entity_type": counts_by_type,
         "counts_by_relationship_type": counts_by_rel,
         "raw_source_counts": {
             "engine_inventory": len(ge_doc.get("engine_inventory", [])),
             "gateway_inventory": len(ge_doc.get("gateway_inventory", [])),
-            "database_catalog_tables": table_count,
+            "database_catalog_supabase_tables": table_count,
             "function_catalog_functions": function_count,
             "ai_roster_roles": ai_role_count,
             "route_registry_routes": route_count,
@@ -623,6 +837,9 @@ def main():
             "software_catalog_cron_jobs": cron_count,
             "knowledge_engine_rows": ke_count,
             "capability_registry_rows_crosschecked": len(cap_by_name),
+            "engine_inventory_browser_components": browser_component_count,
+            "vercel_github_state_census_vercel_projects": vercel_project_count,
+            "vercel_github_state_census_github_repos": github_repo_count,
         },
     }
     print(json.dumps(summary, indent=2))
