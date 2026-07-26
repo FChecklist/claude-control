@@ -140,6 +140,21 @@ mkdir -p "$FAKE_BIN"
 
 cat > "$FAKE_BIN/gh" <<'EOF'
 #!/bin/bash
+# [ROUND 5] `gh alias list` is the guard's own real-alias-resolution lookup
+# (see _interactive_guard_gh_resolve_persistent_alias() in _lib.sh) -- an
+# informational query, not itself a merge, so like the git fake's
+# symbolic-ref handling below it must NOT be logged to CALL_LOG (which means
+# "the actual guarded action reached the real binary"), or every BLOCKED
+# alias-bypass scenario would wrongly show real_bin_called=1 just because
+# the guard asked what the aliases are. $FAKE_GH_ALIASES ("" = none) holds
+# the fixture `gh alias list` output for the scenario, one "name: expansion"
+# line per alias, exactly the real live-confirmed gh 2.45 format.
+if [ "${1:-}" = "alias" ] && [ "${2:-}" = "list" ]; then
+  if [ -n "${FAKE_GH_ALIASES:-}" ]; then
+    printf '%s\n' "$FAKE_GH_ALIASES"
+  fi
+  exit 0
+fi
 echo "REAL_GH_CALLED $*" >> "$CALL_LOG"
 exit 0
 EOF
@@ -157,6 +172,21 @@ fi
 if [ "${args[0]:-}" = "symbolic-ref" ] && [ "${args[1]:-}" = "--short" ] && [ "${args[2]:-}" = "HEAD" ]; then
   echo "${FAKE_CURRENT_BRANCH:-master}"
   exit 0
+fi
+# [ROUND 5] `git config --get-regexp ^alias\.` is the guard's own real
+# persistent-alias-resolution lookup (see
+# _interactive_guard_git_resolve_persistent_alias() in _lib.sh) --
+# informational, not itself a push, so (like symbolic-ref above) it must NOT
+# be logged to CALL_LOG. $FAKE_GIT_ALIASES ("" = none configured, real git's
+# own exit-1-with-no-output behavior when no alias.* config exists) holds
+# the fixture `alias.<name> <value>` lines for the scenario, exactly the
+# real live-confirmed git 2.43 `--get-regexp` output format.
+if [ "${args[0]:-}" = "config" ] && [ "${args[1]:-}" = "--get-regexp" ]; then
+  if [ -n "${FAKE_GIT_ALIASES:-}" ]; then
+    printf '%s\n' "$FAKE_GIT_ALIASES"
+    exit 0
+  fi
+  exit 1
 fi
 echo "REAL_GIT_CALLED $*" >> "$CALL_LOG"
 exit 0
@@ -276,8 +306,16 @@ _build_patched_snippet "$FAKE_NONWORKER_CGROUP" "$PATCHED_SNIPPET_NONWORKER"
 # $10=alternate snippet path to source instead of the real $SNIPPET ("" =
 #     use the real, unmodified, shipped snippet -- every scenario except the
 #     source-patched positive-path ones must leave this unset)
+# $11=[ROUND 5] fixture `git config --get-regexp ^alias\.` output for the
+#     fake "real" git to return (one "alias.<name> <value>" line per alias,
+#     "" = none configured) -- simulates a persistent ~/.gitconfig [alias]
+#     entry for _interactive_guard_git_resolve_persistent_alias() to resolve
+# $12=[ROUND 5] fixture `gh alias list` output for the fake "real" gh to
+#     return (one "<name>: <expansion>" line per alias, "" = none
+#     configured) -- simulates a persistent `gh alias set` entry for
+#     _interactive_guard_gh_resolve_persistent_alias() to resolve
 run_case() {
-  local label="$1" invocation="$2" cmdline="$3" expected_exit="$4" expect_called="$5" expect_stderr="$6" fake_branch="$7" legacy_attacker_cgroup="${8:-}" env_var_attack_cgroup="${9:-}" snippet_override="${10:-}"
+  local label="$1" invocation="$2" cmdline="$3" expected_exit="$4" expect_called="$5" expect_stderr="$6" fake_branch="$7" legacy_attacker_cgroup="${8:-}" env_var_attack_cgroup="${9:-}" snippet_override="${10:-}" fake_git_aliases="${11:-}" fake_gh_aliases="${12:-}"
   local call_log out_file err_file guard_dir snippet_to_source
   call_log="$(mktemp)"; out_file="$(mktemp)"; err_file="$(mktemp)"
   rm -f "$call_log"
@@ -298,6 +336,12 @@ run_case() {
   fi
   if [ -n "$env_var_attack_cgroup" ]; then
     env_args+=(INTERACTIVE_GUARD_TEST_CGROUP_FILE="$env_var_attack_cgroup")
+  fi
+  if [ -n "$fake_git_aliases" ]; then
+    env_args+=(FAKE_GIT_ALIASES="$fake_git_aliases")
+  fi
+  if [ -n "$fake_gh_aliases" ]; then
+    env_args+=(FAKE_GH_ALIASES="$fake_gh_aliases")
   fi
 
   local legacy_attack=""
@@ -332,10 +376,11 @@ run_case() {
 # resolves to a genuine matching worker cgroup, simulating "both signals
 # really present" without touching the real $SNIPPET or any runtime
 # override. $1=label $2=INVOCATION_ID value $3=cmdline $4=fake_branch ("" =
-# unset)
+# unset). $5=[ROUND 5] fixture git alias config ("" = none) $6=[ROUND 5]
+# fixture gh alias list output ("" = none)
 run_case_matching_worker() {
-  local label="$1" invocation="$2" cmdline="$3" fake_branch="${4:-}"
-  run_case "$label" "$invocation" "$cmdline" 0 1 "" "$fake_branch" "" "" "$PATCHED_SNIPPET_MATCHING_WORKER"
+  local label="$1" invocation="$2" cmdline="$3" fake_branch="${4:-}" fake_git_aliases="${5:-}" fake_gh_aliases="${6:-}"
+  run_case "$label" "$invocation" "$cmdline" 0 1 "" "$fake_branch" "" "" "$PATCHED_SNIPPET_MATCHING_WORKER" "$fake_git_aliases" "$fake_gh_aliases"
 }
 
 # --- gh pr merge ---
@@ -632,6 +677,84 @@ run_case "BYPASS VECTOR 9: a cgroup naming a REAL task that is NOT in_progress (
 
 run_case_matching_worker "sanity: a cgroup naming a REAL, in_progress task DOES pass through (both name-pattern AND task cross-reference genuinely satisfied)" \
   "test-unit-123" "git push origin master"
+
+# =========================================================================
+# ROUND 5: bypass vector 10 -- native git/gh command ALIASING (both the
+# one-shot `-c alias.*=`/`--config-env=alias.*` form and persistent
+# ~/.gitconfig `[alias]` / `gh alias set` entries) is now closed. This is
+# the real, live-reproduced round-4-review finding:
+#   `git -c alias.<name>=push <name> <remote> <branch>` (or a pre-existing
+#   `[alias]` entry) let an interactive session push to a protected branch
+#   completely undetected -- _interactive_guard_git_find_subcommand()
+#   matched on the literal subcommand token with no alias-resolution step,
+#   and the wrapper always execs the real git with the untouched argv, which
+#   then expands the alias into an actual push. Reproduced live in this
+#   round's audit (`git -c alias.wip=push wip origin master` really does
+#   push, confirmed against a real git 2.43 install) before this fix landed.
+#   Same class for gh: `gh alias set <name> 'pr merge ...'` then
+#   `gh <name> ...` -- _interactive_guard_gh_is_merge() only recognized the
+#   literal `pr merge`/API forms, no alias-resolution step. Reproduced live
+#   (`gh alias list`'s real output format for gh 2.45 confirmed: one
+#   "<name>: <expansion>" line per alias) before this fix landed too.
+# =========================================================================
+
+# --- one-shot `-c alias.*=` / `--config-env=alias.*` : hard rejected ---
+run_case "BYPASS VECTOR 10: 'git -c alias.wip=push wip origin master' (one-shot alias, the exact round-4-review repro) is BLOCKED, real git never called" \
+  "" "git -c alias.wip=push wip origin master" 1 0 \
+  "BLOCKED: git invocation defines a one-shot alias" ""
+
+run_case "BYPASS VECTOR 10: 'git --config-env=alias.wip=SOME_ENV wip origin master' (--config-env alias form) is BLOCKED" \
+  "" "git --config-env=alias.wip=SOME_ENV wip origin master" 1 0 \
+  "BLOCKED: git invocation defines a one-shot alias" ""
+
+run_case "BYPASS VECTOR 10: 'git --config-env alias.wip SOME_ENV wip origin master' (space form) is BLOCKED" \
+  "" "git --config-env alias.wip SOME_ENV wip origin master" 1 0 \
+  "BLOCKED: git invocation defines a one-shot alias" ""
+
+run_case "BYPASS VECTOR 10: one-shot alias is rejected even if the LITERAL subcommand typed is harmless (fail-closed regardless of what the alias maps to)" \
+  "" "git -c alias.wip=push status" 1 0 \
+  "BLOCKED: git invocation defines a one-shot alias" ""
+
+run_case "BYPASS VECTOR 10 sanity: a non-alias '-c' config override ('-c user.name=x') is NOT hard-rejected -- passes through unaffected" \
+  "" "git -c user.name=x push origin feature-branch" 0 1 "" ""
+
+run_case_matching_worker "BYPASS VECTOR 10: systemd-simulated 'git -c alias.wip=push wip origin master' passes through (one-shot-alias reject is gated on interactive context, same as every other check here)" \
+  "test-unit-123" "git -c alias.wip=push wip origin master"
+
+# --- persistent git [alias] entries: resolved one level before deciding ---
+run_case "BYPASS VECTOR 10: persistent git alias ('alias.wip = push' in ~/.gitconfig) invoked as 'git wip origin master' is BLOCKED" \
+  "" "git wip origin master" 1 0 \
+  "BLOCKED: git push to protected branch/ref 'master'" "" "" "" "" "alias.wip push"
+
+run_case "BYPASS VECTOR 10 sanity: persistent git alias to a NON-protected branch ('git wip origin feature-branch') still passes through" \
+  "" "git wip origin feature-branch" 0 1 "" "" "" "" "" "alias.wip push"
+
+run_case "BYPASS VECTOR 10 sanity: an UNRELATED persistent git alias ('alias.co = checkout') still passes through unaffected" \
+  "" "git co master" 0 1 "" "" "" "" "" "alias.co checkout"
+
+run_case_matching_worker "BYPASS VECTOR 10: systemd-simulated persistent git alias push passes through" \
+  "test-unit-123" "git wip origin master" "" "alias.wip push"
+
+# --- persistent gh alias entries: resolved one level before deciding ---
+run_case "BYPASS VECTOR 10: persistent gh alias ('gh alias set mrg \"pr merge --merge\"') invoked as 'gh mrg 1' is BLOCKED" \
+  "" "gh mrg 1 --repo some/repo" 1 0 \
+  "BLOCKED: gh pr merge" "" "" "" "" "" "mrg: pr merge --merge"
+
+run_case "BYPASS VECTOR 10 sanity: an UNRELATED persistent gh alias ('co: pr checkout') still passes through unaffected" \
+  "" "gh co 1 --repo some/repo" 0 1 "" "" "" "" "" "" "co: pr checkout"
+
+run_case_matching_worker "BYPASS VECTOR 10: systemd-simulated persistent gh alias merge passes through" \
+  "test-unit-123" "gh mrg 1 --repo some/repo" "" "" "mrg: pr merge --merge"
+
+# --- residual gaps, disclosed and proven rather than silently omitted ---
+run_case "BYPASS VECTOR 10 KNOWN LIMITATION (disclosed, not silently omitted): a NESTED persistent git alias ('alias.a = b', 'alias.b = push') is only resolved ONE level -- 'git a origin master' is NOT detected as push by this guard's own resolution (real git itself would still expand it fully and push)" \
+  "" "git a origin master" 0 1 "" "" "" "" "" $'alias.a b\nalias.b push'
+
+run_case "BYPASS VECTOR 10 KNOWN LIMITATION (disclosed, not silently omitted): a gh SHELL alias ('shellmrg: !gh pr merge 1 --merge') is left unresolved by this guard's own alias-resolution logic -- passes through undetected by THIS check specifically (live-verified separately: because real gh's own alias expansion re-invokes an unqualified 'gh', which still resolves through this guard's PATH-prepended wrapper and gets blocked there in the common case -- see KNOWN LIMITATIONS in the installer file)" \
+  "" "gh shellmrg 1 --repo some/repo" 0 1 "" "" "" "" "" "" "shellmrg: '!gh pr merge 1 --merge'"
+
+run_case "BYPASS VECTOR 10 KNOWN LIMITATION (new residual found and disclosed honestly while building THIS round's fix, not silently omitted): a persistent git alias whose value uses quote-splicing to spell out 'master' ('alias.evil = push origin \"ma\"\"ster\"') is NOT recognized by this guard's whitespace-only alias-value split -- live-verified separately against a real git 2.43 install that real git's OWN alias expansion still dequotes this to a literal 'master' destination and pushes there; this guard's own resolution logic deliberately does not attempt full quote/escape-aware parsing (see KNOWN LIMITATIONS in the installer file for why: doing so safely without 'eval'-ing attacker-influenced text is out of scope for this round)" \
+  "" "git evil" 0 1 "" "" "" "" "" 'alias.evil push origin "ma""ster"'
 
 if [ "$FAILURES" -eq 0 ]; then
   echo "All scenarios passed."

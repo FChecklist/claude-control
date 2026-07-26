@@ -143,6 +143,74 @@
 # which is what would actually happen if a `systemd-run --user` impersonation
 # attempt of this kind ever did succeed against the cgroup check alone.
 #
+# ROUND 5 (this version): a fresh audit of round 4, verified by direct live
+# reproduction, found that native git/gh command ALIASING was a total,
+# undetected bypass of everything above:
+#   (a) `git -c alias.<name>=push <name> <remote> <branch>` (a one-shot
+#       alias defined on the command line itself, for that invocation only)
+#       -- reproduced live: `git -c alias.wip=push wip origin master`
+#       against a real git 2.43 install really does push, with zero trace in
+#       ~/.gitconfig. Same for a PRE-EXISTING `[alias]` entry already
+#       sitting in ~/.gitconfig (e.g. `alias.wip = push` from some earlier,
+#       unrelated session) -- `git wip origin master` resolves and pushes
+#       identically. Neither round 4's argv-position fix nor any earlier
+#       round's logic had an alias-resolution step at all --
+#       _interactive_guard_git_find_subcommand() trusted whatever literal
+#       token it found as the real subcommand, so an alias name that isn't
+#       literally "push" walked straight past the `[ "$subcommand" = "push"
+#       ]` check undetected, and the wrapper always execs the real git with
+#       the untouched argv either way -- which then expands the alias into
+#       an actual push.
+#   (b) The identical class for gh: `gh alias set <name> 'pr merge ...'`
+#       (persisted in gh's own config) then `gh <name> ...` --
+#       _interactive_guard_gh_is_merge() only recognized the literal
+#       `pr merge` / API-merge forms, no alias-resolution step. Reproduced
+#       live against a real gh 2.45 install (`gh alias list`'s real output
+#       format confirmed: one "<name>: <expansion>" line per alias, with the
+#       expansion wrapped in a single quote pair ONLY when it begins with
+#       `!` -- gh's own display convention for a shell alias, not part of
+#       the stored value).
+# Closed two different ways depending on which alias form it is, per the
+# review's own suggested direction:
+#   - The ONE-SHOT `-c alias.*=` / `--config-env alias.*=...` form (a) is
+#     REJECTED OUTRIGHT, unconditionally, regardless of what the alias's
+#     value actually is: a legitimate dispatch-pipeline command line has no
+#     reason to define an ad-hoc alias inline, so there is no case where
+#     honoring one is necessary, and the value could itself be a shell alias
+#     (`!...`) or something else not safe to statically evaluate --
+#     resolving and evaluating it correctly in every case is a strictly
+#     harder and riskier problem than simply refusing to run any command
+#     line that defines one. See _interactive_guard_git_find_subcommand()'s
+#     new `_interactive_guard_git_oneshot_alias` detection and the git
+#     wrapper script's hard-reject check in _lib.sh.
+#   - PERSISTENT aliases (b) (an `[alias]` entry already in ~/.gitconfig, or
+#     a `gh alias set` entry already in gh's config) ARE resolved -- one
+#     level -- by asking the REAL git/gh binary what it actually knows via
+#     `git config --get-regexp '^alias\.'` / `gh alias list`, exactly as the
+#     review's suggested direction describes, rather than rejecting every
+#     unrecognized subcommand token outright (which would make ordinary,
+#     harmless aliases like a `co = checkout` shortcut unusable in an
+#     interactive shell for no security benefit). If the resolved token IS
+#     "push" (git) or the resolved argv IS a `pr merge`/merge-API call (gh),
+#     it is evaluated exactly as if the caller had typed that directly. See
+#     _interactive_guard_git_resolve_persistent_alias() and
+#     _interactive_guard_gh_resolve_persistent_alias() in _lib.sh.
+# Both are verified with dedicated, passing regression-test scenarios, not
+# just prose -- see tests/interactive_session_guard_test.sh's "ROUND 5"
+# scenarios ("BYPASS VECTOR 10"), which reproduce the exact command lines
+# from the round-4 review and prove they are now BLOCKED.
+#
+# Two residual gaps were found while building and testing this round's fix
+# and are disclosed honestly below rather than silently omitted (see KNOWN
+# LIMITATIONS): persistent-alias resolution only follows ONE level (a
+# nested alias whose value is itself another alias name is not further
+# resolved), and a gh SHELL alias (an expansion beginning with `!`, an
+# arbitrary shell command rather than a gh subcommand token) is left
+# unresolved by this guard's OWN alias-resolution logic specifically -- both
+# are proven, not just claimed, by dedicated regression-test scenarios that
+# show the current, honest behavior rather than asserting a stronger
+# guarantee than what was actually built.
+#
 # MECHANISM (three signals, all required):
 #   1. INVOCATION_ID -- the real environment variable systemd sets for every
 #      unit it launches (present for veridian-worker@*.service /
@@ -303,6 +371,54 @@
 #     unit-name collision (which is real, but incidental and not relied
 #     upon) -- see tests/interactive_session_guard_test.sh's "ROUND 4"
 #     forged-cgroup-no-matching-task scenario.
+#   - Persistent-alias resolution is ONE level deep, whitespace-only, and
+#     not quote/escape-aware (round 5, new, disclosed honestly): real git
+#     and gh both fully re-parse an alias's stored expansion value with
+#     shell-like quote/escape handling before splicing it in place of the
+#     alias name -- confirmed live: `alias.evil = push origin "ma""ster"`
+#     (concatenated-quote splicing) and `push origin mas\ter`
+#     (backslash-escape) both resolve, in a REAL git 2.43 install, to a
+#     literal, single `master` destination argument and push there.
+#     _interactive_guard_git_resolve_persistent_alias() and
+#     _interactive_guard_gh_resolve_persistent_alias() split an alias's
+#     stored value on PLAIN WHITESPACE ONLY (`local tokens=($value)`, no
+#     quote-removal) -- deliberately, not by oversight: implementing git's
+#     actual dequoting logic correctly, in bash, without resorting to
+#     `eval` (which would execute attacker-influenced alias text as shell
+#     code -- a strictly worse bug than the one being fixed) is out of
+#     scope for this round. The practical effect: an alias value that uses
+#     quoting/escaping to spell out "master" (rather than a plain, literal
+#     `push origin master` with ordinary spaces) is NOT recognized by this
+#     check's whitespace-only split, even though real git still resolves
+#     and pushes it -- reproduced live, and covered by a dedicated,
+#     PASSING (in the sense of "correctly demonstrates the disclosed gap,
+#     not a false claim of coverage") regression-test scenario in
+#     tests/interactive_session_guard_test.sh's "ROUND 5" section, not
+#     silently left untested. This is functionally the same "nested alias" /
+#     "alias with arguments baked in" residual the round-4 review's own
+#     suggested direction anticipated as an acceptable disclosed gap, not a
+#     new bypass class -- see the ROUND 5 section above. Also only resolves
+#     ONE level (an alias whose value is itself another alias name is not
+#     followed further), and a gh SHELL alias (an expansion beginning with
+#     `!`, an arbitrary shell command rather than a subcommand token) is
+#     left unresolved by this guard's own resolution logic specifically --
+#     both proven, not merely asserted, by dedicated regression-test
+#     scenarios. The shell-alias case has a real, but incidental and
+#     NOT-relied-upon, secondary mitigation worth recording honestly: live
+#     testing during this round found that when a shell alias's own script
+#     calls `gh`/`git` unqualified (the common, idiomatic way to write one,
+#     e.g. `!gh pr merge 1 --merge`), that inner call inherits the same
+#     guard-prepended $PATH and is caught by this guard's wrapper scripts
+#     AGAIN on its own recursive invocation -- reproduced live
+#     (`gh alias set shellmrg '!gh pr merge 1 --merge'` then `gh shellmrg`
+#     IS blocked end-to-end, even though this guard's own alias-resolution
+#     logic explicitly declines to resolve the shell alias itself). This is
+#     a side effect of the PATH-search mechanism, not a designed-in
+#     protection, and does NOT hold for a shell alias that calls the real
+#     binary by absolute path or via `command -p` (see the pre-existing
+#     PATH-search residual bypass above) -- this file makes no claim that
+#     shell aliases are closed, only that this one common form is
+#     incidentally caught in practice.
 #
 # This file is meant to be sourced from ~/.bashrc and ~/.profile on
 # VERIDIAN-DEV (167.233.220.35), for the rajat user's interactive shells
@@ -485,6 +601,76 @@ _interactive_guard_gh_strip_globals() {
     done
 }
 
+# [ROUND 5] gh: resolve ONE level of a PERSISTENT gh alias -- an entry
+# created by `gh alias set <name> '<expansion>'` (stored in gh's own config,
+# not anything this guard controls). `_interactive_guard_gh_is_merge()`
+# above only recognizes the literal `pr merge` / `api ... /pulls/*/merge`
+# token forms; if the first (post-global-flag-strip) token is itself an
+# alias name (e.g. `gh alias set mrg 'pr merge --merge --delete-branch'`
+# then `gh mrg 1`), that check reports "not a merge" even though real gh
+# expands it to an actual merge -- this is gh's equivalent of the git
+# persistent-alias bypass above. Resolved the same way: ask the REAL gh
+# binary what it knows via `gh alias list` (real, live-confirmed output
+# format for gh 2.45: one alias per line, "<name>: <expansion>") rather than
+# re-implementing gh's own alias storage/lookup.
+#
+# Only resolves ONE level: if the expansion is itself another alias name, or
+# begins with `!` (a shell alias -- gh, like git, supports these; they run
+# an arbitrary shell command, not a gh subcommand token), this function
+# leaves the argv unchanged rather than guessing -- see KNOWN LIMITATIONS in
+# the installer file for why both are disclosed as residual gaps.
+#
+# Call as: _interactive_guard_gh_resolve_persistent_alias <real-gh-bin>
+# <post-global-strip argv...>. Sets _interactive_guard_gh_resolved (array)
+# to the argv gh would actually run after one level of expansion (the
+# expansion's tokens followed by the caller's remaining args), or the
+# original argv unchanged if the first token is not a known, resolvable
+# alias.
+_interactive_guard_gh_resolve_persistent_alias() {
+    local real_gh="$1"
+    shift
+    _interactive_guard_gh_resolved=("$@")
+    [ $# -ge 1 ] || return
+    local name="$1" line alias_name expansion
+    while IFS= read -r line; do
+        [ -z "$line" ] && continue
+        case "$line" in
+            *:*)
+                alias_name="${line%%:*}"
+                expansion="${line#*: }"
+                ;;
+            *)
+                continue
+                ;;
+        esac
+        if [ "$alias_name" = "$name" ]; then
+            # Real `gh alias list` (confirmed live against gh 2.45) wraps
+            # the expansion in a single quote pair ONLY when it begins with
+            # "!" (its own shell-alias display convention) -- e.g.
+            # `shellmrg: '!gh pr merge 1 --merge'` vs the unquoted
+            # `mrg: pr merge --merge` for a plain alias. Strip that quoting
+            # before checking for the "!" shell-alias marker, or the check
+            # below would miss it (the raw stored value has no such quotes;
+            # this is purely a `gh alias list` display artifact).
+            case "$expansion" in
+                \'*\') expansion="${expansion#\'}"; expansion="${expansion%\'}" ;;
+            esac
+            case "$expansion" in
+                ''|'!'*)
+                    # empty (malformed) or a shell alias -- cannot be
+                    # resolved to a gh subcommand token; leave unresolved
+                    # (see KNOWN LIMITATIONS).
+                    return
+                    ;;
+            esac
+            local expansion_tokens=($expansion)
+            shift
+            _interactive_guard_gh_resolved=("${expansion_tokens[@]}" "$@")
+            return
+        fi
+    done < <("$real_gh" alias list 2>/dev/null)
+}
+
 # [ROUND 4] git: is $1 one of git's real no-argument global boolean flags?
 # Per `man git`'s SYNOPSIS/OPTIONS for this git version, confirmed live
 # against a real git 2.43 install.
@@ -520,15 +706,47 @@ _interactive_guard_git_global_noarg() {
 # separate following argument and is a print-and-exit action in real git (it
 # never reaches any subcommand at all) -- treated here as consuming zero
 # following args, which matches real git's own behavior.
+#
+# [ROUND 5] Also sets _interactive_guard_git_oneshot_alias (1 if a one-shot
+# `-c alias.<name>=<value>` or `--config-env alias.<name>=<ENVVAR>` /
+# `--config-env=alias.<name>=<ENVVAR>` definition appears anywhere in the
+# global-flag prefix, "" otherwise). Real git honors such a definition for
+# THIS invocation only -- e.g. `git -c alias.wip=push wip origin master`
+# expands `wip` to `push` and pushes, with no trace in ~/.gitconfig -- and a
+# legitimate dispatch-pipeline command line has no reason to define an
+# ad-hoc alias inline, so this is a hard reject regardless of what the
+# alias's value actually is (see the git wrapper script below), rather than
+# an attempt to resolve and evaluate it: the value could itself be a shell
+# alias (`!...`) or reference other config in ways not safe to statically
+# evaluate here.
 _interactive_guard_git_find_subcommand() {
     _interactive_guard_subcommand=""
     _interactive_guard_subcommand_args=()
     _interactive_guard_global_prefix=()
+    _interactive_guard_git_oneshot_alias=""
     local arg
     while [ $# -gt 0 ]; do
         arg="$1"
         case "$arg" in
-            -C|-c|--config-env|--git-dir|--work-tree|--namespace|--list-cmds|--attr-source)
+            -c|--config-env)
+                # [ROUND 5] `-c alias.<name>=<value>` / `--config-env
+                # alias.<name>=<ENVVAR>` define a git alias for THIS
+                # invocation only, on the command line itself (see
+                # `_interactive_guard_git_oneshot_alias` note below for why
+                # this is flagged rather than resolved). Both forms only
+                # take a space-separated value in real git (confirmed live
+                # against git 2.43 -- see the function-level comment above).
+                if [ $# -ge 2 ]; then
+                    case "$2" in
+                        alias.*) _interactive_guard_git_oneshot_alias=1 ;;
+                    esac
+                    _interactive_guard_global_prefix+=("$arg" "$2")
+                    shift 2
+                else
+                    shift
+                fi
+                ;;
+            -C|--git-dir|--work-tree|--namespace|--list-cmds|--attr-source)
                 if [ $# -ge 2 ]; then
                     _interactive_guard_global_prefix+=("$arg" "$2")
                     shift 2
@@ -536,7 +754,14 @@ _interactive_guard_git_find_subcommand() {
                     shift
                 fi
                 ;;
-            --config-env=*|--git-dir=*|--work-tree=*|--namespace=*|--list-cmds=*|--attr-source=*|--exec-path=*)
+            --config-env=*)
+                case "$arg" in
+                    --config-env=alias.*) _interactive_guard_git_oneshot_alias=1 ;;
+                esac
+                _interactive_guard_global_prefix+=("$arg")
+                shift
+                ;;
+            --git-dir=*|--work-tree=*|--namespace=*|--list-cmds=*|--attr-source=*|--exec-path=*)
                 _interactive_guard_global_prefix+=("$arg")
                 shift
                 ;;
@@ -567,6 +792,78 @@ _interactive_guard_git_find_subcommand() {
                 ;;
         esac
     done
+}
+
+# [ROUND 5] git: resolve ONE level of a PERSISTENT git alias -- an
+# `[alias]` entry already sitting in ~/.gitconfig (or a repo-local
+# .git/config), as opposed to the one-shot `-c alias.*=` form handled by the
+# hard reject above. `_interactive_guard_git_find_subcommand()` only ever
+# sees the literal token the caller typed; if that token is itself an alias
+# name (e.g. `[alias] wip = push` then `git wip origin master`), the
+# subcommand-detection above reports "wip", which does not literally match
+# "push", and the invocation would pass through unblocked even though real
+# git expands it to an actual push -- this is the persistent-alias half of
+# the round-4-review bypass (the other half is the one-shot `-c` form
+# rejected above). Real git resolves this by looking up `alias.<name>` via
+# its own config machinery (which layers repo-local, global, and system
+# config); this function asks the REAL git binary for that same answer via
+# `git config --get-regexp '^alias\.'` (forwarding any -C/--git-dir/
+# --work-tree that were skipped over, so an aliased subcommand is resolved
+# against the SAME config git itself would use for this invocation) rather
+# than re-implementing git's config-layering rules.
+#
+# Only resolves ONE level: if the alias's value is itself another alias
+# name, or begins with `!` (a shell alias -- an arbitrary shell command, not
+# a git subcommand token at all), this function leaves
+# _interactive_guard_effective_subcommand as the literal alias name
+# unresolved rather than guessing -- see KNOWN LIMITATIONS in the installer
+# file for why both are disclosed as residual gaps rather than silently
+# assumed safe.
+#
+# Call as: _interactive_guard_git_resolve_persistent_alias <real-git-argv...>
+# -- <subcommand> <subcommand-args...>. Sets
+# _interactive_guard_effective_subcommand (the alias's first expansion
+# token, or the original subcommand unchanged if it is not a known,
+# resolvable alias) and _interactive_guard_subcommand_args_effective (the
+# alias's remaining expansion tokens followed by the original subcommand
+# args, matching how real git substitutes an alias in place of the typed
+# name).
+_interactive_guard_git_resolve_persistent_alias() {
+    local real_git_argv=()
+    while [ "$1" != "--" ]; do
+        real_git_argv+=("$1")
+        shift
+    done
+    shift
+    local subcommand="$1"
+    shift
+    _interactive_guard_effective_subcommand="$subcommand"
+    _interactive_guard_subcommand_args_effective=("$@")
+    local line key value name
+    while IFS= read -r line; do
+        [ -z "$line" ] && continue
+        key="${line%% *}"
+        if [ "$key" = "$line" ]; then
+            value=""
+        else
+            value="${line#* }"
+        fi
+        name="${key#alias.}"
+        if [ "$name" = "$subcommand" ]; then
+            case "$value" in
+                ''|'!'*)
+                    # empty (malformed) or a shell alias -- cannot be
+                    # resolved to a subcommand token; leave unresolved (see
+                    # KNOWN LIMITATIONS).
+                    return
+                    ;;
+            esac
+            local expansion_tokens=($value)
+            _interactive_guard_effective_subcommand="${expansion_tokens[0]}"
+            _interactive_guard_subcommand_args_effective=("${expansion_tokens[@]:1}" "$@")
+            return
+        fi
+    done < <("${real_git_argv[@]}" config --get-regexp '^alias\.' 2>/dev/null)
 }
 
 # git: sets _interactive_guard_push_verdict to "" (allow) or a label
@@ -650,8 +947,29 @@ if [ -z "$_real_git" ]; then
 fi
 
 _interactive_guard_git_find_subcommand "$@"
-if [ "$_interactive_guard_subcommand" = "push" ] && ! _interactive_guard_is_real_worker_context; then
-    _interactive_guard_git_push_verdict "$_real_git" "${_interactive_guard_global_prefix[@]}" -- "${_interactive_guard_subcommand_args[@]}"
+
+# [ROUND 5] A one-shot `-c alias.*=`/`--config-env=alias.*` definition on
+# the command line itself is a hard reject regardless of subcommand or
+# worker context bypass state below being reached -- see
+# _interactive_guard_git_oneshot_alias's definition in _lib.sh for why this
+# is rejected outright rather than resolved.
+if [ -n "$_interactive_guard_git_oneshot_alias" ] && ! _interactive_guard_is_real_worker_context; then
+    echo "BLOCKED: git invocation defines a one-shot alias on the command line (-c alias.*=/--config-env=alias.*) -- this cannot be distinguished from an attempt to disguise a guarded subcommand (e.g. 'git -c alias.wip=push wip origin master'), so it is rejected outright; run the real subcommand directly, or go through the dispatch pipeline (task-gateway.py) -- see ai-os/OWNER_DIRECTIVES/PROTOCOL_OWNER_AI.yaml" >&2
+    exit 1
+fi
+
+# [ROUND 5] If the detected subcommand isn't literally "push", it might
+# still BE push via a persistent `[alias]` entry in ~/.gitconfig (e.g.
+# `alias.wip = push` then `git wip ...`) -- resolve one level before
+# deciding it's not a push.
+_interactive_guard_effective_subcommand="$_interactive_guard_subcommand"
+_interactive_guard_subcommand_args_effective=("${_interactive_guard_subcommand_args[@]}")
+if [ -n "$_interactive_guard_subcommand" ] && [ "$_interactive_guard_subcommand" != "push" ]; then
+    _interactive_guard_git_resolve_persistent_alias "$_real_git" "${_interactive_guard_global_prefix[@]}" -- "$_interactive_guard_subcommand" "${_interactive_guard_subcommand_args[@]}"
+fi
+
+if [ "$_interactive_guard_effective_subcommand" = "push" ] && ! _interactive_guard_is_real_worker_context; then
+    _interactive_guard_git_push_verdict "$_real_git" "${_interactive_guard_global_prefix[@]}" -- "${_interactive_guard_subcommand_args_effective[@]}"
     if [ -n "$_interactive_guard_push_verdict" ]; then
         echo "BLOCKED: git push to protected branch/ref '$_interactive_guard_push_verdict' must run through the dispatch pipeline (task-gateway.py), not an interactive session -- see ai-os/OWNER_DIRECTIVES/PROTOCOL_OWNER_AI.yaml" >&2
         exit 1
@@ -674,7 +992,18 @@ if [ -z "$_real_gh" ]; then
 fi
 
 _interactive_guard_gh_strip_globals "$@"
-if ! _interactive_guard_is_real_worker_context && _interactive_guard_gh_is_merge "${_interactive_guard_gh_stripped[@]}"; then
+
+# [ROUND 5] If the (post-global-flag-strip) argv isn't already a literal
+# `pr merge`/merge-API call, it might still BE one via a persistent alias
+# (e.g. `gh alias set mrg 'pr merge --merge'` then `gh mrg 1`) -- resolve
+# one level before deciding it's not a merge.
+_interactive_guard_gh_effective=("${_interactive_guard_gh_stripped[@]}")
+if ! _interactive_guard_gh_is_merge "${_interactive_guard_gh_stripped[@]}"; then
+    _interactive_guard_gh_resolve_persistent_alias "$_real_gh" "${_interactive_guard_gh_stripped[@]}"
+    _interactive_guard_gh_effective=("${_interactive_guard_gh_resolved[@]}")
+fi
+
+if ! _interactive_guard_is_real_worker_context && _interactive_guard_gh_is_merge "${_interactive_guard_gh_effective[@]}"; then
     echo "BLOCKED: gh pr merge (including the equivalent gh api PUT/PATCH .../pulls/N/merge call) must run through the dispatch pipeline (task-gateway.py), not an interactive session -- see ai-os/OWNER_DIRECTIVES/PROTOCOL_OWNER_AI.yaml" >&2
     exit 1
 fi
