@@ -35,8 +35,12 @@ a real, runnable shell command, per the heuristic documented on that
 function.
 """
 import json
+import os
 import re
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from workflow_contract import REQUIRED_TASK_SECTIONS  # noqa: E402
 
 MIN_FIELD_LENGTH = 10
 
@@ -81,7 +85,13 @@ NEGATION_MARKER_WORDS = {"not", "never", "without", "excluding", "no"}
 
 VALID_TIERS = ["mechanical", "integrative", "judgment"]
 
-FIELD_HEADER_RE = re.compile(r"^##\s*(OBJECTIVE|SCOPE|SUCCESS_CRITERIA|EXPECTED_OUTPUT|CONSTRAINTS|COMPLEXITY_TIER|KNOWN_CONTEXT)\s*$", re.IGNORECASE | re.MULTILINE)
+# Built from the shared REQUIRED_TASK_SECTIONS list (workflow_contract.py) instead
+# of a second hardcoded name list -- task-20260726-092433 dedup audit, SCOPE item 3:
+# this regex and task-gateway.py's cmd_start section-presence check used to name the
+# same 7 sections independently and could silently drift.
+FIELD_HEADER_RE = re.compile(
+    r"^##\s*(" + "|".join(REQUIRED_TASK_SECTIONS) + r")\s*$", re.IGNORECASE | re.MULTILINE
+)
 
 # --- SUCCESS_CRITERIA runnable-command heuristic -----------------------------
 # Concrete, testable rule (documented here, not just in the docstring above):

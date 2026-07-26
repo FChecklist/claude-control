@@ -27,13 +27,16 @@ import tempfile
 import yaml
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from workflow_contract import phase_for_task_gateway_subcommand  # noqa: E402
+from workflow_contract import (  # noqa: E402
+    phase_for_task_gateway_subcommand, REQUIRED_TASK_SECTIONS, has_all_required_sections,
+)
 
 VERIDIAN_ROOT = "/opt/veridian"
 SCRIPTS = f"{VERIDIAN_ROOT}/scripts"
 AI_OS = f"{VERIDIAN_ROOT}/ai-os"
 SUPERBOSS = f"{SCRIPTS}/superboss-register.py"
 VERIDIAN_TASK = f"{SCRIPTS}/veridian-task.py"
+CREDIT_ACCOUNTANT = f"{SCRIPTS}/credit-accountant.py"
 # OWNER_ENGINE software (OWNER DIRECTIVE 2026-07-25 / KE-20260725-061008-8423),
 # a pre-processing filter upstream of this dispatcher -- see PROMPT_GATEWAY
 # below and run_owner_engine_gate().
@@ -42,11 +45,6 @@ POSTFLIGHT = f"{AI_OS}/scripts/postflight_audit_gate.py"
 TIGHT_VALIDATION = f"{SCRIPTS}/tight_task_validation.py"
 DB_PATH = f"{AI_OS}/memory/superboss-register.sqlite"
 MASTER_INDEX_REGISTRIES_SYNC = f"{AI_OS}/scripts/sync_master_index_registries.py"
-
-REQUIRED_SECTIONS = [
-    "OBJECTIVE", "SCOPE", "KNOWN_CONTEXT", "SUCCESS_CRITERIA",
-    "EXPECTED_OUTPUT", "CONSTRAINTS", "COMPLEXITY_TIER",
-]
 
 STOPWORDS = {
     "the", "a", "an", "of", "to", "for", "and", "or", "in", "on", "vs",
@@ -319,7 +317,7 @@ def cmd_start(args):
     if not os.path.isfile(args.prompt_file):
         fail(f"prompt-file not found: {args.prompt_file}")
     text = open(args.prompt_file).read()
-    missing = [s for s in REQUIRED_SECTIONS if f"## {s}" not in text]
+    missing = [s for s in REQUIRED_TASK_SECTIONS if f"## {s}" not in text]
     if missing:
         fail(
             "prompt-file does not follow the literal_template -- missing required section(s)",
@@ -360,6 +358,42 @@ def cmd_start(args):
     task_id = m.group(1)
     service = f"veridian-worker@{task_id}.service"
 
+    # Real fix for a real gap found live 2026-07-26 (task-20260726-092433):
+    # this command never called credit-accountant.py propose, yet
+    # worker-entrypoint.sh's checkpoint loop calls `credit-accountant.py
+    # report --increment 1` unconditionally -- which always failed with "no
+    # matching approved plan for this task_id/increment" because no
+    # increment-1 row had ever been proposed. Called here, immediately after
+    # task_id exists (propose requires a real --task-id) and before the
+    # explicit systemd verification below, so an approved-or-rejected
+    # increment-1 row exists before the worker's own checkpoint loop can
+    # reach it. --plan reuses this prompt's own OBJECTIVE section (the same
+    # real intent statement postflight_audit_gate.py's audit trail already
+    # treats as authoritative); --search-terms reuses
+    # extract_keywords_mechanical() (already used by cmd_submit above) rather
+    # than a second keyword-extraction implementation. A rejected verdict is
+    # not fatal here -- credit-accountant.py's own report-time check is the
+    # real enforcement point, and worker-entrypoint.sh already has real
+    # handling for a deterministic-rejection plan (see its own comments) --
+    # this call's job is only to make sure a row exists, so `report` finds a
+    # real, matching increment-1 rather than nothing at all.
+    plan_text = (extract_section(text, "OBJECTIVE") or args.title)[:500]
+    search_terms = " ".join(extract_keywords_mechanical(text)) or args.title
+    # The real call: credit-accountant.py propose (CREDIT_ACCOUNTANT == .../credit-accountant.py).
+    propose_proc = run([
+        "python3", CREDIT_ACCOUNTANT, "propose",
+        "--task-id", task_id, "--plan", plan_text,
+        "--search-terms", search_terms, "--repo", args.repo,
+    ])
+    try:
+        propose_result = json.loads(propose_proc.stdout)
+    except json.JSONDecodeError:
+        propose_result = {
+            "approved": False,
+            "reason": "credit-accountant.py propose did not return parseable JSON",
+            "stdout": propose_proc.stdout[-2000:], "stderr": propose_proc.stderr[-2000:],
+        }
+
     # veridian-task.py create already enables+starts the unit; this explicit
     # start is the spec-mandated verification step and is idempotent against
     # an already-active unit.
@@ -383,6 +417,7 @@ def cmd_start(args):
         "task_id": task_id,
         "systemd_active": systemd_active,
         "work_item_id": work_result.get("work_item_id"),
+        "credit_accountant_propose": propose_result,
     }, indent=2, default=str))
 
 
