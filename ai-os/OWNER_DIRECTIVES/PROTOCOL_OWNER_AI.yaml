@@ -206,6 +206,38 @@ articles:
       lessons/incidents content, not a standing execution rule).
     see_also: MEMORY_OWNER_AI.yaml self_correction_rules, MEMORY_OWNER_AI.yaml incidents
 
+  - id: A16_hold_for_owner_signoff
+    rule: >-
+      A dispatch prompt that must never be auto-merged declares this with a
+      real, machine-readable marker line -- `HOLD_FOR_OWNER_SIGNOFF: true` --
+      inside its EXPECTED_OUTPUT or CONSTRAINTS section, never with prose
+      alone. scripts/tight_task_validation.py's extract_hold_for_owner_signoff()
+      extracts this marker at dispatch time; scripts/task-gateway.py's
+      cmd_start() threads it through to scripts/veridian-task.py's cmd_create()
+      (--hold-for-owner-signoff), which writes hold_for_owner_signoff: true
+      into the task's task.yaml. scripts/supervisor-entrypoint.sh's
+      merge-decision block reads this field FIRST -- before risk-tier.py's
+      tier classification or the Superboss's AI review verdict are even
+      considered -- and if true, unconditionally skips auto-merge, posts a
+      PR comment stating the task is held for Owner sign-off, checkpoints
+      the task as awaiting_human_approval, and notifies the Owner. This
+      makes "hold for sign-off" a real, enforced software behavior, not
+      inert prose an AI agent or reviewer could silently fail to honor.
+    real_incident: >-
+      2026-07-26: PR563's corrective task was dispatched with an explicit
+      prompt-level instruction ("must be held for Owner sign-off, do not
+      merge under any circumstance"), but that natural-language constraint
+      had zero effect on the actual merge decision -- nothing in
+      supervisor-entrypoint.sh's pipeline ever read prompt-level prose, only
+      risk-tier.py's deterministic tier plus the AI reviewer's verdict. The
+      task auto-merged anyway (as a separate, near-empty PR); a human had to
+      notice and manually hold it after the fact. This article and its
+      HOLD_FOR_OWNER_SIGNOFF mechanism are the real, technical fix for that
+      gap, closed in the same session (task-20260726-083946).
+    source: This consolidation task's own real-incident fix -- not carried
+      forward from any prior standing-directive file, since the gap it
+      closes was only discovered and fixed in this same 2026-07-26 session.
+
 task_lifecycle_state_machine:
   note: Real closed finite-state machine implementing A9_workflow_sequence as
     actual dispatchable steps, folded here verbatim from

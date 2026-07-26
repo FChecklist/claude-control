@@ -348,10 +348,19 @@ def cmd_start(args):
             prompt_file=args.prompt_file,
         )
 
-    create_proc = run([
+    # Real, machine-readable hold-for-signoff (2026-07-26, root-caused against
+    # the PR563 incident): tight_task_validation.py already extracted a real
+    # HOLD_FOR_OWNER_SIGNOFF: true marker (if present) from this prompt's
+    # EXPECTED_OUTPUT/CONSTRAINTS above -- thread it through to veridian-task.py
+    # create so task.yaml carries it for real, not just as prose the AI worker
+    # or Superboss might or might not honor.
+    create_cmd = [
         "python3", VERIDIAN_TASK, "create",
         "--title", args.title, "--repo", args.repo, "--prompt", text,
-    ])
+    ]
+    if tight_result.get("holdForOwnerSignoff"):
+        create_cmd.append("--hold-for-owner-signoff")
+    create_proc = run(create_cmd)
     if create_proc.returncode != 0:
         fail("veridian-task.py create failed", stdout=create_proc.stdout, stderr=create_proc.stderr)
     m = re.search(r"CREATED:\s*(\S+)", create_proc.stdout)
