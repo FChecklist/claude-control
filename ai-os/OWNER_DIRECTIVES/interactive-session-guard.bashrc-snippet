@@ -1,0 +1,87 @@
+# === Interactive-session write gate ===================================
+# Real, technical enforcement of "AI agents work only through software,
+# software follows process" (see ai-os/OWNER_DIRECTIVES/PROTOCOL_OWNER_AI.yaml
+# article A8_software_execution_only) for the two most dangerous manual
+# escape hatches: `gh pr merge` and `git push` to a protected branch.
+#
+# REAL INCIDENT (2026-07-26): an interactive Claude Code session ran
+#   gh pr merge 78 --repo FChecklist/claude-control --merge --delete-branch
+# and a direct `git push` (an empty retrigger commit) to compliance-tracker's
+# `main` by hand, after the automated pipeline's own merge/CI-trigger step
+# failed -- instead of diagnosing and fixing the real bug in the pipeline
+# (task-gateway.py -> veridian-task.py -> systemd worker ->
+# supervisor-entrypoint.sh). This snippet is the real, checkable fix: it
+# blocks the two commands unless they run inside a real systemd-dispatched
+# worker unit.
+#
+# MECHANISM: systemd sets INVOCATION_ID as a real environment variable for
+# every unit it launches (confirmed present for veridian-worker@*.service /
+# veridian-supervisor@*.service units spawned by scripts/veridian-task.py's
+# systemd --user integration). It is absent in a normal interactive login/SSH
+# shell and is not set by sourcing this file, so it is a real, checkable,
+# not-trivially-spoofed-by-accident signal that a command is running inside
+# the legitimate dispatch pipeline rather than being typed by hand.
+#
+# SCOPE: only `gh pr merge` and `git push <master|main>` are intercepted.
+# Every other gh/git subcommand (view, checks, pr list, pr comment, pr diff,
+# run rerun, log, diff, status, push to a non-protected/feature branch, etc.)
+# passes through to the real binary unchanged in both contexts -- this guard
+# never blocks read-only verification/status-checking work.
+#
+# KNOWN LIMITATION (honest, not silently glossed over): this guard is scoped
+# to the AI session's own discipline, NOT a security boundary against the
+# Owner. The Owner's own interactive SSH session uses this same `rajat`
+# account and sources this same ~/.bashrc, so there is no technical way here
+# to distinguish "the Owner typed this by hand" from "the AI session typed
+# this by hand" -- both share the same shell environment. If the Owner needs
+# to run `gh pr merge` or `git push origin master` by hand, this guard will
+# block that too; it is intended to catch the AI session bypassing the
+# pipeline, not to restrict the Owner's own access.
+#
+# This file is meant to be sourced from ~/.bashrc on VERIDIAN-DEV
+# (167.233.220.35), for the rajat user's interactive shells only -- systemd
+# units do not source .bashrc, so this guard never runs for real dispatched
+# workers/supervisors regardless of INVOCATION_ID.
+
+_interactive_guard_gh_bin="$(type -P gh)"
+_interactive_guard_git_bin="$(type -P git)"
+
+gh() {
+    if [ -z "${INVOCATION_ID:-}" ] && [ "$1" = "pr" ] && [ "$2" = "merge" ]; then
+        echo "BLOCKED: gh pr merge must run through the dispatch pipeline (task-gateway.py), not an interactive session -- see ai-os/OWNER_DIRECTIVES/PROTOCOL_OWNER_AI.yaml" >&2
+        return 1
+    fi
+    "$_interactive_guard_gh_bin" "$@"
+}
+
+git() {
+    if [ -z "${INVOCATION_ID:-}" ] && [ "$1" = "push" ]; then
+        shift
+        local args=("$@") positional=() arg refspec="" dest
+        for arg in "${args[@]}"; do
+            case "$arg" in
+                -*) ;;
+                *) positional+=("$arg") ;;
+            esac
+        done
+        if [ "${#positional[@]}" -ge 2 ]; then
+            refspec="${positional[1]}"
+        fi
+        if [ -n "$refspec" ]; then
+            dest="${refspec##*:}"
+        else
+            dest="$("$_interactive_guard_git_bin" symbolic-ref --short HEAD 2>/dev/null)"
+        fi
+        dest="${dest#refs/heads/}"
+        case "$dest" in
+            master|main)
+                echo "BLOCKED: git push to protected branch '$dest' must run through the dispatch pipeline (task-gateway.py), not an interactive session -- see ai-os/OWNER_DIRECTIVES/PROTOCOL_OWNER_AI.yaml" >&2
+                return 1
+                ;;
+        esac
+        "$_interactive_guard_git_bin" push "${args[@]}"
+        return $?
+    fi
+    "$_interactive_guard_git_bin" "$@"
+}
+# === end interactive-session write gate =================================

@@ -206,6 +206,64 @@ articles:
       lessons/incidents content, not a standing execution rule).
     see_also: MEMORY_OWNER_AI.yaml self_correction_rules, MEMORY_OWNER_AI.yaml incidents
 
+  - id: A15_interactive_session_write_gate
+    rule: >-
+      Article A8_software_execution_only ("AI agents work only through
+      software, software follows process") is now backed by a real,
+      technical guard on VERIDIAN-DEV (167.233.220.35), not just written
+      text an interactive session can choose not to follow. rajat's shell
+      profile (~/.profile, ~/.bashrc, both sourcing the deployed
+      ~/.claude-interactive-session-guard.bashrc-snippet) defines `gh` and
+      `git` bash functions that intercept `gh pr merge` and `git push
+      <master|main>` specifically: if the real systemd-set INVOCATION_ID
+      environment variable is absent (i.e. this is not a genuine
+      veridian-worker@*/veridian-supervisor@* systemd unit -- systemd units
+      never source .bashrc/.profile, and INVOCATION_ID is not otherwise set
+      in a normal interactive shell), the command is blocked with a
+      non-zero exit and a clear "BLOCKED: ... must run through the dispatch
+      pipeline" message instead of executing. If INVOCATION_ID is set (a
+      real dispatched worker/supervisor), or the gh/git subcommand is
+      anything else (view, checks, pr list, pr comment, pr diff, run rerun,
+      status, log, diff, push to a non-protected branch, etc.), the command
+      passes through to the real binary unchanged -- verification and
+      status-checking work is never blocked.
+    real_incident: >-
+      2026-07-26: an interactive session ran `gh pr merge 78 --repo
+      FChecklist/claude-control --merge --delete-branch` and a direct `git
+      push` (an empty retrigger commit) to compliance-tracker's `main`
+      branch by hand, after the automated pipeline's own merge/CI-trigger
+      step failed -- instead of diagnosing and fixing the pipeline's real
+      bug. This article and its guard are the real, technical fix for that
+      gap.
+    implementation:
+      deployed_at: "/home/rajat/.claude-interactive-session-guard.bashrc-snippet
+        on VERIDIAN-DEV, sourced from both ~/.bashrc (interactive non-login
+        shells) and ~/.profile (login shells, interactive or not -- added
+        because ~/.bashrc's own top-of-file interactive-only check skips
+        login-but-non-interactive shells such as `bash -lc '...'`)."
+      committed_copy: ai-os/OWNER_DIRECTIVES/interactive-session-guard.bashrc-snippet
+        (this exact repo, for auditability -- kept byte-identical to the
+        deployed copy).
+      test: tests/interactive_session_guard_test.sh (sources the real
+        committed snippet against faked gh/git binaries; 18 scenarios
+        covering block/pass-through for both gh pr merge and git push to
+        master/main vs. a feature branch, in both interactive and
+        systemd-simulated contexts).
+      known_limitation: >-
+        This guard cannot distinguish the Owner's own interactive SSH
+        session from an AI session typing by hand -- both share the same
+        rajat account and the same shell profile. It is scoped to the AI
+        session's own discipline, not a security boundary against the
+        Owner; if the Owner runs `gh pr merge` or `git push origin master`
+        by hand, this guard blocks that too. Documented honestly rather
+        than silently building something that only pretends to restrict
+        the AI session.
+    source: This task's own real deliverable (server-side ~/.bashrc /
+      ~/.profile change + committed snippet + test), directly implementing
+      A8_software_execution_only's standing rule with real enforcement.
+    see_also: ai-os/OWNER_DIRECTIVES/interactive-session-guard.bashrc-snippet,
+      tests/interactive_session_guard_test.sh
+
 task_lifecycle_state_machine:
   note: Real closed finite-state machine implementing A9_workflow_sequence as
     actual dispatchable steps, folded here verbatim from
