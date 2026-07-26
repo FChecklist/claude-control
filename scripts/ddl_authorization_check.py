@@ -21,11 +21,14 @@ a "valid" boolean (plus "reason"/"guidance" on rejection) on stdout, exits 0
 if valid else 1.
 
 Fails closed: any reference to a DDL-capable Supabase MCP tool (apply_migration,
-execute_sql, merge_branch -- see DDL_CAPABLE_TOOL_NAMES below), or any SQL DDL
-keyword (CREATE/DROP TABLE, CREATE INDEX/CREATE UNIQUE INDEX/DROP INDEX,
-ALTER TABLE, TRUNCATE, CREATE/DROP POLICY, CREATE/DROP TRIGGER, ADD/DROP
-COLUMN, ADD CONSTRAINT, CREATE/DROP TYPE, CREATE SCHEMA, CREATE EXTENSION,
-CREATE SEQUENCE -- see DDL_KEYWORD_PATTERNS below) anywhere in the
+execute_sql, merge_branch -- see DDL_CAPABLE_TOOL_NAMES below), or any SQL
+DDL/DCL keyword -- schema forms (CREATE/DROP TABLE, CREATE INDEX/CREATE
+UNIQUE INDEX/DROP INDEX, ALTER TABLE, TRUNCATE, CREATE/DROP POLICY,
+CREATE/DROP TRIGGER, ADD/DROP COLUMN, ADD CONSTRAINT, CREATE/DROP TYPE,
+CREATE SCHEMA, CREATE EXTENSION, CREATE SEQUENCE, CREATE/DROP VIEW,
+CREATE/DROP/ALTER FUNCTION, COMMENT ON) and privilege-escalation forms
+(GRANT, REVOKE, CREATE/ALTER/DROP ROLE, CREATE/ALTER/DROP USER, SECURITY
+DEFINER, REASSIGN OWNED -- see DDL_KEYWORD_PATTERNS below) anywhere in the
 prompt-file's text is rejected UNLESS the text also contains a line literally
 matching `PRE-APPROVED-LIVE-DDL:` followed by a real reference: a decision-log
 entry ID (the `KE-<date>-<time>-<hex>` knowledge_engine ID format, or an
@@ -42,23 +45,60 @@ covered the same as single-line uppercase SQL. Plain SELECT-style read-only
 SQL never matches any of the DDL keywords below and so never triggers this
 gate.
 
-Known limitation (accepted, not solved by this gate): this is a DISPATCH-TIME
-scan of the prompt-file's TEXT, not a RUNTIME interceptor of the actual tool
-call. It catches a dispatch prompt that tells a worker to run live DDL. It
-does NOT catch a worker whose prompt says nothing about DDL but which
-decides, mid-task, to call apply_migration/execute_sql/merge_branch anyway --
-this session's agent framework has no mechanism to intercept a live MCP tool
-call while a worker is running, only to vet the prompt before the worker is
-dispatched. Closing that gap would require a runtime tool-call interceptor
-(e.g. an MCP-proxy-level policy check), which is a materially different and
-larger piece of infrastructure than a prompt-text scan and is explicitly out
-of scope here. Treat this gate as a real but partial control: it stops a
-prompt from authorizing live DDL up front, it does not guarantee no live DDL
-happens after dispatch.
+A KE-<date>-<time>-<hex> or OWNER_DECISIONS_NEEDED_<date>.yaml citation is
+verified for real EXISTENCE, not just shape: a KE-style ID must appear
+literally somewhere under ai-os/ (checked via a full-text scan of that
+directory at validation time -- see _ke_id_exists_on_disk below), and an
+OWNER_DECISIONS_NEEDED_<date>.yaml reference must name a file that actually
+exists on disk at ai-os/<that filename> (see _owner_decisions_file_exists
+below). A citation matching the right shape but naming an ID/file that does
+not exist anywhere -- e.g. a fabricated `KE-20260726-999999-dead` nobody ever
+recorded -- is rejected, not accepted on format alone. This closes the round-2
+gap where the check validated only the citation's STRING SHAPE via regex and
+a fabricated-but-well-formed reference passed; a round-3 live test confirmed
+that gap was real. The dated-free-text-note path (below MIN_DATED_NOTE_LENGTH
+check) has NO equivalent existence check -- there is nothing on disk to look
+up for free text like "Owner approved via Slack DM on 2026-07-25, see
+#ops-approvals thread" -- so that path remains format-only and, honestly, a
+worker could still fabricate a plausible-sounding dated note. Prefer a
+KE-id/decision-file citation over a free-text note when authoring a real
+approval for exactly this reason.
+
+Known limitations (accepted, not solved by this gate):
+
+1. This is a DISPATCH-TIME scan of the prompt-file's TEXT, not a RUNTIME
+   interceptor of the actual tool call. It catches a dispatch prompt that
+   tells a worker to run live DDL. It does NOT catch a worker whose prompt
+   says nothing about DDL but which decides, mid-task, to call
+   apply_migration/execute_sql/merge_branch anyway -- this session's agent
+   framework has no mechanism to intercept a live MCP tool call while a
+   worker is running, only to vet the prompt before the worker is dispatched.
+   Closing that gap would require a runtime tool-call interceptor (e.g. an
+   MCP-proxy-level policy check), which is a materially different and larger
+   piece of infrastructure than a prompt-text scan and is explicitly out of
+   scope here.
+2. The existence check above proves the cited ID/file is a real record that
+   exists somewhere under ai-os/ -- it does NOT prove that record is a
+   genuine Owner approval OF THIS SPECIFIC DDL ACTION. A worker could in
+   principle cite a real KE-id or decision file that exists for an unrelated
+   reason. Fully closing that would require the check to parse and semantically
+   match the cited record's content against the specific DDL statements found,
+   which is out of scope here; treat the existence check as raising the bar
+   from "any well-formed string" to "a real, findable record", not as a
+   content/intent audit.
+
+Treat this gate as a real but partial control: it stops a prompt from
+authorizing live DDL up front with a fabricated or free-floating citation, it
+does not guarantee no live DDL happens after dispatch, and it does not
+semantically verify a cited real record actually approves this action.
 """
 import json
+import os
 import re
 import sys
+
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+AI_OS_DIR = os.path.join(REPO_ROOT, "ai-os")
 
 DDL_KEYWORD_PATTERNS = {
     "CREATE TABLE": re.compile(r"\bCREATE\s+TABLE\b", re.IGNORECASE),
@@ -80,6 +120,31 @@ DDL_KEYWORD_PATTERNS = {
     "CREATE SCHEMA": re.compile(r"\bCREATE\s+SCHEMA\b", re.IGNORECASE),
     "CREATE EXTENSION": re.compile(r"\bCREATE\s+EXTENSION\b", re.IGNORECASE),
     "CREATE SEQUENCE": re.compile(r"\bCREATE\s+SEQUENCE\b", re.IGNORECASE),
+    "CREATE VIEW": re.compile(r"\bCREATE\s+(?:OR\s+REPLACE\s+)?(?:MATERIALIZED\s+)?VIEW\b", re.IGNORECASE),
+    "DROP VIEW": re.compile(r"\bDROP\s+(?:MATERIALIZED\s+)?VIEW\b", re.IGNORECASE),
+    "CREATE FUNCTION": re.compile(r"\bCREATE\s+(?:OR\s+REPLACE\s+)?FUNCTION\b", re.IGNORECASE),
+    "ALTER FUNCTION": re.compile(r"\bALTER\s+FUNCTION\b", re.IGNORECASE),
+    "DROP FUNCTION": re.compile(r"\bDROP\s+FUNCTION\b", re.IGNORECASE),
+    "COMMENT ON": re.compile(r"\bCOMMENT\s+ON\b", re.IGNORECASE),
+    # Privilege-escalation DCL/DDL primitives -- arguably more dangerous than
+    # the schema-shape statements above since they change WHO can do what,
+    # not just the shape of the data. Real gap found 2026-07-26 round 3: all
+    # of these previously passed through undetected.
+    "GRANT": re.compile(r"\bGRANT\b", re.IGNORECASE),
+    "REVOKE": re.compile(r"\bREVOKE\b", re.IGNORECASE),
+    "CREATE ROLE": re.compile(r"\bCREATE\s+ROLE\b", re.IGNORECASE),
+    "ALTER ROLE": re.compile(r"\bALTER\s+ROLE\b", re.IGNORECASE),
+    "DROP ROLE": re.compile(r"\bDROP\s+ROLE\b", re.IGNORECASE),
+    "CREATE USER": re.compile(r"\bCREATE\s+USER\b", re.IGNORECASE),
+    "ALTER USER": re.compile(r"\bALTER\s+USER\b", re.IGNORECASE),
+    "DROP USER": re.compile(r"\bDROP\s+USER\b", re.IGNORECASE),
+    # SECURITY DEFINER makes a function run with its OWNER's privileges
+    # rather than the caller's -- the classic Postgres privilege-escalation
+    # primitive, matched standalone (not just adjacent to CREATE FUNCTION)
+    # since it can equally appear in an ALTER FUNCTION statement and the
+    # clause itself, wherever it appears, is the escalation vector.
+    "SECURITY DEFINER": re.compile(r"\bSECURITY\s+DEFINER\b", re.IGNORECASE),
+    "REASSIGN OWNED": re.compile(r"\bREASSIGN\s+OWNED\b", re.IGNORECASE),
 }
 
 # Every Supabase MCP tool name available to this session whose invocation can
@@ -110,12 +175,12 @@ PLACEHOLDER_REFERENCE_RE = re.compile(
 # A real decision-log citation: either the knowledge_engine KE-<date>-<time>-<hex>
 # ID format, or a direct OWNER_DECISIONS_NEEDED_<date>.yaml[#<id>] file reference
 # -- both are real, grep-able record formats already in use elsewhere in this
-# pipeline (see PROTOCOL_OWNER_AI.yaml's approved_via/decision-log convention),
-# not something a worker can fabricate by just writing a plausible-looking word.
-DECISION_LOG_REFERENCE_RE = re.compile(
-    r"KE-\d{8}-\d{6}-[0-9a-f]{4}|OWNER_DECISIONS_NEEDED_\d{4}-\d{2}-\d{2}\.ya?ml",
-    re.IGNORECASE,
-)
+# pipeline (see PROTOCOL_OWNER_AI.yaml's approved_via/decision-log convention).
+# Matching this SHAPE is necessary but not sufficient -- see
+# _ke_id_exists_on_disk / _owner_decisions_file_exists below, which check the
+# cited ID/file is a real record, not just a well-formed string.
+KE_ID_RE = re.compile(r"KE-\d{8}-\d{6}-[0-9a-f]{4}", re.IGNORECASE)
+OWNER_DECISIONS_FILE_RE = re.compile(r"OWNER_DECISIONS_NEEDED_\d{4}-\d{2}-\d{2}\.ya?ml", re.IGNORECASE)
 
 DATED_NOTE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
 
@@ -137,15 +202,49 @@ def find_ddl_references(text):
     return hits
 
 
+def _ke_id_exists_on_disk(ke_id):
+    """True if the literal KE-<date>-<time>-<hex> string appears anywhere in
+    a file under ai-os/ -- i.e. it's a real recorded ID, not just a
+    well-formed one. A full-text scan (ai-os/ is ~11MB across ~50 files, cheap
+    to re-scan per check) rather than an index, since there's no existing
+    index of KE IDs to consult."""
+    if not os.path.isdir(AI_OS_DIR):
+        return False
+    for root, _dirs, files in os.walk(AI_OS_DIR):
+        for name in files:
+            path = os.path.join(root, name)
+            try:
+                with open(path, "r", encoding="utf-8", errors="ignore") as f:
+                    if ke_id in f.read():
+                        return True
+            except OSError:
+                continue
+    return False
+
+
+def _owner_decisions_file_exists(filename):
+    """True if ai-os/<filename> actually exists on disk. Only the file's
+    existence is checked, not that any #<id> fragment on the citation matches
+    a specific entry inside it -- see the module docstring's residual-gap
+    note."""
+    return os.path.isfile(os.path.join(AI_OS_DIR, filename))
+
+
 def is_real_reference(reference):
     """A citation, not a rephrasing: either a decision-log entry ID/file
-    reference in one of this pipeline's real record formats, or a dated
-    free-text note long enough to actually say something. A bare word like
-    "yes" or "approved" is neither."""
+    reference in one of this pipeline's real record formats THAT ACTUALLY
+    EXISTS on disk under ai-os/, or a dated free-text note long enough to
+    actually say something. A bare word like "yes" or "approved" is neither,
+    and a well-formed but fabricated KE-id/decision-file citation is rejected
+    too -- shape alone is not enough."""
     if not reference or PLACEHOLDER_REFERENCE_RE.match(reference):
         return False
-    if DECISION_LOG_REFERENCE_RE.search(reference):
-        return True
+    ke_match = KE_ID_RE.search(reference)
+    if ke_match:
+        return _ke_id_exists_on_disk(ke_match.group(0))
+    file_match = OWNER_DECISIONS_FILE_RE.search(reference)
+    if file_match:
+        return _owner_decisions_file_exists(file_match.group(0))
     if DATED_NOTE_RE.search(reference) and len(reference) >= MIN_DATED_NOTE_LENGTH:
         return True
     return False
