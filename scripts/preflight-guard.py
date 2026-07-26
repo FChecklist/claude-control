@@ -129,6 +129,25 @@ def check_worktree(workspace):
         fail("worktree_locked", lock)
 
 
+def check_single_protocol_file():
+    """Owner directive 2026-07-26: exactly ONE Owner<->AI protocol file and exactly
+    ONE Owner<->AI memory file under ai-os/OWNER_DIRECTIVES/, enforced as real
+    software rather than a one-time manual cleanup (see
+    ai-os/OWNER_DIRECTIVES/PROTOCOL_OWNER_AI.yaml source_inventory for the
+    consolidation this check protects). Delegates the actual signature/count logic
+    to scripts/check_single_protocol_file.py so there is exactly one real
+    implementation, callable standalone (SUCCESS_CRITERIA: `python3
+    scripts/check_single_protocol_file.py`) or in-process here.
+    """
+    try:
+        from check_single_protocol_file import check as check_protocol_docs
+    except ImportError:
+        return  # checker module unavailable -- fail open, don't block on infra issue
+    ok, result = check_protocol_docs()
+    if not ok:
+        fail("owner_ai_protocol_file_drift", "; ".join(result["problems"]))
+
+
 CRONTAB_APPROVED_SNAPSHOT_PATH = "/opt/veridian/ai-os/CRONTAB_APPROVED_SNAPSHOT.txt"
 OWNER_DECISIONS_PATH = "/opt/veridian/ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml"
 _CRONTAB_CITATION_RE = re.compile(
@@ -444,6 +463,7 @@ if __name__ == "__main__":
     check_mem()
     check_worktree(workspace_arg)
     check_crontab_unauthorized_change(task_dir_arg)
+    check_single_protocol_file()
 
     if proxy_arg == "--no-proxy":
         # doc-worker-entrypoint.sh's real-subscription tasks don't route

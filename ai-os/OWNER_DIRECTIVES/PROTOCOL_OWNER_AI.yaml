@@ -1,0 +1,565 @@
+document_class: protocol
+meta:
+  title: VERIDIAN Owner<->AI Protocol -- the single, canonical execution charter
+  chat_post_id: CHATPOST-20260726-051203-consolidation
+  chat_post_id_note: Synthesized from this consolidation task's own dispatch id
+    (task-20260726-051203-server-owner-ai-protocol-memory-consolid), not a new raw
+    Owner chat message -- this document is a software-driven consolidation of prior
+    real directives, not new Owner content. Every rule below is traceable to a real
+    prior source via source_inventory, never invented.
+  status: NON_NEGOTIABLE
+  applies_to: Every task, phase, and instruction executed under this session and any
+    future session continuing this work, until the Owner explicitly revokes or amends
+    this document.
+  consolidation_note: 'Owner requirement (2026-07-26, chat, mirroring the equivalent
+    laptop-side consolidation already done): exactly ONE protocol file and exactly ONE
+    lessons/incidents memory file on the server, zero repetition/duplication/confusion,
+    enforced by real software (scripts/check_single_protocol_file.py), not just a
+    process description. This file is that one protocol file. The companion memory
+    file is MEMORY_OWNER_AI.yaml in this same directory.'
+  supersedes: Nothing existing is deleted from history -- this document consolidates
+    and makes enforceable the standing rules that were scattered across
+    OWNER_ENGINE_MANDATORY_GATE_2026-07-25.txt, STANDING_OPERATING_PROTOCOL_2026-07-26.yaml,
+    OWNER_ASSISTANT_RUNBOOK_2026-07-26.yaml, TASK_LIFECYCLE_STATE_MACHINE_2026-07-26.yaml,
+    and the standing-instruction trailers of CHATGPT_AUDIT_AND_PROMPT_LIBRARY_WORKSPACE_2026-07-24.txt
+    and WIRING_ENGINE_SOFTWARE_2026-07-24.txt. See source_inventory below for exactly
+    which file contributed which content and which files were deleted vs retained.
+    Where this document and an earlier directive conflict, this document (being the
+    latest, most explicit, and most complete) governs.
+
+system_definition:
+  rule: 'SYSTEM means the real, complete, integrated whole -- SERVER (167.233.220.35) +
+    SUPABASE (Postgres, 2 projects: verdian-ai/compliance-tracker, projexa) + VERCEL
+    (2 deployments: veridian-compliance-ai, projexa) + GITHUB (7 repos, primary:
+    claude-control, compliance-tracker, projexa) -- not any one of them in isolation.'
+  source: TASK_LIFECYCLE_STATE_MACHINE_2026-07-26.yaml meta.system_definition;
+    reinforced by STANDING_OPERATING_PROTOCOL_2026-07-26.yaml article A11_system_integration.
+
+communication_channels:
+  internal_machine_language:
+    rule: 'Every AI<->software, AI<->AI, and software<->software interaction is
+      structured CLI args / JSON / YAML / SQL only -- never English prose, never an
+      open-ended statement. All discussion between software and AI is close-ended
+      in machine language only. No exception.'
+    source: TASK_LIFECYCLE_STATE_MACHINE_2026-07-26.yaml meta.language_rule;
+      OWNER_ENGINE_MANDATORY_GATE_2026-07-25.txt points 4,5,10-17.
+  owner_facing_english:
+    rule: English is reserved exclusively for the Owner-facing channel -- simple,
+      1-line sentences, roughly every 10 minutes or immediately at a real decision
+      point or completion, with a recommendation option when multiple options exist.
+      No continuous commentary, no token waste on discussion with the Owner.
+    source: OWNER_ENGINE_MANDATORY_GATE_2026-07-25.txt points 6,7,18; reinforced by
+      article A5_owner_communication below.
+
+articles:
+  - id: A1_execution_location
+    rule: >-
+      All real execution happens only through the direct session between
+      VERIDIAN-DEV (167.233.220.35) and Claude Code CLI Sonnet 5.0 at HIGH effort.
+      No laptop-local resources (CPU, disk, credentials, or the laptop's own shell)
+      are used to perform real work -- the laptop is a thin client only, it relays
+      instructions to the server and displays results.
+    source: STANDING_OPERATING_PROTOCOL_2026-07-26.yaml A1; OWNER_ENGINE_MANDATORY_GATE_2026-07-25.txt
+      points 1,14.
+
+  - id: A2_traceability
+    rule: Every real Owner chat instruction is assigned a real, unique Chat Post ID
+      at the moment it is received (format CHATPOST-<UTC compact timestamp>-<short
+      hash>), and every artifact produced in response to it (files, registry entries,
+      task dispatches) carries that Chat Post ID in its own metadata so the full
+      chain from Owner words to real system change is mechanically traceable.
+    source: STANDING_OPERATING_PROTOCOL_2026-07-26.yaml A2.
+
+  - id: A3_memory_and_register_first
+    rule: Every real Owner directive is saved to system memory twice, independently
+      -- (a) this assistant's own local memory system (for continuity across future
+      chat sessions), and (b) the server's Knowledge Engine via SUPERBOSS IN SERVER
+      (scripts/superboss-register.py register-knowledge), so the record survives
+      independently of any one client or session. Verbatim Owner text and this
+      assistant's own paraphrase/interpretation are never conflated in the same field
+      -- paraphrase is clearly labeled as paraphrase. New directive files (when a real
+      new one is genuinely needed instead of an edit to this file) are registered
+      before being relied upon elsewhere -- register-first, not register-eventually.
+    source: STANDING_OPERATING_PROTOCOL_2026-07-26.yaml A3; TASK_LIFECYCLE_STATE_MACHINE_2026-07-26.yaml
+      state S3_MEMORY_SAVE.
+
+  - id: A4_owner_engine_gate
+    rule: Raw Owner chat is never analyzed directly. It is submitted through
+      OWNER_ENGINE (scripts/prompt_gateway/gateway.py via task-gateway.py submit
+      --source owner) first; this assistant works from OWNER_ENGINE's real
+      machine-language output, querying the software further in machine language
+      before ever asking the Owner a clarifying question.
+    source: STANDING_OPERATING_PROTOCOL_2026-07-26.yaml A4; OWNER_ENGINE_MANDATORY_GATE_2026-07-25.txt
+      points 2,3 (the original 19-point mandate this article implements).
+
+  - id: A5_owner_communication
+    rule: Communication with the Owner is simple, 1-line English, roughly every 10
+      minutes (or immediately when a real decision point or completion occurs) -- no
+      continuous commentary. This assistant holds standing Owner permissions;
+      wherever multiple options exist, the recommended option is the accepted default
+      without requiring the Owner to explicitly select it, unless the action is
+      irreversible/high-stakes enough to warrant a real pause.
+    source: STANDING_OPERATING_PROTOCOL_2026-07-26.yaml A5; OWNER_ENGINE_MANDATORY_GATE_2026-07-25.txt
+      points 6,7; BROWSER_NATIVE_END_USER_ARCHITECTURE_2026-07-25.txt ("YOU ARE THE
+      OWNER, YOU TAKE DECISIONS, THE RECOMMENDED OPTION IS DEFAULT AND ACCEPTED").
+
+  - id: A6_completion_discipline
+    rule: Every task and every phase of every task is driven to real, verified
+      completion -- not self-reported completion. The next phase auto-starts by
+      default the moment the current phase's real completion is confirmed (via a
+      real merged PR or equivalent verifiable evidence, never a self-report alone).
+      Work does not stop until all phases and all tasks of the current initiative are
+      genuinely done.
+    source: STANDING_OPERATING_PROTOCOL_2026-07-26.yaml A6; WIRING_ENGINE_SOFTWARE_2026-07-24.txt
+      ("don't stop ... auto-start the next phase ... don't stop till 100% completion");
+      BROWSER_NATIVE_END_USER_ARCHITECTURE_2026-07-25.txt ("COMPLETE ALL PHASES ONE
+      AFTER ANOTHER ... complete this 100%. no stopping.").
+
+  - id: A7_documentation_and_sync
+    rule: Complete, real documentation accompanies every phase's real deliverable.
+      Every file touched is fully updated (not partially). All documents, all files,
+      and all systems -- Server, GitHub, Vercel, Supabase -- are kept synchronized
+      with each other; no artifact is left describing a state the real system has
+      since moved past.
+    source: STANDING_OPERATING_PROTOCOL_2026-07-26.yaml A7.
+
+  - id: A8_software_execution_only
+    rule: All real work is performed by software -- software services, software
+      programs, software automation, or a real dispatched worker task executing real
+      code. This assistant does not act as a manual AI worker (hand-typing
+      implementation content directly into production files in place of dispatching
+      real software/automation to do it). This assistant's own direct role is
+      orchestration, verification, and judgment calls software cannot make -- not
+      manual implementation labor.
+    source: STANDING_OPERATING_PROTOCOL_2026-07-26.yaml A8; BROWSER_NATIVE_END_USER_ARCHITECTURE_2026-07-25.txt
+      ("NO WORK TO BE DONE BY AI AS A MANUAL WORKER. ALL WORK TO BE DONE USING
+      SOFTWARE, SOFTWARE PROGRAMS, SOFTWARE SYSTEMS, SCRIPTS").
+
+  - id: A9_workflow_sequence
+    rule: Every initiative follows this real sequence, in order, for every phase --
+      (1) complete analysis of the real current state, (2) complete gap
+      identification against that real state, (3) a complete, real, stepwise
+      implementation plan, (4) real implementation of every phase in that plan, (5) a
+      complete, real audit plan executed after implementation, (6) a complete plan
+      for whatever real gaps that post-implementation audit finds, and (7) real
+      implementation of the fixes for those audit-found gaps. No phase is considered
+      done while any of these seven steps for it remains incomplete. The full
+      per-task state machine implementing this sequence in real, dispatchable steps
+      is in task_lifecycle_state_machine below.
+    source: STANDING_OPERATING_PROTOCOL_2026-07-26.yaml A9; BROWSER_NATIVE_END_USER_ARCHITECTURE_2026-07-25.txt
+      ("AFTER ONE PHASE IS OVER AUDIT IT, ANALYZE IT THAN IMPLEMENT IT THAN MOVE TO
+      NEXT PHASE AUTOMATICALLY").
+
+  - id: A10_quality_bars
+    rule: Every real deliverable meets four bars before being considered done -- zero
+      gaps (nothing the spec requires is missing), zero duplication (nothing is
+      rebuilt that already exists), zero collision (nothing overwrites or conflicts
+      with existing real work), and 100% real implementation (no partial/stubbed/
+      simulated substitute for the real thing). No lying, no shortcuts, and no
+      claiming incomplete work as complete.
+    source: STANDING_OPERATING_PROTOCOL_2026-07-26.yaml A10; BROWSER_NATIVE_END_USER_ARCHITECTURE_2026-07-25.txt
+      ("ENSURE ZERO GAPS. ENSURE ZERO DUPLICATION. ENSURE 100% IMPLEMENTATION");
+      CHATGPT_AUDIT_AND_PROMPT_LIBRARY_WORKSPACE_2026-07-24.txt trailer ("no lying or
+      claiming incomplete work as complete; no shortcuts").
+
+  - id: A11_system_integration
+    rule: Every real phase's work is wired completely into the whole SYSTEM (see
+      system_definition), verified to be fully integrated, and confirmed to operate
+      as one single integrated system rather than disconnected parts that happen to
+      share a name.
+    source: STANDING_OPERATING_PROTOCOL_2026-07-26.yaml A11.
+
+  - id: A12_active_monitoring
+    rule: Real software is used to monitor every task and phase's start, progress,
+      completion, and issues -- not this assistant's own memory of what it
+      dispatched. This assistant checks that real monitoring software on a real,
+      regular cadence for as long as any task or phase is outstanding, to confirm
+      phases are actually completing without silent failure, rather than assuming
+      completion and moving on.
+    source: STANDING_OPERATING_PROTOCOL_2026-07-26.yaml A12.
+
+  - id: A13_resource_and_token_discipline
+    rule: Maximum real work is done via software and scripts; AI/model tokens are
+      minimized and never wasted on continuous commentary, open-ended discussion, or
+      re-deriving facts a real tool can just confirm. Up to 95% of real server
+      resources may be used for genuine work. A real issue found along the way is
+      fixed directly (without stopping to ask) using server resources only, through
+      the same task-gateway.py dispatch pipeline as any other real work -- not a
+      manual workaround.
+    source: OWNER_ENGINE_MANDATORY_GATE_2026-07-25.txt points 8,9,19;
+      WIRING_ENGINE_SOFTWARE_2026-07-24.txt trailer ("maximum work via software/scripts
+      and minimum AI tokens"); CHATGPT_AUDIT_AND_PROMPT_LIBRARY_WORKSPACE_2026-07-24.txt
+      trailer ("use up to 95pct server resources; fix any issue found without asking,
+      using server resources only, through this same task-gateway.py pipeline").
+
+  - id: A14_self_correction_enforcement
+    rule: Three standing self-correction rules run on tools that already exist in
+      this system (never trust a success signal without an independent real check;
+      never repeat a memory claim without re-verifying it against the real system;
+      never trust a fix without confirming it is actually wired into the live path).
+      Full rule text, triggers, and the dated incidents that produced each rule are
+      the subject of the companion memory file, not duplicated here -- this article
+      is the pointer, MEMORY_OWNER_AI.yaml is the source of truth for the rules and
+      incidents themselves.
+    source: STANDING_OPERATING_PROTOCOL_2026-07-26.yaml self_correction_enforcement_2026-07-26
+      (moved in full to MEMORY_OWNER_AI.yaml as part of this consolidation, since it is
+      lessons/incidents content, not a standing execution rule).
+    see_also: MEMORY_OWNER_AI.yaml self_correction_rules, MEMORY_OWNER_AI.yaml incidents
+
+task_lifecycle_state_machine:
+  note: Real closed finite-state machine implementing A9_workflow_sequence as
+    actual dispatchable steps, folded here verbatim from
+    TASK_LIFECYCLE_STATE_MACHINE_2026-07-26.yaml (deleted as a standalone file in this
+    consolidation -- no other real file cites it by exact path, so nothing else needs
+    to keep pointing at the old filename; see source_inventory).
+  engines:
+    - id: TASK_GATEWAY
+      path: /opt/veridian/scripts/task-gateway.py
+      commands: [submit, start, log, close, status]
+    - id: OWNER_ENGINE
+      path: /opt/veridian/scripts/prompt_gateway/gateway.py
+      commands: ["--mode stdin --json-only"]
+      sub_engines:
+        - /opt/veridian/scripts/prompt_gateway/engine/id_generator.py
+        - /opt/veridian/scripts/prompt_gateway/engine/classifier.py
+        - /opt/veridian/scripts/prompt_gateway/engine/prompt_engine.py
+        - /opt/veridian/scripts/prompt_gateway/engine/context_engine.py
+        - /opt/veridian/scripts/prompt_gateway/engine/snip_engine.py
+        - /opt/veridian/scripts/prompt_gateway/engine/document_engine.py
+        - /opt/veridian/scripts/prompt_gateway/query.py
+    - id: TIGHT_TASK_VALIDATOR
+      path: /opt/veridian/scripts/tight_task_validation.py
+    - id: VERIDIAN_TASK_CLI
+      path: /opt/veridian/scripts/veridian-task.py
+      commands: [create, checkpoint, status]
+    - id: WORKER_ENTRYPOINT
+      path: /opt/veridian/scripts/worker-entrypoint.sh
+      unit: veridian-worker@<task_id>.service
+    - id: SUPERVISOR_ENGINE
+      path: /opt/veridian/scripts/supervisor-entrypoint.sh
+      unit: veridian-supervisor@<task_id>.service
+      sub_engines:
+        - /opt/veridian/scripts/risk-tier.py
+        - /opt/veridian/scripts/backfill_phase_self_report.py
+    - id: SUPERVISOR_SWEEP
+      path: /opt/veridian/scripts/supervisor-sweep.sh
+      cron: "*/15 * * * *"
+    - id: AUTO_PHASE_CONTINUATION_ENGINE
+      path: /opt/veridian/scripts/auto_phase_continuation.py
+      cron: "*/30 * * * *"
+    - id: KNOWLEDGE_ENGINE
+      path: /opt/veridian/scripts/superboss-register.py
+      commands: [register-knowledge, query-knowledge, list-capabilities, lookup-capability]
+      store: /opt/veridian/ai-os/memory/superboss-register.sqlite
+    - id: WIRING_ENGINE
+      path: /opt/veridian/scripts/generate_wiring_registry.py
+      output: /opt/veridian/ai-os/WIRING_ENGINE_REGISTRY_2026-07-25.json
+      cron: "0 */6 * * *"
+    - id: AUDITOR_ENGINE
+      path: ai-os/AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml (real audit-run scripts it dispatched)
+    - id: TESTING_ENGINE
+      path: ai-os/TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml (route-test-autogeneration, distributed-trace, replay)
+    - id: TERMINOLOGY_GUARDRAIL_ENGINE
+      path: ai-os/TERMINOLOGY_GUARDRAIL_2026-07-24.py
+    - id: CAPABILITY_REGISTRY_ENGINE
+      table: capability_registry (in superboss-register.sqlite)
+    - id: POLICY_RULE_DECISION_ENGINE
+      path: 20_ENGINES_10_GATEWAYS_PHASE_PLAN phase_2 real deliverable
+    - id: GATEWAY_G05_AI
+      role: "sole real boundary all AI/model calls route through (provider/model resolution, policy, audit)"
+    - id: GATEWAY_G09_OBSERVABILITY_AUDIT
+      role: "real boundary/loop surfacing observability + audit events"
+  states:
+    - id: S0_RAW_RECEIVED
+      trigger: Owner sends a message in chat
+      action: "python3 scripts/task-gateway.py submit --text \"<raw>\" --source owner --session-id <id>"
+      engine: TASK_GATEWAY -> OWNER_ENGINE (internal gate, real code path, no English step between)
+      writes: [sqlite instructions.raw_text (gated machine output only), sqlite instructions.metadata_json (raw text, audit only)]
+      next: S1_GATED
+    - id: S1_GATED
+      condition: "owner_engine_gate.applied == true"
+      branch_A: "owner_engine_gate == null OR needs_owner_clarification == true -> S1a_CLARIFY"
+      branch_B: "else -> S2_DUP_CHECK"
+    - id: S1a_CLARIFY
+      action: "python3 scripts/prompt_gateway/query.py --chat-id <id> --q NEEDS_OWNER_CLARIFICATION"
+      on_INSUFFICIENT_INFO: OWNER_REPORT (1-line English question, the ONLY permitted English
+        output in this entire state machine besides OWNER_REPORT itself)
+      next: S0_RAW_RECEIVED (re-submit after Owner answers)
+    - id: S2_DUP_CHECK
+      action: "grep/query ai-os/MASTER_INDEX.yaml + python3 scripts/superboss-register.py
+        list-capabilities + ai-os/WIRING_ENGINE_REGISTRY_2026-07-25.json"
+      engine: KNOWLEDGE_ENGINE, WIRING_ENGINE
+      branch_A: "real match found -> S2a_CITE_EXISTING (no new task, cite existing artifact to Owner)"
+      branch_B: "no match -> S3_MEMORY_SAVE"
+    - id: S3_MEMORY_SAVE
+      action: "write real content into ai-os/OWNER_DIRECTIVES/PROTOCOL_OWNER_AI.yaml or
+        MEMORY_OWNER_AI.yaml (the two canonical files -- a brand-new dated file is no longer
+        created here as of this consolidation) ; python3 scripts/superboss-register.py
+        register-knowledge --path <path> --tags <chat_post_id>,<topic>"
+      engine: KNOWLEDGE_ENGINE
+      parallel: "local memory file (this assistant's own persistent store) written in the same step"
+      next: S4_SPEC
+    - id: S4_SPEC
+      action: "write watertight prompt.txt (OBJECTIVE/SCOPE/KNOWN_CONTEXT/SUCCESS_CRITERIA/
+        EXPECTED_OUTPUT/CONSTRAINTS/COMPLEXITY_TIER) -- every SUCCESS_CRITERIA line a real
+        runnable shell command"
+      engine: TIGHT_TASK_VALIDATOR (validates before dispatch is allowed)
+      branch_A: "rejected -> fix wording -> retry S4_SPEC"
+      branch_B: "accepted -> S5_DISPATCH"
+    - id: S5_DISPATCH
+      action: "python3 scripts/task-gateway.py submit --text \"$(cat prompt.txt)\" --source owner
+        --session-id <id> ; python3 scripts/task-gateway.py start --instruction-id <ins_id>
+        --title <title> --repo <target_repo> --prompt-file prompt.txt"
+      engine: TASK_GATEWAY
+      writes: [/opt/veridian/ai-os/tasks/<task_id>/task.yaml (status: in_progress)]
+      starts: "systemctl --user start veridian-worker@<task_id>.service"
+      engine_started: WORKER_ENTRYPOINT
+      next: S6_IN_PROGRESS
+    - id: S6_IN_PROGRESS
+      action: "worker executes real code changes against SYSTEM (real files in claude-control/
+        compliance-tracker/projexa checkouts)"
+      checkpoint: "python3 scripts/veridian-task.py checkpoint <task_id> --status <status> --note <machine-note>
+        every 5 min (automatic, worker-entrypoint.sh's own loop)"
+      next: S7_PUSHED
+    - id: S7_PUSHED
+      action: "git commit + git push (real branch worker/<task_id>) ; gh pr create --repo <target_repo>"
+      system_touch: GITHUB (branch + PR created)
+      next: S8_PENDING_REVIEW
+    - id: S8_PENDING_REVIEW
+      action: "systemctl --user start veridian-supervisor@<task_id>.service (or picked up by
+        SUPERVISOR_SWEEP within 15 min if the direct trigger was missed)"
+      engine: SUPERVISOR_ENGINE
+      sub_action: "risk-tier.py classifies tier1/tier2 ; Claude-driven real diff review ; posts
+        structured 'AUDIT: PASS/FAIL' PR comment (8 fields, machine-parseable)"
+      next: S9_AUDITED
+    - id: S9_AUDITED
+      branch_A: "AUDIT: FAIL -> S9a_CORRECTIVE"
+      branch_B: "AUDIT: PASS, tier1 -> S10_AUTO_MERGE"
+      branch_C: "AUDIT: PASS, tier2 -> S10b_HELD_FOR_SIGNOFF"
+    - id: S9a_CORRECTIVE
+      action: "gh api repos/<owner>/<repo>/issues/<pr>/comments --jq '.[].body' (read real findings)
+        -> fix -> git commit + push to the SAME branch (never a new PR)"
+      next: S8_PENDING_REVIEW (re-audit)
+    - id: S10_AUTO_MERGE
+      action: "gh pr merge <n> --repo <repo> --merge --delete-branch"
+      condition_race_fix: "if audit-check CI job fails with 'No structured audit verdict found'
+        (posted before the comment), supervisor-entrypoint.sh's AUDIT-CHECK-RERUN-BLOCK
+        auto-retriggers it -- gh run rerun <run_id> --repo <repo> --failed"
+      branch_A: "merge succeeds (real gh pr view confirms mergedAt != null) -> S11_MERGED"
+      branch_B: "merge fails (real conflict or transient 5xx) -> S10a_CONFLICT_RESOLVE"
+    - id: S10b_HELD_FOR_SIGNOFF
+      action: "Owner-rights-delegated default -- this assistant verifies real CI + real audit
+        text, then performs S10_AUTO_MERGE on the Owner's standing behalf unless the action is
+        irreversible/high-stakes enough to warrant a real pause"
+      next: S10_AUTO_MERGE
+    - id: S10a_CONFLICT_RESOLVE
+      action: "git clone -> git merge origin/master -> resolve (union-merge shared registry
+        files: ai-os/MASTER_INDEX.yaml, ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml) -> verify
+        (yaml.safe_load + entry-count check) -> commit -> push -> retry S10_AUTO_MERGE"
+      next: S10_AUTO_MERGE
+    - id: S11_MERGED
+      system_touch: "GITHUB: PR state=MERGED. VERCEL: auto-deploy triggers on merge to main
+        (no manual step -- already wired via Vercel GitHub App)."
+      action: "python3 scripts/backfill_phase_self_report.py --task-id <task_id> (auto-invoked
+        by SUPERVISOR_ENGINE immediately after real merge confirmation)"
+      writes: "ai-os/<INITIATIVE>_PHASE_PLAN_<date>.yaml phase entry: status=done,
+        completed_by_task=<task_id>, evidence=<real PR url + mergedAt>"
+      next: S12_SUPABASE_SYNC_CHECK
+    - id: S12_SUPABASE_SYNC_CHECK
+      condition: "diff includes drizzle/*.sql"
+      branch_A: "yes -> real command 'bun run db:migrate' (drizzle-kit migrate) must be run
+        against the real DATABASE_URL before the merged feature is live -- this is a REAL,
+        currently NOT-fully-automated gap: migrations do not auto-apply on merge. This
+        assistant runs it directly as part of closing S12, or if genuinely destructive/
+        high-risk, surfaces it as the one real Owner-facing exception in S16."
+      branch_B: "no -> skip, next state directly"
+      next: S13_PHASE_CHECK
+    - id: S13_PHASE_CHECK
+      action: "python3 scripts/auto_phase_continuation.py --dry-run --limit 0"
+      engine: AUTO_PHASE_CONTINUATION_ENGINE
+      branch_A: "next_phase != null -> S5_DISPATCH (recurse, target_repo read from phase's own
+        target_repo field, no manual repo selection)"
+      branch_B: "next_phase == null AND done_phases == all real phases in plan -> S14_INITIATIVE_COMPLETE"
+    - id: S14_INITIATIVE_COMPLETE
+      action: "python3 scripts/generate_wiring_registry.py (re-run for real, fresh coverage
+        numbers) ; update ai-os/MASTER_INDEX.yaml registries.<initiative> ;
+        python3 scripts/superboss-register.py register-knowledge (final artifact)"
+      engine: WIRING_ENGINE, KNOWLEDGE_ENGINE
+      next: S15_SYSTEM_SYNC_VERIFY
+    - id: S15_SYSTEM_SYNC_VERIFY
+      action: "verify all 4 SYSTEM components agree: GITHUB (gh pr list --state open, must be
+        empty for this initiative) + VERCEL (gh pr view --json statusCheckRollup, Vercel=Ready)
+        + SUPABASE (real query confirms new columns/tables exist) + SERVER (task.yaml status +
+        phase-plan status both show done)"
+      next: S16_OWNER_REPORT
+    - id: S16_OWNER_REPORT
+      action: "1-line English summary of real state (the ONLY English-language state in this
+        entire machine)"
+      engine: (none -- this assistant directly)
+      next: TERMINAL_CLOSED
+    - id: TERMINAL_CLOSED
+      final: true
+
+owner_ai_runbook:
+  note: Real runbook -- exact steps, exact existing tool per step, folded here verbatim
+    from OWNER_ASSISTANT_RUNBOOK_2026-07-26.yaml (deleted as a standalone file in this
+    consolidation; no real file cited it by exact path). Every step names a real
+    script/command that already exists and is already running in production. Nothing
+    new is built to produce this runbook.
+  process_1_new_task_given:
+    - step: Route the raw chat through OWNER_ENGINE -- never read/act on raw text directly.
+      tool: "python3 scripts/prompt_gateway/gateway.py via task-gateway.py submit --source owner"
+    - step: If OWNER_ENGINE's own output says it can't classify confidently, query the software
+        before asking the Owner anything.
+      tool: scripts/prompt_gateway/query.py --q NEEDS_OWNER_CLARIFICATION
+    - step: Check whether this already exists anywhere before building anything.
+      tool: "ai-os/MASTER_INDEX.yaml, python3 scripts/superboss-register.py list-capabilities,
+        ai-os/WIRING_ENGINE_REGISTRY_2026-07-25.json"
+    - step: Save the real directive twice, independently, tagged with a Chat Post ID.
+      tool: "local memory file + python3 scripts/superboss-register.py register-knowledge"
+    - step: Write one watertight task prompt (OBJECTIVE/SCOPE/KNOWN_CONTEXT/SUCCESS_CRITERIA/
+        EXPECTED_OUTPUT/CONSTRAINTS/COMPLEXITY_TIER) -- every SUCCESS_CRITERIA line a real runnable
+        command.
+      tool: scripts/tight_task_validation.py (the real gate that rejects a bad prompt before dispatch)
+    - step: Dispatch it for real.
+      tool: python3 scripts/task-gateway.py submit then start
+    - step: If it is a multi-phase initiative, its phase-plan file matches auto_phase_continuation.py's
+        real schema so later phases pick themselves up.
+      tool: "ai-os/*_PHASE_PLAN_*.yaml matching PLAN_GLOBS in scripts/auto_phase_continuation.py"
+  process_2_status_asked:
+    - step: Read the real, current status field for every task in flight -- not memory of what was
+        dispatched.
+      tool: "grep '^status:' /opt/veridian/ai-os/tasks/<id>/task.yaml"
+    - step: Never accept self-reported 'completed' as real completion.
+      tool: "gh pr view <n> --repo <owner>/<repo> --json state,mergedAt"
+    - step: If blocked, read the real reason before reporting anything.
+      tool: task.yaml checkpoint notes + review.json + supervisor.log
+    - step: Report in 1 line, real facts only -- what merged, what's still running, what's blocked
+        and why.
+      tool: (this assistant's own reporting discipline, no software needed for this one step)
+  process_3_complete_task_and_phases:
+    - step: On real merge confirmation, the phase's own status/completed_by_task/evidence fields
+        get written back automatically -- no manual backfill.
+      tool: scripts/backfill_phase_self_report.py (auto-invoked by supervisor-entrypoint.sh, fixed
+        2026-07-26 PR #76)
+    - step: The next real dispatchable phase is found and dispatched to its correct real repo
+        automatically.
+      tool: "python3 scripts/auto_phase_continuation.py (cron every 30 min, or --limit 1 to force
+        one tick now) -- target_repo-aware dispatch, fixed 2026-07-26"
+    - step: If the required audit-check CI job races the real AUDIT comment, it re-runs itself
+        automatically.
+      tool: "audit-check-rerun block in scripts/supervisor-entrypoint.sh, fixed 2026-07-26 PR #76"
+    - step: If a real AUDIT FAIL lands, read the real findings in full, then push a real corrective
+        fix to the SAME branch/PR -- never a disconnected new one.
+      tool: "gh api repos/<owner>/<repo>/issues/<pr>/comments, then a dispatched fix task targeting
+        the existing branch"
+    - step: Repeat until a fresh dry-run shows every phase in done_phases, confirmed against real
+        merged PRs, not self-reports.
+      tool: python3 scripts/auto_phase_continuation.py --dry-run --limit 0
+    - step: Close out -- register the real completion and sync every touched document.
+      tool: "ai-os/MASTER_INDEX.yaml + python3 scripts/superboss-register.py register-knowledge"
+
+related_systems:
+  note: Real, separately-maintained systems that carry protocol-relevant content but
+    are actively-updated registries in their own right, not directive files to be
+    folded/deleted -- cited here per the consolidation task's own instruction to cite
+    rather than duplicate.
+  items:
+    - path: ai-os/AI_ENGINEERING_POLICY.yaml
+      what: Real, mandatory, machine-readable AI engineering policy (engineering
+        priority order, values priority order, and the automation_scope_boundary rule
+        that "100% automation" does NOT extend to genuinely irreversible actions --
+        e.g. crontab modifications -- which always get surfaced to the Owner first).
+        This is the rule scripts/preflight-guard.py's check_crontab_unauthorized_change
+        enforces, and the same standing exception the check_single_protocol_file.py
+        wiring below follows.
+      drift_flag: This file is live-server-only (/opt/veridian/ai-os/AI_ENGINEERING_POLICY.yaml)
+        and has never been committed to the claude-control git repo -- out of scope for
+        this consolidation task (which is scoped to OWNER_DIRECTIVES/), but recorded
+        here as a real, observed gap for a future task to close.
+    - path: ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      what: >-
+        Real, live, actively-updated audit log of Owner decisions -- the
+        mechanism-of-record for the Owner-approval-citation pattern used for every
+        crontab addition and every irreversible/high-stakes action this session
+        (status is one of awaiting_owner_decision / approved / pending /
+        resolved_via_manual_bridge / partially_resolved, each with a real
+        approved_via citation). Not duplicated here because it changes frequently;
+        query it directly for current decision state.
+
+source_inventory:
+  note: Every file that was real and under ai-os/OWNER_DIRECTIVES/ at the start of this
+    consolidation task (2026-07-26), and what happened to each. Citation-safety check
+    performed by grepping the entire real ai-os/ tree (both /opt/veridian/ai-os/ and
+    /opt/veridian/repos/claude-control/ai-os/) plus ai-os-scripts/ for each exact
+    filename before any delete decision.
+  files:
+    - file: STANDING_OPERATING_PROTOCOL_2026-07-26.yaml
+      disposition: folded_and_deleted
+      citation_check: No exact-path citation of this filename found anywhere in either
+        the live /opt/veridian/ai-os/ tree or the git-tracked claude-control/ai-os/ tree.
+      content_destination: articles A1-A12, A14 above (A13 partially new, sourced from
+        other files); self_correction_enforcement_2026-07-26 moved to MEMORY_OWNER_AI.yaml.
+    - file: OWNER_ASSISTANT_RUNBOOK_2026-07-26.yaml
+      disposition: folded_and_deleted
+      citation_check: No exact-path citation found anywhere.
+      content_destination: owner_ai_runbook above (verbatim).
+    - file: TASK_LIFECYCLE_STATE_MACHINE_2026-07-26.yaml
+      disposition: folded_and_deleted
+      citation_check: No exact-path citation found anywhere (the file's own S3_MEMORY_SAVE
+        state referenced its own path -- a self-reference, not an external citation, and
+        that state's action text has been updated in-place above to point at the two new
+        canonical files instead).
+      content_destination: task_lifecycle_state_machine above (verbatim, self-reference updated).
+    - file: OWNER_ENGINE_MANDATORY_GATE_2026-07-25.txt
+      disposition: >-
+        RETAINED -- citation-protected, header updated with supersession note
+      citation_check: Exact-path cited by ai-os/MASTER_INDEX.yaml line 2669,
+        ai-os/OWNER_ENGINE_MACHINE_LANGUAGE_CONTRACT_2026-07-25.yaml line 5,
+        ai-os/OWNER_ENGINE_MANDATORY_GATE_IMPLEMENTATION_2026-07-25.yaml line 6, and
+        ai-os/WIRING_ENGINE_REGISTRY_2026-07-25.json (both live and git-tracked copies).
+      content_destination: articles A1, A4, A5, A13 above (its 19 numbered points map onto
+        those articles). File itself kept at its exact original path/name, not deleted.
+    - file: CHATGPT_AUDIT_AND_PROMPT_LIBRARY_WORKSPACE_2026-07-24.txt
+      disposition: >-
+        RETAINED -- citation-protected, header updated with supersession note
+      citation_check: Exact-path cited by ai-os/WIRING_ENGINE_REGISTRY_2026-07-25.json,
+        ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml line 304,
+        ai-os-scripts/generate_engines_gateways_inventory.py line 364, and
+        ai-os/generated/gateway_inventory_2026-07-24.yaml (both live and git-tracked).
+      content_destination: Its task-spec body (ChatGPT Audit/Prompt Library Workspace
+        build spec) is domain/product-specific, not generic Owner<->AI protocol content
+        -- out of scope for this protocol file, left in place. Its generic standing-instruction
+        trailer folded into article A13 above.
+    - file: WIRING_ENGINE_SOFTWARE_2026-07-24.txt
+      disposition: >-
+        RETAINED -- citation-protected, header updated with supersession note
+      citation_check: Exact-path cited by ai-os/WIRING_ENGINE_REGISTRY_2026-07-25.json
+        (both live and git-tracked copies).
+      content_destination: Its task-spec body (Wiring Engine Software build spec) is
+        domain-specific, left in place. Its generic standing-instruction trailer folded
+        into articles A6 and A13 above.
+    - file: BROWSER_NATIVE_END_USER_ARCHITECTURE_2026-07-25.txt
+      disposition: >-
+        RETAINED -- citation-protected, header updated with supersession note
+      citation_check: Exact-path cited 4 times by
+        ai-os/VERIDIAN_ARCHITECTURE_V2_PHASE_PLAN_2026-07-25.yaml lines 142,169,387,421
+        (git-only file, cites it as already registered in knowledge_engine as
+        KE-20260725-184749-e0e0), and by ai-os/WIRING_ENGINE_REGISTRY_2026-07-25.json
+        (live tree).
+      content_destination: Its content is a product-architecture directive (browser-native
+        end-user platform), not generic Owner<->AI protocol content -- out of scope for
+        this protocol file, left in place. Its generic phrasing overlapping standing
+        protocol rules (recommended-option-default, 10-min comms, zero-gaps/zero-dup/100%,
+        auto-phase-continue) is already fully covered by articles A5, A6, A9, A10 above.
+
+enforcement:
+  mechanism: >-
+    scripts/check_single_protocol_file.py -- greps ai-os/OWNER_DIRECTIVES/ for
+    more than one file matching the real "protocol document" signature (document_class
+    == protocol, or a top-level articles list, or meta.status == NON_NEGOTIABLE) and
+    more than one matching the "memory document" signature (document_class == memory,
+    or a top-level incidents or lessons key), exiting non-zero with the exact duplicate
+    filenames if either count is not exactly 1.
+  wired_into: scripts/preflight-guard.py check_single_protocol_file() -- runs before
+    every real task dispatch, same enforcement point as check_crontab_unauthorized_change.

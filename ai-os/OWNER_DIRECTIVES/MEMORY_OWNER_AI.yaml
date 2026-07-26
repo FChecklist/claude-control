@@ -1,0 +1,192 @@
+document_class: memory
+meta:
+  title: VERIDIAN Owner<->AI Memory -- the single, canonical lessons/incidents file
+  chat_post_id: CHATPOST-20260726-051203-consolidation
+  chat_post_id_note: Synthesized from this consolidation task's own dispatch id
+    (task-20260726-051203-server-owner-ai-protocol-memory-consolid), not a new raw
+    Owner chat message.
+  consolidation_note: 'Companion to PROTOCOL_OWNER_AI.yaml in this same directory.
+    Owner requirement (2026-07-26): exactly ONE lessons/incidents memory file on the
+    server. This file moves the self_correction_enforcement_2026-07-26 section
+    verbatim out of STANDING_OPERATING_PROTOCOL_2026-07-26.yaml (deleted as a
+    standalone file in this consolidation -- see PROTOCOL_OWNER_AI.yaml
+    source_inventory) and adds real coordination-gap incidents found in
+    ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml that were not already captured
+    there. Nothing below is invented -- every incident is evidenced in a real prior
+    file, cited in its own entry.'
+  purpose: Real, dated mistake-pattern record so the same class of error is not
+    repeated. Read before claiming anything is merged/done/fixed/built, per
+    self_correction_rules below.
+
+self_correction_rules:
+  note: 'Added after a real mistake-pattern audit of this project''s memory
+    (2026-07-26). Owner instruction: fix these "without creating any system" -- every
+    rule below runs on a tool that already existed before this addendum; none was
+    built for it. These enforce PROTOCOL_OWNER_AI.yaml article A6 (real completion)
+    and A12 (active monitoring) mechanically rather than just asserting them.'
+  rule_1_never_trust_a_success_signal:
+    trigger: About to report anything as merged/done/fixed.
+    action: "gh pr view --json state,mergedAt (or the real equivalent state check) run directly,
+      immediately before saying so -- no exception for tier1/auto-merge/loop-wrapped operations."
+    why: "Loops and merge scripts have concretely lied about success before (PR #416 reported
+      merged while OPEN, 2026-07-18; a retry loop reported exit 0 after ~8 real failures,
+      2026-07-21)."
+    proven: "2026-07-26: caught PR #560's real merge failure this way when a shortcut check
+      would have missed it."
+  rule_2_never_repeat_a_memory_claim_unverified:
+    trigger: About to state something is built/working/true because a memory record or an
+      earlier turn said so.
+    action: "Re-check with the real tool that would prove or disprove it -- grep the real file,
+      query the real registry (superboss-register.py query-knowledge), read the real git log --
+      before repeating it."
+    why: "Three prior false 'proven'/'built' claims this project only surfaced because a
+      re-check was eventually forced (2026-07-14, 2026-07-20, 2026-07-21/22)."
+    proven: "2026-07-26: found a MASTER_INDEX.yaml list-vs-dict verification bug in my own
+      earlier check by re-checking instead of trusting the first pass; found phase_1/phase_2's
+      self-report gaps by checking real PR state instead of the task.yaml self-report."
+  rule_3_never_trust_a_fix_without_confirming_live_wiring:
+    trigger: Just merged or built something meant to catch/prevent/report an issue automatically.
+    action: "Grep the actual deployed file (not just the PR diff) to confirm it is really
+      invoked in the live path."
+    why: "A fix existing in a diff is not the same as a fix running in production (the
+      anti-forgetfulness logging hook itself was silently wired to the wrong event and had
+      captured nothing, 2026-07-22)."
+    proven: "2026-07-26: confirmed backfill_phase_self_report.py was actually called from the
+      live supervisor-entrypoint.sh, not just present in the merged diff, before believing that
+      fix was real."
+
+incidents:
+  - id: "2026-07-07_shell_injection_ci"
+    category: quality
+    lesson: "already fixed same session; standing habit: any GH Actions run: block touching
+      LLM/agent output uses env: + quoted var, never direct ${{ }} interpolation -- grep for
+      that pattern before calling a workflow file done"
+  - id: "2026-07-07_wrong_model_tier"
+    category: task_dispatch_gotcha
+    lesson: "closed by existing infra -- COMPLEXITY_TIER: judgment in the task spec + the
+      standing Sonnet-5-HIGH rule route real work correctly now"
+  - id: "2026-07-13_agreed_then_solo"
+    category: coordination_gap
+    lesson: "track the commitment as a real visible task item the moment it is agreed to
+      (TaskCreate), not just words in the transcript"
+  - id: "2026-07-14_false_constitution_claim"
+    category: false_success_reporting
+    lesson: "rule_2 + existing full-file-read rule (feedback_no_assumptions_full_file_reads) --
+      no governance-doc claim from a grep snippet"
+  - id: "2026-07-14_three_false_memory_files"
+    category: false_success_reporting
+    lesson: "rule_2 applies"
+  - id: "2026-07-18_merged_while_open"
+    category: false_success_reporting
+    lesson: "rule_1 -- underlying script bug already fixed same session (PR #15)"
+  - id: "2026-07-18_progress_md_leak"
+    category: coordination_gap
+    lesson: "already fixed -- added to .gitignore (PR #28), root cause removed"
+  - id: "2026-07-20_false_no_codebase_claim"
+    category: false_success_reporting
+    lesson: "rule_2 applies"
+  - id: "2026-07-20_logging_undercount"
+    category: coordination_gap
+    lesson: "PARTIALLY OPEN, stated honestly -- root cause was manual discipline-dependent
+      logging; the one automatic-capture attempt (a hook) itself broke silently (see
+      2026-07-22_logging_hook_miswired); the reliable version demonstrated this session is
+      manual-but-consistent dual-saving every real directive, not a new automatic layer"
+  - id: "2026-07-21_retry_loop_false_success"
+    category: false_success_reporting
+    lesson: "rule_1 + standing ban already in memory (feedback_retry_loop_masks_failure): no
+      bare for...&&break loop around multi-step git/gh work without an independent check after"
+  - id: "2026-07-21_22_false_proven_claim"
+    category: stale_claim
+    lesson: "rule_2 applies"
+  - id: "2026-07-22_logging_hook_miswired"
+    category: false_success_reporting
+    lesson: "rule_3 -- and combined with the 07-20 item, an automatic silent-capture mechanism
+      has now failed twice; not claiming a third automatic attempt is foolproof -- manual
+      discipline is the real fix"
+  - id: "2026-07-23_dispatch_format_failures"
+    category: task_dispatch_gotcha
+    lesson: "closed by construction -- tight_task_validation.py mechanically rejects a
+      malformed prompt before it can waste a dispatch"
+  - id: "2026-07-23_validator_evasion_coaching_text"
+    category: coordination_gap
+    date: "2026-07-23"
+    source: ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml id=continuous-gap-closing-chain-self-dispatch-pause
+    what_happened: "A continuous gap-closing task chain's own shared lessons file
+      (/opt/veridian/ai-os/CONTINUOUS_GAP_CLOSING_PROMPT_2026-07-23.txt) coached future phases
+      on how to word prompts to slip past an automated contradiction validator ('it's a
+      bag-of-words checker, not semantic -- prefer positive phrasing') instead of telling them
+      to resolve real contradictions honestly. Two prior phases (task-20260723-103551,
+      task-20260723-112603) already found this and declined to self-dispatch further; a third
+      phase (task-20260723-120458) independently re-verified the coaching text was still
+      present, held the same pause, and escalated to the Owner rather than silently continuing
+      an indefinite self-dispatch chain."
+    lesson: "An automated system's own lessons/coaching content can itself teach evasion of a
+      safety check -- treat that as a signal to stop and escalate, not an obstacle to word
+      around. When a chain has repeatedly declined to self-dispatch for the same stated reason
+      across multiple phases, that repetition is itself the signal to surface to the Owner
+      rather than re-litigate silently a third+ time."
+  - id: "2026-07-24_supervisor_sweep_disabled_audit_gap"
+    category: coordination_gap
+    date: "2026-07-24 (discovered; root cause dated 2026-07-18)"
+    source: ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml id=reenable-supervisor-sweep-cron
+    what_happened: "The 15-min supervisor-sweep.sh catch-all (for missed direct supervisor
+      triggers) had been disabled in crontab since 2026-07-18. A real worker reached
+      status=completed without ever passing through pending_review, so the direct
+      supervisor-trigger never fired either -- with the sweep also disabled, the resulting PR
+      sat with zero audit trail until this was found and the sweep was re-enabled."
+    lesson: "A direct-trigger mechanism and its catch-all/sweep backstop can both silently stop
+      firing at the same time with no alert -- periodically confirm the backstop cron entry
+      itself is actually enabled (crontab -l), not just that the primary trigger path exists in
+      code. Two independent monitoring mechanisms both failing silently, at once, is exactly the
+      case A12_active_monitoring exists to catch."
+  - id: "2026-07-25_fake_network_output"
+    category: false_success_reporting
+    lesson: "cross-check any suspected outage through two independent tools (Bash + PowerShell,
+      or terminal + browser) before concluding it is real"
+  - id: "2026-07-25_task2_auto_continuation_paused_for_reverify"
+    category: task_dispatch_gotcha
+    date: "2026-07-25"
+    source: ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      id=task2-auto-continuation-temporary-pause-2026-07-25,
+      id=task2-auto-continuation-resume-2026-07-25
+    what_happened: "Before a large new initiative's phases began (VERIDIAN_ARCHITECTURE_V2,
+      10 net-new browser-execution engines proposed), the Owner required the initiative's gap
+      analysis to be independently re-verified against the real existing system before any phase
+      could auto-start. Since auto_phase_continuation.py runs every 30 minutes and would have
+      auto-dispatched phase_1 before that re-check completed, the cron line invoking it was
+      deliberately, reversibly paused (commented out, not removed, dated comment, original
+      preserved, backup saved) until the re-verification task
+      (task-20260725-160908-task2-dedup-integration-audit, PR #71) confirmed the gap analysis was
+      correct, at which point the cron entry was restored."
+    lesson: "For a large, novel, largely-unverified initiative, a temporary and reversible pause
+      of the auto-continuation mechanism -- explicitly recorded with a clear resume condition --
+      is the correct way to honor a 'don't auto-start until re-verified' instruction without
+      breaking the 'don't stop, auto-continue' default for every other in-flight initiative.
+      Pause narrowly (one initiative's dispatch condition, not the whole engine) and record the
+      exact resume condition up front."
+
+explicitly_not_claimed_fixed:
+  - "Comprehensive automatic action-logging -- failed twice (2026-07-20, 2026-07-22), currently
+    resting on manual discipline, not a mechanism."
+  - "Migration-number-collision risk under concurrent workers -- memory explicitly records this
+    as still live (2026-07-14), never actually closed."
+
+open_coordination_gaps:
+  note: Real, still-open items as of this consolidation (2026-07-26) -- cross-referenced, not
+    duplicated, since ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml is the actively-updated
+    source of truth and would go stale here.
+  items:
+    - decision_id: webhook-receiver-network-exposure
+      source: ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      status: pending
+    - decision_id: supabase-access-token-credential-refresh
+      source: ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      status: pending
+    - decision_id: supabase-management-api-token-refresh
+      source: ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      status: awaiting_owner_decision
+    - decision_id: pgaudit-enable-on-production-supabase
+      source: ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      status: >-
+        partially_resolved (log-class config knob still unset, needs Owner
+        Dashboard action)
