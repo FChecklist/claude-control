@@ -492,10 +492,35 @@ def cmd_checkpoint(args):
                 # one -- no new field, the existing 'branch' value just
                 # becomes trustworthy. Best-effort: a detached HEAD or a
                 # workspace mid-git-operation must never break checkpointing.
-                real_branch = subprocess.run(
-                    ["git", "-C", workspace, "rev-parse", "--abbrev-ref", "HEAD"],
-                    capture_output=True, text=True, check=True,
-                ).stdout.strip()
+                #
+                # Follow-up fix (2026-07-26, root-caused against
+                # task-20260726-105110's stuck 'pr80-work' incident): the
+                # local checked-out branch name (`rev-parse --abbrev-ref
+                # HEAD`) is not necessarily the branch that was actually
+                # pushed -- a worker can `git checkout -b <local-alias>
+                # <remote-ref>` and commit/push there via the tracking
+                # relationship alone, leaving the local name never matching
+                # anything on the remote. supervisor-entrypoint.sh's `gh pr
+                # create --head`/`gh pr list --head` need the real remote
+                # branch name, so prefer the upstream tracking branch
+                # (`@{upstream}`, with its leading "<remote>/" prefix
+                # stripped) when one is set, and only fall back to the local
+                # HEAD branch name when there is no upstream -- e.g. a
+                # genuinely new branch with nothing to track yet.
+                upstream = subprocess.run(
+                    ["git", "-C", workspace, "rev-parse", "--abbrev-ref",
+                     "--symbolic-full-name", "@{upstream}"],
+                    capture_output=True, text=True,
+                )
+                if upstream.returncode == 0 and upstream.stdout.strip():
+                    real_branch = upstream.stdout.strip()
+                    if "/" in real_branch:
+                        real_branch = real_branch.split("/", 1)[1]
+                else:
+                    real_branch = subprocess.run(
+                        ["git", "-C", workspace, "rev-parse", "--abbrev-ref", "HEAD"],
+                        capture_output=True, text=True, check=True,
+                    ).stdout.strip()
                 if real_branch and real_branch != "HEAD":
                     task["branch"] = real_branch
 
