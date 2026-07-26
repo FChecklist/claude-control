@@ -1,0 +1,24 @@
+--- a/scripts/quality-gate.sh
++++ b/scripts/quality-gate.sh
+@@ -40,6 +40,21 @@
+ }
+ 
+ if [ -f package.json ]; then
++  # Root-caused 2026-07-26 (task-20260726-180000 RCA against
++  # task-20260726-171957's watchdog "periodic checkpoint" stall signature):
++  # journalctl showed the worker unit "killed by the OOM killer" mid `next
++  # build` here (3.7G memory peak for that one process, host at 13Gi/15Gi
++  # used with swap already exhausted -- many veridian-worker@ units run
++  # concurrent Node builds on this box with no per-process memory cap).
++  # systemd's Restart=on-failure silently restarted the whole worker, which
++  # re-ran this same unbounded-heap build again -- from the watchdog's side
++  # that just looks like a gap in checkpointing, misread as a stall/loop
++  # against the last "periodic checkpoint" note, even though nothing in the
++  # AI's own logic was stuck. Capping V8's heap here bounds each concurrent
++  # build's own contribution to system-wide memory pressure, same mitigation
++  # Next.js's own docs recommend for constrained-memory build environments.
++  # Preserves any NODE_OPTIONS already set rather than clobbering it.
++  export NODE_OPTIONS="${NODE_OPTIONS:-} --max-old-space-size=2048"
+   PKG_MGR="npm"
+   [ -f pnpm-lock.yaml ] && PKG_MGR="pnpm"
+   # Bun-managed repo (bun.lock / bun.lockb): prefer Bun. npm/pnpm cannot
