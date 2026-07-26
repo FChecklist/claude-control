@@ -380,6 +380,20 @@ def cmd_start(args):
     plan_text = (extract_section(text, "OBJECTIVE") or args.title)[:500]
     search_terms = " ".join(extract_keywords_mechanical(text)) or args.title
     # The real call: credit-accountant.py propose (CREDIT_ACCOUNTANT == .../credit-accountant.py).
+    # --repo verified against credit-accountant.py's own argument parser
+    # (task-20260726-101257 SCOPE item 4), not assumed: `python3
+    # /opt/veridian/scripts/credit-accountant.py propose --help` confirms
+    # `--repo REPO` is a real, accepted optional argument (p_propose.
+    # add_argument("--repo", default=None)), and cmd_propose genuinely
+    # consumes it (folded into the claude_judgment_call prompt as
+    # "Repo: {args.repo or 'unspecified'}") -- it is not a silent no-op.
+    # preflight-guard.py's own call site (check_credit_accountant_approval)
+    # simply never bothered to pass this optional arg; that is not evidence
+    # it is unused. Both call sites are independently correct.
+    # tests/test_gateway_task_integration.py::test_credit_accountant_propose_*
+    # exercises credit-accountant.py's real cmd_propose (module import,
+    # temp ledger, mocked judgment call) and asserts the row it inserts
+    # plus the "Repo: <value>" text reaching the judgment prompt.
     propose_proc = run([
         "python3", CREDIT_ACCOUNTANT, "propose",
         "--task-id", task_id, "--plan", plan_text,

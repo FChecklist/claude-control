@@ -89,6 +89,14 @@ from engine.context_engine import ContextManager
 from engine.snip_engine import SnipEngine
 from engine import document_engine
 from workflow_contract import has_all_required_sections  # noqa: E402
+# The real, single "software could not tell -> ask the Owner" decision
+# procedure (OWNER_ENGINE_MANDATORY_GATE_IMPLEMENTATION_2026-07-25.yaml,
+# step_3) -- imported and reused here, not re-implemented, so --mode
+# owner-dispatch's real task-gateway.py calls are gated by the exact same
+# NEEDS_OWNER_CLARIFICATION logic query.py already exposes (task-20260726-
+# 101257 SCOPE item 1: this dispatch path previously skipped that gate
+# entirely).
+from query import run_query  # noqa: E402
 
 # The real, production task lifecycle dispatcher this module's new --mode
 # owner-dispatch calls into (task-20260726-092433 SCOPE item 1).
@@ -184,9 +192,15 @@ def _derive_title_from_spec(raw_text: str, fallback: str) -> str:
 def _derive_repo_from_spec(raw_text: str) -> str:
     """First of KNOWN_REPOS literally named in the spec text, else
     DEFAULT_REPO. A real, disclosed heuristic -- not a guess dressed up as
-    certainty: dispatch_to_task_lifecycle() always reports which repo it
-    picked in derived_repo so a caller can override before anything
-    downstream of `start` runs, if the guess was wrong."""
+    certainty. Corrected 2026-07-26 (task-20260726-101257 SCOPE item 3):
+    this function's guess feeds straight into the SAME dispatch_to_task_
+    lifecycle() call that invokes `start` -- there is no downstream pause
+    where a caller could inspect derived_repo and correct a wrong guess
+    before anything runs; by the time a caller sees derived_repo in the
+    return value, `start` has already executed against it. The real
+    override checkpoint is dispatch_to_task_lifecycle()'s / route_and_
+    dispatch()'s repo_override param (--repo on --mode owner-dispatch):
+    supply it up front and this guess is never consulted at all."""
     for repo in KNOWN_REPOS:
         if repo in raw_text:
             return repo
@@ -213,7 +227,8 @@ def _default_subprocess_runner(cmd, input_text=None):
 
 
 def dispatch_to_task_lifecycle(route: dict, chat_result: dict, raw_text: str,
-                                session_id: Optional[str], runner=_default_subprocess_runner) -> dict:
+                                session_id: Optional[str], runner=_default_subprocess_runner,
+                                repo_override: Optional[str] = None) -> dict:
     """
     The real, single trigger point from OWNER_ENGINE's own classification
     into the real task-gateway.py CLI -- no AI turn or human hand-
@@ -227,6 +242,12 @@ def dispatch_to_task_lifecycle(route: dict, chat_result: dict, raw_text: str,
     re-run this exact classification a second time for no benefit, and
     risks recursion if this function were ever reached from inside that
     gate (it currently never is -- see gateway.py's module docstring).
+
+    repo_override (task-20260726-101257 SCOPE item 3): the real override
+    checkpoint for action "start"'s target repo. When given, takes
+    precedence over _derive_repo_from_spec()'s literal-name guess entirely
+    -- there is no later point in this same call where a wrong guess could
+    otherwise be corrected before `start` runs against it.
     """
     action = route["action"]
     chat_id = chat_result["chat_id"]
@@ -248,7 +269,8 @@ def dispatch_to_task_lifecycle(route: dict, chat_result: dict, raw_text: str,
                       "--text", final_output, "--source", "ai_agent",
                       "--session-id", effective_session]
         submit_outcome = runner(submit_cmd)
-        instruction_id = (submit_outcome.get("parsed") or {}).get("instruction_id")
+        submit_parsed = submit_outcome.get("parsed") or {}
+        instruction_id = submit_parsed.get("instruction_id")
         if not instruction_id:
             return {
                 "action": action, "task_id": None, "submit_result": submit_outcome,
@@ -256,8 +278,26 @@ def dispatch_to_task_lifecycle(route: dict, chat_result: dict, raw_text: str,
                 "start_skipped_reason": "submit did not return an instruction_id",
             }
 
+        # Real fix, task-20260726-101257 SCOPE item 2: submit's own
+        # check-duplicate call (cmd_submit in task-gateway.py) already
+        # reports duplicate_found/duplicate_evidence in its JSON response --
+        # auto-firing `start` right after submit regardless was a real
+        # duplicate-dispatch risk, directly opposite this whole initiative's
+        # "zero duplication" principle. Surface the finding instead of
+        # deciding on the Owner's/AI's behalf, matching how a manual
+        # dispatch would behave when a human notices duplicate_found: true.
+        if submit_parsed.get("duplicate_found"):
+            return {
+                "action": action, "task_id": None, "submit_result": submit_outcome,
+                "result": None,
+                "start_skipped_reason": "submit reported duplicate_found=true -- "
+                                         "surfacing for human/AI review instead of "
+                                         "auto-starting a possibly-duplicate task",
+                "duplicate_evidence": submit_parsed.get("duplicate_evidence", []),
+            }
+
         title = _derive_title_from_spec(raw_text, fallback=chat_id)
-        repo = _derive_repo_from_spec(raw_text)
+        repo = repo_override or _derive_repo_from_spec(raw_text)
         fd, prompt_path = tempfile.mkstemp(suffix=".txt", prefix=f"owner_dispatch_{chat_id}_")
         os.close(fd)
         with open(prompt_path, "w") as f:
@@ -445,7 +485,8 @@ class TaskGateway:
         return result
 
     def route_and_dispatch(self, raw_text: str, session_id: str = None,
-                            runner=_default_subprocess_runner) -> dict:
+                            runner=_default_subprocess_runner,
+                            repo_override: Optional[str] = None) -> dict:
         """
         task-20260726-092433 SCOPE item 1's single entrypoint: classify
         raw_text via the same process_chat() pipeline every other mode
@@ -455,13 +496,44 @@ class TaskGateway:
         the manual "AI reads OWNER_ENGINE's output, then hand-constructs a
         task-gateway.py command" gap. Returns process_chat()'s own result
         dict with one added key, "lifecycle_dispatch".
+
+        Real fix, task-20260726-101257 SCOPE item 1: once a route decides a
+        real task-gateway.py action is actually warranted (status/submit/
+        start -- action "none" was never going to dispatch anything, so
+        there is nothing here for a clarifying question to protect against),
+        this now runs the exact same NEEDS_OWNER_CLARIFICATION check
+        query.py exposes (OWNER_ENGINE_MANDATORY_GATE_IMPLEMENTATION_2026-
+        07-25.yaml step_3) against the chat record process_chat() just
+        saved, BEFORE dispatch_to_task_lifecycle() is ever called.
+        Previously this whole dispatch path never consulted that gate at
+        all, so an ambiguous Owner message (low classification confidence
+        or unknown intent -- the exact two signals step_3 defines as
+        "software could not tell") could be auto-dispatched as a real
+        task-gateway.py submit/start instead of surfacing a clarifying
+        question first.
         """
         chat_result = self.process_chat(raw_text, role="user", session_id=session_id)
         category = chat_result["classification"]["category"]
         entities = chat_result.get("entities", [])
         route = determine_lifecycle_route(category, entities, raw_text)
+
+        if route["action"] != "none":
+            clarification = run_query(chat_result["chat_id"], "NEEDS_OWNER_CLARIFICATION")
+            needs_clarification = bool(
+                (clarification.get("answer") or {}).get("needs_owner_clarification")
+            )
+            if needs_clarification:
+                chat_result["lifecycle_dispatch"] = {
+                    "action": "clarification_needed",
+                    "task_id": None,
+                    "result": None,
+                    "clarification": clarification,
+                }
+                return chat_result
+
         chat_result["lifecycle_dispatch"] = dispatch_to_task_lifecycle(
             route, chat_result, raw_text, session_id, runner=runner,
+            repo_override=repo_override,
         )
         return chat_result
 
@@ -752,6 +824,16 @@ Examples:
         action="store_true",
         help="Enable verbose logging"
     )
+    parser.add_argument(
+        "--repo",
+        type=str,
+        default=None,
+        help="For --mode owner-dispatch's 'start' action only: explicit target "
+             "repo, overriding _derive_repo_from_spec()'s literal-name guess "
+             "entirely. This is the real override checkpoint (task-20260726-"
+             "101257 SCOPE item 3) -- there is no later point after `start` "
+             "runs where a wrong guess could otherwise be corrected."
+    )
 
     args = parser.parse_args()
 
@@ -805,7 +887,8 @@ Examples:
         if not raw_text:
             print("Error: No input on stdin", file=sys.stderr)
             sys.exit(1)
-        result = gateway.route_and_dispatch(raw_text, session_id=args.session)
+        result = gateway.route_and_dispatch(raw_text, session_id=args.session,
+                                             repo_override=args.repo)
         if args.output:
             with open(args.output, "w") as f:
                 json.dump(result, f, indent=2, default=str)
