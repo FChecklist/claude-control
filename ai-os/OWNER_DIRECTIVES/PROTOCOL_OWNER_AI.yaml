@@ -245,13 +245,39 @@ task_lifecycle_state_machine:
     TASK_LIFECYCLE_STATE_MACHINE_2026-07-26.yaml (deleted as a standalone file in this
     consolidation -- no other real file cites it by exact path, so nothing else needs
     to keep pointing at the old filename; see source_inventory).
+  integration_note_2026-07-26: >-
+    task-20260726-092433 closed the one remaining manual hand-off in this
+    machine: S0_RAW_RECEIVED through S5_DISPATCH previously required this
+    assistant to manually read OWNER_ENGINE's classified output (S1_GATED)
+    and hand-construct the S4_SPEC/S5_DISPATCH task-gateway.py calls itself.
+    OWNER_ENGINE (gateway.py --mode owner-dispatch) now performs that
+    classification-to-dispatch step as one real software call for the
+    task-dispatch/status-query/completion-query cases (see S1_GATED's
+    branch_C and S1b_AUTO_DISPATCHED below) -- this assistant's own
+    S4_SPEC/S5_DISPATCH steps remain the real path only for a message that
+    is not yet a complete, tightened task spec. Also fixed in the same
+    task: task-gateway.py's cmd_start now calls credit-accountant.py
+    propose immediately after veridian-task.py create succeeds (previously
+    never called at all, so WORKER_ENTRYPOINT's own later `report
+    --increment 1` always failed with "no matching approved plan").
   engines:
     - id: TASK_GATEWAY
       path: /opt/veridian/scripts/task-gateway.py
       commands: [submit, start, log, close, status]
     - id: OWNER_ENGINE
       path: /opt/veridian/scripts/prompt_gateway/gateway.py
-      commands: ["--mode stdin --json-only"]
+      commands: ["--mode stdin --json-only", "--mode owner-dispatch"]
+      commands_note: >-
+        task-20260726-092433 added --mode owner-dispatch: the single, real
+        software entrypoint that classifies a raw Owner message AND, when
+        that classification is a task-dispatch/status-query/completion-
+        query request, calls TASK_GATEWAY's submit/start/status directly
+        (gateway.py's route_and_dispatch()/dispatch_to_task_lifecycle()) --
+        no AI turn or human reads OWNER_ENGINE's classified output and
+        hand-constructs the task-gateway.py command in between. --mode
+        stdin (still used BY TASK_GATEWAY's own run_owner_engine_gate(),
+        see below) never calls into TASK_GATEWAY -- only --mode
+        owner-dispatch does, so the two integration points cannot recurse.
       sub_engines:
         - /opt/veridian/scripts/prompt_gateway/engine/id_generator.py
         - /opt/veridian/scripts/prompt_gateway/engine/classifier.py
@@ -305,19 +331,46 @@ task_lifecycle_state_machine:
   states:
     - id: S0_RAW_RECEIVED
       trigger: Owner sends a message in chat
-      action: "python3 scripts/task-gateway.py submit --text \"<raw>\" --source owner --session-id <id>"
-      engine: TASK_GATEWAY -> OWNER_ENGINE (internal gate, real code path, no English step between)
+      action: "python3 scripts/prompt_gateway/gateway.py --mode owner-dispatch (preferred,
+        task-20260726-092433: single real entrypoint -- classifies AND, for a
+        task-dispatch/status-query/completion-query message, calls TASK_GATEWAY directly,
+        see S1_GATED branch_C) ; OR python3 scripts/task-gateway.py submit --text \"<raw>\"
+        --source owner --session-id <id> (still the real path for a message that is not yet
+        a complete, tightened task spec -- see S1_GATED branch_B / S4_SPEC)"
+      engine: OWNER_ENGINE (owner-dispatch calls TASK_GATEWAY itself) OR TASK_GATEWAY -> OWNER_ENGINE
+        (internal gate via run_owner_engine_gate) -- either order, no English step between
       writes: [sqlite instructions.raw_text (gated machine output only), sqlite instructions.metadata_json (raw text, audit only)]
       next: S1_GATED
     - id: S1_GATED
       condition: "owner_engine_gate.applied == true"
       branch_A: "owner_engine_gate == null OR needs_owner_clarification == true -> S1a_CLARIFY"
-      branch_B: "else -> S2_DUP_CHECK"
+      branch_B: "classification is not a recognized task-lifecycle request (or is a task idea
+        that is not yet a complete spec) -> S2_DUP_CHECK"
+      branch_C: "S0 used --mode owner-dispatch AND gateway.py's own
+        determine_lifecycle_route() returned action submit/start/status -> S1b_AUTO_DISPATCHED
+        (TASK_GATEWAY has already been called for real -- do not also manually construct
+        the same call)"
     - id: S1a_CLARIFY
       action: "python3 scripts/prompt_gateway/query.py --chat-id <id> --q NEEDS_OWNER_CLARIFICATION"
       on_INSUFFICIENT_INFO: OWNER_REPORT (1-line English question, the ONLY permitted English
         output in this entire state machine besides OWNER_REPORT itself)
       next: S0_RAW_RECEIVED (re-submit after Owner answers)
+    - id: S1b_AUTO_DISPATCHED
+      note: >-
+        task-20260726-092433. gateway.py's --mode owner-dispatch already ran
+        the real task-gateway.py submit/start/status call described by S2-S5
+        below in a single software step (dispatch_to_task_lifecycle()); this
+        state is where that already-real result is read, not re-executed.
+      action: "read the lifecycle_dispatch key of gateway.py's own JSON output --
+        {action: submit, result: <task-gateway.py submit's real JSON>} or
+        {action: start, submit_result, result: <task-gateway.py start's real JSON>} or
+        {action: status, result: <task-gateway.py status's real JSON>}"
+      branch_A: "action == status -> report the real status to the Owner (see
+        process_2_status_asked) ; TERMINAL_CLOSED for this message"
+      branch_B: "action == submit -> S2_DUP_CHECK (submit's own dedup/search/capability
+        results are already in result -- do not re-run S2's lookups, just read them)"
+      branch_C: "action == start -> S6_IN_PROGRESS (task_id is in result.parsed.task_id;
+        S5_DISPATCH's own two-call sequence already ran for real)"
     - id: S2_DUP_CHECK
       action: "grep/query ai-os/MASTER_INDEX.yaml + python3 scripts/superboss-register.py
         list-capabilities + ai-os/WIRING_ENGINE_REGISTRY_2026-07-25.json"
@@ -460,8 +513,14 @@ owner_ai_runbook:
         real schema so later phases pick themselves up.
       tool: "ai-os/*_PHASE_PLAN_*.yaml matching PLAN_GLOBS in scripts/auto_phase_continuation.py"
   process_2_status_asked:
+    - step: "task-20260726-092433: when the Owner's own message names the task_id and asks a
+        status/completion question in one line, route it through the single entrypoint --
+        it calls task-gateway.py status for real and returns systemd_active + the last
+        checkpoint note in one JSON call, no separate manual steps needed."
+      tool: "echo \"<owner message>\" | python3 scripts/prompt_gateway/gateway.py --mode owner-dispatch"
     - step: Read the real, current status field for every task in flight -- not memory of what was
-        dispatched.
+        dispatched. (Still the real path when a task_id was not named in the Owner's own message,
+        or for a full sweep across multiple tasks at once.)
       tool: "grep '^status:' /opt/veridian/ai-os/tasks/<id>/task.yaml"
     - step: Never accept self-reported 'completed' as real completion.
       tool: "gh pr view <n> --repo <owner>/<repo> --json state,mergedAt"

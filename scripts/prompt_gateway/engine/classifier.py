@@ -158,6 +158,16 @@ class ChatClassifier:
         for match in re.finditer(r'\bv?\d+\.\d+(?:\.\d+)*(?:-\w+)?\b', text):
             entities.append({"type": "VERSION", "value": match.group()})
 
+        # Task lifecycle IDs (task-YYYYMMDD-HHMMSS-slug, the id format
+        # ai-os/tasks/<id>/ and every worker/<id> branch use -- distinct
+        # from this module's own VD-/KE-/INS- id namespaces). Added for
+        # task-20260726-092433 so a raw Owner status/completion query
+        # ("what's the status of task-20260726-092433-...") can be routed
+        # to task-gateway.py status without a second, separate regex living
+        # in gateway.py's dispatch logic.
+        for match in re.finditer(r'\btask-\d{8}-\d{6}(?:-+[a-z0-9]+)*\b', text):
+            entities.append({"type": "TASK_ID", "value": match.group()})
+
         return entities
 
     def classify_document(self, sections: list) -> dict:
