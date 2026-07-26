@@ -230,6 +230,37 @@ def record_fix_applied(signature, fix_action):
     return r.returncode == 0
 
 
+def unit_already_self_healing(task_id):
+    """RCA fix 2026-07-26 (task-20260726-172000's watchdog escalation,
+    signature "periodic checkpoint"): confirmed root cause was NOT a real
+    stall -- the worker's quality-gate phase (bun install/lint, both real
+    memory users) got OOM-killed by the kernel (`systemctl --user status`
+    showed "Active: activating (auto-restart) (Result: oom-kill)" at the
+    moment of escalation), which froze checkpoints on the same "periodic
+    checkpoint" heartbeat note this watchdog's own LOOP_EXCLUDED_NOTES
+    already treats as meaningless for LOOP -- but STALL still fired on its
+    plain checkpoint-age check, and nothing stopped step_3 from escalating a
+    brand-new billed RCA task for a unit systemd's own Restart=on-failure was
+    already recovering on its own (confirmed: invocation_count went 1->2 and
+    task.yaml resumed making real progress within the same minute, no human
+    or RCA action involved). This is the exact "already self-healing, no
+    watchdog action needed" case JUDGMENT CALL 1 in this file's own docstring
+    describes for exited units -- this closes the analogous gap for a unit
+    that is still nominally 'active' per systemctl's --state=active filter
+    but is really just mid-auto-restart, not making any progress a human or
+    a duplicate RCA task could add to.
+    Narrowly scoped to ActiveState=activating (systemd's own explicit
+    "restart already in flight" signal) so a unit that is genuinely hung
+    while ActiveState=active is untouched and still escalates as before."""
+    unit = f"veridian-worker@{task_id}.service"
+    r = subprocess.run(
+        ["systemctl", "--user", "show", unit, "--property=ActiveState,Result"],
+        capture_output=True, text=True,
+    )
+    props = dict(line.split("=", 1) for line in r.stdout.splitlines() if "=" in line)
+    return props.get("ActiveState") == "activating"
+
+
 def _fix_restart_unit(task_id):
     unit = f"veridian-worker@{task_id}.service"
     subprocess.run(["systemctl", "--user", "restart", unit], capture_output=True, text=True)
@@ -315,6 +346,14 @@ def process_task(task_id, task, dry_run_escalation=False):
     }
 
     if not (stalled or loop_detected):
+        return entry
+
+    if unit_already_self_healing(task_id):
+        entry["action_taken"] = (
+            "self-healing: systemd ActiveState=activating (own Restart=on-failure already "
+            "recovering this unit, e.g. after an oom-kill) -- skipping escalation, no watchdog "
+            "action needed"
+        )
         return entry
 
     signature = signature_of(last_note)
