@@ -221,11 +221,28 @@ articles:
       pipeline checked what a dispatch prompt itself is allowed to authorize. Fixed by
       scripts/ddl_authorization_check.py, chained into scripts/task-gateway.py's
       cmd_start() immediately after tight_task_validation.py (same run()/json.loads()/
-      fail() rejection pattern): any prompt-file referencing apply_migration, or a DDL
-      keyword (DROP TABLE, CREATE TABLE, ALTER TABLE, CREATE INDEX, TRUNCATE), is
+      fail() rejection pattern): any prompt-file referencing a DDL-capable Supabase MCP
+      tool (apply_migration, execute_sql, merge_branch), or a DDL keyword -- widened
+      2026-07-26 past the original six to also cover CREATE UNIQUE INDEX, DROP INDEX,
+      CREATE/DROP POLICY, CREATE/DROP TRIGGER, ADD/DROP COLUMN, ADD CONSTRAINT,
+      CREATE/DROP TYPE, CREATE SCHEMA, CREATE EXTENSION, CREATE SEQUENCE, all
+      case-insensitive and scanned across multi-line/multi-statement SQL blocks -- is
       dispatch-blocked unless the prompt-file also contains a line literally matching
-      `PRE-APPROVED-LIVE-DDL: <real citation>` (an Owner approval note or a decision-log
-      entry ID -- not a placeholder). Plain SELECT-only SQL never triggers this gate.
+      `PRE-APPROVED-LIVE-DDL: <real citation>`. As of the same 2026-07-26 tightening
+      the citation itself must match a real reference pattern (a KE-<date>-<time>-<hex>
+      decision-log ID, an OWNER_DECISIONS_NEEDED_<date>.yaml#<id> reference, or a dated
+      free-text note of meaningful length), not just be any non-empty, non-placeholder
+      string -- a bare `PRE-APPROVED-LIVE-DDL: yes` no longer passes. Plain SELECT-only
+      SQL never triggers this gate.
+      Known limitation (accepted, not solved): this is a DISPATCH-TIME scan of the
+      prompt-file's text, not a RUNTIME interceptor of the actual MCP tool call. A
+      worker whose prompt says nothing about DDL but which decides mid-task to call
+      apply_migration/execute_sql/merge_branch anyway is NOT caught by this gate --
+      this session's agent framework has no mechanism to intercept a live MCP tool call
+      while a worker is running, only to vet the prompt before dispatch. See
+      scripts/ddl_authorization_check.py's own docstring for the full statement of this
+      limitation; closing it would need a runtime tool-call interceptor, a materially
+      larger piece of infrastructure than a prompt-text scan, and is not built here.
     source: Real incident task-20260726-071400-migration-drift-audit-and-reconciliation
       (2026-07-26); closed by task-20260726-082342-add-ddl-pre-flight-authorization-gate-to.
 
