@@ -85,13 +85,17 @@ Each x.com URL was fetched directly via WebFetch. `accessible=false` means the f
 | https://x.com/i/status/2079493655216214505 | true | https://github.com/NousResearch/hermes-agent | https://github.com/NousResearch/hermes-agent: Hermes Agent is a self-improving AI agent built by Nous Research that features a built-in learning loop, available as both a hosted "Hermes Agent"/"Hermes Desktop" product and open source. |
 | https://x.com/i/status/1927339121120272553 | true | https://github.com/lharries/whatsapp-mcp | https://github.com/lharries/whatsapp-mcp: A WhatsApp MCP (Model Context Protocol) server. |
 | https://x.com/i/status/2079760572279873817 | true | https://github.com/themabhiram/WhatsApp-Message-Scheduler | https://github.com/themabhiram/WhatsApp-Message-Scheduler: A lightweight Python command-line application (built with pyWhatKit) that schedules WhatsApp messages to be sent automatically, including a live countdown timer and a precise delivery mode. |
+| https://x.com/i/status/2081004547384975838 | true | https://github.com/anthropics/knowledge-work-plugins | This repository is an open-source collection of plugins that enhance Claude's capabilities for specific knowledge work roles by bundling domain expertise, tool connectors, and slash commands for functions like sales, marketing, finance, legal, product management, and more. |
+| https://x.com/i/status/2081253476374561198 | true | none found | N/A |
+| https://x.com/i/status/2080689998848778523 | true | none found | N/A |
+| https://x.com/i/status/2081066452694556956 | true | none found | N/A |
 
 ## Summary
 
-- Total URLs analyzed: 79
-- Accessible: 78
+- Total URLs analyzed: 83
+- Accessible: 82
 - Inaccessible: 1
-- Distinct GitHub repos found across all posts/direct links: 80
-  - Confirmed to exist and indexed: 78
+- Distinct GitHub repos found across all posts/direct links: 81
+  - Confirmed to exist and indexed: 79
   - Linked but do not exist (404 / unreachable, NOT indexed): 2 -- https://github.com/md-Ateek-dev/Gate_Pass_Backend, https://github.com/stan-smith/FossFLOW
 

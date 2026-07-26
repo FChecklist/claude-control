@@ -5908,3 +5908,85 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260726-103756-adopted-adopt-recovered-lifecycle-fix-pr84-for-r/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-104914-adopted-owner-engine-dispatch-safety-gaps-round
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''OWNER_ENGINE dispatch safety gaps round 2 (adopted
+      after supervisor branch-resolution failure)'' on claude-control reached status=completed.
+      tier1, Superboss-approved, merged autonomously: https://github.com/FChecklist/claude-control/pull/82'
+    where: '/opt/veridian/ai-os/tasks/task-20260726-104914-adopted-owner-engine-dispatch-safety-gaps-round/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/82'
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-105110-fix-write-gate-spoofable-cgroup-file---f
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: Server-worker task 'Fix write-gate spoofable-cgroup-file + force-push +
+      multi-refspec bugs (round 3)' on claude-control reached status=blocked. supervisor
+      could not resolve a real PR for branch 'pr80-work' (gh pr create failed, no existing
+      open PR found for it) — refusing to proceed rather than risk operating on an unrelated
+      PR via gh's empty-argument fallback. See supervisor.log.
+    where: /opt/veridian/ai-os/tasks/task-20260726-105110-fix-write-gate-spoofable-cgroup-file---f/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-105214-correct-stale-pr-state-claims-in-engine
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Correct stale PR-state claims in engine-inventory
+      PRs 566+83'' on compliance-tracker reached status=completed. tier1, Superboss-approved,
+      merged autonomously: https://github.com/FChecklist/compliance-tracker/pull/568'
+    where: '/opt/veridian/ai-os/tasks/task-20260726-105214-correct-stale-pr-state-claims-in-engine/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/568'
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-112102-fix-branch-resolution-edge-case--local-a
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Fix branch-resolution edge case: local alias vs remote
+      tracking branch name'' on claude-control reached status=completed. tier1, Superboss-approved,
+      merged autonomously: https://github.com/FChecklist/claude-control/pull/88'
+    where: '/opt/veridian/ai-os/tasks/task-20260726-112102-fix-branch-resolution-edge-case--local-a/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/88'
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-112208-adopted-write-gate-round-3--fix-spoofable-cgroup
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Write-gate round 3: fix spoofable cgroup file + force-push
+      + multi-refspec (adopted)'' on claude-control reached status=blocked. Superboss
+      rejected: https://github.com/FChecklist/claude-control/pull/80 — see review.json
+      for issues'
+    where: '/opt/veridian/ai-os/tasks/task-20260726-112208-adopted-write-gate-round-3--fix-spoofable-cgroup/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/80'
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-115417-resolve-pr85-merge-conflict--vercel-gith
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: Server-worker task 'Resolve PR85 merge conflict (Vercel+GitHub census vs
+      new master)' on claude-control reached status=blocked. supervisor could not resolve
+      a real PR for branch 'pr85-local' (gh pr create failed, no existing open PR found
+      for it) — refusing to proceed rather than risk operating on an unrelated PR via
+      gh's empty-argument fallback. See supervisor.log.
+    where: /opt/veridian/ai-os/tasks/task-20260726-115417-resolve-pr85-merge-conflict--vercel-gith/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-26'
+
+  - id: WORKER-20260726-115420-resolve-pr79-merge-conflict--ddl-gate--c
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Resolve PR79 merge conflict (DDL gate, content already
+      approved)'' on claude-control reached status=completed. tier1, Superboss-approved,
+      merged autonomously: https://github.com/FChecklist/claude-control/pull/79'
+    where: '/opt/veridian/ai-os/tasks/task-20260726-115420-resolve-pr79-merge-conflict--ddl-gate--c/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/79'
+    last_touched: '2026-07-26'

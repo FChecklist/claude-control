@@ -638,6 +638,33 @@ phases:
         - "phase_3_workflow_automation_integration and phase_4_document_notification_data (both depends_on
           only phase_1, already satisfiable) and phase_5_metadata_knowledge_consolidation (depends_on: [])
           remain open in this plan -- not attempted in this task."
+      follow_up_2026_07_26:
+        produced_by_task: task-20260726-154345-phase-2--policy-rule-decision-engine-uni
+        what_shipped:
+          - "A real 3rd and 4th disconnected gate had appeared since this phase closed
+            (scripts/ddl_authorization_check.py, the interactive-session write-gate) -- flagged by
+            ai-os/MASTER_INDEX.yaml's own registries.engines_gateways_architecture.phase_2_scope_judgment_2026_07_26
+            note. Closed: ddl_authorization_check.py now emits an additive `policy_decision` field
+            (policy_decision_schema), all 28 existing tests pass unmodified. The write-gate's real
+            content was committed to git for the first time
+            (ai-os/OWNER_DIRECTIVES/interactive-session-guard.bashrc-snippet, previously only at $HOME,
+            un-versioned) with a new real test (tests/interactive_session_guard_test.sh, 8/8 pass) -- but
+            judged, honestly, as not_applicable_by_design for schema-wrapping (a bash-level operator
+            control, not a machine dispatch decision)."
+          - "ai-os/POLICY_GATE_REGISTRY_2026-07-26.yaml: the real, queryable gate registry this phase's
+            objective's own follow-up needed -- all 4 gates, scope/checks/schema_emission per gate,
+            registered via MASTER_INDEX.yaml's registries[] pattern (id: policy_gate_registry), synced
+            into knowledge_engine (query-knowledge \"policy_gate_registry\" --tag
+            registry-id:policy_gate_registry -> found: 1)."
+          - "compliance-tracker PR #571 (FChecklist/compliance-tracker,
+            worker/task-20260726-154345-phase-2-guardrail-coverage-expansion): registered 12 more
+            capability-tree leaves in guardrail-registrations.ts using the real field shapes from
+            GUARDRAIL_COVERAGE_CANDIDATES_2026-07-24.yaml, verified via
+            ai-os-scripts/generate_guardrail_coverage_candidates.py: already_registered_count 5 -> 17,
+            uncovered_candidate_count 106 -> 94. 73/73 compliance-tracker tests pass (bun test)."
+        prs: [claude-control#89, compliance-tracker#571]
+        still_open: "policy-enforcement-engine.ts remains documented-not-yet-ported (compliance-tracker's
+          own PR, same repo-boundary discipline); ~94 guardrail-coverage candidates remain unactioned."
 
   - id: phase_3_workflow_automation_integration
     closes_engines: [8, 9, 10]
