@@ -239,6 +239,46 @@ articles:
       forward from any prior standing-directive file, since the gap it
       closes was only discovered and fixed in this same 2026-07-26 session.
 
+  - id: A16_ddl_authorization_gate
+    rule: >-
+      Supabase schema changes (and any other live DDL) are tier2-by-definition --
+      always held for human sign-off, never auto-merged. That rule is enforced at TWO
+      points, not one: at PR-merge time (S9_AUDITED/S10b_HELD_FOR_SIGNOFF below), and
+      -- as of this article -- at dispatch time, before a worker task is ever created.
+      Real incident, 2026-07-26: task-20260726-071400-migration-drift-audit-and-reconciliation's
+      own dispatch prompt's SCOPE section told the worker to call Supabase MCP's
+      apply_migration tool directly against the production project (pcrjmlpuqsbocqfwoxod),
+      and the worker executed live DROP TABLE/CREATE TABLE/ALTER TABLE/CREATE INDEX
+      statements entirely before any PR/CI/human review happened. The worker did exactly
+      what its prompt authorized -- the real gap was that nothing in the dispatch
+      pipeline checked what a dispatch prompt itself is allowed to authorize. Fixed by
+      scripts/ddl_authorization_check.py, chained into scripts/task-gateway.py's
+      cmd_start() immediately after tight_task_validation.py (same run()/json.loads()/
+      fail() rejection pattern): any prompt-file referencing a DDL-capable Supabase MCP
+      tool (apply_migration, execute_sql, merge_branch), or a DDL keyword -- widened
+      2026-07-26 past the original six to also cover CREATE UNIQUE INDEX, DROP INDEX,
+      CREATE/DROP POLICY, CREATE/DROP TRIGGER, ADD/DROP COLUMN, ADD CONSTRAINT,
+      CREATE/DROP TYPE, CREATE SCHEMA, CREATE EXTENSION, CREATE SEQUENCE, all
+      case-insensitive and scanned across multi-line/multi-statement SQL blocks -- is
+      dispatch-blocked unless the prompt-file also contains a line literally matching
+      `PRE-APPROVED-LIVE-DDL: <real citation>`. As of the same 2026-07-26 tightening
+      the citation itself must match a real reference pattern (a KE-<date>-<time>-<hex>
+      decision-log ID, an OWNER_DECISIONS_NEEDED_<date>.yaml#<id> reference, or a dated
+      free-text note of meaningful length), not just be any non-empty, non-placeholder
+      string -- a bare `PRE-APPROVED-LIVE-DDL: yes` no longer passes. Plain SELECT-only
+      SQL never triggers this gate.
+      Known limitation (accepted, not solved): this is a DISPATCH-TIME scan of the
+      prompt-file's text, not a RUNTIME interceptor of the actual MCP tool call. A
+      worker whose prompt says nothing about DDL but which decides mid-task to call
+      apply_migration/execute_sql/merge_branch anyway is NOT caught by this gate --
+      this session's agent framework has no mechanism to intercept a live MCP tool call
+      while a worker is running, only to vet the prompt before dispatch. See
+      scripts/ddl_authorization_check.py's own docstring for the full statement of this
+      limitation; closing it would need a runtime tool-call interceptor, a materially
+      larger piece of infrastructure than a prompt-text scan, and is not built here.
+    source: Real incident task-20260726-071400-migration-drift-audit-and-reconciliation
+      (2026-07-26); closed by task-20260726-082342-add-ddl-pre-flight-authorization-gate-to.
+
 task_lifecycle_state_machine:
   note: Real closed finite-state machine implementing A9_workflow_sequence as
     actual dispatchable steps, folded here verbatim from
@@ -288,6 +328,10 @@ task_lifecycle_state_machine:
         - /opt/veridian/scripts/prompt_gateway/query.py
     - id: TIGHT_TASK_VALIDATOR
       path: /opt/veridian/scripts/tight_task_validation.py
+    - id: DDL_AUTHORIZATION_CHECK
+      path: /opt/veridian/scripts/ddl_authorization_check.py
+      note: "Runs immediately after TIGHT_TASK_VALIDATOR, before VERIDIAN_TASK_CLI create --
+        see A16_ddl_authorization_gate above."
     - id: VERIDIAN_TASK_CLI
       path: /opt/veridian/scripts/veridian-task.py
       commands: [create, checkpoint, status]
@@ -389,8 +433,10 @@ task_lifecycle_state_machine:
       action: "write watertight prompt.txt (OBJECTIVE/SCOPE/KNOWN_CONTEXT/SUCCESS_CRITERIA/
         EXPECTED_OUTPUT/CONSTRAINTS/COMPLEXITY_TIER) -- every SUCCESS_CRITERIA line a real
         runnable shell command"
-      engine: TIGHT_TASK_VALIDATOR (validates before dispatch is allowed)
-      branch_A: "rejected -> fix wording -> retry S4_SPEC"
+      engine: "TIGHT_TASK_VALIDATOR, DDL_AUTHORIZATION_CHECK (both validate before dispatch is
+        allowed -- DDL_AUTHORIZATION_CHECK blocks any prompt authorizing live DDL/apply_migration
+        with no PRE-APPROVED-LIVE-DDL: citation)"
+      branch_A: "rejected -> fix wording (or add a real Owner citation) -> retry S4_SPEC"
       branch_B: "accepted -> S5_DISPATCH"
     - id: S5_DISPATCH
       action: "python3 scripts/task-gateway.py submit --text \"$(cat prompt.txt)\" --source owner

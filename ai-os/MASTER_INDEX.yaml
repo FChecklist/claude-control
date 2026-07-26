@@ -3040,7 +3040,7 @@ registries:
     hardening, real gap found and fixed) that citation is verified for real
     EXISTENCE on disk (a KE-<date>-<time>-<hex> ID or an
     OWNER_DECISIONS_NEEDED_<date>.yaml#<id> reference), not accepted on string shape
-    alone. Documented as protocol article A15_ddl_authorization_gate in
+    alone. Documented as protocol article A16_ddl_authorization_gate in
     ai-os/OWNER_DIRECTIVES/PROTOCOL_OWNER_AI.yaml. Architecturally this IS a Policy
     Engine (5) gate in the same shape Phase 2 already unified (deterministic
     pre-execution allow/deny, same task-gateway.py insertion point as
