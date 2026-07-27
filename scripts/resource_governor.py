@@ -417,10 +417,17 @@ def _perform_spawn(row):
 
 
 def dispatch_one(dry_run=False, now=None):
-    """Pulls the single highest-effective-priority queued item, checks all 4
-    real metrics, and only if NONE are at/over threshold, acquires
-    dispatch_core's shared lock + free-slot check, then performs the real
-    spawn. Never raises for a normal 'nothing to do'/'frozen' outcome."""
+    """Checks all 4 real metrics, and only if NONE are at/over threshold,
+    acquires dispatch_core's shared lock and does EVERYTHING else --
+    selecting the next queued row, the free-slot check, and the real spawn
+    -- from inside that one critical section. Selecting the row before
+    acquiring the lock (an earlier version of this function did that) let
+    two concurrent callers both pick the SAME 'queued' row before either had
+    claimed it, so both proceeded to spawn it: exactly the TOCTOU race
+    dispatch_core.has_free_slot()'s own docstring already warns about
+    ("callers must check this WHILE holding acquire_dispatch_lock(), never
+    before/after"). Never raises for a normal 'nothing to do'/'frozen'
+    outcome."""
     if os.path.exists(EMERGENCY_STOP_PATH):
         return {"action": "emergency_stopped",
                 "detail": "EMERGENCY_STOP sentinel present -- clear via --clear-emergency-stop"}
@@ -434,14 +441,15 @@ def dispatch_one(dry_run=False, now=None):
 
     dc = _dispatch_core()
     sbr = _superboss_register()
-    conn = sbr._connect()
-    sbr._ensure_umr_table(conn)
-    row = next_queued_task(conn, now=now)
-    if row is None:
-        conn.close()
-        return {"action": "idle", "detail": "queue empty", "metrics": metrics}
 
     with dc.acquire_dispatch_lock():
+        conn = sbr._connect()
+        sbr._ensure_umr_table(conn)
+        row = next_queued_task(conn, now=now)
+        if row is None:
+            conn.close()
+            return {"action": "idle", "detail": "queue empty", "metrics": metrics}
+
         if not dc.has_free_slot():
             conn.close()
             return {"action": "deferred", "detail": "no free concurrency slot under dispatch_core's shared cap",
@@ -464,7 +472,7 @@ def dispatch_one(dry_run=False, now=None):
                 task_id=row["task_identity"], dispatched_by=f"resource_governor:{row['source_trigger']}",
                 source_queue_or_plan="umr_tasks", worker_unit=result.get("unit_name") or row["unit_name"] or "",
             )
-    conn.close()
+        conn.close()
     return {"action": "dispatched", "umr_id": row["umr_id"], "result": result, "metrics": metrics}
 
 

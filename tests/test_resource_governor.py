@@ -13,7 +13,9 @@ cascade (shed-load + hard-stop), plus one real end-to-end dispatch proving
 dispatch_core.py's shared lock/cap/record_dispatch_event integration still
 fires for real, not stubbed out.
 """
+import concurrent.futures
 import importlib.util
+import json
 import os
 import sqlite3
 import sys
@@ -22,7 +24,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from _resource_governor_fixtures import build_governor_fixture_tree  # noqa: E402
+from _resource_governor_fixtures import build_governor_fixture_tree, run_script  # noqa: E402
 
 
 def _load_resource_governor(work, env, monkeypatch):
@@ -410,3 +412,62 @@ def test_emergency_stop_blocks_all_dispatch_including_tier_0_until_cleared(tmp_p
     monkeypatch.setattr(rg, "sample_metrics", lambda now=None: {"cpu": 1.0, "ram": 1.0, "disk_io": 1.0, "network": 1.0})
     result = rg.dispatch_one()
     assert result["action"] != "emergency_stopped"
+
+
+# ---------------------------------------------------------------------------
+# Concurrent dispatch -- the real TOCTOU race the round-2 audit reproduced:
+# dispatch_one() used to select the next queued row BEFORE acquiring
+# dispatch_core.acquire_dispatch_lock(), so two concurrent callers could both
+# select and spawn the SAME queued row.
+# ---------------------------------------------------------------------------
+
+def test_concurrent_dispatch_never_double_dispatches_the_same_queued_row(tmp_path, monkeypatch):
+    """Two REAL subprocess `--tick` invocations (not just two threads inside
+    one interpreter -- this is how the real cron/timer callers actually
+    overlap) racing against the same fixture DB and the same dispatch_core
+    lock file must produce exactly one real spawn for the one queued row:
+    the other must observe it already claimed, never fire the real systemctl
+    call a second time."""
+    work, env = build_governor_fixture_tree(tmp_path)
+    units_file = work / "units.txt"
+    units_file.write_text("")
+    systemctl_log = work / "systemctl.log"
+    env["MOCK_RUNNING_UNITS_FILE"] = str(units_file)
+    env["MOCK_SYSTEMCTL_LOG"] = str(systemctl_log)
+    # Set unreachably high so real host load on the test box can never freeze
+    # the queue -- the concurrency race is the only thing under test here.
+    env["VERIDIAN_GOVERNOR_METRIC_THRESHOLD"] = "1000000"
+
+    rg = _load_resource_governor(work, env, monkeypatch)
+    rg.submit(
+        {"task_identity": "task-race", "task_kind": "systemctl_action",
+         "unit_name": "veridian-worker@task-race.service", "inputs": {"action": "start"}},
+        tier=2, source_trigger="test",
+    )
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+        futures = [pool.submit(run_script, work, env, "resource_governor.py", ["--tick"]) for _ in range(2)]
+        results = [f.result(timeout=60) for f in futures]
+
+    for r in results:
+        assert r.returncode == 0, f"--tick subprocess failed: {r.stderr}"
+
+    ticks = [json.loads(r.stdout) for r in results]
+    race_dispatches = [
+        d for tick in ticks for d in tick["dispatches"]
+        if d["action"] == "dispatched" and d["result"].get("unit_name") == "veridian-worker@task-race.service"
+    ]
+    assert len(race_dispatches) == 1, (
+        f"expected exactly 1 real dispatch of task-race across 2 concurrent --tick invocations, "
+        f"got {len(race_dispatches)}: {race_dispatches}"
+    )
+
+    start_calls = [line for line in systemctl_log.read_text().splitlines()
+                   if "start veridian-worker@task-race.service" in line]
+    assert len(start_calls) == 1, (
+        f"the real systemctl start call for task-race fired {len(start_calls)} times across the "
+        f"concurrent tick -- the TOCTOU race was not closed: {systemctl_log.read_text()!r}"
+    )
+
+    statuses = _umr_statuses(env["SUPERBOSS_REGISTER_DB"], "task-race")
+    assert statuses == ["running"], f"expected exactly one umr_tasks row left in status=running, got {statuses}"
