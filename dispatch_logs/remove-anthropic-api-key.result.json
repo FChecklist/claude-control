@@ -1,0 +1,6 @@
+{
+  "key": "remove-anthropic-api-key",
+  "instruction_id": "INS-20260726-171925-d10c",
+  "start_rc": 0,
+  "task_id": "task-20260726-171926-remove-anthropic-api-key-dead-code-path"
+}
