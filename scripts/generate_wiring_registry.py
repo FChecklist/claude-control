@@ -103,6 +103,12 @@ DEFAULT_OUT = os.path.join(REPO_AI_OS, "WIRING_ENGINE_REGISTRY_2026-07-25.json")
 
 VALID_VERIFICATION = {"VERIFIED_MATCH", "HASH_DRIFTED", "PATH_MISSING", "UNVERIFIED"}
 
+# task-20260727-025248 (knowledge-engine/wiring-registry integration): the tags
+# build_governance_docs() below treats as "this knowledge_engine row is a
+# governance/constitution doc" -- real, already-applied tags from
+# knowledge_registry_multisource.py's own SERVER-source seeding, not a new taxonomy.
+GOVERNANCE_TAGS = {"governance", "constitution"}
+
 # Phase 3 live-wiring (ai-os/WIRING_ENGINE_PHASE_PLAN_2026-07-25.yaml
 # phase_3_wiring_registry_live_wiring): reuse scripts/superboss-register.py's own
 # wiring_registry table DDL + upsert logic as the single source of truth (never
@@ -135,6 +141,72 @@ def source_system_for_path(p):
 
 def path_exists(p):
     return os.path.exists(normalize_path(p))
+
+
+def parse_ke_tags(tags):
+    """knowledge_engine.tags is stored as a JSON-encoded list (register-knowledge's own
+    --tags help text: "stored as a JSON-encoded list") -- e.g. '["governance",
+    "constitution", "source:SERVER"]', never a bare comma-separated string. Real,
+    live-verified 2026-07-27 (task-20260727-025248): all 343 current rows parse as a
+    JSON list; this was a real pre-existing bug in this file (both here and in
+    build_from_knowledge_engine below used to do `(tags or "").split(",")` directly on
+    that JSON string, which can never match a plain tag like "governance" or
+    "source:VERCEL" against the bracketed/quoted fragments .split(",") produces -- so
+    source_system for every VERCEL/SUPABASE/GITHUB-tagged knowledge_engine row silently
+    fell through to the "server" default, and build_governance_docs() below found zero
+    governance-tagged rows instead of the real 9). Falls back to comma-split only for a
+    malformed/non-JSON value, so a future caller that ever does pass a bare CSV string
+    degrades instead of crashing."""
+    if not tags:
+        return []
+    try:
+        parsed = json.loads(tags)
+        if isinstance(parsed, list):
+            return parsed
+    except (json.JSONDecodeError, TypeError):
+        pass
+    return [t.strip() for t in tags.split(",") if t.strip()]
+
+
+def _hash_file_bytes(abs_path):
+    h = hashlib.sha256()
+    with open(abs_path, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 16), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def compute_content_hash(raw_paths):
+    """Real sha256 over live file content for one or more real paths -- multi-path
+    engine/gateway entities (whose own `path` field is already "; ".join(exists_as))
+    pass every exists_as entry here, combined into ONE hash. Lets a re-run of this
+    generator tell "content changed" apart from "path still exists": verification_status
+    alone only ever checked existence (VERIFIED_MATCH/PATH_MISSING/UNVERIFIED), never
+    content, for anything except knowledge_engine's own separate content_hash column
+    and route's dependency_validation_status. Directories (some engine exists_as
+    entries are directories, e.g. `services/doc-processing`) are walked recursively in
+    sorted order for determinism. Each real path/file's own path string is folded into
+    the hash alongside its bytes, so renaming a file changes the hash even when its
+    content is byte-identical to some other file. Returns None only when NONE of the
+    given paths resolve to anything real on disk -- an entity with nothing real to hash
+    (verification_status already carries PATH_MISSING for that case)."""
+    h = hashlib.sha256()
+    found_any = False
+    for raw in sorted(p for p in raw_paths if p):
+        abs_path = normalize_path(raw)
+        if os.path.isfile(abs_path):
+            found_any = True
+            h.update(abs_path.encode())
+            h.update(_hash_file_bytes(abs_path).encode())
+        elif os.path.isdir(abs_path):
+            for root, dirs, files in os.walk(abs_path):
+                dirs.sort()
+                for fname in sorted(files):
+                    fpath = os.path.join(root, fname)
+                    found_any = True
+                    h.update(fpath.encode())
+                    h.update(_hash_file_bytes(fpath).encode())
+    return h.hexdigest() if found_any else None
 
 
 class Registry:
@@ -225,6 +297,7 @@ def build_engines_and_gateways(reg, doc):
             "last_verified_ts": now_iso(),
             "verification_status": "VERIFIED_MATCH" if row.get("verified_on_disk") else "UNVERIFIED",
             "source_ref": ["engine_inventory"],
+            "content_hash": compute_content_hash(row.get("exists_as", [])),
             "metadata": {"engine_no": row["engine_no"], "engine_name": row["engine_name"],
                          "purpose": row.get("purpose"), "coverage": row.get("coverage")},
         })
@@ -246,6 +319,7 @@ def build_engines_and_gateways(reg, doc):
             "last_verified_ts": now_iso(),
             "verification_status": "VERIFIED_MATCH" if row.get("verified_on_disk") else "UNVERIFIED",
             "source_ref": ["gateway_inventory"],
+            "content_hash": compute_content_hash(row.get("exists_as", [])),
             "metadata": {"gateway_no": row["gateway_no"], "gateway_id": row["gateway_id"],
                          "gateway_name": row["gateway_name"], "purpose": row.get("purpose"),
                          "coverage": row.get("coverage")},
@@ -516,6 +590,124 @@ def load_capability_registry():
         return {}
 
 
+def _fetch_governance_tagged_knowledge_engine_rows():
+    """Real, live read of every knowledge_engine row tagged governance/constitution --
+    single source of truth for what "the governance/constitution doc set" means, shared
+    by build_governance_docs() and coverage_delta() below so the two can never disagree
+    about which rows count (a real risk if each ran its own separate tag-filter query)."""
+    if not os.path.isfile(DB_PATH):
+        print(f"  ! {DB_PATH} not found, skipping governance_doc entities", file=sys.stderr)
+        return []
+    try:
+        conn = sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True, timeout=10)
+        rows = conn.execute(
+            "SELECT artifact_id, artifact_path, verification_status, tags FROM knowledge_engine"
+        ).fetchall()
+        conn.close()
+    except sqlite3.Error as e:
+        print(f"  ! knowledge_engine read failed (governance_doc pass): {e}", file=sys.stderr)
+        return []
+    out = []
+    for artifact_id, artifact_path, verification_status, tags in rows:
+        tag_list = parse_ke_tags(tags)
+        if GOVERNANCE_TAGS & set(tag_list):
+            out.append((artifact_id, artifact_path, verification_status, tag_list))
+    return out
+
+
+def build_governance_docs(reg):
+    """entity_type=governance_doc -- task-20260727-025248 (knowledge-engine/wiring-registry
+    integration). Reads the SAME live knowledge_engine rows build_from_knowledge_engine()
+    below already merges into the wiring graph, but for the subset already tagged
+    governance/constitution there, creates a FIRST-CLASS governance_doc entity (not the
+    generic 'file' bucket every other knowledge_engine row falls into) with a real sha256
+    content_hash of the live file bytes -- the same "first-class type, not a bucket"
+    pattern build_scripts_and_cron already established for entity_type='script'.
+
+    MUST run before build_from_knowledge_engine() in main()/generate() so that function's
+    own `if abs_path in reg.path_to_id` branch enriches these entities (adding
+    source_ref=knowledge_engine, refreshing verification_status/last_verified_ts) instead
+    of creating a second, duplicate 'file' entity for the exact same real doc -- the
+    Registry class's whole "collapse into ONE entity" contract (see its own docstring)
+    depends on the more specific type claiming the path first. If some OTHER source
+    already claimed this exact path first (e.g. it is also cited as an engine's exists_as
+    or a script's own path), this function does not steal or duplicate it -- that entity
+    keeps its own, more specific type, unchanged.
+
+    content_hash is computed fresh from the live file bytes here (not reused verbatim
+    from knowledge_engine.content_hash) so a doc edited after its last knowledge_engine
+    verify-knowledge run shows real drift immediately on this run, rather than waiting for
+    that separate table's own next verify pass. Fragment-style artifact_paths (e.g.
+    "ai-os/MASTER_INDEX.yaml#registries.function_catalog", a sub-key inside a real file,
+    not a standalone file of its own) never resolve to a real path, so content_hash is
+    None for those -- same "no real file to hash" case compute_content_hash() already
+    returns None for."""
+    count = 0
+    for artifact_id, artifact_path, verification_status, tag_list in _fetch_governance_tagged_knowledge_engine_rows():
+        abs_path = normalize_path(artifact_path)
+        if abs_path in reg.path_to_id:
+            continue  # another, more specific source already claimed this exact path
+        eid = f"governance_doc-{artifact_id}"
+        reg.path_to_id[abs_path] = eid
+        vstatus = verification_status if verification_status in VALID_VERIFICATION else "UNVERIFIED"
+        if not os.path.exists(abs_path):
+            vstatus = "PATH_MISSING"
+        reg.add({
+            "entity_id": eid,
+            "entity_type": "governance_doc",
+            "source_system": source_system_for_path(abs_path),
+            "path": abs_path,
+            "relationships": [],
+            "last_verified_ts": now_iso(),
+            "verification_status": vstatus,
+            "source_ref": ["governance_tag"],
+            "content_hash": compute_content_hash([artifact_path]),
+            "metadata": {"knowledge_engine_artifact_id": artifact_id, "tags": tag_list},
+        })
+        count += 1
+    return count
+
+
+def coverage_delta():
+    """Real, re-runnable coverage-delta report (SCOPE item 1): compares the current
+    engine_inventory (source of truth for the 20-engine registry) and the current live
+    governance/constitution knowledge_engine rows against what's ACTUALLY live in
+    wiring_registry right now, using the exact same entity_id/path conventions
+    build_engines_and_gateways()/build_governance_docs() use -- so this can never silently
+    drift from what a real generate() run would produce. Read-only; safe to call anytime,
+    not just right after a generate() run, which is the whole point (it answers "is the
+    live index still in sync" as its own question, not just "was it in sync when this
+    process last ran generate()")."""
+    ge_doc = load_engines_gateways()
+    expected_engine_ids = {f"engine-{row['engine_no']:02d}" for row in ge_doc.get("engine_inventory", [])}
+    governance_rows = _fetch_governance_tagged_knowledge_engine_rows()
+    expected_governance_abs_paths = {normalize_path(r[1]) for r in governance_rows}
+
+    wr_engine_ids = set()
+    wr_governance_paths = set()
+    wr_ke_backed_paths = set()
+    if os.path.isfile(DB_PATH):
+        conn = sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True, timeout=10)
+        for (eid,) in conn.execute("SELECT entity_id FROM wiring_registry WHERE entity_type='engine'"):
+            wr_engine_ids.add(eid)
+        for (path,) in conn.execute("SELECT path FROM wiring_registry WHERE entity_type='governance_doc'"):
+            wr_governance_paths.add(path)
+        for entity_id, path, source_ref in conn.execute("SELECT entity_id, path, source_ref FROM wiring_registry"):
+            if "knowledge_engine" in json.loads(source_ref or "[]"):
+                wr_ke_backed_paths.add(path)
+        conn.close()
+
+    governance_covered_paths = expected_governance_abs_paths & (wr_governance_paths | wr_ke_backed_paths)
+    return {
+        "engines_expected": len(expected_engine_ids),
+        "engines_covered": len(expected_engine_ids & wr_engine_ids),
+        "engines_missing": sorted(expected_engine_ids - wr_engine_ids),
+        "governance_docs_expected": len(expected_governance_abs_paths),
+        "governance_docs_covered": len(governance_covered_paths),
+        "governance_docs_missing": sorted(expected_governance_abs_paths - governance_covered_paths),
+    }
+
+
 def build_from_knowledge_engine(reg):
     """entity_type=file, one per existing knowledge_engine row.
     verification_status/last_verified_ts reused VERBATIM (not recomputed --
@@ -539,7 +731,7 @@ def build_from_knowledge_engine(reg):
     count = 0
     for artifact_id, artifact_path, verification_status, last_verified_ts, tags, entity_relationships in rows:
         abs_path = normalize_path(artifact_path)
-        tag_list = (tags or "").split(",")
+        tag_list = parse_ke_tags(tags)
         if "source:VERCEL" in tag_list:
             src_sys = "vercel"
         elif "source:SUPABASE" in tag_list:
@@ -764,10 +956,19 @@ def upsert_live_wiring_registry(entities):
     batch, same bypass-the-CLI-for-bulk-writes convention
     scripts/batch-import-conversation-log.py already established for exactly this
     reason (a ~7600-row batch via one register-entity subprocess per row would be
-    far too slow). Returns the live row count after the upsert."""
+    far too slow). Returns the live row count after the upsert.
+
+    _ensure_wiring_registry_table() alone is a bare CREATE TABLE IF NOT EXISTS -- a
+    no-op against this DB's real pre-existing wiring_registry table, so it never picks
+    up a newly-added column or CHECK-widened entity_type (this is the EXACT bug class
+    PR #101's round-1 was rejected for: a migration that only ever ran against fresh
+    fixture DBs). _migrate_wiring_registry_entity_types() is the real migration --
+    called explicitly here, same as dispatch_core._upsert_wiring_row's own write path,
+    never left to a bare _ensure_*_table() call to cover on its own."""
     with _sbr._write_lock():
         conn = _sbr._connect()
         _sbr._ensure_wiring_registry_table(conn)
+        _sbr._migrate_wiring_registry_entity_types(conn)
         for entity in entities:
             _sbr.register_entity_row(conn, entity)
         conn.commit()
@@ -776,11 +977,14 @@ def upsert_live_wiring_registry(entities):
     return live_count
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--out", default=DEFAULT_OUT)
-    args = parser.parse_args()
-
+def generate(out_path=None):
+    """The real generation pipeline -- factored out of main() (task-20260727-025248)
+    so status-remediation-tick.py can call this in-process on its own existing tick
+    (see dispatch_core.py's own importlib pattern for loading superboss-register.py,
+    reused the same way here) instead of needing a new standalone cron entry or a
+    subprocess call per tick. main() below is now a thin argparse/print wrapper
+    around this function; behavior for the existing CLI entrypoint is unchanged."""
+    out_path = out_path or DEFAULT_OUT
     reg = Registry()
 
     ge_doc = load_engines_gateways()
@@ -792,6 +996,9 @@ def main():
     cap_by_name = load_capability_registry()
     route_count = build_routes(reg, engine_ids_by_no, gateway_ids_by_id, cap_by_name)
     script_count, cron_count = build_scripts_and_cron(reg)
+    # Runs BEFORE build_from_knowledge_engine -- see build_governance_docs()'s own
+    # docstring for why the ordering is load-bearing, not incidental.
+    governance_doc_count = build_governance_docs(reg)
     ke_count = build_from_knowledge_engine(reg)
     browser_component_count = build_browser_components(reg, ge_doc.get("engine_inventory", []), engine_ids_by_no)
     master_index_doc = load_master_index()
@@ -813,15 +1020,15 @@ def main():
         },
         "entities": reg.entities,
     }
-    os.makedirs(os.path.dirname(args.out), exist_ok=True)
-    with open(args.out, "w") as f:
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    with open(out_path, "w") as f:
         json.dump(output, f, indent=2)
 
     live_row_count = upsert_live_wiring_registry(reg.entities)
 
-    summary = {
+    return {
         "ok": True,
-        "output_path": args.out,
+        "output_path": out_path,
         "entity_count": len(reg.entities),
         "live_wiring_registry_row_count": live_row_count,
         "counts_by_entity_type": counts_by_type,
@@ -835,6 +1042,7 @@ def main():
             "route_registry_routes": route_count,
             "software_catalog_scripts": script_count,
             "software_catalog_cron_jobs": cron_count,
+            "governance_docs": governance_doc_count,
             "knowledge_engine_rows": ke_count,
             "capability_registry_rows_crosschecked": len(cap_by_name),
             "engine_inventory_browser_components": browser_component_count,
@@ -842,6 +1050,21 @@ def main():
             "vercel_github_state_census_github_repos": github_repo_count,
         },
     }
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--out", default=DEFAULT_OUT)
+    parser.add_argument("--report-only", action="store_true",
+                         help="Print the real coverage-delta report (SCOPE item 1) and exit -- "
+                              "never writes WIRING_ENGINE_REGISTRY_*.json or the live DB.")
+    args = parser.parse_args()
+
+    if args.report_only:
+        print(json.dumps(coverage_delta(), indent=2))
+        return 0
+
+    summary = generate(args.out)
     print(json.dumps(summary, indent=2))
     return 0
 

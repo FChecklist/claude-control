@@ -82,6 +82,7 @@ writes a local file) so it always runs for real, --apply or not.
 """
 import argparse
 import datetime
+import importlib.util
 import json
 import os
 import re
@@ -95,6 +96,42 @@ import dispatch_core
 AI_OS = dispatch_core.AI_OS
 TASKS_DIR = dispatch_core.TASKS_DIR
 OUTPUT_PATH = os.environ.get("VERIDIAN_LIVE_STATUS_PATH", f"{AI_OS}/LIVE_STATUS_2026-07-26.yaml")
+
+
+def _load_generate_wiring_registry():
+    """Lazy, in-process import of generate_wiring_registry.py -- same importlib
+    pattern dispatch_core._superboss_register() already uses to load
+    superboss-register.py, reused here so this tick can call the real generator
+    in-process instead of a subprocess call or a new standalone cron entry (see
+    this task's -- task-20260727-025248 -- own CONSTRAINTS: reuse an existing
+    consolidated tick script for scheduling, do not add a new one)."""
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    spec = importlib.util.spec_from_file_location(
+        "generate_wiring_registry", os.path.join(script_dir, "generate_wiring_registry.py"))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def refresh_wiring_registry():
+    """Best-effort wiring_registry/knowledge_engine refresh, run once per tick
+    (task-20260727-025248: makes the index "auto-updating... instead of a stale
+    snapshot" per that task's own OBJECTIVE). A real full generate() run costs
+    ~2s against the current ~7700-row live DB -- cheap enough to run on every
+    10-minute tick with no throttling needed. Failure here is printed and
+    swallowed, same "fails open, never load-bearing for the tick it wraps"
+    principle dispatch_core.record_tick() already applies to its own
+    wiring_registry write -- a broken doc/engine catalog read must never block
+    the real remediation scan/dispatch this script exists to run."""
+    try:
+        gwr = _load_generate_wiring_registry()
+        summary = gwr.generate()
+        return {"ok": True, "entity_count": summary.get("entity_count")}
+    except Exception as e:
+        print(f"WARNING: wiring_registry refresh failed (non-fatal): {e}", file=sys.stderr)
+        return {"ok": False, "error": str(e)}
+
+
 PHASE_READY_CACHE_PATH = os.environ.get("VERIDIAN_PHASE_READY_CACHE", f"{AI_OS}/PHASE_READY_CACHE.json")
 PENDING_DIR = os.environ.get("VERIDIAN_PENDING_REMEDIATION_DIR", f"{AI_OS}/pending_remediation")
 REMEDIATION_LOG = os.environ.get("VERIDIAN_REMEDIATION_LOG", f"{AI_OS}/logs/remediation-dispatcher.jsonl")
@@ -797,12 +834,15 @@ def main():
         yaml.safe_dump(artifact, f, sort_keys=False, default_flow_style=False, width=100)
     os.replace(tmp_path, OUTPUT_PATH)
 
+    wiring_refresh = refresh_wiring_registry()
+
     dispatch_core.record_tick(
         "status-remediation-tick", status="ok", dispatched_this_tick=0,
         extra={
             "auto_dispatched_count": len(auto_dispatched),
             "drafted_pending_review_count": len(drafted_pending),
             "scan_errors": len(errors),
+            "wiring_registry_refresh": wiring_refresh,
         },
     )
 
@@ -817,6 +857,7 @@ def main():
         "apply_mode": args.apply,
         "auto_dispatched_count": len(auto_dispatched),
         "drafted_pending_review_count": len(drafted_pending),
+        "wiring_registry_refresh": wiring_refresh,
     }
     print(json.dumps(summary, indent=2))
     return 0
