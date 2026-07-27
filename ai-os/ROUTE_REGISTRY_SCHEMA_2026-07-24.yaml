@@ -374,6 +374,50 @@ populated_routes:
     dependency_validation_status: validated_match
     confidence: 1.0
     notes: "grep of repos/compliance-tracker/src/lib/task-execution-engine.ts's dispatchEngine() switch found no case \"capability_registry_dedup\": -- no live Workflow Engine dispatch target for this capability today."
+  - route_id: RT-veridian-v2-gateway-knowledge-sync-001
+    capability_name: task_oa
+    source: repos/compliance-tracker/src/app/api/ai/orchestrate/route.ts
+    destination: repos/compliance-tracker/src/lib/ai-router/mother-router.ts
+    expected_path:
+      - hop_no: 1
+        hop_type: gateway
+        hop_name: "AI"
+        engine_no: null
+        gateway_id: "G05"
+        mechanism_path: repos/compliance-tracker/src/lib/ai-router/mother-router.ts
+        live_or_planned: live
+    test_status: not_yet_tested
+    trace_verification_status: not_instrumented
+    replay_status: not_yet_captured
+    dependency_validation_status: validated_match
+    confidence: 1.0
+    notes: "VERIDIAN_ARCHITECTURE_V2_PHASE_PLAN_2026-07-25.yaml phase_9_gateway_knowledge_sync_infrastructure
+      (zero-duplication phase closing engine-gateway-integration): before this route, mother-router.ts's
+      end_user_org scope (computeEndUserOrgResolution/resolveModel) was fully implemented but had ZERO real
+      callers anywhere in the repo (grep-confirmed) -- G05's own gap_description in
+      20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml names exactly this class of gap (35 files bypassing
+      it). orchestrate/route.ts (the strongest of ~22 resolvePromptTemplate() callers, since it also
+      independently resolved its own model) now calls resolveModel({scope:\"end_user_org\",orgId,
+      layerKey:\"task_oa\"}) at orchestrate/route.ts:225-226 (resolveMotherRouterModel import at line 7)
+      INSTEAD OF calling orchestra-model-resolver.ts's resolveModelConfig() directly as it did before this
+      phase -- a real, non-simulated crossing of gateway G05, including a real ai_routing_audit_log insert
+      on every call (mother-router.ts's resolveModel(), unchanged by this phase). mother-router.ts extended:
+      MotherRouterResolution gained an optional resolvedConfig field (type at line 149) and
+      computeEndUserOrgResolution (line 363) populates it for every branch, so orchestrate/route.ts gets a
+      real, ready-to-call config through this ONE function instead of a second independent resolution
+      afterwards. capability_name=task_oa reused verbatim from orchestraLayers.layerKey (the real,
+      pre-existing DB identifier this call site already passed) for the engine-capability-intel item this
+      same phase closes, per capability_registry's own capability_id CAP-20260727-084004-bff8 -- not a new
+      parallel capability matcher. HONEST GAP: trace_verification_status is not_instrumented and
+      test_status is not_yet_tested -- this session verified the hop via direct code reading (both
+      route.ts:225-226 and mother-router.ts:594-634), `bun x tsc --noEmit` (clean), and 30/30 passing
+      mother-router.test.ts unit tests covering computeEndUserOrgResolution's resolvedConfig field
+      end-to-end for every branch (BYO, no override, override+platform-key, override+no-key) -- but no live
+      E2E request was actually sent through the deployed /api/ai/orchestrate endpoint against a real
+      Postgres org this session (would require live DB/org fixtures out of this task's reach), so this is
+      unit-level-verified, not live-traced, same honest distinction phase_1's own gratuity_calculator route
+      draws between trace_verification_status and dependency_validation_status. PR:
+      FChecklist/compliance-tracker#588 (open at registration time)."
 
 registration:
   knowledge_engine_query_command: 'python3 scripts/superboss-register.py query-knowledge "route_registry" --tag domain:testing_engine_irvf'
