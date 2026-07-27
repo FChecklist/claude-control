@@ -281,10 +281,20 @@ judgment
 """
 
 
-def escalate(task_id, signature, dry_run=False):
+def escalate(task_id, task, signature, dry_run=False):
     title = f"rca-{task_id}"
     prompt = RCA_PROMPT_TEMPLATE.format(original_task_id=task_id, signature=signature)
-    cmd = ["python3", VERIDIAN_TASK, "create", "--title", title, "--repo", "claude-control", "--prompt", prompt]
+    # Real fix (2026-07-27): this used to hardcode --repo claude-control for
+    # every escalated rca- task regardless of the stalled task's own real
+    # repo -- confirmed live against 2 historical instances where the
+    # stalled task's real repo was compliance-tracker, not claude-control.
+    # task.yaml's own 'repo' field (already loaded via load_task_yaml() by
+    # the caller, passed in here) is the real, known-at-escalation-time repo
+    # the RCA worker actually needs to investigate/fix in -- fall back to
+    # claude-control only if the stalled task's own task.yaml is somehow
+    # unreadable/missing that field.
+    repo = (task or {}).get("repo") or "claude-control"
+    cmd = ["python3", VERIDIAN_TASK, "create", "--title", title, "--repo", repo, "--prompt", prompt]
     if dry_run:
         return f"DRY_RUN would escalate: {' '.join(cmd[:6])} ... (title={title})"
 
@@ -331,12 +341,12 @@ def process_task(task_id, task, dry_run_escalation=False):
             entry["action_taken"] = f"step_2: {applied_desc} (signature seen before via {source}); recheck after {RECHECK_DELAY_SECONDS}s: recovered"
             return entry
         entry["action_taken"] = f"step_2: {applied_desc} (signature seen before via {source}); recheck after {RECHECK_DELAY_SECONDS}s: still stalled/looping -> "
-        esc = escalate(task_id, signature, dry_run=dry_run_escalation)
+        esc = escalate(task_id, task, signature, dry_run=dry_run_escalation)
         entry["action_taken"] += f"step_3: {esc}"
         return entry
 
     reason = "no prior occurrence found (step_1)" if not found else "prior occurrence found but no known_fixes entry (step_2 not applicable)"
-    esc = escalate(task_id, signature, dry_run=dry_run_escalation)
+    esc = escalate(task_id, task, signature, dry_run=dry_run_escalation)
     entry["action_taken"] = f"step_1: {reason} -> step_3: {esc}"
     return entry
 
