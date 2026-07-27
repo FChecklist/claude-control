@@ -545,6 +545,7 @@ def _migrate_schema(conn):
         conn.commit()
     _migrate_wiring_registry_content_hash(conn)
     _migrate_wiring_registry_entity_types(conn)
+    _ensure_umr_table(conn)
 
 
 def _migrate_wiring_registry_content_hash(conn):
@@ -1890,6 +1891,201 @@ def list_entities(args):
     conn.close()
     matches = [_wiring_row_to_dict(r) for r in rows]
     print(json.dumps({"count": len(matches), "entities": matches}, indent=2, default=str))
+
+
+# ---------------------------------------------------------------------------
+# 11th tree (2026-07-27, SERVER RESOURCE GOVERNOR, Owner directive same day --
+# ai-os/SERVER_RESOURCE_GOVERNOR_2026-07-27.md). Universal Task Metadata
+# Record (UMR): one row per task submitted through scripts/resource_governor.py's
+# submit() -- the persistent queue table every scheduled trigger (cron, systemd
+# timer, systemd worker spawn) now writes to instead of calling `systemctl
+# start` directly. Same table/FTS5/upsert-on-conflict convention as every
+# other tree above, not a new pattern. status transitions:
+#   queued -> dispatched -> running -> completed | failed
+#                                    -> sigterm_sent -> killed
+#   queued -> rejected_duplicate  (de-dup check in resource_governor.submit()
+#                                   found an existing active row for the same
+#                                   task_identity -- logged, not silently
+#                                   dropped, per this table's own row)
+# ---------------------------------------------------------------------------
+UMR_STATUSES = (
+    "queued", "dispatched", "running", "completed", "failed",
+    "rejected_duplicate", "sigterm_sent", "killed",
+)
+UMR_ACTIVE_STATUSES = ("queued", "dispatched", "running")
+
+
+def _ensure_umr_table(conn):
+    """Standalone idempotent create (CREATE TABLE IF NOT EXISTS), same
+    defensiveness convention as _ensure_execution_log_table/
+    _ensure_wiring_registry_table -- works even if init_db() was never run
+    against this DB. Called both from _migrate_schema() (so `init` and any
+    write-path CLI command picks up the table on a pre-existing DB) AND
+    directly by resource_governor.py before every umr_tasks read/write (same
+    "call the specific ensure function directly, bypassing _migrate_schema()"
+    convention dispatch_core._upsert_wiring_row already established for
+    wiring_registry). No CHECK-constraint-widening rebuild is needed here the
+    way wiring_registry's entity_type migration needed one -- this is a
+    brand-new table, so a pre-existing DB simply doesn't have it yet, and
+    CREATE TABLE IF NOT EXISTS is genuinely sufficient. Tested against a
+    fixture DB seeded with the real pre-existing (non-UMR) schema in
+    tests/test_resource_governor.py, not a fresh DB, per PR #101's own
+    postmortem on trusting CREATE TABLE IF NOT EXISTS alone."""
+    status_sql = ",".join("'" + s + "'" for s in UMR_STATUSES)
+    conn.execute(f"""CREATE TABLE IF NOT EXISTS umr_tasks (
+        umr_id TEXT PRIMARY KEY,
+        task_identity TEXT NOT NULL,
+        ts_submitted TEXT NOT NULL,
+        tier INTEGER NOT NULL CHECK(tier BETWEEN 0 AND 4),
+        status TEXT NOT NULL DEFAULT 'queued' CHECK(status IN ({status_sql})),
+        source_trigger TEXT NOT NULL,
+        task_kind TEXT NOT NULL DEFAULT 'systemctl_action',
+        unit_name TEXT,
+        inputs_json TEXT NOT NULL DEFAULT '{{}}',
+        outputs_json TEXT NOT NULL DEFAULT '{{}}',
+        logs_ref TEXT,
+        metric_snapshot_json TEXT,
+        ts_dispatched TEXT,
+        ts_sigterm TEXT,
+        ts_completed TEXT,
+        reason TEXT,
+        metadata_json TEXT NOT NULL DEFAULT '{{}}'
+    )""")
+    conn.execute("""CREATE VIRTUAL TABLE IF NOT EXISTS umr_tasks_fts USING fts5(
+        task_identity, source_trigger, logs_ref,
+        content='umr_tasks', content_rowid='rowid'
+    )""")
+    conn.execute("""CREATE TRIGGER IF NOT EXISTS umr_tasks_ai AFTER INSERT ON umr_tasks BEGIN
+        INSERT INTO umr_tasks_fts(rowid, task_identity, source_trigger, logs_ref)
+        VALUES (new.rowid, new.task_identity, new.source_trigger, new.logs_ref);
+    END""")
+    conn.execute("""CREATE TRIGGER IF NOT EXISTS umr_tasks_au AFTER UPDATE ON umr_tasks BEGIN
+        INSERT INTO umr_tasks_fts(umr_tasks_fts, rowid, task_identity, source_trigger, logs_ref)
+        VALUES ('delete', old.rowid, old.task_identity, old.source_trigger, old.logs_ref);
+        INSERT INTO umr_tasks_fts(rowid, task_identity, source_trigger, logs_ref)
+        VALUES (new.rowid, new.task_identity, new.source_trigger, new.logs_ref);
+    END""")
+    conn.execute("""CREATE TRIGGER IF NOT EXISTS umr_tasks_ad AFTER DELETE ON umr_tasks BEGIN
+        INSERT INTO umr_tasks_fts(umr_tasks_fts, rowid, task_identity, source_trigger, logs_ref)
+        VALUES ('delete', old.rowid, old.task_identity, old.source_trigger, old.logs_ref);
+    END""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_umr_tasks_identity ON umr_tasks(task_identity)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_umr_tasks_status ON umr_tasks(status)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_umr_tasks_tier ON umr_tasks(tier)")
+    conn.commit()
+
+
+def find_active_umr_by_identity(conn, task_identity):
+    """The real de-duplication check (SCOPE item 4): does task_identity
+    already have a row in queued/dispatched/running? Called from inside
+    resource_governor.submit()'s superboss-register.py._write_lock(), so two
+    racing submissions for the same identity cannot both pass this check --
+    same TOCTOU-closing shape as dispatch_core.acquire_dispatch_lock()."""
+    placeholders = ",".join("?" * len(UMR_ACTIVE_STATUSES))
+    row = conn.execute(
+        f"SELECT * FROM umr_tasks WHERE task_identity=? AND status IN ({placeholders}) "
+        "ORDER BY ts_submitted DESC LIMIT 1",
+        (task_identity, *UMR_ACTIVE_STATUSES),
+    ).fetchone()
+    return dict(row) if row else None
+
+
+def upsert_umr_task(conn, record):
+    """Insert-or-replace ONE umr_tasks row keyed on umr_id (generated here if
+    not supplied). Does NOT commit -- caller (resource_governor.py) owns the
+    transaction/commit, same convention register_entity_row() documents for
+    wiring_registry. Returns the umr_id."""
+    umr_id = record.get("umr_id") or _new_id("UMR")
+    now = _now_iso()
+    conn.execute(
+        "INSERT INTO umr_tasks (umr_id, task_identity, ts_submitted, tier, status, source_trigger, "
+        "task_kind, unit_name, inputs_json, outputs_json, logs_ref, metric_snapshot_json, "
+        "ts_dispatched, ts_sigterm, ts_completed, reason, metadata_json) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) "
+        "ON CONFLICT(umr_id) DO UPDATE SET status=excluded.status, unit_name=excluded.unit_name, "
+        "outputs_json=excluded.outputs_json, logs_ref=excluded.logs_ref, "
+        "metric_snapshot_json=excluded.metric_snapshot_json, ts_dispatched=excluded.ts_dispatched, "
+        "ts_sigterm=excluded.ts_sigterm, ts_completed=excluded.ts_completed, reason=excluded.reason, "
+        "metadata_json=excluded.metadata_json",
+        (
+            umr_id, record["task_identity"], record.get("ts_submitted") or now,
+            record["tier"], record.get("status", "queued"), record["source_trigger"],
+            record.get("task_kind", "systemctl_action"), record.get("unit_name"),
+            json.dumps(record.get("inputs") or {}), json.dumps(record.get("outputs") or {}),
+            record.get("logs_ref"), json.dumps(record["metric_snapshot"]) if record.get("metric_snapshot") is not None else None,
+            record.get("ts_dispatched"), record.get("ts_sigterm"), record.get("ts_completed"),
+            record.get("reason"), json.dumps(record.get("metadata") or {}),
+        ),
+    )
+    return umr_id
+
+
+def update_umr_task(conn, umr_id, **fields):
+    """Partial UPDATE of an existing umr_tasks row -- only the columns passed
+    as keyword args are touched. json_fields are dicts that get json.dumps'd
+    automatically before the UPDATE. Does NOT commit, same convention as
+    upsert_umr_task()."""
+    json_fields = {"outputs", "metric_snapshot", "metadata"}
+    column_map = {"metric_snapshot": "metric_snapshot_json", "outputs": "outputs_json", "metadata": "metadata_json"}
+    if not fields:
+        return
+    set_clauses, values = [], []
+    for key, value in fields.items():
+        column = column_map.get(key, key)
+        set_clauses.append(f"{column}=?")
+        values.append(json.dumps(value) if key in json_fields else value)
+    values.append(umr_id)
+    conn.execute(f"UPDATE umr_tasks SET {', '.join(set_clauses)} WHERE umr_id=?", values)
+
+
+def _umr_row_to_dict(row):
+    d = dict(row)
+    for key in ("inputs_json", "outputs_json", "metric_snapshot_json", "metadata_json"):
+        if d.get(key):
+            d[key] = json.loads(d[key])
+    return d
+
+
+def query_umr_tasks(conn, limit=20, status=None, tier=None, task_identity=None, query_text=None):
+    """Real search over umr_tasks -- exact task_identity match first, then
+    FTS5 over task_identity/source_trigger/logs_ref for a free-text
+    --search, else a plain filtered listing (newest first). Same two-stage
+    resolution shape lookup_entity()/lookup_capability() already use."""
+    if task_identity:
+        rows = conn.execute(
+            "SELECT * FROM umr_tasks WHERE task_identity=? ORDER BY ts_submitted DESC LIMIT ?",
+            (task_identity, limit),
+        ).fetchall()
+    elif query_text:
+        q = _fts_query(query_text)
+        try:
+            rows = conn.execute(
+                "SELECT t.* FROM umr_tasks_fts f JOIN umr_tasks t ON t.rowid = f.rowid "
+                "WHERE umr_tasks_fts MATCH ? ORDER BY t.ts_submitted DESC LIMIT ?",
+                (q, limit),
+            ).fetchall()
+        except sqlite3.OperationalError:
+            rows = []
+    else:
+        clauses, params = [], []
+        if status:
+            clauses.append("status=?")
+            params.append(status)
+        if tier is not None:
+            clauses.append("tier=?")
+            params.append(tier)
+        where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+        params.append(limit)
+        rows = conn.execute(
+            f"SELECT * FROM umr_tasks {where} ORDER BY ts_submitted DESC LIMIT ?", params
+        ).fetchall()
+
+    matches = [_umr_row_to_dict(r) for r in rows]
+    if status and (task_identity or query_text):
+        matches = [m for m in matches if m["status"] == status]
+    if tier is not None and (task_identity or query_text):
+        matches = [m for m in matches if m["tier"] == tier]
+    return matches
 
 
 def init_db_silent():

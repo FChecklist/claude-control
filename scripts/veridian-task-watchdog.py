@@ -72,7 +72,6 @@ import argparse
 import glob
 import json
 import os
-import re
 import sqlite3
 import subprocess
 import sys
@@ -86,12 +85,33 @@ WATCHDOG_LOG = f"{LOGS_DIR}/watchdog.jsonl"
 ATTENTION_PATH = f"{LOGS_DIR}/ATTENTION.md"
 DB_PATH = "/opt/veridian/ai-os/memory/superboss-register.sqlite"
 SUPERBOSS_REGISTER = "/opt/veridian/scripts/superboss-register.py"
-VERIDIAN_TASK = "/opt/veridian/scripts/veridian-task.py"
 
 STALL_MINUTES = 20
 LOOP_COUNT = 3
 RECHECK_DELAY_SECONDS = 60
 SIGNATURE_LEN = 60
+
+# 2026-07-27, SERVER RESOURCE GOVERNOR (ai-os/SERVER_RESOURCE_GOVERNOR_2026-07-27.md):
+# every real spawn call site below now submits through resource_governor.submit()
+# instead of calling systemctl/veridian-task.py directly -- the specific,
+# concrete fix for the 2026-07-27 watchdog-timer incident (9h18m of unstopped
+# 60s-interval firing with no "already in flight for this task_id" check).
+# Tiers per the design doc's tier-mapping table: FIX_ACTIONS (get an
+# already-stalled worker moving again) outrank a brand-new RCA escalation
+# (investigative work spawned in response to a stall that, by definition, is
+# already stuck and not made worse by a short queue delay).
+GOVERNOR_TIER_FIX_ACTION = 2
+GOVERNOR_TIER_ESCALATION = 4
+
+
+def _governor():
+    """Plain import (both files share scripts/, no hyphen in the module
+    name) -- lazy, so a dry-run/import of this module never requires
+    resource_governor.py's own dependencies (dispatch_core.py,
+    superboss-register.py) to be importable unless a real fix/escalation
+    path actually runs."""
+    import resource_governor
+    return resource_governor
 
 LOOP_EXCLUDED_NOTES = {
     "periodic checkpoint",
@@ -232,16 +252,22 @@ def record_fix_applied(signature, fix_action):
 
 def _fix_restart_unit(task_id):
     unit = f"veridian-worker@{task_id}.service"
-    subprocess.run(["systemctl", "--user", "restart", unit], capture_output=True, text=True)
-    return f"restarted {unit}"
+    result = _governor().submit(
+        {"task_identity": task_id, "task_kind": "systemctl_action", "unit_name": unit,
+         "inputs": {"action": "restart"}},
+        GOVERNOR_TIER_FIX_ACTION, source_trigger="veridian-task-watchdog:restart_unit",
+    )
+    return f"submitted restart of {unit} to resource governor (umr_id={result['umr_id']}): {result['reason']}"
 
 
 def _fix_reset_failed_and_start(task_id):
-    # same two-call sequence as recover-failed-workers.py's recovered path
     unit = f"veridian-worker@{task_id}.service"
-    subprocess.run(["systemctl", "--user", "reset-failed", unit], capture_output=True)
-    subprocess.run(["systemctl", "--user", "start", unit], capture_output=True)
-    return f"reset-failed + started {unit}"
+    result = _governor().submit(
+        {"task_identity": task_id, "task_kind": "systemctl_action", "unit_name": unit,
+         "inputs": {"action": "reset_failed_and_start"}},
+        GOVERNOR_TIER_FIX_ACTION, source_trigger="veridian-task-watchdog:reset_failed_and_start",
+    )
+    return f"submitted reset-failed+start of {unit} to resource governor (umr_id={result['umr_id']}): {result['reason']}"
 
 
 FIX_ACTIONS = {
@@ -294,22 +320,24 @@ def escalate(task_id, task, signature, dry_run=False):
     # claude-control only if the stalled task's own task.yaml is somehow
     # unreadable/missing that field.
     repo = (task or {}).get("repo") or "claude-control"
-    cmd = ["python3", VERIDIAN_TASK, "create", "--title", title, "--repo", repo, "--prompt", prompt]
     if dry_run:
-        return f"DRY_RUN would escalate: {' '.join(cmd[:6])} ... (title={title})"
+        return f"DRY_RUN would escalate via resource governor: title={title} repo={repo}"
 
-    r = subprocess.run(cmd, capture_output=True, text=True)
-    if r.returncode != 0:
-        return f"escalation FAILED (create exit={r.returncode}): {r.stderr[:300]}"
-
-    m = re.search(r"^CREATED: (\S+)", r.stdout, re.MULTILINE)
-    new_task_id = m.group(1) if m else None
-    if new_task_id:
-        # cmd_create already starts the unit; explicit start here is a
-        # documented no-op safety net, matching the spec's literal step_3.
-        subprocess.run(["systemctl", "--user", "start", f"veridian-worker@{new_task_id}.service"], capture_output=True)
-        return f"escalated: created and started {new_task_id}"
-    return f"escalated: create ran (exit=0) but new task_id not parsed from stdout: {r.stdout[:200]}"
+    # 2026-07-27: routes through resource_governor.submit() instead of calling
+    # veridian-task.py create + systemctl start directly (see GOVERNOR_TIER_*
+    # docstring above) -- task_identity=title (the "rca-<task_id>" string)
+    # means a second escalation attempt for the SAME stalled task_id, fired by
+    # ANY trigger while the first is still queued/dispatched/running, is
+    # rejected as a duplicate rather than creating a second RCA task. This is
+    # the concrete fix for the 2026-07-27 watchdog-timer incident.
+    result = _governor().submit(
+        {"task_identity": title, "task_kind": "veridian_task_create",
+         "inputs": {"title": title, "repo": repo, "prompt": prompt}},
+        GOVERNOR_TIER_ESCALATION, source_trigger="veridian-task-watchdog:escalate",
+    )
+    if not result["accepted"]:
+        return f"escalation NOT queued (resource governor): {result['reason']}"
+    return f"escalation queued via resource governor: umr_id={result['umr_id']} title={title}"
 
 
 def process_task(task_id, task, dry_run_escalation=False):

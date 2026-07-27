@@ -1,5 +1,15 @@
 [Unit]
 Description=VERIDIAN task watchdog -- one-shot stall/loop scan of active veridian-worker@ units (ai-os/STANDING_DIRECTIVE.yaml v2_watchdog_service)
+# 2026-07-27, SERVER RESOURCE GOVERNOR (ai-os/SERVER_RESOURCE_GOVERNOR_2026-07-27.md):
+# veridian-task-watchdog.py's own real spawn call sites (FIX_ACTIONS +
+# escalate()) now call resource_governor.submit() instead of systemctl/
+# veridian-task.py directly -- ExecStart itself is unchanged (still this
+# script), the governor routing lives inside the script. This unit's own
+# .timer stays exactly as found: stopped and disabled. Re-enabling it is a
+# separate Owner decision, out of scope for this task -- but when it IS
+# re-enabled, every spawn it triggers is now de-duplicated per task_identity
+# by the governor's queue, closing the 2026-07-27 9h18m duplicate-spawn
+# incident this unit caused.
 
 [Service]
 Type=oneshot
