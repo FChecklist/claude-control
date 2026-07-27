@@ -74,6 +74,8 @@ import dispatch_core  # noqa: E402
 AI_OS = "/opt/veridian/ai-os"
 TASKS_DIR = f"{AI_OS}/tasks"
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, SCRIPT_DIR)
+from plan_backlog_completion import GH_OWNER  # noqa: E402  (reuse the one real org-name constant)
 FIXED_SCRIPT = os.path.join(SCRIPT_DIR, "plan_backlog_completion.py")
 GATEWAY = "/opt/veridian/scripts/task-gateway.py"
 CORES = 8
@@ -279,7 +281,7 @@ def phase3b_open_prs_for_substantial_work(plan, results):
             continue
 
         existing_pr = subprocess.run(
-            ["gh", "pr", "list", "--repo", f"FChecklist/{issue['repo']}", "--head", branch,
+            ["gh", "pr", "list", "--repo", f"{GH_OWNER}/{issue['repo']}", "--head", branch,
              "--json", "number,url,state"],
             capture_output=True, text=True,
         )
@@ -293,7 +295,7 @@ def phase3b_open_prs_for_substantial_work(plan, results):
             print(f"  PR already exists for {branch}: {pr_url}")
         else:
             create_r = subprocess.run(
-                ["gh", "pr", "create", "--repo", f"FChecklist/{issue['repo']}",
+                ["gh", "pr", "create", "--repo", f"{GH_OWNER}/{issue['repo']}",
                  "--head", branch, "--base", default_branch,
                  "--title", issue["title"][:120],
                  "--body", f"Auto-opened by execute_backlog_plan.py for real, "
