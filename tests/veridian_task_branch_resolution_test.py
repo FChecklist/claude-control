@@ -303,32 +303,60 @@ def test_branch_resolution_not_corrupted_to_default_branch_before_first_push():
         shutil.rmtree(tmp, ignore_errors=True)
 
 
-def test_escalate_passes_stalled_tasks_real_repo_not_hardcoded_claude_control():
+def _load_watchdog_bound_to_governor_fixture(tmp_path, monkeypatch, module_name):
+    """2026-07-27 (SERVER RESOURCE GOVERNOR): escalate() now calls
+    resource_governor.submit() -- a plain `import resource_governor` inside
+    veridian-task-watchdog.py, since both files share scripts/ -- instead of
+    invoking subprocess.run directly. That plain import is cached process-wide
+    in sys.modules, so each test here must force a fresh import bound to ITS
+    OWN throwaway env (popping any stale cached module first), otherwise a
+    second test in the same pytest session would silently keep writing to the
+    first test's already-torn-down tmp_path DB."""
+    import sys as _sys
+    for stale in ("resource_governor", "dispatch_core_governor", "superboss_register_governor"):
+        _sys.modules.pop(stale, None)
+
+    ai_os = tmp_path / "ai-os"
+    (ai_os / "locks").mkdir(parents=True, exist_ok=True)
+    monkeypatch.setenv("VERIDIAN_ROOT", str(tmp_path))
+    monkeypatch.setenv("VERIDIAN_AI_OS_DIR", str(ai_os))
+    monkeypatch.setenv("VERIDIAN_SCRIPTS_DIR", os.path.join(REPO_ROOT, "scripts"))
+    monkeypatch.setenv("VERIDIAN_DISPATCH_LOCK_DIR", str(ai_os / "locks"))
+    monkeypatch.setenv("SUPERBOSS_REGISTER_DB", str(ai_os / "test-superboss.sqlite"))
+
+    import importlib.util as _ilu
+    watchdog_path = os.path.join(REPO_ROOT, "scripts", "veridian-task-watchdog.py")
+    spec = _ilu.spec_from_file_location(module_name, watchdog_path)
+    wd = _ilu.module_from_spec(spec)
+    spec.loader.exec_module(wd)
+    return wd
+
+
+def _umr_inputs_for_identity(task_identity):
+    import json
+    import sqlite3
+    conn = sqlite3.connect(os.environ["SUPERBOSS_REGISTER_DB"])
+    conn.row_factory = sqlite3.Row
+    row = conn.execute(
+        "SELECT inputs_json FROM umr_tasks WHERE task_identity=? ORDER BY ts_submitted DESC LIMIT 1",
+        (task_identity,),
+    ).fetchone()
+    conn.close()
+    assert row is not None, f"escalate() never submitted a umr_tasks row for task_identity={task_identity!r}"
+    return json.loads(row["inputs_json"])
+
+
+def test_escalate_passes_stalled_tasks_real_repo_not_hardcoded_claude_control(tmp_path, monkeypatch):
     """Real bug confirmed live in the deployed veridian-task-watchdog.py:
     escalate() hardcoded --repo claude-control for every auto-escalated rca-
     task regardless of the stalled task's own real repo -- confirmed against 2
     historical instances whose stalled task's real repo was compliance-tracker.
     escalate() must read the stalled task's own already-loaded task.yaml
-    'repo' field instead."""
-    import importlib.util as _ilu
-
-    watchdog_path = os.path.join(REPO_ROOT, "scripts", "veridian-task-watchdog.py")
-    spec = _ilu.spec_from_file_location("veridian_task_watchdog_under_test", watchdog_path)
-    wd = _ilu.module_from_spec(spec)
-    spec.loader.exec_module(wd)
-
-    calls = []
-
-    class _FakeCompletedProcess:
-        returncode = 0
-        stdout = "CREATED: task-fake-rca-id\n"
-        stderr = ""
-
-    def _fake_run(cmd, **kwargs):
-        calls.append(cmd)
-        return _FakeCompletedProcess()
-
-    wd.subprocess.run = _fake_run
+    'repo' field instead. escalate() now submits (via resource_governor.py,
+    ai-os/SERVER_RESOURCE_GOVERNOR_2026-07-27.md) rather than calling
+    veridian-task.py create directly -- this asserts the real repo made it
+    into the queued task_spec's inputs."""
+    wd = _load_watchdog_bound_to_governor_fixture(tmp_path, monkeypatch, "veridian_task_watchdog_under_test")
 
     stalled_task = {
         "id": "task-20260726-172000-hr-performance-error-handling---payroll",
@@ -336,55 +364,29 @@ def test_escalate_passes_stalled_tasks_real_repo_not_hardcoded_claude_control():
         "branch": "worker/task-20260726-172000-hr-performance-error-handling---payroll",
         "status": "blocked",
     }
-    wd.escalate("task-20260726-172000-hr-performance-error-handling---payroll",
-                stalled_task, "some failure signature")
+    result_msg = wd.escalate("task-20260726-172000-hr-performance-error-handling---payroll",
+                              stalled_task, "some failure signature")
+    assert "escalation queued via resource governor" in result_msg, result_msg
 
-    # escalate() also makes a 2nd subprocess.run call (the documented no-op
-    # `systemctl start` safety net) -- find the real `create` invocation
-    # specifically, not just the last call made.
-    create_calls = [c for c in calls if "create" in c]
-    assert create_calls, f"escalate() never invoked veridian-task.py create: {calls}"
-    cmd = create_calls[0]
-    assert "--repo" in cmd, f"escalate()'s create call has no --repo argument: {cmd}"
-    repo_value = cmd[cmd.index("--repo") + 1]
-    assert repo_value == "compliance-tracker", (
+    inputs = _umr_inputs_for_identity("rca-task-20260726-172000-hr-performance-error-handling---payroll")
+    assert inputs["repo"] == "compliance-tracker", (
         f"expected escalate() to pass the stalled task's own real repo "
-        f"'compliance-tracker', got '{repo_value}' -- this is exactly the live "
+        f"'compliance-tracker', got {inputs.get('repo')!r} -- this is exactly the live "
         f"hardcoded-claude-control bug"
     )
 
 
-def test_escalate_falls_back_to_claude_control_when_repo_unknown():
+def test_escalate_falls_back_to_claude_control_when_repo_unknown(tmp_path, monkeypatch):
     """Defensive fallback: if the stalled task's own task.yaml is somehow
-    unreadable/missing a 'repo' field, escalate() must still produce a valid
-    --repo argument (the pre-fix default) rather than crash or pass repo=None."""
-    import importlib.util as _ilu
+    unreadable/missing a 'repo' field, escalate() must still queue a valid
+    repo (the pre-fix default) rather than crash or pass repo=None."""
+    wd = _load_watchdog_bound_to_governor_fixture(tmp_path, monkeypatch, "veridian_task_watchdog_under_test_fallback")
 
-    watchdog_path = os.path.join(REPO_ROOT, "scripts", "veridian-task-watchdog.py")
-    spec = _ilu.spec_from_file_location("veridian_task_watchdog_under_test_fallback", watchdog_path)
-    wd = _ilu.module_from_spec(spec)
-    spec.loader.exec_module(wd)
+    result_msg = wd.escalate("task-with-unreadable-yaml", None, "some failure signature")
+    assert "escalation queued via resource governor" in result_msg, result_msg
 
-    calls = []
-
-    class _FakeCompletedProcess:
-        returncode = 0
-        stdout = "CREATED: task-fake-rca-id\n"
-        stderr = ""
-
-    def _fake_run(cmd, **kwargs):
-        calls.append(cmd)
-        return _FakeCompletedProcess()
-
-    wd.subprocess.run = _fake_run
-
-    wd.escalate("task-with-unreadable-yaml", None, "some failure signature")
-
-    create_calls = [c for c in calls if "create" in c]
-    assert create_calls, f"escalate() never invoked veridian-task.py create: {calls}"
-    cmd = create_calls[0]
-    repo_value = cmd[cmd.index("--repo") + 1]
-    assert repo_value == "claude-control"
+    inputs = _umr_inputs_for_identity("rca-task-with-unreadable-yaml")
+    assert inputs["repo"] == "claude-control"
 
 
 if __name__ == "__main__":
