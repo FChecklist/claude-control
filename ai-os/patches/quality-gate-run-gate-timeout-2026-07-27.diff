@@ -1,0 +1,59 @@
+--- a/scripts/quality-gate.sh
++++ b/scripts/quality-gate.sh
+@@ -12,13 +12,46 @@
+ echo "{}" > "$RESULTS_FILE"
+ OVERALL=0
+ 
++# Root-caused 2026-07-27 (task-20260727-043407 RCA against
++# task-20260727-034439's watchdog "periodic checkpoint" stall signature):
++# confirmed LIVE that a `next build` invoked from here can hang forever with
++# zero forward progress -- the process sat in state S, wchan=ep_poll, with
++# utime frozen across a 5s sample, for over an hour (task-20260727-034439's
++# worker unit, PID 1205932). This is a DIFFERENT failure mode from the
++# 2026-07-26 OOM fix above (that one crashed loudly and got restarted by
++# systemd; this one never crashes, never exits, just sits idle in its own
++# event loop). Nothing in this script (or worker-entrypoint.sh, which calls
++# it synchronously in the foreground) ever bounded a gate command's
++# wall-clock time -- eval "$cmd" blocks until the command exits, however
++# long that takes. worker-entrypoint.sh's background periodic-checkpoint
++# heartbeat (added 2026-07-26 specifically so a long-but-real quality-gate
++# phase wouldn't be misdiagnosed as stalled) keeps firing "periodic
++# checkpoint" notes the whole time via cheap `git status`/`git log` calls
++# against the workspace -- those don't depend on the hung build at all, so
++# they kept succeeding, which is exactly what made this LOOK like a healthy,
++# slow-but-working task to the watchdog's LOOP_EXCLUDED_NOTES exemption
++# instead of the permanent hang it actually was. Wrapping every gate command
++# in `timeout` closes this: a hang now fails the gate (same as any other
++# gate failure -- gets logged as a timeout in output_tail, feeds the
++# existing auto-fix-then-blocked pipeline) instead of blocking the worker
++# forever. `-k 30` sends SIGKILL 30s after the SIGTERM if the command
++# ignores it (Node event-loop hangs like this one do not reliably die on
++# SIGTERM alone). Applies to install too (same unbounded-`eval` shape, same
++# class of risk, no evidence needed beyond that to close the gap
++# consistently rather than patch only the one command that happened to hang
++# this time).
++GATE_STEP_TIMEOUT_SECONDS="${GATE_STEP_TIMEOUT_SECONDS:-900}"
++
+ run_gate() {
+   local name="$1"; shift
+   local cmd="$*"
+   local logfile
+   logfile=$(mktemp)
+-  eval "$cmd" > "$logfile" 2>&1
++  timeout -k 30 "$GATE_STEP_TIMEOUT_SECONDS" bash -c "$cmd" > "$logfile" 2>&1
+   local code=$?
++  if [ "$code" -eq 124 ] || [ "$code" -eq 137 ]; then
++    echo "[quality-gate.sh] gate '$name' TIMED OUT after ${GATE_STEP_TIMEOUT_SECONDS}s and was killed -- treating as a failed gate rather than blocking the worker forever (see task-20260727-043407 RCA)" >> "$logfile"
++  fi
+   tail -c 4000 "$logfile" > "${logfile}.tail"
+   NAME="$name" CODE="$code" LOGFILE="${logfile}.tail" RESULTS_FILE="$RESULTS_FILE" python3 <<'PYEOF'
+ import json, os
+@@ -74,7 +107,7 @@
+ 
+   if ! [ -d node_modules ]; then
+     echo "--- installing deps ---"
+-    $PKG_MGR install 2>&1 | tail -20
++    timeout -k 30 "$GATE_STEP_TIMEOUT_SECONDS" $PKG_MGR install 2>&1 | tail -20
+   fi
+ 
+   if grep -q '"lint"' package.json; then
