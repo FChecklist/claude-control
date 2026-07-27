@@ -461,7 +461,8 @@ def init_db():
         ts TEXT NOT NULL,
         entity_type TEXT NOT NULL CHECK(entity_type IN (
             'engine','gateway','supabase_table','function','route','file','script','cron_job',
-            'ai_role','vercel_project','github_repo','browser_component','dispatch_event'
+            'ai_role','vercel_project','github_repo','browser_component','dispatch_event',
+            'governance_doc'
         )),
         source_system TEXT NOT NULL CHECK(source_system IN ('server','vercel','supabase','github')),
         path TEXT,
@@ -470,7 +471,16 @@ def init_db():
         verification_status TEXT NOT NULL DEFAULT 'UNVERIFIED'
             CHECK(verification_status IN ('VERIFIED_MATCH','HASH_DRIFTED','PATH_MISSING','UNVERIFIED')),
         source_ref TEXT NOT NULL DEFAULT '[]',
-        metadata_json TEXT NOT NULL DEFAULT '{}'
+        metadata_json TEXT NOT NULL DEFAULT '{}',
+        -- 2026-07-27 (task-20260727-025248): real sha256 over the entity's own live
+        -- file bytes at generation time (multi-path engine/gateway entities: sorted
+        -- concatenation, see generate_wiring_registry.py's compute_content_hash()) --
+        -- same drift-detection contract knowledge_engine.content_hash already uses,
+        -- extended here so re-running the generator can tell "content changed" apart
+        -- from "path still exists" (verification_status alone only ever checked the
+        -- latter). NULL for entity types with no single real file (ai_role,
+        -- vercel_project, dispatch_event, ...) -- never a required field.
+        content_hash TEXT
     );
     CREATE VIRTUAL TABLE IF NOT EXISTS wiring_registry_fts USING fts5(
         path, entity_type, source_ref,
@@ -533,12 +543,35 @@ def _migrate_schema(conn):
     if "tags" not in cols:
         conn.execute("ALTER TABLE system_index ADD COLUMN tags TEXT")
         conn.commit()
+    _migrate_wiring_registry_content_hash(conn)
     _migrate_wiring_registry_entity_types(conn)
+
+
+def _migrate_wiring_registry_content_hash(conn):
+    """2026-07-27 (task-20260727-025248, knowledge-engine/wiring-registry integration):
+    additive ALTER TABLE ADD COLUMN for wiring_registry.content_hash, same pattern as the
+    system_index.tags column above -- no CHECK constraint involved, so (unlike
+    _migrate_wiring_registry_entity_types below) this never needs a full table rebuild.
+    Called both from _migrate_schema() AND from the top of
+    _migrate_wiring_registry_entity_types() itself, because dispatch_core._upsert_wiring_row
+    calls that function directly, bypassing _migrate_schema() by its own design (see that
+    function's docstring) -- so its rebuild's SELECT ..., content_hash FROM wiring_registry
+    must never run against a table that doesn't have the column yet. No-op once migrated."""
+    row = conn.execute(
+        "SELECT sql FROM sqlite_master WHERE type='table' AND name='wiring_registry'"
+    ).fetchone()
+    if row is None:
+        return  # table doesn't exist yet; the next CREATE TABLE IF NOT EXISTS covers it
+    cols = {r["name"] for r in conn.execute("PRAGMA table_info(wiring_registry)").fetchall()}
+    if "content_hash" not in cols:
+        conn.execute("ALTER TABLE wiring_registry ADD COLUMN content_hash TEXT")
+        conn.commit()
 
 
 def _migrate_wiring_registry_entity_types(conn):
     """2026-07-27, dispatch-script consolidation: widens wiring_registry's entity_type
-    CHECK constraint to allow 'dispatch_event' (see WIRING_ENTITY_TYPES above). SQLite has
+    CHECK constraint to allow 'dispatch_event' (see WIRING_ENTITY_TYPES above), extended
+    2026-07-27 (task-20260727-025248) to also allow 'governance_doc'. SQLite has
     no ALTER TABLE for CHECK constraints, so a pre-existing table (this DB has one, created
     before this addition, with 7000+ real rows) needs a real rebuild: create a new table with
     the widened CHECK, copy every row across unchanged, drop the FTS5 index + its triggers
@@ -546,11 +579,16 @@ def _migrate_wiring_registry_entity_types(conn):
     place, then recreate + fully rebuild the FTS5 index exactly like _ensure_wiring_registry_table
     does for a fresh DB. No-op (checked via sqlite_master's own stored CREATE TABLE text) once
     already migrated, so this is safe to call on every startup, same as the ADD COLUMN check
-    above."""
+    above. The "already migrated" check tests for EVERY current WIRING_ENTITY_TYPES member
+    (not one hardcoded literal) so the next entity_type addition after this one only needs to
+    append to that tuple -- this function re-runs its (idempotent) rebuild exactly once more
+    to pick up the new member, the same way this run picks up 'governance_doc' on a DB that
+    already has 'dispatch_event' from the prior migration."""
+    _migrate_wiring_registry_content_hash(conn)
     row = conn.execute(
         "SELECT sql FROM sqlite_master WHERE type='table' AND name='wiring_registry'"
     ).fetchone()
-    if row is None or "'dispatch_event'" in row["sql"]:
+    if row is None or all(f"'{t}'" in row["sql"] for t in WIRING_ENTITY_TYPES):
         return  # table doesn't exist yet (a later CREATE TABLE IF NOT EXISTS covers that) or already migrated
 
     conn.execute("DROP TRIGGER IF EXISTS wiring_registry_ai")
@@ -570,13 +608,14 @@ def _migrate_wiring_registry_entity_types(conn):
         verification_status TEXT NOT NULL DEFAULT 'UNVERIFIED'
             CHECK(verification_status IN ('VERIFIED_MATCH','HASH_DRIFTED','PATH_MISSING','UNVERIFIED')),
         source_ref TEXT NOT NULL DEFAULT '[]',
-        metadata_json TEXT NOT NULL DEFAULT '{{}}'
+        metadata_json TEXT NOT NULL DEFAULT '{{}}',
+        content_hash TEXT
     )""")
     conn.execute(
         "INSERT INTO wiring_registry__migrate (entity_id, ts, entity_type, source_system, path, "
-        "relationships, last_verified_ts, verification_status, source_ref, metadata_json) "
+        "relationships, last_verified_ts, verification_status, source_ref, metadata_json, content_hash) "
         "SELECT entity_id, ts, entity_type, source_system, path, relationships, last_verified_ts, "
-        "verification_status, source_ref, metadata_json FROM wiring_registry"
+        "verification_status, source_ref, metadata_json, content_hash FROM wiring_registry"
     )
     conn.execute("DROP TABLE wiring_registry")
     conn.execute("ALTER TABLE wiring_registry__migrate RENAME TO wiring_registry")
@@ -1679,6 +1718,15 @@ WIRING_ENTITY_TYPES = (
     # _migrate_schema()'s wiring_registry CHECK-widening block for why a live DB created
     # before this addition needs an explicit migration, not just this tuple edit.
     "dispatch_event",
+    # 2026-07-27, knowledge-engine/wiring-registry integration (task-20260727-025248):
+    # first-class type for governance/constitution docs, built by
+    # generate_wiring_registry.py's build_governance_docs() BEFORE the existing
+    # knowledge_engine merge (build_from_knowledge_engine) runs, so a governance-tagged
+    # knowledge_engine row enriches this entity instead of falling into the generic
+    # 'file' type the way it did before -- same "first-class type, not a bucket" pattern
+    # 'script' already established. See _migrate_wiring_registry_entity_types() for why a
+    # live DB created before this addition needs an explicit migration.
+    "governance_doc",
 )
 WIRING_SOURCE_SYSTEMS = ("server", "vercel", "supabase", "github")
 REQUIRED_WIRING_ENTITY_FIELDS = {
@@ -1705,7 +1753,8 @@ def _ensure_wiring_registry_table(conn):
         verification_status TEXT NOT NULL DEFAULT 'UNVERIFIED'
             CHECK(verification_status IN ('VERIFIED_MATCH','HASH_DRIFTED','PATH_MISSING','UNVERIFIED')),
         source_ref TEXT NOT NULL DEFAULT '[]',
-        metadata_json TEXT NOT NULL DEFAULT '{{}}'
+        metadata_json TEXT NOT NULL DEFAULT '{{}}',
+        content_hash TEXT
     )""")
     conn.execute("""CREATE VIRTUAL TABLE IF NOT EXISTS wiring_registry_fts USING fts5(
         path, entity_type, source_ref,
@@ -1733,7 +1782,10 @@ def _ensure_wiring_registry_table(conn):
 def register_entity_row(conn, entity):
     """Upsert ONE entity dict matching ai-os/WIRING_ENGINE_SCHEMA_2026-07-25.yaml's
     entity_record_schema field-for-field (entity_id/entity_type/source_system/path/
-    relationships/last_verified_ts/verification_status/source_ref/metadata). Does
+    relationships/last_verified_ts/verification_status/source_ref/metadata), plus the
+    optional content_hash field added 2026-07-27 (task-20260727-025248) -- NOT in
+    REQUIRED_WIRING_ENTITY_FIELDS since entity types with no single real file
+    (ai_role/vercel_project/dispatch_event/...) never have one. Does
     NOT commit or ensure the table -- callers doing a bulk run (generate_wiring_registry.py)
     own one _ensure_wiring_registry_table() + one commit() around many calls to this;
     the register-entity CLI (a single ad hoc row) owns both itself, see register_entity()."""
@@ -1743,15 +1795,18 @@ def register_entity_row(conn, entity):
     now = _now_iso()
     conn.execute(
         "INSERT INTO wiring_registry (entity_id, ts, entity_type, source_system, path, relationships, "
-        "last_verified_ts, verification_status, source_ref, metadata_json) VALUES (?,?,?,?,?,?,?,?,?,?) "
+        "last_verified_ts, verification_status, source_ref, metadata_json, content_hash) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?,?) "
         "ON CONFLICT(entity_id) DO UPDATE SET ts=excluded.ts, entity_type=excluded.entity_type, "
         "source_system=excluded.source_system, path=excluded.path, relationships=excluded.relationships, "
         "last_verified_ts=excluded.last_verified_ts, verification_status=excluded.verification_status, "
-        "source_ref=excluded.source_ref, metadata_json=excluded.metadata_json",
+        "source_ref=excluded.source_ref, metadata_json=excluded.metadata_json, "
+        "content_hash=excluded.content_hash",
         (
             entity["entity_id"], now, entity["entity_type"], entity["source_system"], entity.get("path"),
             json.dumps(entity["relationships"]), entity["last_verified_ts"], entity["verification_status"],
             json.dumps(entity["source_ref"]), json.dumps(entity.get("metadata") or {}),
+            entity.get("content_hash"),
         ),
     )
 
