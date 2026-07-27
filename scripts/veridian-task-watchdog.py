@@ -312,6 +312,53 @@ def escalate(task_id, task, signature, dry_run=False):
     return f"escalated: create ran (exit=0) but new task_id not parsed from stdout: {r.stdout[:200]}"
 
 
+# Statuses that mean a previously-escalated RCA task is no longer "in
+# flight" -- a new escalation for the same original_task_id is legitimate
+# again once its predecessor has reached one of these.
+RCA_TERMINAL_STATUSES = {"completed", "blocked", "failed", "pending_review"}
+
+
+def existing_rca_task_active(original_task_id):
+    """Root-caused live 2026-07-27 against task-20260727-034439: this
+    watchdog runs every 60s (systemd timer OnUnitActiveSec=60) and, before
+    this fix, escalate() had no memory of its OWN prior escalations --
+    process_task() re-evaluates stalled/loop_detected fresh from task.yaml
+    on every single tick, and as long as that condition held (here: ~38
+    minutes while a `next build` hung under the OOM-fix's own MemoryHigh
+    cgroup throttling), a BRAND NEW billed RCA task got created on every
+    tick. Confirmed live: task-20260727-034439 alone spawned 6 duplicate
+    RCA tasks (...044231, 044331, 044431, 044531, 044632, 044732) roughly
+    one per minute before the original task finally reached its own
+    'blocked' terminal state and stopped being 'active' to list_active_task_ids().
+    This is the same class of gap Rule 11 (ai-os/boss/ACTIVE-CLAIMS.yaml)
+    exists to close at the human/session level, just missing here at the
+    automated-escalation level. Fix: before creating a new rca- task, check
+    whether one already exists for this exact original_task_id and hasn't
+    reached a terminal status yet -- if so, skip, exactly the same
+    "read real evidence first, only act on a confirmed gap" principle this
+    script's own module docstring already claims for step_1/step_2.
+
+    Directory-name matching has to replicate veridian-task.py's cmd_create
+    slug truncation (title.lower(), non-alnum -> '-', [:40], strip('-'))
+    rather than glob for the raw original_task_id suffix -- confirmed live
+    that a 63-char original_task_id produces a title (f"rca-{task_id}") that
+    gets cut to 40 chars ("rca-task-20260727-034439-re-verify-20-en" for
+    task-20260727-034439-re-verify-20-engine-inventory---confirm), so a
+    naive suffix glob against the full id would never match any real RCA
+    task directory and silently defeat this whole check."""
+    rca_slug = "".join(c if c.isalnum() else "-" for c in f"rca-{original_task_id}".lower())[:40].strip("-")
+    pattern = f"{TASKS_DIR}/task-*-{rca_slug}"
+    for d in sorted(glob.glob(pattern)):
+        candidate_id = os.path.basename(d)
+        candidate_task = load_task_yaml(candidate_id)
+        if not candidate_task:
+            continue
+        if candidate_task.get("status") in RCA_TERMINAL_STATUSES:
+            continue
+        return candidate_id
+    return None
+
+
 def process_task(task_id, task, dry_run_escalation=False):
     stalled, loop_detected, last_note = evaluate(task, task_id)
     status = (task or {}).get("status", "unknown")
@@ -325,6 +372,11 @@ def process_task(task_id, task, dry_run_escalation=False):
     }
 
     if not (stalled or loop_detected):
+        return entry
+
+    in_flight_rca = existing_rca_task_active(task_id)
+    if in_flight_rca:
+        entry["action_taken"] = f"step_3 SKIPPED: RCA already in flight for {task_id} ({in_flight_rca}, non-terminal) -- not spawning a duplicate escalation"
         return entry
 
     signature = signature_of(last_note)
