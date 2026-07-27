@@ -1,0 +1,8 @@
+id: task-20260101-000000-example-prose-only-crit
+title: 'Example task with prose-only SUCCESS_CRITERIA'
+status: failed
+repo: claude-control
+created_at: '2026-01-01T00:00:00.000000+00:00'
+last_checkpoint_at: '2026-01-01T00:10:00.000000+00:00'
+completed_steps:
+- 'Opened PR #5 for this fix.'

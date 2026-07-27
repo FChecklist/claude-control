@@ -25,6 +25,17 @@ pure duplication. This script:
      capped at dispatch_core.py's real CONCURRENCY_CAP) so the plan can be
      executed in the fewest possible sequential rounds with zero duplicate
      dispatches.
+  6. Before ever concluding an issue is ALREADY_DONE_STALE_STATUS, re-runs
+     the ORIGINAL task's own SUCCESS_CRITERIA against a fresh checkout of the
+     real current default branch -- a PR merging is not proof it satisfied
+     THIS issue's objective (2026-07-27 incident: a merged PR referenced in
+     an rca-chain's checkpoints turned out to be a content-unrelated fix).
+  7. --apply is the ONLY code path in this repo allowed to write
+     status=superseded/duplicate_of/superseded_reason into a real task.yaml,
+     and only for issues this same run verified via (6). Plan-only (no
+     --apply) never touches task.yaml. --audit-report is a separate,
+     always-read-only mode that cross-checks existing superseded records
+     against a fresh run of this fixed classifier.
 
 Outputs JSON (full detail) + Markdown (human-readable plan) to the given paths.
 """
@@ -33,12 +44,17 @@ import datetime
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import sqlite3
+import tempfile
 from collections import defaultdict
 
 import yaml
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from tight_task_validation import parse_labeled_fields  # noqa: E402  (reuse the one real prompt-field parser)
 
 AI_OS = "/opt/veridian/ai-os"
 TASKS_DIR = f"{AI_OS}/tasks"
@@ -192,7 +208,115 @@ def wiring_registry_matches(cur, title, limit=5):
     return matches[:limit]
 
 
-def classify(rep, group, db_cur, effective_repo):
+_BACKTICK_CMD_RE = re.compile(r'`([^`]+)`')
+_RUNNABLE_CMD_PREFIXES = ("python3 -m pytest", "pytest ", "grep ")
+_CHECKOUT_CACHE = {}
+
+
+def find_group_original(group):
+    """The task whose own SUCCESS_CRITERIA is authoritative for this issue --
+    the first REAL attempt (not an "rca-task-..." auto-retry), regardless of
+    which attempt is `rep` (latest checkpoint) or which attempt's checkpoint
+    prose happens to mention the highest PR number. Falls back to the
+    earliest attempt if every member of the group is itself an rca- retry
+    (e.g. the true original task.yaml is missing/renamed)."""
+    non_rca = [t for t in group if not RCA_TARGET_RE.match(t["_slug"])]
+    pool = non_rca or group
+    return min(pool, key=lambda t: (t.get("created_at") or "", t["_date"] + t["_time"]))
+
+
+def load_success_criteria_text(original_task):
+    prompt_path = os.path.join(TASKS_DIR, original_task["id"], "prompt.txt")
+    if not os.path.isfile(prompt_path):
+        return None
+    with open(prompt_path) as f:
+        text = f.read()
+    fields = parse_labeled_fields(text)
+    if not fields:
+        return None
+    return fields.get("successCriteria")
+
+
+def extract_verifiable_commands(success_criteria_text):
+    """Pull out backtick-quoted pytest/grep invocations from a SUCCESS_CRITERIA
+    section -- this project's dispatch prompts already write SUCCESS_CRITERIA
+    in exactly this style (see task-20260726-083946's prompt.txt). A bullet
+    with no backtick command, or backticks around something that isn't a
+    pytest/grep call, cannot be mechanically run and is intentionally
+    excluded rather than guessed at."""
+    if not success_criteria_text:
+        return []
+    commands = []
+    for line in success_criteria_text.splitlines():
+        line = line.strip()
+        if not line.startswith(("-", "*")):
+            continue
+        for m in _BACKTICK_CMD_RE.finditer(line):
+            cmd = m.group(1).strip()
+            if cmd.startswith(_RUNNABLE_CMD_PREFIXES):
+                commands.append(cmd)
+    return commands
+
+
+def get_repo_checkout(repo):
+    """Fresh, isolated, --depth 1 clone of the repo's real default branch,
+    memoized per repo for the lifetime of this process. Never touches any
+    existing/shared checkout -- verification must reflect the real current
+    default branch, not whatever state a long-lived local clone happens to
+    be in. Caller must eventually call cleanup_checkouts()."""
+    if repo in _CHECKOUT_CACHE:
+        return _CHECKOUT_CACHE[repo]
+    tmpdir = tempfile.mkdtemp(prefix="dedup_verify_")
+    clone = subprocess.run(
+        ["git", "clone", "--depth", "1", "--quiet", f"https://github.com/{GH_OWNER}/{repo}.git", tmpdir],
+        capture_output=True, text=True, timeout=120,
+    )
+    if clone.returncode != 0:
+        shutil.rmtree(tmpdir, ignore_errors=True)
+        _CHECKOUT_CACHE[repo] = None
+        return None
+    _CHECKOUT_CACHE[repo] = tmpdir
+    return tmpdir
+
+
+def cleanup_checkouts():
+    for path in _CHECKOUT_CACHE.values():
+        if path:
+            shutil.rmtree(path, ignore_errors=True)
+    _CHECKOUT_CACHE.clear()
+
+
+def verify_success_criteria(repo, commands):
+    """Actually run the original task's own mechanically-runnable
+    SUCCESS_CRITERIA commands against a fresh checkout of the real current
+    default branch (not the group's own checkpoint prose). Commands are
+    restricted at extraction time (extract_verifiable_commands) to a
+    pytest/grep safelist authored by this project's own trusted dispatch
+    prompts -- not arbitrary/external input. Returns (all_passed, details)."""
+    if not commands:
+        return False, []
+    checkout = get_repo_checkout(repo)
+    if not checkout:
+        return False, [{"command": None, "passed": False, "error": f"could not clone {repo} for verification"}]
+    head = subprocess.run(
+        ["git", "-C", checkout, "rev-parse", "HEAD"], capture_output=True, text=True, timeout=10
+    ).stdout.strip()
+    details = []
+    for cmd in commands:
+        try:
+            run = subprocess.run(cmd, shell=True, cwd=checkout, capture_output=True, text=True, timeout=180)
+            passed = run.returncode == 0
+            details.append({
+                "command": cmd, "passed": passed, "checked_commit": head,
+                "returncode": run.returncode, "stderr_tail": (None if passed else run.stderr[-500:]),
+            })
+        except Exception as e:
+            details.append({"command": cmd, "passed": False, "checked_commit": head, "error": str(e)})
+    all_passed = all(d["passed"] for d in details)
+    return all_passed, details
+
+
+def classify(rep, group, db_cur, effective_repo, verify_fn=verify_success_criteria):
     # Search the FULL attempt history for this issue, not just the latest
     # attempt -- blind auto-retry ("rca-") attempts routinely crash with zero
     # progress of their own while an EARLIER attempt in the same chain
@@ -222,8 +346,52 @@ def classify(rep, group, db_cur, effective_repo):
         pr_state = gh_pr_state(effective_repo or rep.get("repo", ""), pr_number)
         result["pr_state"] = pr_state
         if pr_state.get("mergedAt"):
-            result["category"] = "ALREADY_DONE_STALE_STATUS"
-            result["action"] = f"Real PR #{pr_number} already merged -- patch task.yaml status to completed, no redispatch."
+            # A merged PR referenced somewhere in this chain's checkpoint
+            # prose is NOT proof it satisfied THIS issue's actual objective
+            # -- 2026-07-27 incident: an rca-chain's checkpoint mentioned a
+            # real merged PR that turned out to be unrelated work (fixed a
+            # different gate entirely). Re-run the ORIGINAL task's own
+            # SUCCESS_CRITERIA against the real current default branch before
+            # ever concluding "already done".
+            original = find_group_original(group)
+            success_criteria_text = load_success_criteria_text(original)
+            commands = extract_verifiable_commands(success_criteria_text)
+            if not commands:
+                result["category"] = "CANNOT_AUTO_VERIFY_NEEDS_HUMAN_READ"
+                result["action"] = (
+                    f"PR #{pr_number} merged, but original task `{original['id']}`'s SUCCESS_CRITERIA is "
+                    f"missing or has no mechanically-runnable (pytest/grep) lines -- a merged PR mention "
+                    f"alone is not proof this issue's real objective was met. Needs a human to read the "
+                    f"original SUCCESS_CRITERIA and the merged PR's real diff before any status change."
+                )
+                result["success_criteria_verification"] = {
+                    "original_task_id": original["id"], "commands": [], "verified": False,
+                    "reason": "no mechanically-runnable SUCCESS_CRITERIA found",
+                }
+            else:
+                verified, details = verify_fn(effective_repo or rep.get("repo", ""), commands)
+                result["success_criteria_verification"] = {
+                    "original_task_id": original["id"], "commands": commands,
+                    "verified": verified, "details": details,
+                }
+                if verified:
+                    checked_commit = (details[0].get("checked_commit") if details else None) or "unknown"
+                    result["category"] = "ALREADY_DONE_STALE_STATUS"
+                    result["action"] = (
+                        f"Real PR #{pr_number} merged AND original task `{original['id']}`'s own "
+                        f"SUCCESS_CRITERIA independently re-run and passing against the real current "
+                        f"default branch (commit {checked_commit}) -- patch task.yaml status to "
+                        f"completed, no redispatch."
+                    )
+                else:
+                    result["category"] = "PR_MERGED_BUT_SUCCESS_CRITERIA_UNVERIFIED"
+                    result["action"] = (
+                        f"PR #{pr_number} merged, but re-running original task `{original['id']}`'s own "
+                        f"SUCCESS_CRITERIA against the real current default branch did NOT pass -- the "
+                        f"merged PR referenced in this chain's checkpoints does not actually satisfy the "
+                        f"original objective (may be unrelated work sharing the same rca-chain lineage). "
+                        f"Do not collapse -- needs an Owner/reviewer decision."
+                    )
         elif pr_state.get("state") == "OPEN":
             result["category"] = "PR_PENDING_MERGE"
             result["action"] = f"Real work done, PR #{pr_number} open ({pr_state.get('reviewDecision') or 'no review yet'}, mergeable={pr_state.get('mergeable')}). Route through the merge pipeline -- do not redispatch."
@@ -283,6 +451,100 @@ def assign_waves(issues):
     return waves
 
 
+def apply_collapse(task_id, duplicate_of, category, evidence, dry_run=True):
+    """The ONLY code path in this repo allowed to write
+    status=superseded/duplicate_of/superseded_reason into a real task.yaml.
+    Root-causes the 2026-07-27 incident directly: 32 real task.yaml files
+    were hand-edited outside any code path, citing this tool for a collapse
+    decision it never made and never had a mechanism to make. Refuses unless
+    category is exactly the verified ALREADY_DONE_STALE_STATUS conclusion
+    from THIS run's own classify(), and refuses a missing/empty evidence
+    string -- the superseded_reason it writes must always cite the real
+    checked commit/PR, never a generic "same underlying issue" claim."""
+    if category != "ALREADY_DONE_STALE_STATUS":
+        raise ValueError(
+            f"refuse to collapse {task_id}: classification category is {category!r}, not the "
+            f"SUCCESS_CRITERIA-verified ALREADY_DONE_STALE_STATUS -- only that category is collapse-eligible."
+        )
+    if not evidence or not evidence.strip():
+        raise ValueError(f"refuse to collapse {task_id}: no cited verification evidence given.")
+    yaml_path = os.path.join(TASKS_DIR, task_id, "task.yaml")
+    with open(yaml_path) as f:
+        d = yaml.safe_load(f) or {}
+    d["status"] = "superseded"
+    d["duplicate_of"] = duplicate_of
+    d["superseded_reason"] = (
+        f"Collapsed by plan_backlog_completion.py --apply on {datetime.date.today().isoformat()} -- {evidence}"
+    )
+    if not dry_run:
+        with open(yaml_path, "w") as f:
+            yaml.safe_dump(d, f, sort_keys=False)
+    return d
+
+
+def run_audit_report(out_path, db_cur):
+    """Read-only: cross-check every real task.yaml already marked
+    status=superseded with a superseded_reason citing this dedup routine
+    against what the FIXED, SUCCESS_CRITERIA-verifying classify() concludes
+    when run fresh against current live state (real gh pr view + real
+    default-branch re-verification) -- not against a stale plan JSON. Never
+    writes to ai-os/tasks/*/task.yaml; only writes the report at out_path."""
+    tasks = load_all_tasks()
+    groups = build_groups(tasks)  # also sets t["_final_group"] on every task
+    task_by_id = {t["id"]: t for t in tasks}
+
+    target_ids = sorted(
+        t["id"] for t in tasks
+        if t.get("status") == "superseded"
+        and "plan_backlog_completion" in (t.get("superseded_reason") or "")
+    )
+    target_group_keys = {task_by_id[tid]["_final_group"] for tid in target_ids}
+
+    group_result = {}
+    for gk in target_group_keys:
+        group = groups[gk]
+        group_sorted = sorted(group, key=lambda t: (t.get("created_at") or "", t.get("last_checkpoint_at") or ""))
+        rep = group_sorted[-1]
+        effective_repo = group_sorted[0].get("repo") or rep.get("repo")
+        classification = classify(rep, group_sorted, db_cur, effective_repo)
+        group_result[gk] = (classification, rep["id"])
+
+    mismatches = []
+    for tid in target_ids:
+        t = task_by_id[tid]
+        classification, rep_id = group_result[t["_final_group"]]
+        category = classification["category"]
+        if category == "ALREADY_DONE_STALE_STATUS":
+            continue
+        mismatches.append({
+            "task_id": tid,
+            "recorded_duplicate_of": t.get("duplicate_of"),
+            "recorded_superseded_reason": t.get("superseded_reason"),
+            "fresh_classification_category": category,
+            "fresh_representative_task_id": rep_id,
+            "reason_not_qualified": (
+                f"real classifier concludes '{category}', not the verified ALREADY_DONE_STALE_STATUS -- "
+                f"{classification.get('action')}"
+            ),
+        })
+
+    report = {
+        "generated_note": (
+            "Non-mutating audit: real ai-os/tasks/*/task.yaml records with status=superseded whose "
+            "superseded_reason cites plan_backlog_completion.py's dedup routine, cross-checked against "
+            "what the FIXED, SUCCESS_CRITERIA-verifying classify() concludes when run fresh against "
+            "current live state (real gh pr view + real default-branch re-verification). Read-only: "
+            "reads ai-os/tasks/*/task.yaml but never writes to it."
+        ),
+        "total_superseded_by_this_routine": len(target_ids),
+        "mismatch_count": len(mismatches),
+        "mismatches": mismatches,
+    }
+    with open(out_path, "w") as f:
+        yaml.safe_dump(report, f, sort_keys=False, default_flow_style=False, width=100)
+    return report
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--json-out", default=f"{AI_OS}/BACKLOG_COMPLETION_PLAN_2026-07-27.json")
@@ -290,7 +552,35 @@ def main():
     ap.add_argument("--skip-gh", action="store_true", help="skip live gh pr view calls (faster, less accurate)")
     ap.add_argument("--hours-back", type=float, default=None,
                      help="only include issues whose latest attempt was created within this many hours of now (scopes to the Owner's requested window; omit for full history)")
+    ap.add_argument("--apply", action="store_true",
+                     help="ACTUALLY WRITE status=superseded/duplicate_of/superseded_reason to real task.yaml "
+                          "files, but ONLY for issues this run classified ALREADY_DONE_STALE_STATUS with a "
+                          "passing SUCCESS_CRITERIA re-verification. This is the ONLY code path in this repo "
+                          "allowed to perform that write. Default is off (plan-only, read-only).")
+    ap.add_argument("--apply-only-issue-key", action="append", default=None,
+                     help="restrict --apply to specific issue_key(s) (repeatable); omit to apply to every "
+                          "verified ALREADY_DONE_STALE_STATUS issue found this run.")
+    ap.add_argument("--audit-report", action="store_true",
+                     help="read-only mode: cross-check every real task.yaml already marked status=superseded "
+                          "with a superseded_reason citing this dedup routine against what this FIXED "
+                          "classifier concludes today, and write mismatches to --audit-report-out. Never "
+                          "writes to ai-os/tasks/*/task.yaml. Ignores all other flags below.")
+    ap.add_argument("--audit-report-out", default=f"{AI_OS}/DEDUP_MISMATCH_MANUAL_REVIEW_2026-07-27.yaml")
     args = ap.parse_args()
+
+    if args.audit_report:
+        conn = sqlite3.connect(DB_PATH)
+        cur = conn.cursor()
+        try:
+            report = run_audit_report(args.audit_report_out, cur)
+        finally:
+            cleanup_checkouts()
+        print(json.dumps({
+            "total_superseded_by_this_routine": report["total_superseded_by_this_routine"],
+            "mismatch_count": report["mismatch_count"],
+            "out": args.audit_report_out,
+        }, indent=2))
+        return
 
     tasks = load_all_tasks()
     if args.hours_back is not None:
@@ -398,6 +688,33 @@ def main():
     with open(args.md_out, "w") as f:
         f.write("\n".join(lines))
 
+    applied_count = 0
+    if args.apply:
+        for issue in issues:
+            c = issue["classification"]
+            if c.get("category") != "ALREADY_DONE_STALE_STATUS":
+                continue
+            verification = c.get("success_criteria_verification") or {}
+            if not verification.get("verified"):
+                continue
+            if args.apply_only_issue_key and issue["issue_key"] not in args.apply_only_issue_key:
+                continue
+            details = verification.get("details") or []
+            checked_commit = details[0].get("checked_commit") if details else "unknown"
+            evidence = (
+                f"PR #{c.get('pr_number')} merged; original task `{verification.get('original_task_id')}`'s "
+                f"SUCCESS_CRITERIA ({len(verification.get('commands') or [])} command(s)) independently "
+                f"re-run and passing at commit {checked_commit}."
+            )
+            rep_id = issue["representative_task_id"]
+            for attempt_id in issue["all_attempt_ids"]:
+                if attempt_id == rep_id:
+                    continue
+                apply_collapse(attempt_id, rep_id, c["category"], evidence, dry_run=False)
+                applied_count += 1
+        print(f"--apply: wrote real collapse to {applied_count} task.yaml file(s).", file=sys.stderr)
+
+    cleanup_checkouts()
     print(json.dumps(summary, indent=2))
 
 
