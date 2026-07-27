@@ -507,16 +507,51 @@ def cmd_checkpoint(args):
                 # stripped) when one is set, and only fall back to the local
                 # HEAD branch name when there is no upstream -- e.g. a
                 # genuinely new branch with nothing to track yet.
+                #
+                # Follow-up fix (2026-07-27, root-caused live against 2 stuck
+                # rca- tasks whose task.yaml ended up with branch: master,
+                # which then made supervisor-entrypoint.sh fail with
+                # "supervisor could not resolve a real PR for branch
+                # 'master'"): git's own branch.autoSetupMerge default means a
+                # BRAND NEW branch created via `checkout -b <branch>
+                # origin/<default>` -- exactly what cmd_create's `git
+                # worktree add -b` does -- has `@{upstream}` pointing at
+                # `origin/<default>` from the INSTANT it is created, before
+                # any commit or push (confirmed directly: a fresh worktree's
+                # `@{upstream}` resolves to "origin/master" immediately after
+                # creation, with nothing pushed). Any checkpoint that runs
+                # before the first real `git push -u origin <branch>` -- the
+                # very first in_progress checkpoint, or any checkpoint on a
+                # task that never gets past pre-flight -- was reading this
+                # default fork-point tracking ref as if it were proof of a
+                # real push, overwriting task["branch"] with the repo's own
+                # default branch name. That default branch is never a
+                # legitimate real target branch for a worker's own PR in
+                # this workflow, so it is excluded here: @{upstream} is only
+                # trusted once it has actually been retargeted by a real
+                # push away from the default branch.
+                default_ref = subprocess.run(
+                    ["git", "-C", workspace, "symbolic-ref", "refs/remotes/origin/HEAD"],
+                    capture_output=True, text=True,
+                )
+                default_branch = (
+                    default_ref.stdout.strip().rsplit("/", 1)[-1]
+                    if default_ref.returncode == 0 and default_ref.stdout.strip() else None
+                )
+
                 upstream = subprocess.run(
                     ["git", "-C", workspace, "rev-parse", "--abbrev-ref",
                      "--symbolic-full-name", "@{upstream}"],
                     capture_output=True, text=True,
                 )
+                real_branch = None
                 if upstream.returncode == 0 and upstream.stdout.strip():
-                    real_branch = upstream.stdout.strip()
-                    if "/" in real_branch:
-                        real_branch = real_branch.split("/", 1)[1]
-                else:
+                    candidate = upstream.stdout.strip()
+                    if "/" in candidate:
+                        candidate = candidate.split("/", 1)[1]
+                    if candidate != default_branch:
+                        real_branch = candidate
+                if not real_branch:
                     real_branch = subprocess.run(
                         ["git", "-C", workspace, "rev-parse", "--abbrev-ref", "HEAD"],
                         capture_output=True, text=True, check=True,

@@ -207,8 +207,191 @@ def test_branch_resolution_noop_when_still_on_original_branch():
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+def test_branch_resolution_not_corrupted_to_default_branch_before_first_push():
+    """Real root cause found live (2026-07-27) against 2 stuck rca- tasks whose
+    task.yaml ended up with branch: master, which then made
+    supervisor-entrypoint.sh fail with "supervisor could not resolve a real PR
+    for branch 'master'": cmd_create's real invocation
+    (`git worktree add -b <branch> workspace origin/<default>`) checks the new
+    branch out FROM a remote-tracking ref, and git's own
+    branch.autoSetupMerge default means that new branch's @{upstream} points
+    at origin/<default> from the INSTANT it is created -- before any commit or
+    push. Any checkpoint that runs before the first real `git push -u origin
+    <branch>` (e.g. the very first in_progress checkpoint, or any checkpoint on
+    a task that never gets past pre-flight, exactly what happened to both real
+    stuck instances) must not mistake that default fork-point tracking ref for
+    a real, already-pushed branch name."""
+    tmp = tempfile.mkdtemp(prefix="branch_resolution_test_")
+    try:
+        ai_os_root = os.path.join(tmp, "ai_os")
+        task_id = "task-fake-fresh-branch-never-pushed"
+        task_dir = os.path.join(ai_os_root, "tasks", task_id)
+        workspace = os.path.join(task_dir, "workspace")
+        os.makedirs(workspace)
+
+        # Real remote with a "master" default branch (matches this repo's own
+        # real default branch, and the exact literal observed live).
+        remote_dir = os.path.join(tmp, "remote.git")
+        _git("init", "-q", "--bare", remote_dir, cwd=tmp)
+        seed = os.path.join(tmp, "seed")
+        os.makedirs(seed)
+        _git("init", "-q", cwd=seed)
+        _git("config", "user.email", "test@example.com", cwd=seed)
+        _git("config", "user.name", "Test", cwd=seed)
+        with open(os.path.join(seed, "README.md"), "w") as f:
+            f.write("initial\n")
+        _git("add", "-A", cwd=seed)
+        _git("commit", "-q", "-m", "initial", cwd=seed)
+        _git("branch", "-M", "master", cwd=seed)
+        _git("remote", "add", "origin", remote_dir, cwd=seed)
+        _git("push", "-q", "origin", "master", cwd=seed)
+
+        # Mirrors cmd_create exactly: `git worktree add -b <branch> workspace
+        # origin/<default>` off a real clone (not a plain local checkout) --
+        # this remote-tracking start point is what triggers
+        # branch.autoSetupMerge, which the prior fixture (_make_fixture, a
+        # plain local `checkout -b` with no remote at all) never exercised.
+        _git("clone", "-q", remote_dir, workspace, cwd=tmp)
+        _git("remote", "set-head", "origin", "master", cwd=workspace)
+        original_branch = f"worker/{task_id}"
+        _git("checkout", "-q", "-b", original_branch, "origin/master", cwd=workspace)
+
+        # No commit, no push -- exactly the state of a task whose worker never
+        # got past pre-flight (both real stuck instances: 3-5 consecutive
+        # PRE-FLIGHT REJECTED checkpoints, zero real commits, zero pushes).
+
+        task = {
+            "id": task_id,
+            "title": "fake rca task, never got past pre-flight",
+            "status": "failed",
+            "repo": "compliance-tracker",
+            "branch": original_branch,
+            "workspace": workspace,
+            "task_dir": task_dir,
+            "service": f"veridian-worker@{task_id}.service",
+            "created_at": "2026-07-27T00:00:00+00:00",
+            "last_checkpoint_at": None,
+            "completed_steps": [],
+            "remaining_steps": [],
+            "files_modified": [],
+            "checkpoints": [],
+            "execution_seconds": 0,
+            "restart_count": 0,
+            "token_usage": None,
+            "hold_for_owner_signoff": False,
+        }
+        with open(os.path.join(task_dir, "task.yaml"), "w") as f:
+            yaml.safe_dump(task, f, sort_keys=False)
+        with open(os.path.join(ai_os_root, "CONTROLLER.yaml"), "w") as f:
+            yaml.safe_dump({"server": "TEST", "tasks": []}, f)
+
+        mod = _load_module()
+        _run_checkpoint(mod, ai_os_root, task_id, "failed",
+                         "PRE-FLIGHT REJECTED (crontab_unauthorized_change, transient): no model call made")
+
+        with open(os.path.join(task_dir, "task.yaml")) as f:
+            saved = yaml.safe_load(f)
+
+        assert saved["branch"] == original_branch, (
+            f"expected task.yaml branch to stay the real worker branch "
+            f"'{original_branch}', got '{saved['branch']}' -- if this is 'master' "
+            f"(the repo's own default branch), that is exactly the live bug: git's "
+            f"default fork-point tracking ref was mistaken for a real pushed branch "
+            f"before any push ever happened."
+        )
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def test_escalate_passes_stalled_tasks_real_repo_not_hardcoded_claude_control():
+    """Real bug confirmed live in the deployed veridian-task-watchdog.py:
+    escalate() hardcoded --repo claude-control for every auto-escalated rca-
+    task regardless of the stalled task's own real repo -- confirmed against 2
+    historical instances whose stalled task's real repo was compliance-tracker.
+    escalate() must read the stalled task's own already-loaded task.yaml
+    'repo' field instead."""
+    import importlib.util as _ilu
+
+    watchdog_path = os.path.join(REPO_ROOT, "scripts", "veridian-task-watchdog.py")
+    spec = _ilu.spec_from_file_location("veridian_task_watchdog_under_test", watchdog_path)
+    wd = _ilu.module_from_spec(spec)
+    spec.loader.exec_module(wd)
+
+    calls = []
+
+    class _FakeCompletedProcess:
+        returncode = 0
+        stdout = "CREATED: task-fake-rca-id\n"
+        stderr = ""
+
+    def _fake_run(cmd, **kwargs):
+        calls.append(cmd)
+        return _FakeCompletedProcess()
+
+    wd.subprocess.run = _fake_run
+
+    stalled_task = {
+        "id": "task-20260726-172000-hr-performance-error-handling---payroll",
+        "repo": "compliance-tracker",
+        "branch": "worker/task-20260726-172000-hr-performance-error-handling---payroll",
+        "status": "blocked",
+    }
+    wd.escalate("task-20260726-172000-hr-performance-error-handling---payroll",
+                stalled_task, "some failure signature")
+
+    # escalate() also makes a 2nd subprocess.run call (the documented no-op
+    # `systemctl start` safety net) -- find the real `create` invocation
+    # specifically, not just the last call made.
+    create_calls = [c for c in calls if "create" in c]
+    assert create_calls, f"escalate() never invoked veridian-task.py create: {calls}"
+    cmd = create_calls[0]
+    assert "--repo" in cmd, f"escalate()'s create call has no --repo argument: {cmd}"
+    repo_value = cmd[cmd.index("--repo") + 1]
+    assert repo_value == "compliance-tracker", (
+        f"expected escalate() to pass the stalled task's own real repo "
+        f"'compliance-tracker', got '{repo_value}' -- this is exactly the live "
+        f"hardcoded-claude-control bug"
+    )
+
+
+def test_escalate_falls_back_to_claude_control_when_repo_unknown():
+    """Defensive fallback: if the stalled task's own task.yaml is somehow
+    unreadable/missing a 'repo' field, escalate() must still produce a valid
+    --repo argument (the pre-fix default) rather than crash or pass repo=None."""
+    import importlib.util as _ilu
+
+    watchdog_path = os.path.join(REPO_ROOT, "scripts", "veridian-task-watchdog.py")
+    spec = _ilu.spec_from_file_location("veridian_task_watchdog_under_test_fallback", watchdog_path)
+    wd = _ilu.module_from_spec(spec)
+    spec.loader.exec_module(wd)
+
+    calls = []
+
+    class _FakeCompletedProcess:
+        returncode = 0
+        stdout = "CREATED: task-fake-rca-id\n"
+        stderr = ""
+
+    def _fake_run(cmd, **kwargs):
+        calls.append(cmd)
+        return _FakeCompletedProcess()
+
+    wd.subprocess.run = _fake_run
+
+    wd.escalate("task-with-unreadable-yaml", None, "some failure signature")
+
+    create_calls = [c for c in calls if "create" in c]
+    assert create_calls, f"escalate() never invoked veridian-task.py create: {calls}"
+    cmd = create_calls[0]
+    repo_value = cmd[cmd.index("--repo") + 1]
+    assert repo_value == "claude-control"
+
+
 if __name__ == "__main__":
     test_branch_resolution_reflects_real_worker_pushed_branch()
     test_branch_resolution_prefers_upstream_over_local_alias()
     test_branch_resolution_noop_when_still_on_original_branch()
+    test_branch_resolution_not_corrupted_to_default_branch_before_first_push()
+    test_escalate_passes_stalled_tasks_real_repo_not_hardcoded_claude_control()
+    test_escalate_falls_back_to_claude_control_when_repo_unknown()
     print("All branch_resolution scenarios passed.")
