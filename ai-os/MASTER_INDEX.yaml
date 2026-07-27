@@ -784,6 +784,59 @@ quick_reference:
   summary: Live alert surface. Written by health-check-15min.py (systemd unit failures,
     stalled checkpoints, Mother Router DB reachability, disk/mem,...
 registries:
+- id: veridian_v2_dspy_learning_distribution_engines
+  type: phase_plan_increment_evidence
+  path: repos/compliance-tracker/ai-os/VERIDIAN_V2_DSPY_TECH_DECISION_2026-07-27.md
+    + ai-os/VERIDIAN_V2_PROMPT_LIFECYCLE_ENGINES_SCOPING_2026-07-27.md (this repo)
+  scope: >
+    phase_8_dspy_learning_distribution_engines increment 1 of
+    VERIDIAN_ARCHITECTURE_V2_PHASE_PLAN_2026-07-25.yaml. engine-dspy-integration:
+    confirmed dspy pip-installs cleanly (dry-run) against
+    services/doc-processing/'s real pinned numpy==1.26.4/PyMuPDF==1.20.2 (no
+    conflict), then made a real, justified REJECT decision -- every candidate
+    integration point either contradicts the Owner's 2026-07-25 directive that
+    src/lib/prompt-compiler/ stay deterministic/zero-LLM-call, or requires a
+    fresh Python deployment this task explicitly forbade. Before/after
+    evidence via the justified alternative (phase_2's own existing compiler,
+    no new engine built): bun run scripts/prompt-compiler-smoke-test.ts, real
+    sample prompt, 22->9 estimated tokens (-59.1%), exit 0. engine-ai-learning:
+    re-verified src/lib/services/capability-learning-service.ts is real/current
+    (295 lines, 10 live callers) but this gap analysis's own verdict
+    (VERIDIAN_ARCHITECTURE_V2_GAP_ANALYSIS_2026-07-25.yaml:807-815) already
+    rules it "no functional match" for the real requirement (learn from
+    UNKNOWN PROMPTS via autonomous exploration/evaluation/registration, not
+    business-task-execution routing) -- wired a genuine minimal extension
+    (shouldExploreAsUnknownPrompt/exploreUnknownPrompt, reusing
+    findOrCreateCapability/extendPromptWordIndex) into the real live caller
+    app/api/prompt-compiler/execute/route.ts instead of duplicating. The 5
+    zero-prior-art engines (translation/localization/marketplace/export/import)
+    got a scoping-only pass (schema design + build estimate each,
+    ~17-19.5 real build-days total) -- explicitly NOT built this increment,
+    see planned_engines below.
+  status: increment_1_of_n_complete_evidence_real
+  planned_engines:
+  - id: engine-prompt-translation
+    status: planned
+    schema: promptTranslations (FK compliance.prompt_versions)
+    estimate_days: 3
+  - id: engine-prompt-localization
+    status: planned
+    schema: promptLocalizations (FK compliance.prompt_versions, keys off organisations.country)
+    estimate_days: 3
+  - id: engine-prompt-marketplace
+    status: planned
+    schema: promptMarketplaceListings + promptMarketplaceInstalls
+    estimate_days: 5-6
+  - id: engine-prompt-export
+    status: planned
+    schema: none new -- pure serialization service over existing prompt_templates/prompt_versions
+    estimate_days: 1.5
+  - id: engine-prompt-import
+    status: planned
+    schema: promptImportJobs (shares export's schema-validation contract)
+    estimate_days: 4-5
+  query_command: python3 scripts/superboss-register.py query-knowledge "veridian_v2_dspy_learning" --tag domain:veridian_architecture_v2
+  verify_command: cd repos/compliance-tracker && bun run scripts/prompt-compiler-smoke-test.ts
 - id: task_completion_audit_7day
   type: independent_task_completion_verification
   path: ai-os/TASK_COMPLETION_AUDIT_2026-07-26.md + ai-os/TASK_COMPLETION_AUDIT_2026-07-26.json
