@@ -3053,20 +3053,39 @@ registries:
     scripts/auto_phase_continuation.py''s exact phases[] schema, and is confirmed picked up by a
     real `python3 scripts/auto_phase_continuation.py --dry-run --limit 0` run (next_phase:
     phase_1_prompt_registry_lifecycle_foundation, would_dispatch: true).'
-  status: phase_0_gap_analysis_and_plan_complete_phase_1_not_yet_dispatched
+  status: phase_1_through_phase_3_merged_phase_4_open_unmerged_phase_5_through_10_not_started
+  status_correction_2026_07_27: 'CORRECTED by task-20260727-055448-owner-engine-task2-phase0--real-gap-anal:
+    this entry previously read status: phase_0_gap_analysis_and_plan_complete_phase_1_not_yet_dispatched,
+    which was stale -- phase_1 (compliance-tracker PR #559), phase_2 (PR #560), and phase_3 (PR #561)
+    were all real and MERGED by 2026-07-26 (independently verified via `gh pr view <n> --json
+    state,mergedAt`, not just trusting task.yaml status fields), and phase_4 (PR #562, defense-in-depth
+    security) is open awaiting conflict resolution + review. This task produced a fresh, dated gap
+    analysis and phase-plan refresh reflecting that real state -- see path_2026_07_27 below -- rather
+    than silently leaving this entry''s status stale for a future session to re-discover the same drift.'
+  path_2026_07_27: ai-os/OWNER_ENGINE_TASK2_GAP_ANALYSIS_2026-07-27.yaml + ai-os/OWNER_ENGINE_TASK2_PHASE_PLAN_2026-07-27.yaml
   query_command: python3 scripts/superboss-register.py query-knowledge "VERIDIAN_Architecture_v2"
     --tag domain:veridian_architecture_v2
   owner_decision_filed: 'ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml id
     veridian-architecture-v2-target-repo-anchor -- confirm compliance-tracker (the only repo with
     any real browser-native prior art, litert-spike) as the target repo for phases 2-10''s
-    application code, since claude-control itself is config/YAML-only.'
+    application code, since claude-control itself is config/YAML-only. STILL UNRESOLVED as of
+    2026-07-27 even though phases 1-3 already merged real code into compliance-tracker on the
+    strength of the plan''s own stated default, not an actual Owner answer -- now higher-stakes to
+    resolve explicitly (see gap analysis item platform-anchor-repo-undecided).'
   evidence_chain:
     - task-20260725-104606-owner-engine-document-accuracy-convergen (PR #69, merged)
-    - task-20260725-112909-veridian-architecture-v2-task2-phase0-ga (this task)
-  next_phase: 'phase_1_prompt_registry_lifecycle_foundation per
-    ai-os/VERIDIAN_ARCHITECTURE_V2_PHASE_PLAN_2026-07-25.yaml phases[] -- dispatched as a separate
-    task by scripts/auto_phase_continuation.py''s own cron cycle once this task''s PR merges, not
-    part of this registry entry''s own scope.'
+    - task-20260725-112909-veridian-architecture-v2-task2-phase0-ga
+    - task-20260725-160908-task2-dedup-integration-audit
+    - task-20260725-174858-phase1-prompt-registry-version-lifecycle (compliance-tracker PR #559, merged)
+    - task-20260725-231836-phase2-prompt-compiler-pipeline-core-non (compliance-tracker PR #560, merged)
+    - task-20260726-035742-phase3-business-rule-permission-policy-c (compliance-tracker PR #561, merged)
+    - task-20260726-043023-phase4-defense-in-depth-prompt-security (compliance-tracker PR #562, open/unmerged)
+    - task-20260727-055448-owner-engine-task2-phase0--real-gap-anal (this task)
+  next_phase: 'phase_4_defense_in_depth_security_quality (compliance-tracker PR #562) needs its merge
+    conflicts resolved and a review pass, per ai-os/OWNER_ENGINE_TASK2_PHASE_PLAN_2026-07-27.yaml
+    phase 4 -- this is the fastest real next step (existing code, not new engineering). Phases 5-10
+    remain not_started per ai-os/VERIDIAN_ARCHITECTURE_V2_PHASE_PLAN_2026-07-25.yaml''s own detailed
+    scope for each.'
 - id: status_monitor_and_remediation
   type: cron_pipeline
   path: scripts/veridian_status_monitor.py + scripts/veridian_remediation_dispatcher.py
