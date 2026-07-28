@@ -133,10 +133,38 @@ python3 /opt/veridian/scripts/veridian-task.py checkpoint "$TASK_ID" --status in
 
 # Background checkpoint loop: snapshots git state + PROGRESS.md every 5 minutes
 # regardless of whether the AI itself remembers to checkpoint.
+#
+# 2026-07-27 RCA fix (task-20260727-044531, watchdog signature "periodic
+# checkpoint" against task-20260727-034439): this loop's own checkpoint call
+# is a plain child process of THIS service's cgroup, so it inherits that
+# unit's MemoryHigh=2G/MemoryMax=3G (added by the 2026-07-26 RCA fix above
+# this script's header, task-20260726-175957) exactly like the heavy
+# `bun run build`/`next build` process it runs alongside. Confirmed live via
+# `ps -o stat,wchan -p <checkpoint-pid>`: state D, wchan
+# mem_cgroup_handle_over_high -- once the unit's real memory usage (build,
+# not this 4MB script) crosses MemoryHigh, the kernel throttles EVERY
+# process in that cgroup trying to force reclaim, including this one. That
+# silently reintroduces the exact stall this loop exists to prevent (the
+# 2026-07-26 RCA fix immediately above, task-20260726-175009, explicitly
+# kept this loop alive through the whole quality-gate phase FOR this
+# scenario -- a long memory-heavy build -- so it is self-defeating for the
+# heartbeat to be throttled by the very memory pressure it must survive).
+# Fix: run the actual checkpoint call in its own transient scope, in a
+# separate slice with no memory limit, via systemd-run --user --scope --
+# this is a SIBLING unit, not nested under this service's cgroup, so it is
+# never subject to this unit's MemoryHigh/MemoryMax/MemorySwapMax
+# regardless of how constrained the build is. Falls back to a direct call
+# if systemd-run itself is unavailable/fails (e.g. a non-systemd host) --
+# same fail-open choice as elsewhere in this file for the heartbeat's own
+# infrastructure, since this is a liveness signal, not a spend gate.
 (
   while true; do
     sleep 300
-    python3 /opt/veridian/scripts/veridian-task.py checkpoint "$TASK_ID" --auto --note "periodic checkpoint"
+    systemd-run --user --scope --quiet --collect \
+      --slice=veridian-checkpoint-heartbeat.slice \
+      --property=MemoryHigh=infinity --property=MemoryMax=infinity --property=MemorySwapMax=infinity \
+      -- python3 /opt/veridian/scripts/veridian-task.py checkpoint "$TASK_ID" --auto --note "periodic checkpoint" \
+      || python3 /opt/veridian/scripts/veridian-task.py checkpoint "$TASK_ID" --auto --note "periodic checkpoint (systemd-run escape unavailable, ran in-cgroup)"
   done
 ) &
 CHECKPOINT_PID=$!
