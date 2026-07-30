@@ -8257,3 +8257,29 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260729-110426-resolve-fresh-conflict-on-pr--610/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-29'
+
+  - id: WORKER-20260729-210307-backend--backend-001--correct-the-opena
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''[backend] BACKEND-001: Correct the openai/gpt-oss-120b
+      (Groq) entry in llm-clien'' on compliance-tracker reached status=blocked. credit
+      accountant rejected auto-fix attempt 1, no further metered spend without human
+      review: {"approved": false, "increment_number": 1, "reason": "existing software/mechanism
+      already covers this (system_index match) -- use it instead of spending AI credits",
+      "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260729-210307-backend--backend-001--correct-the-opena/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-30'
+
+  - id: WORKER-20260730-035932-adopted-master-index-central-entrypoint-confirma
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''MASTER_INDEX central-entrypoint confirmation + 7
+      coverage gaps'' on compliance-tracker reached status=blocked. Superboss rejected:
+      https://github.com/FChecklist/compliance-tracker/pull/640 — see review.json for
+      issues'
+    where: '/opt/veridian/ai-os/tasks/task-20260730-035932-adopted-master-index-central-entrypoint-confirma/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/640'
+    last_touched: '2026-07-30'
