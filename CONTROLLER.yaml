@@ -8307,3 +8307,16 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260730-040813-build-extend-workflow-track-engines/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-30'
+
+  - id: WORKER-20260730-041950-build-extend-calculation-track-engines
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Build/extend calculation-track engines'' on compliance-tracker
+      reached status=blocked. credit accountant rejected auto-fix attempt 1, no further
+      metered spend without human review: {"approved": false, "increment_number": 1,
+      "reason": "existing software/mechanism already covers this (system_index match)
+      -- use it instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260730-041950-build-extend-calculation-track-engines/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-07-30'
