@@ -8320,3 +8320,14 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260730-041950-build-extend-calculation-track-engines/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-07-30'
+
+  - id: WORKER-20260730-072855-adopted-fi-ar-006--customer-payment-behavior---d
+    project: veridian
+    type: worker-task
+    status: in-progress
+    summary: 'Server-worker task ''FI-AR-006: Customer Payment Behavior / DSO report''
+      on compliance-tracker reached status=awaiting_human_approval. tier2, Superboss-approved,
+      held for human merge: https://github.com/FChecklist/compliance-tracker/pull/645'
+    where: '/opt/veridian/ai-os/tasks/task-20260730-072855-adopted-fi-ar-006--customer-payment-behavior---d/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/645'
+    last_touched: '2026-07-30'
