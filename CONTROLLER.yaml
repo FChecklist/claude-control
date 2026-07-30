@@ -8283,3 +8283,14 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260730-035932-adopted-master-index-central-entrypoint-confirma/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/640'
     last_touched: '2026-07-30'
+
+  - id: WORKER-20260730-041205-adopted-master-index-central-entrypoint-fix--rep
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''MASTER_INDEX central-entrypoint fix (repo-drift regression
+      corrected)'' on compliance-tracker reached status=completed. tier1, Superboss-approved,
+      merged autonomously: https://github.com/FChecklist/compliance-tracker/pull/640'
+    where: '/opt/veridian/ai-os/tasks/task-20260730-041205-adopted-master-index-central-entrypoint-fix--rep/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/640'
+    last_touched: '2026-07-30'
