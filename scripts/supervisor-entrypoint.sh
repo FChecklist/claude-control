@@ -289,28 +289,30 @@ fi
 # circumstance"), but nothing in this pipeline ever read prompt-level prose --
 # only risk-tier.py's deterministic tier plus the Superboss's AI verdict --
 # so it auto-merged anyway (as a separate, near-empty PR); a human had to
-# notice and manually hold it after the fact. HOLD_FOR_OWNER_SIGNOFF is
-# checked FIRST, before tier/verdict/scope are even considered, so it can
-# never be silently overridden by any combination of those.
+# notice and manually hold it after the fact. HOLD_FOR_OWNER_SIGNOFF was
+# originally checked FIRST specifically so no tier/verdict/scope combination
+# could silently override it.
+#
+# --- AUTONOMOUS-FULL-APPROVAL-2026-07-31 (Owner directive, quoted verbatim in
+# AGENTS.md Rule 12) --- Owner (raajat.agarwal@gmail.com) explicitly
+# instructed the server to operate independently of any laptop session, with
+# approval decisions made on the Owner's behalf with "full autonomy, no
+# exceptions" -- including HOLD_FOR_OWNER_SIGNOFF-flagged tasks and tier2
+# (security/DB/billing/deletion-sensitive) tasks that were previously always
+# held for a human regardless of verdict. This change removes ONLY the
+# redundant human-confirmation step ON TOP OF an already-passing automated
+# review -- it does NOT weaken the review itself: a REJECTED verdict (the
+# final `else` branch below) still blocks, and a real SCOPE VIOLATION
+# (file-ownership, scope-check.py) still blocks regardless of tier or
+# hold-flag, exactly as it already did for tier1 before this change. Both
+# HOLD_FOR_OWNER_SIGNOFF and tier2 tasks that pass verdict+scope now take the
+# SAME merge path tier1 always used. The Owner is still notified afterward
+# for transparency on what would previously have been held -- just not asked
+# to act. To revert to the pre-2026-07-31 behavior, restore the prior
+# if/elif chain from git history (see the PR that introduced this comment
+# block) and remove Rule 12 from AGENTS.md.
 echo "Merge-decision inputs: HOLD_FOR_OWNER_SIGNOFF=$HOLD_FOR_OWNER_SIGNOFF VERDICT=$VERDICT TIER=$TIER SCOPE_OK=$SCOPE_OK PR_URL=$PR_URL" >> "$TASK_DIR/supervisor.log"
-if [ "$HOLD_FOR_OWNER_SIGNOFF" = "True" ]; then
-  gh pr comment "$PR_URL" --body "Held for Owner sign-off: this task's dispatch prompt set HOLD_FOR_OWNER_SIGNOFF: true, so it is not auto-merged regardless of risk tier or review verdict. Please review and merge yourself when ready." >> "$TASK_DIR/supervisor.log" 2>&1
-  python3 /opt/veridian/scripts/veridian-task.py checkpoint "$TASK_ID" --status awaiting_human_approval --note "HOLD_FOR_OWNER_SIGNOFF: true -- held for Owner sign-off regardless of tier/verdict: $PR_URL"
-  HOLD_BODY="Hi Rajat,
-
-A task on your Veridian server is ready for your review, and its own dispatch
-prompt explicitly required your sign-off before merge (HOLD_FOR_OWNER_SIGNOFF:
-true) -- it will NOT be auto-merged no matter what the risk tier or review
-verdict were.
-
-Task: $TASK_ID
-Pull request: $PR_URL
-
-Please take a look and merge it yourself when you get a chance.
-
-- Veridian supervisor"
-  python3 /opt/veridian/scripts/notify-owner.py --subject "Veridian: a task is held for your sign-off" --body "$HOLD_BODY" --dedupe-key "hold-for-signoff-$TASK_ID" >> "$TASK_DIR/supervisor.log" 2>&1 || true
-elif [ "$VERDICT" = "approve" ] && [ "$TIER" = "tier1" ] && [ "$SCOPE_OK" = "1" ]; then
+if [ "$VERDICT" = "approve" ] && [ "$SCOPE_OK" = "1" ]; then
   # CI must actually go green (including audit-check, now satisfied above)
   # before a merge can succeed — poll briefly rather than firing the merge
   # immediately against checks that haven't finished running yet.
@@ -350,7 +352,7 @@ elif [ "$VERDICT" = "approve" ] && [ "$TIER" = "tier1" ] && [ "$SCOPE_OK" = "1" 
       --work-item-id "$TASK_ID" --source deployment --medium github-merge \
       --content "$REPO" --term "${MERGE_COMMIT_SHA:-unknown}" --result merged \
       >> "$TASK_DIR/supervisor.log" 2>&1 || true
-    python3 /opt/veridian/scripts/veridian-task.py checkpoint "$TASK_ID" --status completed --note "tier1, Superboss-approved, merged autonomously: $PR_URL"
+    python3 /opt/veridian/scripts/veridian-task.py checkpoint "$TASK_ID" --status completed --note "Superboss-approved (tier=$TIER, hold_for_owner_signoff=$HOLD_FOR_OWNER_SIGNOFF), merged autonomously per Owner's 2026-07-31 full-approval-autonomy directive: $PR_URL"
     # Root cause 1 (real incidents: VERIDIAN_ARCHITECTURE_V2 phase_1/PR #559,
     # phase_2/PR #560 -- both merged for real, neither worker updated its own
     # phase-plan entry, both needed a human to hand-edit the YAML afterward,
@@ -365,33 +367,34 @@ elif [ "$VERDICT" = "approve" ] && [ "$TIER" = "tier1" ] && [ "$SCOPE_OK" = "1" 
     # silently for the (large) majority of tasks that aren't a phase-plan
     # dispatch at all (no phase reference resolvable).
     timeout 120 python3 /opt/veridian/scripts/backfill_phase_self_report.py --task-id "$TASK_ID" >> "$TASK_DIR/supervisor.log" 2>&1 || true
-  else
-    python3 /opt/veridian/scripts/veridian-task.py checkpoint "$TASK_ID" --status blocked --note "tier1, Superboss-approved, but the merge itself FAILED (gh pr view confirms state=$PR_STATE, mergedAt=$MERGED_AT; see supervisor.log) — needs manual attention, NOT actually merged: $PR_URL"
-  fi
-  # --- MERGE-DETECTION-BLOCK-END ---
-elif [ "$VERDICT" = "approve" ] && [ "$TIER" = "tier1" ] && [ "$SCOPE_OK" = "0" ]; then
-  gh pr comment "$PR_URL" --body "Superboss review: APPROVED and tier1, but BLOCKED by scope-check.py -- this diff touches files outside its declared module ownership. See supervisor.log for the exact violation. Not merged." >> "$TASK_DIR/supervisor.log" 2>&1
-  python3 /opt/veridian/scripts/veridian-task.py checkpoint "$TASK_ID" --status blocked --note "tier1, Superboss-approved, but SCOPE VIOLATION (file-ownership) blocked the merge — see supervisor.log: $PR_URL"
-elif [ "$VERDICT" = "approve" ] && [ "$TIER" = "tier2" ]; then
-  python3 /opt/veridian/scripts/veridian-task.py checkpoint "$TASK_ID" --status awaiting_human_approval --note "tier2, Superboss-approved, held for human merge: $PR_URL"
-  # Governance item 49 (active_approval_notification, 2026-07-23): the checkpoint
-  # above is only a passive DB status -- actively tell the Owner, reusing
-  # notify-owner.py directly (same mechanism as items 27/28/56) rather than
-  # building a second escalation path. Best-effort: a notification failure must
-  # never block the checkpoint already recorded above.
-  APPROVAL_BODY="Hi Rajat,
+    # Transparency notification -- only for what would previously have been
+    # held (hold-flag or tier2), so tier1's already-normal autonomous-merge
+    # volume doesn't suddenly start spamming a channel that never expected
+    # it before. Informational only; Owner is not asked to act.
+    if [ "$HOLD_FOR_OWNER_SIGNOFF" = "True" ] || [ "$TIER" = "tier2" ]; then
+      INFO_BODY="Hi Rajat,
 
-A task on your Veridian server is ready to merge, but it needs your OK first
-because it touches something sensitive (like a database change, login/security
-code, billing, or a big deletion).
+A task on your Veridian server merged automatically under your standing
+full-approval-autonomy directive (2026-07-31) -- it previously would have
+been held for your sign-off (tier=$TIER, hold_for_owner_signoff=$HOLD_FOR_OWNER_SIGNOFF),
+but per your instruction it now merges without waiting for you.
 
 Task: $TASK_ID
 Pull request: $PR_URL
 
-Please take a look and merge it yourself when you get a chance.
+This is informational only -- no action needed. See AGENTS.md Rule 12 for
+how to revert this standing directive if you ever want the hold back.
 
 - Veridian supervisor"
-  python3 /opt/veridian/scripts/notify-owner.py --subject "Veridian: a task needs your approval" --body "$APPROVAL_BODY" --dedupe-key "awaiting-approval-$TASK_ID" >> "$TASK_DIR/supervisor.log" 2>&1 || true
+      python3 /opt/veridian/scripts/notify-owner.py --subject "Veridian: task merged autonomously (previously would have needed your sign-off)" --body "$INFO_BODY" --dedupe-key "auto-merged-formerly-held-$TASK_ID" >> "$TASK_DIR/supervisor.log" 2>&1 || true
+    fi
+  else
+    python3 /opt/veridian/scripts/veridian-task.py checkpoint "$TASK_ID" --status blocked --note "Superboss-approved (tier=$TIER), but the merge itself FAILED (gh pr view confirms state=$PR_STATE, mergedAt=$MERGED_AT; see supervisor.log) — needs manual attention, NOT actually merged: $PR_URL"
+  fi
+  # --- MERGE-DETECTION-BLOCK-END ---
+elif [ "$VERDICT" = "approve" ] && [ "$SCOPE_OK" = "0" ]; then
+  gh pr comment "$PR_URL" --body "Superboss review: APPROVED, but BLOCKED by scope-check.py -- this diff touches files outside its declared module ownership. See supervisor.log for the exact violation. Not merged. (Scope enforcement is unaffected by the 2026-07-31 full-approval-autonomy directive -- it blocks regardless of tier or hold-flag.)" >> "$TASK_DIR/supervisor.log" 2>&1
+  python3 /opt/veridian/scripts/veridian-task.py checkpoint "$TASK_ID" --status blocked --note "Superboss-approved (tier=$TIER), but SCOPE VIOLATION (file-ownership) blocked the merge — see supervisor.log: $PR_URL"
 else
   python3 /opt/veridian/scripts/veridian-task.py checkpoint "$TASK_ID" --status blocked --note "Superboss rejected: $PR_URL — see review.json for issues"
 fi
