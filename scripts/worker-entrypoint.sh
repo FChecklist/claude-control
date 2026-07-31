@@ -190,7 +190,15 @@ fi
 
 MAIN_OUT="$TASK_DIR/.claude-out-main.json"
 MAIN_START_EPOCH=$(date -u +%s)
-claude -p "$PROMPT" --model sonnet --effort high --dangerously-skip-permissions --max-budget-usd "$WORKER_BUDGET_CAP_USD" --output-format json > "$MAIN_OUT" 2>>"$TASK_DIR/worker.log"
+# 2026-08-01: routed through the shared usage-limit auto-resume wrapper (see
+# claude-usage-limit-retry.sh header) -- if this invocation hits the CLI's
+# own 5-hour usage limit, it sleeps until the CLI-reported resume time and
+# retries automatically instead of surfacing as an ordinary failure. Same
+# out-file/exit-code contract as a direct `claude -p ...` call, so everything
+# below (EXIT_CODE checks, is_error parsing, budget-cap parsing) is unchanged.
+source /opt/veridian/scripts/claude-usage-limit-retry.sh
+run_claude_usage_limit_retry "$MAIN_OUT" "$TASK_DIR/worker.log" -- \
+  -p "$PROMPT" --model sonnet --effort high --dangerously-skip-permissions --max-budget-usd "$WORKER_BUDGET_CAP_USD" --output-format json
 EXIT_CODE=$?
 cat "$MAIN_OUT" >> "$TASK_DIR/result.json"
 
@@ -491,7 +499,10 @@ $PROGRESS_INSTRUCTION"
   FIX_INCREMENT="${FIX_INCREMENT:-$((GATE_ATTEMPT + 1))}"
   FIX_OUT="$TASK_DIR/.claude-out-fix-$GATE_ATTEMPT.json"
   FIX_START_EPOCH=$(date -u +%s)
-  claude -p "$FIX_PROMPT" --model sonnet --effort high --continue --dangerously-skip-permissions --max-budget-usd "$WORKER_BUDGET_CAP_USD" --output-format json > "$FIX_OUT" 2>>"$TASK_DIR/worker.log"
+  # 2026-08-01: same usage-limit auto-resume wrapper as the main invocation
+  # above -- see claude-usage-limit-retry.sh header.
+  run_claude_usage_limit_retry "$FIX_OUT" "$TASK_DIR/worker.log" -- \
+    -p "$FIX_PROMPT" --model sonnet --effort high --continue --dangerously-skip-permissions --max-budget-usd "$WORKER_BUDGET_CAP_USD" --output-format json
   cat "$FIX_OUT" >> "$TASK_DIR/result.json"
   FIX_COST=$(real_invocation_cost_usd "$FIX_START_EPOCH")
   python3 /opt/veridian/scripts/credit-accountant.py report --task-id "$TASK_ID" --increment "$FIX_INCREMENT" --actual-spend-usd "$FIX_COST" --outcome "auto-fix attempt $GATE_ATTEMPT/2 completed, real cost \$$FIX_COST" >> "$TASK_DIR/worker.log" 2>&1 || true

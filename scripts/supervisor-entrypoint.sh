@@ -81,7 +81,14 @@ Write a file named review-verdict.json in the current directory (repo root) with
 Do not modify any other file. Do not attempt to merge, push, or run git commands beyond reading the diff. If this diff touches .github/workflows/** in a way that would need to be pushed (per the hard rule in SUPERBOSS_DISPATCH_PROMPT.md), note that explicitly in issues."
 
 SUPERVISOR_START_EPOCH=$(date -u +%s)
-claude -p "$REVIEW_PROMPT" --model sonnet --effort high --dangerously-skip-permissions --max-budget-usd "$SUPERVISOR_BUDGET_CAP_USD" --output-format json > "$TASK_DIR/supervisor-result.json" 2>>"$TASK_DIR/supervisor.log"
+# 2026-08-01: routed through the shared usage-limit auto-resume wrapper (see
+# claude-usage-limit-retry.sh header) -- if this review invocation hits the
+# CLI's own 5-hour usage limit, it sleeps until the CLI-reported resume time
+# and retries automatically instead of surfacing as an ordinary review
+# failure. Same out-file/exit-code contract as a direct `claude -p ...` call.
+source /opt/veridian/scripts/claude-usage-limit-retry.sh
+run_claude_usage_limit_retry "$TASK_DIR/supervisor-result.json" "$TASK_DIR/supervisor.log" -- \
+  -p "$REVIEW_PROMPT" --model sonnet --effort high --dangerously-skip-permissions --max-budget-usd "$SUPERVISOR_BUDGET_CAP_USD" --output-format json
 
 # --- AI response logging (2026-07-24, governance item 15: ai_response_logging) ---
 # Same fix as worker-entrypoint.sh's own MAIN_OUT block, applied to the
