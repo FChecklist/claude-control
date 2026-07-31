@@ -136,7 +136,18 @@ $PROGRESS_INSTRUCTION"
 fi
 
 MAIN_OUT="$TASK_DIR/.claude-out-main.json"
-timeout "$MAX_WALL_SECONDS" claude -p "$PROMPT" --model sonnet --effort high --dangerously-skip-permissions --output-format json > "$MAIN_OUT" 2>>"$TASK_DIR/worker.log"
+# 2026-08-01: routed through the shared usage-limit auto-resume wrapper (see
+# claude-usage-limit-retry.sh header). The MAX_WALL_SECONDS timeout is still
+# applied per-attempt exactly as before (passed through to the wrapper); the
+# usage-limit sleep between attempts happens BETWEEN separate timeout
+# invocations, so a multi-hour usage-limit wait is never itself counted
+# against this per-invocation wall-clock cap (that cap exists to bound a
+# stuck/looping task, which this is not). Same out-file/exit-code contract as
+# the direct `timeout ... claude -p ...` call this replaces, so EXIT_CODE=124
+# (wall-clock cap) handling below is unchanged.
+source /opt/veridian/scripts/claude-usage-limit-retry.sh
+run_claude_usage_limit_retry "$MAIN_OUT" "$TASK_DIR/worker.log" "$MAX_WALL_SECONDS" -- \
+  -p "$PROMPT" --model sonnet --effort high --dangerously-skip-permissions --output-format json
 EXIT_CODE=$?
 cat "$MAIN_OUT" >> "$TASK_DIR/result.json"
 
