@@ -9701,3 +9701,21 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260801-083637-independently-audit-pr-681--create-simil/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-08-01'
+
+  - id: WORKER-20260801-091859-final-merge-pr-610--3rd-attempt--resourc
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Final merge PR 610 (3rd attempt, resource-recovered)''
+      on compliance-tracker reached status=blocked. Paused deliberately: stopped mid-build
+      after load crossed the 20 threshold (21.31) and swap re-exhausted (20Ki free),
+      per explicit operator instruction to pull back immediately at that threshold.
+      This is the 3rd dispatch attempt for this merge, each coinciding with a resource
+      spike -- the PR''s own code has already been independently verified clean (tsc/tests/lint/build
+      all pass) multiple times outside this pipeline. Do not auto-resume; wait for a
+      sustained period of genuine stability (not just a momentary dip) before retrying,
+      and consider whether repeated dispatch attempts for this specific merge are themselves
+      contributing to instability given the 3-for-3 correlation.'
+    where: /opt/veridian/ai-os/tasks/task-20260801-091859-final-merge-pr-610--3rd-attempt--resourc/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-01'
