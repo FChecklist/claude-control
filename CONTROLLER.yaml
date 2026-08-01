@@ -9862,3 +9862,63 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260801-112944-wrapper-norelay-smoke-test-v3/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-08-01'
+
+  - id: WORKER-20260801-113107-merge-pr-680--extended-timeout
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Merge PR 680 (extended timeout)'' on compliance-tracker
+      reached status=blocked. Confirmed via gh pr view: PR #680 already merged (mergedAt=2026-08-01T11:31:29Z).
+      Stopped manually -- nothing left to do.'
+    where: /opt/veridian/ai-os/tasks/task-20260801-113107-merge-pr-680--extended-timeout/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-01'
+
+  - id: WORKER-20260801-113132-audit-pr-681--extended-timeout
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Audit PR 681 (extended timeout)'' on compliance-tracker
+      reached status=blocked. Real objective already achieved: posted the AUDIT: FAIL
+      verdict identifying a genuine double-click race in createSimilarTaskAgain(). Stopped
+      manually to free the slot for the fix''s re-audit -- nothing further needed from
+      this specific task.'
+    where: /opt/veridian/ai-os/tasks/task-20260801-113132-audit-pr-681--extended-timeout/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-01'
+
+  - id: WORKER-20260801-113701-live-deploy-verify-v4
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''live-deploy-verify-v4'' on compliance-tracker reached
+      status=blocked. PRE-FLIGHT HARD STOP (crontab_unauthorized_change): live crontab
+      differs from the last-known-approved snapshot at /opt/veridian/ai-os/CRONTAB_APPROVED_SNAPSHOT.txt,
+      and prompt.txt does not cite a verified-approved OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      entry for this exact change. Per AI_ENGINEERING_POLICY.yaml''s genuinely_irreversible_actions
+      standing exception, crontab modifications require explicit Owner confirmation
+      before execution -- this is not a code bug, it is the policy working as designed.
+      If this change was Owner-approved, cite it in prompt.txt as: ''OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      entry id=<id> status=approved'' and ensure that entry''s status is actually ''approved''
+      in the live decisions file.'
+    where: /opt/veridian/ai-os/tasks/task-20260801-113701-live-deploy-verify-v4/ on
+      VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-01'
+
+  - id: WORKER-20260801-114112-hook-verification-final
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''hook-verification-final'' on compliance-tracker reached
+      status=blocked. PRE-FLIGHT HARD STOP (crontab_unauthorized_change): live crontab
+      differs from the last-known-approved snapshot at /opt/veridian/ai-os/CRONTAB_APPROVED_SNAPSHOT.txt,
+      and prompt.txt does not cite a verified-approved OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      entry for this exact change. Per AI_ENGINEERING_POLICY.yaml''s genuinely_irreversible_actions
+      standing exception, crontab modifications require explicit Owner confirmation
+      before execution -- this is not a code bug, it is the policy working as designed.
+      If this change was Owner-approved, cite it in prompt.txt as: ''OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      entry id=<id> status=approved'' and ensure that entry''s status is actually ''approved''
+      in the live decisions file.'
+    where: /opt/veridian/ai-os/tasks/task-20260801-114112-hook-verification-final/ on
+      VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-01'
