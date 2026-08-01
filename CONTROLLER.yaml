@@ -10309,3 +10309,97 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260801-163429-sentinel-frozen-19m45s-alert/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-08-01'
+
+  - id: WORKER-20260726-194915-rca-20260726-171946-chat-context
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''rca-task-20260726-171946-chat-context---terminology---mode-pill-a''
+      on compliance-tracker reached status=blocked. RETRIAGE (800-task audit, 2026-08-01):
+      status was ''not_needed'' but the supervisor''s own note says it refused to proceed
+      because it couldn''t resolve a real PR for its own branch -- a genuine infra/tooling
+      confusion, not a judgment that the work isn''t needed. git ls-remote confirms
+      the branch doesn''t exist on origin (real work, if any, was never pushed). Needs
+      a fresh dispatch to determine if the chat-context/terminology/mode-pill RCA is
+      still relevant, or an explicit Owner call that it''s stale.'
+    where: /opt/veridian/ai-os/tasks/task-20260726-194915-rca-task-20260726-171946-chat-context/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-01'
+
+  - id: WORKER-20260726-194917-rca-20260726-172004-search-performa
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''rca-task-20260726-172004-search-performance-explain-analyze---gin''
+      on compliance-tracker reached status=blocked. RETRIAGE (800-task audit, 2026-08-01):
+      status was ''not_needed'' but Superboss REJECTED this PR (#582, compliance-tracker),
+      never fixed-and-remerged. gh pr view confirms PR #582 still OPEN today. Real backlog
+      debt (search performance EXPLAIN ANALYZE / GIN indexing RCA). Needs a fresh dispatch
+      or explicit Owner sign-off.'
+    where: '/opt/veridian/ai-os/tasks/task-20260726-194917-rca-task-20260726-172004-search-performa/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/582'
+    last_touched: '2026-08-01'
+
+  - id: WORKER-20260726-194920-rca-20260726-172016-mother-router-a
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''rca-task-20260726-172016-mother-router-and-roster-persistent-memo''
+      on compliance-tracker reached status=blocked. RETRIAGE (800-task audit, 2026-08-01):
+      status was ''not_needed'' but Superboss REJECTED this PR (#585, compliance-tracker),
+      never fixed-and-remerged. gh pr view confirms PR #585 still OPEN today. Real backlog
+      debt (Mother Router / roster persistent memory RCA). Needs a fresh dispatch or
+      explicit Owner sign-off.'
+    where: '/opt/veridian/ai-os/tasks/task-20260726-194920-rca-task-20260726-172016-mother-router-a/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/585'
+    last_touched: '2026-08-01'
+
+  - id: WORKER-20260726-195246-rca-20260726-172000-hr-performance
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''rca-task-20260726-172000-hr-performance-error-handling---payroll''
+      on compliance-tracker reached status=blocked. RETRIAGE (800-task audit, 2026-08-01):
+      status was ''not_needed'' but Superboss REJECTED this PR (#583, compliance-tracker),
+      never fixed-and-remerged. gh pr view confirms PR #583 still OPEN today. Real backlog
+      debt (HR performance error-handling / payroll RCA). Needs a fresh dispatch or
+      explicit Owner sign-off.'
+    where: '/opt/veridian/ai-os/tasks/task-20260726-195246-rca-task-20260726-172000-hr-performance/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/583'
+    last_touched: '2026-08-01'
+
+  - id: WORKER-20260801-163811-retriage-9-mislabeled-not-needed-tasks
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''retriage-9-mislabeled-not-needed-tasks'' on compliance-tracker
+      reached status=blocked. PRE-FLIGHT HARD STOP (crontab_unauthorized_change): live
+      crontab differs from the last-known-approved snapshot at /opt/veridian/ai-os/CRONTAB_APPROVED_SNAPSHOT.txt,
+      and prompt.txt does not cite a verified-approved OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      entry for this exact change. Per AI_ENGINEERING_POLICY.yaml''s genuinely_irreversible_actions
+      standing exception, crontab modifications require explicit Owner confirmation
+      before execution -- this is not a code bug, it is the policy working as designed.
+      If this change was Owner-approved, cite it in prompt.txt as: ''OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      entry id=<id> status=approved'' and ensure that entry''s status is actually ''approved''
+      in the live decisions file.'
+    where: /opt/veridian/ai-os/tasks/task-20260801-163811-retriage-9-mislabeled-not-needed-tasks/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-01'
+
+  - id: WORKER-20260801-164529-remove-disabled-anthropic-api-key-from
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Remove disabled Anthropic API key from /opt/veridian/shared/.env''
+      on compliance-tracker reached status=blocked. PRE-FLIGHT HARD STOP (crontab_unauthorized_change):
+      live crontab differs from the last-known-approved snapshot at /opt/veridian/ai-os/CRONTAB_APPROVED_SNAPSHOT.txt,
+      and prompt.txt does not cite a verified-approved OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      entry for this exact change. Per AI_ENGINEERING_POLICY.yaml''s genuinely_irreversible_actions
+      standing exception, crontab modifications require explicit Owner confirmation
+      before execution -- this is not a code bug, it is the policy working as designed.
+      If this change was Owner-approved, cite it in prompt.txt as: ''OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      entry id=<id> status=approved'' and ensure that entry''s status is actually ''approved''
+      in the live decisions file.'
+    where: /opt/veridian/ai-os/tasks/task-20260801-164529-remove-disabled-anthropic-api-key-from/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-01'
