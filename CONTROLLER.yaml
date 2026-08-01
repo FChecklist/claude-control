@@ -9638,3 +9638,66 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260801-081100-final-merge-pr-676--all-ci-green/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-08-01'
+
+  - id: WORKER-20260801-083448-final-merge-pr-610--verified--resource-r
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Final merge PR 610 (verified, resource-recovered)''
+      on compliance-tracker reached status=blocked. credit accountant rejected auto-fix
+      attempt 1, no further metered spend without human review: {"approved": false,
+      "increment_number": 2, "reason": "existing software/mechanism already covers this
+      (system_index match) -- use it instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260801-083448-final-merge-pr-610--verified--resource-r/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-01'
+
+  - id: WORKER-20260801-083610-independently-audit-pr-679--selectedpath
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: Server-worker task 'Independently audit PR 679 (selectedPath lift)' on
+      compliance-tracker reached status=blocked. Paused deliberately during a real resource
+      crisis (load 32.77, matching the historical OOM-kill threshold, available memory
+      down to 2.5GB, swap exhausted) -- stopped by the operator to relieve concurrent
+      tsc/build memory pressure alongside 2 other simultaneous PR audits. Not a task
+      failure. Resume manually once load/swap genuinely recover -- do not let the automated
+      resume-interrupted-workers mechanism restart this on its own, that is exactly
+      what caused the crisis (this task had already been paused once for the same reason
+      and was auto-resumed).
+    where: /opt/veridian/ai-os/tasks/task-20260801-083610-independently-audit-pr-679--selectedpath/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-01'
+
+  - id: WORKER-20260801-083623-independently-audit-pr-680--chainrows
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: Server-worker task 'Independently audit PR 680 (ChainRows)' on compliance-tracker
+      reached status=blocked. Paused deliberately during a real resource crisis (load
+      32.77, matching the historical OOM-kill threshold, available memory down to 2.5GB,
+      swap exhausted) -- stopped by the operator to relieve concurrent tsc/build memory
+      pressure alongside 2 other simultaneous PR audits. Not a task failure. Resume
+      manually once load/swap genuinely recover -- do not let the automated resume-interrupted-workers
+      mechanism restart this on its own, that is exactly what caused the crisis (this
+      task had already been paused once for the same reason and was auto-resumed).
+    where: /opt/veridian/ai-os/tasks/task-20260801-083623-independently-audit-pr-680--chainrows/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-01'
+
+  - id: WORKER-20260801-083637-independently-audit-pr-681--create-simil
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: Server-worker task 'Independently audit PR 681 (Create similar task)' on
+      compliance-tracker reached status=blocked. Paused deliberately during a real resource
+      crisis (load 32.77, matching the historical OOM-kill threshold, available memory
+      down to 2.5GB, swap exhausted) -- stopped by the operator to relieve concurrent
+      tsc/build memory pressure alongside 2 other simultaneous PR audits. Not a task
+      failure. Resume manually once load/swap genuinely recover -- do not let the automated
+      resume-interrupted-workers mechanism restart this on its own, that is exactly
+      what caused the crisis (this task had already been paused once for the same reason
+      and was auto-resumed).
+    where: /opt/veridian/ai-os/tasks/task-20260801-083637-independently-audit-pr-681--create-simil/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-01'
