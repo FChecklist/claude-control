@@ -10202,3 +10202,53 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260801-151952-final-merge-pr671-only/ on
       VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-08-01'
+
+  - id: WORKER-20260801-144403-rebase-audit-merge-pr672-procurement-doc
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''rebase-audit-merge-pr672-procurement-doc'' on compliance-tracker
+      reached status=blocked. credit accountant rejected auto-fix attempt 1, no further
+      metered spend without human review: {"approved": false, "increment_number": 2,
+      "reason": "existing software/mechanism already covers this (system_index match)
+      -- use it instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260801-144403-rebase-audit-merge-pr672-procurement-doc/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-01'
+
+  - id: WORKER-20260801-153920-audit-and-clean-800-ai-os-records
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Audit and clean 800 ai-os task records: root-cause
+      blocked/failed/superseded, dedupe, UMR-tag all'' on compliance-tracker reached
+      status=blocked. PRE-FLIGHT HARD STOP (crontab_unauthorized_change): live crontab
+      differs from the last-known-approved snapshot at /opt/veridian/ai-os/CRONTAB_APPROVED_SNAPSHOT.txt,
+      and prompt.txt does not cite a verified-approved OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      entry for this exact change. Per AI_ENGINEERING_POLICY.yaml''s genuinely_irreversible_actions
+      standing exception, crontab modifications require explicit Owner confirmation
+      before execution -- this is not a code bug, it is the policy working as designed.
+      If this change was Owner-approved, cite it in prompt.txt as: ''OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      entry id=<id> status=approved'' and ensure that entry''s status is actually ''approved''
+      in the live decisions file.'
+    where: /opt/veridian/ai-os/tasks/task-20260801-153920-audit-and-clean-800-ai-os-task-records/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-01'
+
+  - id: WORKER-20260801-155726-cleanup-closed-6-stale-awaiting-approval
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''cleanup-closed-6-stale-awaiting-approval-tasks''
+      on compliance-tracker reached status=blocked. Stopped immediately by the dispatching
+      session -- this cleanup was already performed directly (not via a worker) at the
+      time of dispatch: 6 task.yaml records (task-20260718-185246-rescue-pr--418, task-20260718-195948-rescue-pr--419,
+      task-20260727-094843-architecture-phase-8-increment-1--dspy-e, task-20260727-100954-erp-hr-gaps--expense-reimbursement--loan,
+      task-20260727-101123-erp-project-management-gaps--timesheet-t, task-20260727-101134-erp-helpdesk-gaps--tiered-sla---team-rou)
+      were already checkpointed to their real terminal state via veridian-task.py checkpoint
+      before this UMR record was created. This UMR/task exists purely for traceability
+      of that already-completed action per the audit''s own tracking requirement --
+      no further work needed, do not redo.'
+    where: /opt/veridian/ai-os/tasks/task-20260801-155726-cleanup-closed-6-stale-awaiting-approval/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-01'
