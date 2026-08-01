@@ -9996,3 +9996,45 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260801-123454-sentinel-zero-workers-alert/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-08-01'
+
+  - id: WORKER-20260801-123623-merge-pr-681-retry-2
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Merge PR 681 retry 2'' on compliance-tracker reached
+      status=blocked. Confirmed via gh pr view: PR #681 already merged (mergedAt=2026-08-01T12:36:43Z).
+      Stopped manually -- nothing left to do.'
+    where: /opt/veridian/ai-os/tasks/task-20260801-123623-merge-pr-681-retry-2/ on VERIDIAN-DEV
+      server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-01'
+
+  - id: WORKER-20260801-123640-retry-audit-pr-678
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Retry audit PR 678'' on compliance-tracker reached
+      status=blocked. credit accountant rejected auto-fix attempt 1, no further metered
+      spend without human review: {"approved": false, "increment_number": 2, "reason":
+      "existing software/mechanism already covers this (system_index match) -- use it
+      instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260801-123640-retry-audit-pr-678/ on VERIDIAN-DEV
+      server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-01'
+
+  - id: WORKER-20260801-130426-sentinel-checkin-post-recovery
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''sentinel-checkin-post-recovery'' on compliance-tracker
+      reached status=blocked. PRE-FLIGHT HARD STOP (crontab_unauthorized_change): live
+      crontab differs from the last-known-approved snapshot at /opt/veridian/ai-os/CRONTAB_APPROVED_SNAPSHOT.txt,
+      and prompt.txt does not cite a verified-approved OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      entry for this exact change. Per AI_ENGINEERING_POLICY.yaml''s genuinely_irreversible_actions
+      standing exception, crontab modifications require explicit Owner confirmation
+      before execution -- this is not a code bug, it is the policy working as designed.
+      If this change was Owner-approved, cite it in prompt.txt as: ''OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      entry id=<id> status=approved'' and ensure that entry''s status is actually ''approved''
+      in the live decisions file.'
+    where: /opt/veridian/ai-os/tasks/task-20260801-130426-sentinel-checkin-post-recovery/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-01'
