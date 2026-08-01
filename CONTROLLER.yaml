@@ -10132,3 +10132,73 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260801-144356-rebase-merge-pr671-active-claims-final/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-08-01'
+
+  - id: WORKER-20260801-144224-merge-pr678-lead-source-final
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''merge-pr678-lead-source-final'' on compliance-tracker
+      reached status=blocked. credit accountant rejected auto-fix attempt 1, no further
+      metered spend without human review: {"approved": false, "increment_number": 2,
+      "reason": "existing software/mechanism already covers this (system_index match)
+      -- use it instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260801-144224-merge-pr678-lead-source-final/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-01'
+
+  - id: WORKER-20260801-151835-sentinel-checkin-frozen-crunched
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''sentinel-checkin-frozen-crunched'' on compliance-tracker
+      reached status=blocked. PRE-FLIGHT HARD STOP (crontab_unauthorized_change): live
+      crontab differs from the last-known-approved snapshot at /opt/veridian/ai-os/CRONTAB_APPROVED_SNAPSHOT.txt,
+      and prompt.txt does not cite a verified-approved OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      entry for this exact change. Per AI_ENGINEERING_POLICY.yaml''s genuinely_irreversible_actions
+      standing exception, crontab modifications require explicit Owner confirmation
+      before execution -- this is not a code bug, it is the policy working as designed.
+      If this change was Owner-approved, cite it in prompt.txt as: ''OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      entry id=<id> status=approved'' and ensure that entry''s status is actually ''approved''
+      in the live decisions file.'
+    where: /opt/veridian/ai-os/tasks/task-20260801-151835-sentinel-checkin-frozen-crunched/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-01'
+
+  - id: WORKER-20260801-151941-final-merge-pr678-only
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''final-merge-pr678-only'' on compliance-tracker reached
+      status=blocked. credit accountant rejected auto-fix attempt 1, no further metered
+      spend without human review: {"approved": false, "increment_number": 2, "reason":
+      "existing software/mechanism already covers this (system_index match) -- use it
+      instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260801-151941-final-merge-pr678-only/ on
+      VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-01'
+
+  - id: WORKER-20260801-151949-final-merge-pr649-only
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''final-merge-pr649-only'' on compliance-tracker reached
+      status=blocked. credit accountant rejected auto-fix attempt 1, no further metered
+      spend without human review: {"approved": false, "increment_number": 2, "reason":
+      "existing software/mechanism already covers this (system_index match) -- use it
+      instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260801-151949-final-merge-pr649-only/ on
+      VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-01'
+
+  - id: WORKER-20260801-151952-final-merge-pr671-only
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''final-merge-pr671-only'' on compliance-tracker reached
+      status=blocked. credit accountant rejected auto-fix attempt 1, no further metered
+      spend without human review: {"approved": false, "increment_number": 2, "reason":
+      "existing software/mechanism already covers this (system_index match) -- use it
+      instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260801-151952-final-merge-pr671-only/ on
+      VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-01'
