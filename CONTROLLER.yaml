@@ -10252,3 +10252,60 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260801-155726-cleanup-closed-6-stale-awaiting-approval/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-08-01'
+
+  - id: WORKER-20260801-154739-final-merge-pr678-v2-longer-lock-wait
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''final-merge-pr678-v2-longer-lock-wait'' on compliance-tracker
+      reached status=blocked. credit accountant rejected auto-fix attempt 1, no further
+      metered spend without human review: {"approved": false, "increment_number": 2,
+      "reason": "existing software/mechanism already covers this (system_index match)
+      -- use it instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260801-154739-final-merge-pr678-v2-longer-lock-wait/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-01'
+
+  - id: WORKER-20260801-154745-final-merge-pr671-v2-longer-lock-wait
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''final-merge-pr671-v2-longer-lock-wait'' on compliance-tracker
+      reached status=blocked. credit accountant rejected auto-fix attempt 1, no further
+      metered spend without human review: {"approved": false, "increment_number": 2,
+      "reason": "existing software/mechanism already covers this (system_index match)
+      -- use it instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260801-154745-final-merge-pr671-v2-longer-lock-wait/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-01'
+
+  - id: WORKER-20260801-154802-rebase-audit-merge-pr672-v2-retry
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''rebase-audit-merge-pr672-v2-retry'' on compliance-tracker
+      reached status=blocked. credit accountant rejected auto-fix attempt 1, no further
+      metered spend without human review: {"approved": false, "increment_number": 2,
+      "reason": "existing software/mechanism already covers this (system_index match)
+      -- use it instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260801-154802-rebase-audit-merge-pr672-v2-retry/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-01'
+
+  - id: WORKER-20260801-163429-sentinel-frozen-19m45s-alert
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''sentinel-frozen-19m45s-alert'' on compliance-tracker
+      reached status=blocked. PRE-FLIGHT HARD STOP (crontab_unauthorized_change): live
+      crontab differs from the last-known-approved snapshot at /opt/veridian/ai-os/CRONTAB_APPROVED_SNAPSHOT.txt,
+      and prompt.txt does not cite a verified-approved OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      entry for this exact change. Per AI_ENGINEERING_POLICY.yaml''s genuinely_irreversible_actions
+      standing exception, crontab modifications require explicit Owner confirmation
+      before execution -- this is not a code bug, it is the policy working as designed.
+      If this change was Owner-approved, cite it in prompt.txt as: ''OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      entry id=<id> status=approved'' and ensure that entry''s status is actually ''approved''
+      in the live decisions file.'
+    where: /opt/veridian/ai-os/tasks/task-20260801-163429-sentinel-frozen-19m45s-alert/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-01'
