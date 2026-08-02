@@ -10764,3 +10764,60 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260801-210625-audit-pr685-documentation-lifecycle/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-024838-merge-the-8-clean-ci-green-compliance-tr
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Merge the 8 clean/CI-green compliance-tracker PRs,
+      then work through the remaining 72 (conflicts/behind/blocked)'' on compliance-tracker
+      reached status=blocked. PRE-FLIGHT HARD STOP (crontab_unauthorized_change): live
+      crontab differs from the last-known-approved snapshot at /opt/veridian/ai-os/CRONTAB_APPROVED_SNAPSHOT.txt,
+      and prompt.txt does not cite a verified-approved OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      entry for this exact change. Per AI_ENGINEERING_POLICY.yaml''s genuinely_irreversible_actions
+      standing exception, crontab modifications require explicit Owner confirmation
+      before execution -- this is not a code bug, it is the policy working as designed.
+      If this change was Owner-approved, cite it in prompt.txt as: ''OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      entry id=<id> status=approved'' and ensure that entry''s status is actually ''approved''
+      in the live decisions file.'
+    where: /opt/veridian/ai-os/tasks/task-20260802-024838-merge-the-8-clean-ci-green-compliance-tr/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-030047-merge-pr--9--veridian-scripts---fixed-co
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Merge PR #9 (veridian-scripts): fixed CONCURRENCY_CAP=5
+      + resource-headroom veto'' on compliance-tracker reached status=blocked. PRE-FLIGHT
+      HARD STOP (crontab_unauthorized_change): live crontab differs from the last-known-approved
+      snapshot at /opt/veridian/ai-os/CRONTAB_APPROVED_SNAPSHOT.txt, and prompt.txt
+      does not cite a verified-approved OWNER_DECISIONS_NEEDED_2026-07-23.yaml entry
+      for this exact change. Per AI_ENGINEERING_POLICY.yaml''s genuinely_irreversible_actions
+      standing exception, crontab modifications require explicit Owner confirmation
+      before execution -- this is not a code bug, it is the policy working as designed.
+      If this change was Owner-approved, cite it in prompt.txt as: ''OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      entry id=<id> status=approved'' and ensure that entry''s status is actually ''approved''
+      in the live decisions file.'
+    where: /opt/veridian/ai-os/tasks/task-20260802-030047-merge-pr--9--veridian-scripts---fixed-co/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-030125-real-completion-audit--ui-ux--veri-chat
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Real completion audit: UI/UX, VERI Chat, VERI assistant,
+      PROJEXA-AI.COM end-user readiness'' on compliance-tracker reached status=blocked.
+      PRE-FLIGHT HARD STOP (crontab_unauthorized_change): live crontab differs from
+      the last-known-approved snapshot at /opt/veridian/ai-os/CRONTAB_APPROVED_SNAPSHOT.txt,
+      and prompt.txt does not cite a verified-approved OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      entry for this exact change. Per AI_ENGINEERING_POLICY.yaml''s genuinely_irreversible_actions
+      standing exception, crontab modifications require explicit Owner confirmation
+      before execution -- this is not a code bug, it is the policy working as designed.
+      If this change was Owner-approved, cite it in prompt.txt as: ''OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      entry id=<id> status=approved'' and ensure that entry''s status is actually ''approved''
+      in the live decisions file.'
+    where: /opt/veridian/ai-os/tasks/task-20260802-030125-real-completion-audit--ui-ux--veri-chat/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
