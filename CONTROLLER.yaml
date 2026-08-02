@@ -11367,3 +11367,14 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260802-142001-checkpoint-refresh--item-c--pr-14--needs/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/veridian-scripts/pull/18'
     last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-150145-adopted-dispatch-tick-py-stuck-detection
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Dispatch-tick.py stuck-task detection + PM-triage
+      cooldown fix, PR 14 (clean re-adoption)'' on veridian-scripts reached status=completed.
+      tier1, Superboss-approved, merged autonomously: https://github.com/FChecklist/veridian-scripts/pull/14'
+    where: '/opt/veridian/ai-os/tasks/task-20260802-150145-adopted-dispatch-tick-py-stuck-task-detection/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/veridian-scripts/pull/14'
+    last_touched: '2026-08-02'
