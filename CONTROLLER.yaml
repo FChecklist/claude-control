@@ -10821,3 +10821,33 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260802-030125-real-completion-audit--ui-ux--veri-chat/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-032153-merge-pr--9-on-veridian-scripts--fixed-c
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Merge PR #9 on veridian-scripts (fixed concurrency
+      cap + resource veto)'' on veridian-scripts reached status=completed. tier1, Superboss-approved,
+      merged autonomously: https://github.com/FChecklist/veridian-scripts/pull/10'
+    where: '/opt/veridian/ai-os/tasks/task-20260802-032153-merge-pr--9-on-veridian-scripts--fixed-c/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/veridian-scripts/pull/10'
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-032508-close-phase-2---44--final-2-gates
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Close Phase 2 (Task #44) final 2 gates: rebase+fresh-audit+merge
+      PR #630 and PR #632'' on compliance-tracker reached status=blocked. PRE-FLIGHT
+      HARD STOP (crontab_unauthorized_change): live crontab differs from the last-known-approved
+      snapshot at /opt/veridian/ai-os/CRONTAB_APPROVED_SNAPSHOT.txt, and prompt.txt
+      does not cite a verified-approved OWNER_DECISIONS_NEEDED_2026-07-23.yaml entry
+      for this exact change. Per AI_ENGINEERING_POLICY.yaml''s genuinely_irreversible_actions
+      standing exception, crontab modifications require explicit Owner confirmation
+      before execution -- this is not a code bug, it is the policy working as designed.
+      If this change was Owner-approved, cite it in prompt.txt as: ''OWNER_DECISIONS_NEEDED_2026-07-23.yaml
+      entry id=<id> status=approved'' and ensure that entry''s status is actually ''approved''
+      in the live decisions file.'
+    where: /opt/veridian/ai-os/tasks/task-20260802-032508-close-phase-2--task--44--final-2-gates/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
