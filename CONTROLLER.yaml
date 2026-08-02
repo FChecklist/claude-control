@@ -10851,3 +10851,380 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260802-032508-close-phase-2--task--44--final-2-gates/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-08-02'
+
+  - id: WORKER-20260726-182702-rca-20260726-172004-search-performa
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''rca-task-20260726-172004-search-performance-explain-analyze---gin''
+      on claude-control reached status=blocked. 113-crontab-retriage (UMR-20260802-051325-9e5a):
+      NOT closed -- flagged AMBIGUOUS/needs-followup. Real, distinguishing RCA fix commit
+      exists (a23f983 ''RCA task-20260726-172004: fix watchdog''s periodic-checkpoint
+      false-stall escalation'') but confirmed via `git merge-base --is-ancestor` NOT
+      in claude-control''s origin/master and no PR exists for it (gh pr list empty)
+      -- real, valuable, orphaned work that never landed, not a duplicate (unlike sibling
+      RCA tasks 183201/185101/etc. which produced no distinguishing commit of their
+      own). Crontab root cause (resolved 2026-08-02T03:25 UTC) is not this task''s real
+      remaining blocker. Keeping status=blocked rather than closing; needs a follow-up
+      task to cherry-pick commit a23f983 onto a fresh branch and PR it, or confirm the
+      watchdog false-stall bug was independently already fixed another way first.'
+    where: /opt/veridian/ai-os/tasks/task-20260726-182702-rca-task-20260726-172004-search-performa/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260726-185117-rca-20260726-172000-hr-performance
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''rca-task-20260726-172000-hr-performance-error-handling---payroll''
+      on claude-control reached status=blocked. 113-crontab-retriage (UMR-20260802-051325-9e5a):
+      NOT closed -- flagged AMBIGUOUS/needs-followup. Real, distinguishing RCA fix commit
+      exists (d072e2b ''Watchdog: skip RCA escalation for units already self-healing
+      after OOM-kill'') but confirmed via `git merge-base --is-ancestor` NOT in claude-control''s
+      origin/master and no PR exists for it (gh pr list empty) -- real, valuable, orphaned
+      work that never landed, not a duplicate (unlike sibling RCA tasks 185101/185224/185426
+      for the same hr-performance RCA target, which produced no distinguishing commit
+      of their own). Crontab root cause (resolved 2026-08-02T03:25 UTC) is not this
+      task''s real remaining blocker. Keeping status=blocked rather than closing; needs
+      a follow-up task to cherry-pick commit d072e2b onto a fresh branch and PR it,
+      or confirm the OOM-kill self-healing double-escalation bug was independently already
+      fixed another way first.'
+    where: /opt/veridian/ai-os/tasks/task-20260726-185117-rca-task-20260726-172000-hr-performance/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-035159-parallel-job--cross-reference-every-rele
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Parallel job: cross-reference every relevant UMR/task/PR/CI
+      ID back to the master directive'' on compliance-tracker reached status=blocked.
+      credit accountant rejected auto-fix attempt 1, no further metered spend without
+      human review: {"approved": false, "increment_number": 1, "reason": "existing software/mechanism
+      already covers this (system_index match) -- use it instead of spending AI credits",
+      "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260802-035159-parallel-job--cross-reference-every-rele/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-035819-independent-audit--pr--630-and-pr--632
+    project: veridian
+    type: worker-task
+    status: in-progress
+    summary: 'Server-worker task ''Independent audit: PR #630 and PR #632 (Phase 2 /
+      Task #44 closure gate)'' on compliance-tracker reached status=awaiting_human_approval.
+      tier2, Superboss-approved, held for human merge: https://github.com/FChecklist/compliance-tracker/pull/712'
+    where: '/opt/veridian/ai-os/tasks/task-20260802-035819-independent-audit--pr--630-and-pr--632/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/712'
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-040340-real-completion-audit--live-click-throug
+    project: veridian
+    type: worker-task
+    status: in-progress
+    summary: 'Server-worker task ''Real completion audit: live click-through of PROJEXA-AI.COM
+      UI/UX vs spec'' on compliance-tracker reached status=awaiting_human_approval.
+      tier2, Superboss-approved, held for human merge: https://github.com/FChecklist/compliance-tracker/pull/711'
+    where: '/opt/veridian/ai-os/tasks/task-20260802-040340-real-completion-audit--live-click-throug/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/711'
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-045852-resume--area-2-live-ui-ux-click-through
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Resume: area 2 live UI/UX click-through + restore
+      parallel throughput'' on compliance-tracker reached status=blocked. credit accountant
+      rejected auto-fix attempt 1, no further metered spend without human review: {"approved":
+      false, "increment_number": 1, "reason": "existing software/mechanism already covers
+      this (system_index match) -- use it instead of spending AI credits", "reviewer":
+      "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260802-045852-resume--area-2-live-ui-ux-click-through/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-045928-investigate-the-two-duplication-rejectio
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Investigate the two duplication rejections blocking
+      Phase 2 (Task #44) and the 8-clean-PR-merge task'' on compliance-tracker reached
+      status=blocked. credit accountant rejected auto-fix attempt 1, no further metered
+      spend without human review: {"approved": false, "increment_number": 1, "reason":
+      "existing software/mechanism already covers this (system_index match) -- use it
+      instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260802-045928-investigate-the-two-duplication-rejectio/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-055208-batch-disposition-of-113-crontab-preflig
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Batch disposition of 113 crontab-preflight-blocked
+      tasks (800-task audit follow-up)'' on compliance-tracker reached status=blocked.
+      credit accountant rejected auto-fix attempt 1, no further metered spend without
+      human review: {"approved": false, "increment_number": 1, "reason": "existing software/mechanism
+      already covers this (system_index match) -- use it instead of spending AI credits",
+      "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260802-055208-batch-disposition-of-113-crontab-preflig/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-055212-fix-worker-entrypoint-sh-479-hardcoded-g
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Fix worker-entrypoint.sh:479 hardcoded gate name''
+      on compliance-tracker reached status=blocked. credit accountant rejected auto-fix
+      attempt 1, no further metered spend without human review: {"approved": false,
+      "increment_number": 1, "reason": "existing software/mechanism already covers this
+      (system_index match) -- use it instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260802-055212-fix-worker-entrypoint-sh-479-hardcoded-g/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-055214-register-veridian-kernel-1-0---kernel-co
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Register VERIDIAN_KERNEL 1.0 + KERNEL_CONFLICT +
+      PROJECT_CONTEXT addendum as Single Source of Truth'' on compliance-tracker reached
+      status=completed. tier1, Superboss-approved, merged autonomously: https://github.com/FChecklist/compliance-tracker/pull/697'
+    where: '/opt/veridian/ai-os/tasks/task-20260802-055214-register-veridian-kernel-1-0---kernel-co/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/697'
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-055217-800-audit--backfilled-703-umr-ids-f
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''800-task audit: backfilled 703 UMR IDs for pre-governor
+      task records'' on compliance-tracker reached status=blocked. credit accountant
+      rejected auto-fix attempt 1, no further metered spend without human review: {"approved":
+      false, "increment_number": 1, "reason": "existing software/mechanism already covers
+      this (system_index match) -- use it instead of spending AI credits", "reviewer":
+      "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260802-055217-800-task-audit--backfilled-703-umr-ids-f/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-074143-real-status-check--pr--685-and--687
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Real status check: PR #685 and #687'' on compliance-tracker
+      reached status=blocked. credit accountant rejected auto-fix attempt 1, no further
+      metered spend without human review: {"approved": false, "increment_number": 1,
+      "reason": "existing software/mechanism already covers this (system_index match)
+      -- use it instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260802-074143-real-status-check--pr--685-and--687/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-074400-pm-decision--scope-the-reconcile-stale-h
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''PM decision: scope the reconcile_stale_heartbeats
+      restoration narrowly'' on compliance-tracker reached status=blocked. credit accountant
+      rejected auto-fix attempt 1, no further metered spend without human review: {"approved":
+      false, "increment_number": 1, "reason": "existing software/mechanism already covers
+      this (system_index match) -- use it instead of spending AI credits", "reviewer":
+      "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260802-074400-pm-decision--scope-the-reconcile-stale-h/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-084829-pm-decision--reconcile-master-index-yaml
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''PM decision: reconcile MASTER_INDEX.yaml divergence
+      (live wins as base, fix sync gap)'' on compliance-tracker reached status=blocked.
+      credit accountant rejected auto-fix attempt 1, no further metered spend without
+      human review: {"approved": false, "increment_number": 1, "reason": "existing software/mechanism
+      already covers this (system_index match) -- use it instead of spending AI credits",
+      "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260802-084829-pm-decision--reconcile-master-index-yaml/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-084936-advance-in-flight-batches-toward-concurr
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Advance in-flight batches toward concurrency ceiling''
+      on compliance-tracker reached status=blocked. CLI HARD STOP (max_budget_usd):
+      this invocation''s own self-reported cost hit the $10 per-task cap (/opt/veridian/ai-os/tasks/task-20260802-084936-advance-in-flight-batches-toward-concurr/.claude-out-main.json).
+      Stopping rather than retrying -- a retry will very likely spend another $10 hitting
+      the identical wall. Needs human review: either the task is too large for one invocation
+      (split it) or it is genuinely stuck/looping.'
+    where: /opt/veridian/ai-os/tasks/task-20260802-084936-advance-in-flight-batches-toward-concurr/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-094001-add-headless-claude-code-cli-triage-judg
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Add headless Claude Code CLI triage judgment to dispatch-tick.py,
+      alert-only, no new script or timer'' on compliance-tracker reached status=blocked.
+      credit accountant rejected auto-fix attempt 1, no further metered spend without
+      human review: {"approved": false, "increment_number": 1, "reason": "existing software/mechanism
+      already covers this (system_index match) -- use it instead of spending AI credits",
+      "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260802-094001-add-headless-claude-code-cli-triage-judg/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-101715-pm-decision--prioritize-the-56-approved
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''PM decision: prioritize the 56 approved-but-not-merged
+      cases, defer full 425 backlog'' on compliance-tracker reached status=blocked.
+      credit accountant rejected auto-fix attempt 1, no further metered spend without
+      human review: {"approved": false, "increment_number": 1, "reason": "existing software/mechanism
+      already covers this (system_index match) -- use it instead of spending AI credits",
+      "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260802-101715-pm-decision--prioritize-the-56-approved/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-110419-pm-decision--close-umr-034545-3388-and-0
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''PM decision: close UMR 034545-3388 and 040056-5319,
+      correct UMR 054239-4251 record honestly'' on compliance-tracker reached status=blocked.
+      credit accountant rejected auto-fix attempt 1, no further metered spend without
+      human review: {"approved": false, "increment_number": 1, "reason": "existing software/mechanism
+      already covers this (system_index match) -- use it instead of spending AI credits",
+      "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260802-110419-pm-decision--close-umr-034545-3388-and-0/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-110424-owner-requested--full-evidence-based-imp
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Owner-requested: full evidence-based implementation
+      matrix for all 12 VERIDIAN deliverables'' on compliance-tracker reached status=blocked.
+      credit accountant rejected auto-fix attempt 1, no further metered spend without
+      human review: {"approved": false, "increment_number": 1, "reason": "existing software/mechanism
+      already covers this (system_index match) -- use it instead of spending AI credits",
+      "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260802-110424-owner-requested--full-evidence-based-imp/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-110427-scope-extension-to-existing-audit-umr-20
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: Server-worker task 'Scope extension to existing audit UMR-20260802-104058-25ba,
+      add 2 verification targets, no new audit' on compliance-tracker reached status=blocked.
+      periodic checkpoint
+    where: /opt/veridian/ai-os/tasks/task-20260802-110427-scope-extension-to-existing-audit-umr-20/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-115701-persist-the-already-compiled-14-item-mat
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Persist the already-compiled 14-item matrix to one
+      real canonical file under UMR-20260802-104058-25ba'' on compliance-tracker reached
+      status=blocked. credit accountant rejected auto-fix attempt 1, no further metered
+      spend without human review: {"approved": false, "increment_number": 1, "reason":
+      "existing software/mechanism already covers this (system_index match) -- use it
+      instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260802-115701-persist-the-already-compiled-14-item-mat/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-115706-second-false-completion-claim-on-the-sam
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Second false-completion claim on the same matrix
+      file, require real proof this time'' on compliance-tracker reached status=blocked.
+      credit accountant rejected auto-fix attempt 1, no further metered spend without
+      human review: {"approved": false, "increment_number": 1, "reason": "existing software/mechanism
+      already covers this (system_index match) -- use it instead of spending AI credits",
+      "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260802-115706-second-false-completion-claim-on-the-sam/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-115710-kernel-amendment--stateless-ai-scop
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''KERNEL_AMENDMENT: stateless-AI task-scoped UMR governance,
+      amending UMR-20260802-054239-4251'' on compliance-tracker reached status=blocked.
+      credit accountant rejected auto-fix attempt 1, no further metered spend without
+      human review: {"approved": false, "increment_number": 1, "reason": "existing software/mechanism
+      already covers this (system_index match) -- use it instead of spending AI credits",
+      "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260802-115710-kernel-amendment--stateless-ai-task-scop/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-123916-investigate-and-fix-real-production-risk
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Investigate and fix real production risk: two Vercel
+      projects bound to same domain'' on compliance-tracker reached status=blocked.
+      credit accountant rejected auto-fix attempt 1, no further metered spend without
+      human review: {"approved": false, "increment_number": 1, "reason": "existing software/mechanism
+      already covers this (system_index match) -- use it instead of spending AI credits",
+      "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260802-123916-investigate-and-fix-real-production-risk/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-124055-approve--correct-the-go-live-domain-conf
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Approve: correct the Go Live domain-conflict finding
+      in the matrix to reflect current re-verified state'' on compliance-tracker reached
+      status=blocked. credit accountant rejected auto-fix attempt 1, no further metered
+      spend without human review: {"approved": false, "increment_number": 1, "reason":
+      "existing software/mechanism already covers this (system_index match) -- use it
+      instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260802-124055-approve--correct-the-go-live-domain-conf/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-124650-closure-checklist-cycle-1--fix-2-conflic
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Closure checklist cycle 1: fix 2 conflicts, nudge
+      3 stalled audits'' on compliance-tracker reached status=blocked. credit accountant
+      rejected auto-fix attempt 1, no further metered spend without human review: {"approved":
+      false, "increment_number": 1, "reason": "existing software/mechanism already covers
+      this (system_index match) -- use it instead of spending AI credits", "reviewer":
+      "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260802-124650-closure-checklist-cycle-1--fix-2-conflic/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-124726-formal-audit-job-description-for-the-5-c
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Formal audit job description for the 5 checklist
+      items, linked to closure checklist dispatch'' on compliance-tracker reached status=blocked.
+      credit accountant rejected auto-fix attempt 1, no further metered spend without
+      human review: {"approved": false, "increment_number": 1, "reason": "existing software/mechanism
+      already covers this (system_index match) -- use it instead of spending AI credits",
+      "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260802-124726-formal-audit-job-description-for-the-5-c/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
