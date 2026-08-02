@@ -3588,6 +3588,149 @@ registries:
     trustworthy rather than silently drifting.'
   query_command: python3 scripts/superboss-register.py query-knowledge "cross_system_verification_summary_2026_07_26"
     --tag registry-id:cross_system_verification_summary_2026_07_26
+- id: browser_intent_cache
+  type: application_feature
+  path: compliance-tracker/src/lib/browser-intent-cache.ts
+  scope: 'Matches prior session record ''VERIDIAN Browser Intent Cache + Palette'' (PR #324) -- IndexedDB
+    workflow-recall palette. Real file confirmed to exist 2026-07-30; was never catalogued in this file
+    despite being a named, merged PR feature. Known honest gap carried over from that PR''s own record:
+    encryption and attachments were not built.'
+  status: live_existence_confirmed_2026-07-30
+- id: capability_services_pair
+  type: application_service_pair
+  path: compliance-tracker/src/lib/services/capability-learning-service.ts + compliance-tracker/src/lib/services/capability-audit-service.ts
+  scope: App-layer (subsystem_2) TypeScript services -- distinct from the ai-os-layer registries.engines_gateways_architecture
+    phase_1_capability_registry_live_wiring (Engine 3, the AI-dispatch capability lookup table in superboss-register.sqlite's
+    capability_registry table). Both files confirmed to exist on disk 2026-07-30; had zero prior mention
+    in this file. Existence-confirmed only this pass -- internal wiring/callers not independently re-verified.
+  status: live_existence_confirmed_2026-07-30
+- id: cron_systemd_consolidation_2026_07_29
+  type: automation_infrastructure_inventory
+  path: /home/rajat/.config/systemd/user/veridian-cron-*.timer (18 confirmed) + veridian-cron-*.service
+    (matching 18) + 9 additional non-cron units (veridian-worker@.service, veridian-supervisor@.service,
+    veridian-docworker@.service, veridian-worker-enduser@.service, veridian-task-watchdog.service+.timer,
+    veridian-directive-engine.service, veridian-glm-proxy.service, veridian-governor-tick.service)
+  scope: '18 systemd-timer-based replacements for the periodic workload that used to run via rajat''s
+    crontab, before the entire crontab was stopped during the 2026-07-26 OOM incident (see MEMORY_OWNER_AI.md)
+    and never restored as cron -- it was consolidated into systemd --user timers instead: dispatch-tick,
+    phase-continuation-tick, status-remediation-tick, health-check-15min, cost-usage-60min, file-inventory,
+    generate-wiring-registry, knowledge-registry-multisource, software-catalog-gen, security-check, audit-pipeline-security,
+    credit-ledger-prune, sync-repos, sync-vercel-env, sync-verdian-ai-data, sync-controller-back, system-sync,
+    veridian-self-check. Confirmed live via direct `ls` 2026-07-30 (18 *.timer files, exact count). Had
+    ZERO prior mention in this file or in system_index -- a real, live, currently-unregistered piece of
+    production automation infrastructure.'
+  status: live
+  honest_gap: Not yet registered in system_index either as of this pass -- this MASTER_INDEX.yaml entry
+    is the first place this consolidation is catalogued anywhere. A follow-up `index-add` pass per unit
+    (or one rollup row) is still needed for system_index's own check-duplicate coverage.
+  closed_set_rule: 'Documented 2026-07-30 (campaign cron-consolidation-reaudit-phase6): these 18 units
+    are a closed set -- see ~/.config/systemd/user/README.md (new, this pass) plus a matching header comment
+    prepended to each of the 18 .service files. A new periodic need is added as a new ExecStart step or
+    trigger condition inside one of these 18 existing units where it genuinely fits; a genuinely new cadence/purpose
+    requires an explicit Owner decision to add unit #19, never a default/automatic action by any script,
+    worker, or session.'
+  reaudit_2026_07_30: 'Independently re-verified this pass: all 18 timers present/enabled/active with
+    next-run times spread across distinct minutes (not clustered the way the old crontab was); list-unit-files
+    shows exactly 18 .service + 18 .timer, no duplicates or orphans; crontab -l confirmed every real job
+    line still carries its #STOPPED-ALL-CRON-2026-07-26# or #PAUSED-OOM-INCIDENT-2026-07-26 marker, only
+    the XDG_RUNTIME_DIR= env line is uncommented; the full 19-old-job to 18-new-unit mapping was confirmed
+    correct via each units real ExecStart= line, not just name-matching (only supervisor-sweep + queue-dispatcher
+    collapse into dispatch-tick). REAL GAP FOUND: the shared ConditionPathExists=!.../resource-governor-EMERGENCY_STOP
+    gate tripped again (ATTENTION.md entry timestamped 2026-07-29T21:08:00 UTC, same near-zero-metrics
+    false-positive signature already flagged in PROTOCOL_OWNER_AI.md section 16) only minutes into this
+    rollout, and stayed tripped for hours with no logged clear event. Effect: the 10 lower/medium-frequency
+    units (sync-repos, sync-vercel-env, sync-verdian-ai-data, cost-usage-60min, credit-ledger-prune, generate-wiring-registry,
+    knowledge-registry-multisource, software-catalog-gen, audit-pipeline-security, system-sync) hit ConditionResult=no
+    (start condition unmet) at every real trigger since rollout -- zero real payload executions, despite
+    systemd reporting no failure, since a condition-skip is not a failure exit code and never shows up
+    in an ordinary journal failure grep. The 8 higher-frequency units (10-30 minute cadence: dispatch-tick,
+    phase-continuation-tick, status-remediation-tick, health-check-15min, security-check, file-inventory,
+    veridian-self-check, sync-controller-back) had enough trigger attempts to also land in a clear window
+    and ran for real, with real register and log evidence. The sentinel file was gone and current metrics
+    read 0/0/0/0 by the time this audit checked (~2026-07-30 03:44-04:02 UTC); not yet independently reconfirmed
+    that the 10 gated units succeed on their own next real fire. This is the same recurring EMERGENCY_STOP
+    false-positive bug already flagged as unresolved -- observed for a third real time, and this time
+    it silently defeated more than half of a brand-new rollouts real execution coverage without tripping
+    any alarm a normal status check would catch. Worth a dedicated fix to the trip logic itself, not just
+    another manual clear.'
+- id: pm_triage_alerts
+  type: real_time_append_only_log
+  path: ai-os/PM_TRIAGE_ALERTS.md
+  scope: 'Added 2026-08-02 (PM decision UMR-20260802-090702-c813), extending dispatch-tick.py''s same
+    tick (PR #14 branch, same file, same ~10min cadence, no new script/cron/timer) with a strictly-scoped
+    headless-Claude triage step. A deterministic, zero-AI-cost pre-filter (should_triage_pm(): real stuck
+    tasks / fresh real Superboss-reject-or-AUDIT-FAIL checkpoint notes / real pending text in the interactive
+    tmux ''claude'' session''s own prompt line) decides whether anything looks notable; only when it does,
+    one small, capped (--max-budget-usd, default $0.50), zero-tool-access (--allowedTools "") `claude
+    -p` call is made, asked ONLY for a yes/no plus 1-2 sentence evidence-cited reason on whether this
+    needs Owner/PM attention -- it cannot decide product questions, dispatch work, edit any other file,
+    or resolve a KERNEL_CONFLICT itself (no tool access to do so even if it tried). This script appends
+    the result to this file; the model never writes anything itself. Evidence lists are bounded to the
+    first 10 real records per key plus an honest *_omitted_count (never a smaller fabricated count) after
+    a real production run against 846 tasks (425 stuck, 56 fresh audit-fails) hit the OS ARG_MAX passing
+    full lists via subprocess argv -- see commit 75b25c2 on PR #14''s branch. Verified live 2026-08-02T09:23:46Z:
+    real invocation ran end-to-end, real judgment returned (YES -- flagged the same 425 stuck / 56 audit-fail
+    backlog for PM attention), real entry written to this file.'
+  status: live
+  query_command: cat /opt/veridian/ai-os/PM_TRIAGE_ALERTS.md
+- id: sap_reports_projexa_completion_effort
+  type: data_migration_and_report_mapping_effort
+  path: 'ai-os/memory/sap_mapping.sqlite (tables: sap_modules, sap_reports, ingest_log) + task dirs: ai-os/tasks/task-20260728-050704-sap-informed-veridian-phase-0-baseline,
+    task-20260728-054819-adopted-adopt-pr-615-sap-phase-0-baseline-inven, task-20260728-123644-classify-87-sap-reports-into-engine-trac,
+    task-20260728-160934-cross-reference-sap-reports-vs-existing, task-20260728-033242-adopted-real-audit-pr-603-projexa-erp-e2e-re'
+  scope: SAP-informed VERIDIAN/PROJEXA reports-completion effort, dispatched 2026-07-28. Real sqlite DB
+    (692KB, 3 real tables) + 5 real task directories confirmed to exist on disk 2026-07-30. Had ZERO prior
+    mention anywhere in this file. This entry is existence-cataloguing only -- per-task phase/completion
+    status was NOT re-verified this pass; read each task's own task.yaml/PROGRESS.md for that.
+  status: existence_confirmed_2026-07-30_phase_detail_not_reverified
+- id: stuck_tasks_heartbeat
+  type: real_time_state_file
+  path: ai-os/STUCK_TASKS_HEARTBEAT.json
+  scope: 'Added 2026-08-02 (PR #14 on veridian-scripts, dispatch-tick.py''s find_stuck_tasks()/write_stuck_tasks_heartbeat()),
+    extending the existing dispatch-tick.py rather than a new cron/systemd timer. Every tick, writes a
+    real snapshot of task.yaml entries with status=blocked and no new checkpoint in STUCK_TASK_THRESHOLD_MINUTES
+    (default 30min, VERIDIAN_DISPATCH_TICK_STUCK_THRESHOLD_MIN-overridable), each with real blocked-duration
+    and the last real checkpoint note, plus real load average / running-task counts. Strictly read-only
+    with respect to task state -- never auto-resolves a stuck task or dispatches anything. Supersedes
+    the short-lived ai-os/DISPATCH_TICK_HEARTBEAT.json (closed duplicate PR #15, removed 2026-08-02) --
+    same purpose, this is the canonical file/path going forward. Verified live: real run against 846 real
+    tasks found 425 genuinely stuck.'
+  status: live
+  query_command: cat /opt/veridian/ai-os/STUCK_TASKS_HEARTBEAT.json | python3 -m json.tool
+- id: umr_tasks_registry
+  type: dispatch_queue_task_ledger
+  path: ai-os/memory/superboss-register.sqlite#umr_tasks
+  scope: Real, live table (104 rows as of 2026-07-30) written by scripts/resource_governor.py's submit()/dispatch_one()
+    (registries -- see the Resource Governor section of this file's own quick_reference/history) and read
+    by superboss-register.py's `heartbeat --task-identity` command (Stage 3 reconciliation-sweep prerequisite
+    -- stamps last_heartbeat=now() on the active row). Was a foundational live dispatch-queue mechanism
+    with ZERO prior mention anywhere in this file despite being referenced by name in prior session memory
+    -- added 2026-07-30 during the master-index-central-entrypoint-confirmation pass.
+  status: live
+  query_command: python3 scripts/resource_governor.py --query-umr --limit <n>
+- id: utm_traceability_convention
+  type: cross_cutting_data_convention
+  path: ai-os/memory/superboss-register.sqlite's instructions/work_items/actions tables (utm_source/utm_medium/utm_campaign/utm_content/utm_term
+    columns) + every log-instruction/log-work/log-action CLI invocation across this whole system
+  scope: The standing traceability convention (not a single script or table of its own) tagging every
+    real Owner instruction and every real AI/software work item, letting a query filter by utm_campaign
+    the same way a marketing UTM tag filters ad traffic -- e.g. this exact task logs itself with utm_campaign='master-index-central-entrypoint-confirmation-phase6-2026-07-30'.
+    Referenced ad hoc in ai-os/GOVERNANCE_AUDIT_RESULT_2026-07-23.yaml and ai-os/STANDING_DIRECTIVE.yaml's
+    schema block, but never had its own single MASTER_INDEX.yaml entry describing it as a standing convention
+    until this pass.
+  status: live
+  query_command: python3 scripts/superboss-register.py search '<keywords>' (then filter results by utm_campaign
+    in the JSON output), or a raw SELECT ... FROM instructions WHERE utm_campaign='<value>'
+- id: veri_chat
+  type: end_user_facing_feature
+  path: compliance-tracker/src/app/api/veri-chat + compliance-tracker/src/components/veri-chat/ + compliance-tracker/src/lib/services/veri-chat-service.ts
+    + compliance-tracker/src/lib/services/veri-chat-v2-enablement-service.ts
+  scope: Real, existing end-user chat feature (subsystem_2, app layer) -- API route, React components,
+    and 2 backing services all confirmed present on disk 2026-07-30. Had ZERO prior entry in this file
+    despite being a named, real, end-user-facing surface -- a genuine coverage gap this pass closes. Existence-confirmed
+    only; feature behavior/wiring to the Mother Router / AI roster not independently re-verified this
+    pass.
+  status: live_existence_confirmed_2026-07-30
 tree_lineage:
   tree1_audit_tree:
     path: /opt/veridian/repos/compliance-tracker/ai-os/audit-tree/
