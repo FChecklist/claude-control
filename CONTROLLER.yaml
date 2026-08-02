@@ -11228,3 +11228,142 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260802-124726-formal-audit-job-description-for-the-5-c/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-040131-parallel-job--collate-existing-module-en
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Parallel job: collate existing module/engine wiring+metadata/UTM
+      map, verify it, use it to accelerate master directive'' on compliance-tracker
+      reached status=blocked. Superboss rejected: https://github.com/FChecklist/compliance-tracker/pull/692
+      — see review.json for issues'
+    where: '/opt/veridian/ai-os/tasks/task-20260802-040131-parallel-job--collate-existing-module-en/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/692'
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-124913-adopted-implementation-matrix--14-item-audit
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Implementation matrix (14-item audit) -- durable
+      file + domain-collision correction, PR 716'' on compliance-tracker reached status=completed.
+      tier1, Superboss-approved, merged autonomously: https://github.com/FChecklist/compliance-tracker/pull/716'
+    where: '/opt/veridian/ai-os/tasks/task-20260802-124913-adopted-implementation-matrix--14-item-audit/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/716'
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-124920-adopted-kernel-amendment-documentation--umr-owne
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''KERNEL_AMENDMENT documentation (UMR ownership separation),
+      plan only, PR 717'' on compliance-tracker reached status=completed. tier1, Superboss-approved,
+      merged autonomously: https://github.com/FChecklist/compliance-tracker/pull/717'
+    where: '/opt/veridian/ai-os/tasks/task-20260802-124920-adopted-kernel-amendment-documentation--umr-owne/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/717'
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-124955-adopted-reconcile-master-index-yaml-registries
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Reconcile MASTER_INDEX.yaml registries (carry-forward
+      17 entries), PR 121'' on claude-control reached status=blocked. Superboss rejected:
+      https://github.com/FChecklist/claude-control/pull/121 — see review.json for issues'
+    where: '/opt/veridian/ai-os/tasks/task-20260802-124955-adopted-reconcile-master-index-yaml-registries/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/121'
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-133445-pm-decision--do-not-stop-the-4-workers
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''PM decision: do not stop the 4 workers, they are
+      not confirmed duplicates'' on compliance-tracker reached status=blocked. credit
+      accountant rejected auto-fix attempt 1, no further metered spend without human
+      review: {"approved": false, "increment_number": 1, "reason": "existing software/mechanism
+      already covers this (system_index match) -- use it instead of spending AI credits",
+      "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260802-133445-pm-decision--do-not-stop-the-4-workers/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-133449-pm-ack--keep-working--standing-cadence-a
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''PM ack: keep working, standing cadence already covered''
+      on compliance-tracker reached status=blocked. credit accountant rejected auto-fix
+      attempt 1, no further metered spend without human review: {"approved": false,
+      "increment_number": 1, "reason": "existing software/mechanism already covers this
+      (system_index match) -- use it instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260802-133449-pm-ack--keep-working--standing-cadence-a/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-141942-owner-decision--revert-projexa-ai-com-to
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Owner decision: revert projexa-ai.com to Wave 10
+      merge (veridian-compliance-ai)'' on compliance-tracker reached status=blocked.
+      credit accountant rejected auto-fix attempt 1, no further metered spend without
+      human review: {"approved": false, "increment_number": 1, "reason": "existing software/mechanism
+      already covers this (system_index match) -- use it instead of spending AI credits",
+      "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260802-141942-owner-decision--revert-projexa-ai-com-to/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-141947-merge-pr--716--item-a-----genuine-fresh
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Merge PR #716 (item A) -- genuine fresh AUDIT: PASS
+      verified'' on compliance-tracker reached status=blocked. credit accountant rejected
+      auto-fix attempt 1, no further metered spend without human review: {"approved":
+      false, "increment_number": 1, "reason": "existing software/mechanism already covers
+      this (system_index match) -- use it instead of spending AI credits", "reviewer":
+      "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260802-141947-merge-pr--716--item-a-----genuine-fresh/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-141951-merge-pr--717--item-b-----genuine-fresh
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Merge PR #717 (item B) -- genuine fresh AUDIT: PASS
+      verified'' on compliance-tracker reached status=blocked. credit accountant rejected
+      auto-fix attempt 1, no further metered spend without human review: {"approved":
+      false, "increment_number": 1, "reason": "existing software/mechanism already covers
+      this (system_index match) -- use it instead of spending AI credits", "reviewer":
+      "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260802-141951-merge-pr--717--item-b-----genuine-fresh/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-141956-merge-pr--716--item-a-----fresh-audit--p
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Merge PR #716 (item A) -- fresh AUDIT: PASS covers
+      current head e6bf610b'' on compliance-tracker reached status=blocked. credit accountant
+      rejected auto-fix attempt 1, no further metered spend without human review: {"approved":
+      false, "increment_number": 1, "reason": "existing software/mechanism already covers
+      this (system_index match) -- use it instead of spending AI credits", "reviewer":
+      "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260802-141956-merge-pr--716--item-a-----fresh-audit--p/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-142001-checkpoint-refresh--item-c--pr-14--needs
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Checkpoint-refresh: item C (PR#14) needs a fresh
+      audit pass on current head'' on veridian-scripts reached status=completed. tier1,
+      Superboss-approved, merged autonomously: https://github.com/FChecklist/veridian-scripts/pull/18'
+    where: '/opt/veridian/ai-os/tasks/task-20260802-142001-checkpoint-refresh--item-c--pr-14--needs/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/veridian-scripts/pull/18'
+    last_touched: '2026-08-02'
