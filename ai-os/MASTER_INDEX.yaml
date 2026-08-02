@@ -6,7 +6,11 @@ protocol: READ_THIS_FILE_FIRST. Before any grep/find/read across this server or 
   and this file both show no match, proceed, then register the new thing in system_index (index-add) AND
   in this file's relevant list.
 built_ts: '2026-07-30T03:57:58.416644+00:00'
-built_by: regenerate_master_index.py (automated, wholesale regeneration each run)
+built_by: 'CORRECTED 2026-08-02 (real independent audit finding, this repo''s own review process):
+  this field previously claimed "regenerate_master_index.py (automated, wholesale regeneration each
+  run)", which contradicts search_layers_relationship.master_index_yaml below (and the file''s own
+  real, observed edit history) -- registries[] entries are hand-maintained, appended per-task, not
+  auto-generated; only initiative-status and unregistered_mentions_backlog get script-corrected.'
 audit_passes_complete: 3
 audit_passes_required: 3
 canonical_path_live: /opt/veridian/ai-os/MASTER_INDEX.yaml
@@ -716,10 +720,13 @@ quick_reference:
   summary: Pre-existing "start here" stub for the ai-os/ tree. Rewritten 2026-07-13 after being found
     stale/wrong (false Prisma claim). This...
 - id: engine_registry
-  status: live
-  path: /opt/veridian/repos/compliance-tracker/ai-os/engines/ENGINES.yaml
-  summary: VCEL deterministic-computation engine registry (247 engines catalogued, 41 implemented per
-    prior session record).
+  status: 'MISCITED PATH, corrected 2026-07-26 -- see the full registries.engine_registry entry below for
+    the real path and evidence.'
+  path: /opt/veridian/repos/compliance-tracker/src/lib/engines/*.ts (see correction below; ai-os/engines/ENGINES.yaml
+    is NOT this registry)
+  summary: VCEL deterministic-computation engine registry (25 files, ~247 functions, per
+    ai-os/system-tree/10-compliance-tracker-governance.yaml#GOV-07). 41 implemented is a prior-session
+    record not re-verified by this task.
 - id: file_ownership_rules
   status: live
   path: /opt/veridian/ai-os/file-ownership.yaml
@@ -740,9 +747,13 @@ quick_reference:
   summary: Root-level doc quarantine-banner enforcement list, tied to master_tracker's GAP-UNIFIED-SOT-REMAINDER
     item.
 - id: database_catalog
-  status: live, generated 2026-07-20
+  status: 'STALE, regen merged but not yet synced to this path as of 2026-07-26 -- see the full
+    registries.database_catalog entry below.'
   path: /opt/veridian/ai-os/DATABASE_CATALOG.json
-  summary: EXHAUSTIVE, mechanically-generated catalog of every table (444), every column per table (name/type/nullability/default/PK/unique/...
+  summary: 'EXHAUSTIVE, mechanically-generated catalog of every table (449 per compliance-tracker PR
+    #567, merged 2026-07-26 -- this live runtime copy still reads 444 as of the last re-check, see
+    correction below), every column per table (name/type/nullability/default/PK/unique/enum-values),
+    every foreign key, every index, and every enum.'
 - id: function_catalog
   status: live, generated 2026-07-20
   path: /opt/veridian/ai-os/FUNCTION_CATALOG.json
@@ -2417,9 +2428,24 @@ registries:
     Real follow-up, not done this pass.
 - id: engine_registry
   type: yaml_file
-  path: /opt/veridian/repos/compliance-tracker/ai-os/engines/ENGINES.yaml
-  scope: VCEL deterministic-computation engine registry (247 engines catalogued, 41 implemented per prior
-    session record).
+  path: /opt/veridian/repos/compliance-tracker/src/lib/engines/*.ts (25 files, see
+    ai-os/system-tree/10-compliance-tracker-governance.yaml#GOV-07 for the per-file function
+    breakdown -- NOT ai-os/engines/ENGINES.yaml, see path_correction_2026_07_26)
+  scope: VCEL deterministic-computation engine registry (~247 functions across 25 files, per GOV-07
+    -- "engines" in the count is a functions count, not a file/engine count). 41 implemented is a
+    prior-session record, not independently re-verified by this task.
+  path_correction_2026_07_26: 'Real, mechanically-confirmed finding: the path this entry has always
+    carried (/opt/veridian/repos/compliance-tracker/ai-os/engines/ENGINES.yaml) is NOT the VCEL
+    engine registry and never has been -- `git log --follow` on that file shows exactly one commit
+    (33b615ba, 2026-07-19, an unrelated ACTIVE-CLAIMS.yaml edit) and its real content is a
+    Z.ai/Claude-Code FULL_ACCESS agent-authorization grant (repos/permissions for the zai and
+    claude_code AI agents), confirmed by direct read of the live file. This is not path drift over
+    time -- the citation was wrong from the start. The real VCEL computation-engine inventory
+    (accounting, banking, costing, inventory, hr, payroll, sales, security, etc.,
+    src/lib/engines/*.ts, 25 files) is documented in
+    ai-os/system-tree/10-compliance-tracker-governance.yaml''s GOV-07 entry ("VCEL Computation
+    Engine registry -- 25 files, ~247 functions, all deterministic") and referenced from
+    ai-os/CONSTITUTION.yaml.'
   status: live
 - id: file_ownership_rules
   type: yaml_file
@@ -2474,7 +2500,16 @@ registries:
     a direct schema.ts read at the time). This catalog's 3-way-verified count is 444 tables / 124 enums
     as of 2026-07-20 -- the schema grew after that doc was last verified; it was not wrong when written,
     it went stale. This is the corrected, current, re-verifiable number going forward.
-  status: live, generated 2026-07-20
+  regen_2026_07_26: 'compliance-tracker PR #567 (merged 2026-07-26T10:40:04Z) re-ran generator_script and
+    found real schema growth: 449 tables / 124 enums (5 added -- crm_activities, crm_campaigns,
+    crm_lost_reasons, ops_dev_tasks, tenant_ai_config -- 0 removed, 0 enum changes) vs this entry''s
+    444/124 baseline. Re-checked the actual file at this registry''s own path
+    (/opt/veridian/ai-os/DATABASE_CATALOG.json) as of 2026-07-26: it still reads table_count=444,
+    enum_count=124 -- the PR #567 regen has not yet propagated to this live-runtime path. Remediation
+    recommendation: a follow-up sync pass should fast-forward this path to reflect PR #567 before
+    trusting its on-disk contents again.'
+  status: 'live, generated 2026-07-20, PR #567 regen (449/124) merged but not yet reflected at this
+    path -- see regen_2026_07_26'
   regenerate: run generator_script anytime schema.ts changes; safe, read-only, no DB connection required
 - id: function_catalog
   type: json_file
