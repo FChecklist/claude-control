@@ -11378,3 +11378,39 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260802-150145-adopted-dispatch-tick-py-stuck-task-detection/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/veridian-scripts/pull/14'
     last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-152728-closure-checklist--nudge-d-e-audits--clo
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Closure checklist: nudge D+E audits, close #713 superseded,
+      land F doc commit'' on compliance-tracker reached status=blocked. credit accountant
+      rejected auto-fix attempt 1, no further metered spend without human review: {"approved":
+      false, "increment_number": 1, "reason": "existing software/mechanism already covers
+      this (system_index match) -- use it instead of spending AI credits", "reviewer":
+      "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260802-152728-closure-checklist--nudge-d-e-audits--clo/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-153622-adopted-wave-10-redo-documentation-in-completed
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Wave 10 redo documentation in COMPLETED.yaml, PR
+      720'' on compliance-tracker reached status=completed. tier1, Superboss-approved,
+      merged autonomously: https://github.com/FChecklist/compliance-tracker/pull/720'
+    where: '/opt/veridian/ai-os/tasks/task-20260802-153622-adopted-wave-10-redo-documentation-in-completed/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/720'
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-155151-adopted-minimal-master-index-yaml-reconciliation
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Minimal MASTER_INDEX.yaml reconciliation (9 entries),
+      PR 122'' on claude-control reached status=completed. tier1, Superboss-approved,
+      merged autonomously: https://github.com/FChecklist/claude-control/pull/122'
+    where: '/opt/veridian/ai-os/tasks/task-20260802-155151-adopted-minimal-master-index-yaml-reconciliation/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/122'
+    last_touched: '2026-08-02'
