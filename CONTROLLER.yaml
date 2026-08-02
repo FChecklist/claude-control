@@ -11414,3 +11414,62 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260802-155151-adopted-minimal-master-index-yaml-reconciliation/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/122'
     last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-163326-amendment--map-6-merged-prs-to-implement
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''AMENDMENT: map 6 merged PRs to implementation UMRs,
+      verify real implementation vs governance-only, update canonical matrix'' on compliance-tracker
+      reached status=blocked. credit accountant rejected auto-fix attempt 1, no further
+      metered spend without human review: {"approved": false, "increment_number": 1,
+      "reason": "existing software/mechanism already covers this (system_index match)
+      -- use it instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260802-163326-amendment--map-6-merged-prs-to-implement/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-163545-adopted-amend-implementation-matrix-with-pr-to-u
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Amend implementation matrix with PR-to-UMR mapping,
+      PR 723'' on compliance-tracker reached status=completed. tier1, Superboss-approved,
+      merged autonomously: https://github.com/FChecklist/compliance-tracker/pull/723'
+    where: '/opt/veridian/ai-os/tasks/task-20260802-163545-adopted-amend-implementation-matrix-with-pr-to-u/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/723'
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-165846-adopted-amend-matrix-execution-framework-gatekee
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''amend-matrix-execution-framework-gatekeeper-memory-recovery''
+      on compliance-tracker reached status=completed. tier1, Superboss-approved, merged
+      autonomously: https://github.com/FChecklist/compliance-tracker/pull/725'
+    where: '/opt/veridian/ai-os/tasks/task-20260802-165846-adopted-amend-matrix-execution-framework-gatekee/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/725'
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-171730-adopted-amend-matrix-artifact-traceability-regis
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''amend-matrix-artifact-traceability-register-tranche1''
+      on compliance-tracker reached status=completed. tier1, Superboss-approved, merged
+      autonomously: https://github.com/FChecklist/compliance-tracker/pull/726'
+    where: '/opt/veridian/ai-os/tasks/task-20260802-171730-adopted-amend-matrix-artifact-traceability-regis/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/726'
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260802-171740-amendment--consolidate-a-single-unified
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''AMENDMENT: consolidate a single unified project memory
+      that all AI instances read and write, no new database'' on compliance-tracker
+      reached status=blocked. Superboss rejected: https://github.com/FChecklist/compliance-tracker/pull/729
+      — see review.json for issues'
+    where: '/opt/veridian/ai-os/tasks/task-20260802-171740-amendment--consolidate-a-single-unified/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/729'
+    last_touched: '2026-08-02'
