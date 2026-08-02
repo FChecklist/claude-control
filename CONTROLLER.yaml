@@ -10712,3 +10712,42 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260801-210559-audit-pr683-ai-modification-readiness/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-08-01'
+
+  - id: WORKER-20260801-210607-audit-pr684-ai-readable-technical-docs
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''audit-pr684-ai-readable-technical-docs'' on compliance-tracker
+      reached status=blocked. credit accountant rejected auto-fix attempt 1, no further
+      metered spend without human review: {"approved": false, "increment_number": 2,
+      "reason": "existing software/mechanism already covers this (system_index match)
+      -- use it instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260801-210607-audit-pr684-ai-readable-technical-docs/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260801-210637-audit-pr687-cost-visibility
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''audit-pr687-cost-visibility'' on compliance-tracker
+      reached status=blocked. credit accountant rejected auto-fix attempt 1, no further
+      metered spend without human review: {"approved": false, "increment_number": 2,
+      "reason": "existing software/mechanism already covers this (system_index match)
+      -- use it instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260801-210637-audit-pr687-cost-visibility/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
+
+  - id: WORKER-20260801-210649-audit-pr688-code-structure-modularity
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''audit-pr688-code-structure-modularity'' on compliance-tracker
+      reached status=blocked. credit accountant rejected auto-fix attempt 1, no further
+      metered spend without human review: {"approved": false, "increment_number": 2,
+      "reason": "existing software/mechanism already covers this (system_index match)
+      -- use it instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260801-210649-audit-pr688-code-structure-modularity/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-02'
