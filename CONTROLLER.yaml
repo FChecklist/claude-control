@@ -13187,3 +13187,121 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260803-174925-adopted-ocid-050-real-empty-sample-execution--pm/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/834'
     last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-180059-pm-confirmation-to-proceed-with-ocid-050
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''PM confirmation to proceed with OCID-050 real testing
+      execution'' on compliance-tracker reached status=blocked. credit accountant rejected
+      auto-fix attempt 1, no further metered spend without human review: {"approved":
+      false, "increment_number": 1, "reason": "existing software/mechanism already covers
+      this (system_index match) -- use it instead of spending AI credits", "reviewer":
+      "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260803-180059-pm-confirmation-to-proceed-with-ocid-050/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-180107-analyze-current-umr-and-utm-implementati
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Analyze current UMR and UTM implementation against
+      the proposed Universal Knowledge and Execution Architecture'' on compliance-tracker
+      reached status=blocked. credit accountant rejected auto-fix attempt 1, no further
+      metered spend without human review: {"approved": false, "increment_number": 1,
+      "reason": "existing software/mechanism already covers this (system_index match)
+      -- use it instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260803-180107-analyze-current-umr-and-utm-implementati/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-180110-pm-decision-resolving-the-umr-and-utm-na
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''PM decision resolving the UMR and UTM naming collision,
+      use UTR'' on compliance-tracker reached status=blocked. credit accountant rejected
+      auto-fix attempt 1, no further metered spend without human review: {"approved":
+      false, "increment_number": 1, "reason": "existing software/mechanism already covers
+      this (system_index match) -- use it instead of spending AI credits", "reviewer":
+      "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260803-180110-pm-decision-resolving-the-umr-and-utm-na/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-180428-adopted-umr-utr-euid-discovery-vs-live-system--p
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''UMR/UTR/EUID discovery vs live system (PM UMR-20260803-174634-5a2f,
+      UMR-20260803-175139-dedf)'' on compliance-tracker reached status=completed. Superboss-approved
+      (tier=tier1, hold_for_owner_signoff=False), merged autonomously per Owner''s 2026-07-31
+      full-approval-autonomy directive: https://github.com/FChecklist/compliance-tracker/pull/835'
+    where: '/opt/veridian/ai-os/tasks/task-20260803-180428-adopted-umr-utr-euid-discovery-vs-live-system--p/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/835'
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-181100-adopted-amend-umr-utr-discovery--credit-3rd-umr
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''amend UMR/UTR discovery, credit 3rd UMR usage (PM
+      UMR-20260803-174634-5a2f)'' on compliance-tracker reached status=completed. Superboss-approved
+      (tier=tier1, hold_for_owner_signoff=False), merged autonomously per Owner''s 2026-07-31
+      full-approval-autonomy directive: https://github.com/FChecklist/compliance-tracker/pull/837'
+    where: '/opt/veridian/ai-os/tasks/task-20260803-181100-adopted-amend-umr-utr-discovery--credit-3rd-umr/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/837'
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-182050-adopted-pr833-review-trigger--real--clean-conten
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''PR833 review trigger (real, clean content, mergeable)''
+      on compliance-tracker reached status=completed. Superboss-approved (tier=tier1,
+      hold_for_owner_signoff=False), merged autonomously per Owner''s 2026-07-31 full-approval-autonomy
+      directive: https://github.com/FChecklist/compliance-tracker/pull/833'
+    where: '/opt/veridian/ai-os/tasks/task-20260803-182050-adopted-pr833-review-trigger--real--clean-conten/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/833'
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-183752-adopted-retrigger-review-for-pr--832-after-real
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Retrigger review for PR #832 after real conflict
+      resolution (union-append)'' on compliance-tracker reached status=completed. Superboss-approved
+      (tier=tier1, hold_for_owner_signoff=False), merged autonomously per Owner''s 2026-07-31
+      full-approval-autonomy directive: https://github.com/FChecklist/compliance-tracker/pull/832'
+    where: '/opt/veridian/ai-os/tasks/task-20260803-183752-adopted-retrigger-review-for-pr--832-after-real/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/832'
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-184844-pm-confirmation-to-rebase-and-merge-pr-8
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''PM confirmation to rebase and merge PR 832 now that
+      PR 833 landed first'' on compliance-tracker reached status=blocked. credit accountant
+      rejected auto-fix attempt 1, no further metered spend without human review: {"approved":
+      false, "increment_number": 1, "reason": "existing software/mechanism already covers
+      this (system_index match) -- use it instead of spending AI credits", "reviewer":
+      "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260803-184844-pm-confirmation-to-rebase-and-merge-pr-8/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-185745-pm-decision-on-next-priority--finish-oci
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''PM decision on next priority, finish OCID-050 fully
+      before OCID-051, defer PR backlog cleanup'' on compliance-tracker reached status=blocked.
+      credit accountant rejected auto-fix attempt 1, no further metered spend without
+      human review: {"approved": false, "increment_number": 1, "reason": "existing software/mechanism
+      already covers this (system_index match) -- use it instead of spending AI credits",
+      "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260803-185745-pm-decision-on-next-priority--finish-oci/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-03'
