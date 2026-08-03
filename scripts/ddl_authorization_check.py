@@ -369,6 +369,20 @@ IDEMPOTENCY_GUARD_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Statements that match RISKY_DDL_OPENER_RE's broad ALTER TABLE class but are
+# actually inherently idempotent in Postgres -- re-running them when already
+# in the target state is a documented no-op, not an error, so they don't
+# need an IF NOT EXISTS/IF EXISTS-style guard. Real gap found running the
+# MIGRATION-DRIFT-0264 retroactive test (2026-08-03): the original heuristic
+# flagged `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` -- a real statement
+# from that real, genuinely-idempotent migration -- as an unguarded risk,
+# which would have caused a false-negative rejection of a migration that IS
+# safe to rerun.
+INHERENTLY_IDEMPOTENT_STATEMENT_RE = re.compile(
+    r"\bALTER\s+TABLE\b.*\b(?:ENABLE|DISABLE)\s+ROW\s+LEVEL\s+SECURITY\b",
+    re.IGNORECASE | re.DOTALL,
+)
+
 DO_BLOCK_RE = re.compile(r"DO\s+\$\$.*?END\s+\$\$\s*;", re.IGNORECASE | re.DOTALL)
 
 
@@ -460,22 +474,65 @@ def _is_idempotent_sql(sql_text):
     remainder = DO_BLOCK_RE.sub("", sql_text)
     unguarded = []
     for statement in remainder.split(";"):
-        if RISKY_DDL_OPENER_RE.search(statement) and not IDEMPOTENCY_GUARD_RE.search(statement):
+        if (RISKY_DDL_OPENER_RE.search(statement)
+                and not IDEMPOTENCY_GUARD_RE.search(statement)
+                and not INHERENTLY_IDEMPOTENT_STATEMENT_RE.search(statement)):
             unguarded.append(statement.strip().splitlines()[0][:80])
     if unguarded:
         return False, f"{len(unguarded)} unguarded DDL statement(s) outside any DO $$ exception block: {unguarded}"
     return True, f"all risky DDL statements guarded (IF NOT EXISTS/IF EXISTS/OR REPLACE/ON CONFLICT), {len(guarded_blocks)} DO $$ exception block(s) also present"
 
 
+YAML_ENTRY_ID_LINE_RE = re.compile(r'^(\s*)-?\s*id:\s*["\']?([A-Za-z0-9_.-]+)["\']?\s*$')
+
+
+def _scoped_yaml_entry_block(content, entry_id):
+    """Returns just the one YAML list entry's own text -- from a `- id:
+    <entry_id>` (or `id: <entry_id>`) line to the next line at the same or
+    lesser indentation matching the same id-line shape, or EOF. Returns None
+    if no line's id value matches entry_id exactly. Exists specifically to
+    stop a citation like `COMPLETED.yaml#some-detail-phrase` from being
+    satisfied by an unrelated, earlier entry in the same shared file that
+    happens to mention the same words -- real gap found while building the
+    MIGRATION-DRIFT-0264 retroactive test (see module docstring): a bare
+    file-wide search for "rollback" matched the *previous*, unrelated
+    WAVE-10-REDO entry's own rollback runbook, not anything documented for
+    the entry actually under test."""
+    lines = content.splitlines(keepends=True)
+    start = None
+    start_indent = None
+    for i, line in enumerate(lines):
+        m = YAML_ENTRY_ID_LINE_RE.match(line)
+        if m and m.group(2) == entry_id:
+            start = i
+            start_indent = len(m.group(1))
+            break
+    if start is None:
+        return None
+    end = len(lines)
+    for j in range(start + 1, len(lines)):
+        m = YAML_ENTRY_ID_LINE_RE.match(lines[j])
+        if m and len(m.group(1)) <= start_indent:
+            end = j
+            break
+    return "".join(lines[start:end])
+
+
 def _citation_exists(repo_root, citation):
     """Generalizes is_real_reference()/_ke_id_exists_on_disk() to Category B's
     evidence fields, which may cite: a UMR id (existence-scanned the same way
-    a KE id is), a `path#anchor` or bare `path` reference into the named
-    repo's own ai-os/ tree (path must exist; anchor, if given, must appear
-    literally inside it), or fall back to the same dated-free-text-note floor
-    Category A uses. Same honest limitation as the rest of this module: this
-    proves the citation is a real, findable record, not that its content
-    actually substantiates the specific claim."""
+    a KE id is), a `path#entry_id` or `path#entry_id::detail phrase`
+    reference into the named repo's own ai-os/ tree, or a bare `path`. When
+    the anchor names a real YAML `id:` entry, matching is SCOPED to that
+    entry's own block (see _scoped_yaml_entry_block) -- not the whole file --
+    so a detail phrase must actually appear within the cited entry, not
+    merely somewhere else in a large shared file like COMPLETED.yaml. If the
+    anchor doesn't resolve to a real YAML entry id, falls back to a weaker
+    whole-file substring search (logged as such). Falls back further to the
+    same dated-free-text-note floor Category A uses. Same honest limitation
+    as the rest of this module throughout: this proves the citation is a
+    real, findable, correctly-scoped record, not that its content is
+    semantically accurate."""
     if not citation or PLACEHOLDER_REFERENCE_RE.match(citation.strip()):
         return False, "empty or placeholder citation"
     citation = citation.strip()
@@ -507,6 +564,17 @@ def _citation_exists(repo_root, citation):
                 content = f.read()
         except OSError:
             return False, f"{rel_path} exists but could not be read"
+        entry_id, _sep, detail_phrase = anchor.partition("::")
+        entry_id = entry_id.strip()
+        scoped = _scoped_yaml_entry_block(content, entry_id)
+        if scoped is not None:
+            if not detail_phrase:
+                return True, f"{rel_path} contains YAML entry id={entry_id!r} (scoped match)"
+            if detail_phrase.strip() in scoped:
+                return True, f"{rel_path}#{entry_id} (scoped) contains {detail_phrase.strip()!r}"
+            return False, f"{rel_path}#{entry_id} (scoped to just this entry) does NOT contain {detail_phrase.strip()!r}"
+        # No matching YAML `id:` line -- anchor isn't a real entry id in this
+        # file. Fall back to the weaker whole-file search, honestly logged.
         if anchor in content:
             return True, f"{rel_path} exists and contains anchor {anchor!r}"
         return False, f"{rel_path} exists but does not contain anchor {anchor!r}"

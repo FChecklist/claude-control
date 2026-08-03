@@ -525,6 +525,26 @@ def test_category_b_non_idempotent_sql_fails_condition_3(fixture_repo):
            "DROP COLUMN" in str(conditions_by_id["3_idempotent"]["detail"])
 
 
+def test_enable_row_level_security_is_not_a_false_positive_idempotency_failure(fixture_repo):
+    """Real bug found running the MIGRATION-DRIFT-0264 retroactive test:
+    ALTER TABLE ... ENABLE ROW LEVEL SECURITY is inherently idempotent in
+    Postgres (a documented no-op on rerun, not an error) and must not be
+    flagged as an unguarded risky statement just because it matches the
+    broad ALTER TABLE pattern."""
+    sql_path = os.path.join(fixture_repo, "drizzle", "0004_enable_rls.sql")
+    with open(sql_path, "w") as f:
+        f.write(
+            "CREATE TABLE IF NOT EXISTS compliance.rls_demo (id text PRIMARY KEY);\n"
+            "ALTER TABLE compliance.rls_demo ENABLE ROW LEVEL SECURITY;\n"
+        )
+    _run(["git", "add", "-A"], fixture_repo)
+    _run(["git", "commit", "-m", "add enable-rls fixture"], fixture_repo)
+    _run(["git", "branch", "-f", "origin/main", "main"], fixture_repo)
+
+    ok, detail = dac._is_idempotent_sql(open(sql_path).read())
+    assert ok is True, detail
+
+
 def test_category_b_fabricated_citation_fails_condition(fixture_repo):
     evidence = dict(VALID_EVIDENCE_BASE)
     evidence["root_cause_evidence"] = "ai-os/boss/COMPLETED.yaml#this-anchor-does-not-exist"
