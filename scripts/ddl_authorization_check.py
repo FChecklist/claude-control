@@ -731,6 +731,62 @@ def check_category_b_recovery(evidence):
     return {"category_b_valid": all_passed, "conditions": conditions}
 
 
+def _prompt_scope_matches_cited_sql(prompt_text, evidence):
+    """Critical binding check, closing a real, severe gap found in
+    independent review (2026-08-03, claude-control PR #123 AUDIT: FAIL):
+    check_category_b_recovery() alone only verifies PROPERTIES of
+    evidence['sql_file'] (exists, previously merged, idempotent) -- it never
+    verified that file is what the prompt-file's own SCOPE will actually
+    execute. Without this, a dispatch prompt could cite a safe, unrelated,
+    already-reviewed SQL file (satisfying conditions 1-3) plus any real
+    UMR/COMPLETED.yaml citations that merely exist somewhere on disk
+    (satisfying conditions 4-10) while its real SCOPE instructs completely
+    different, unreviewed, potentially destructive DDL -- and Category B
+    would have incorrectly authorized it. Binds the two together:
+    (a) if the prompt inlines literal DDL statements (outside the
+    CATEGORY-B block itself), every one of them must appear, normalized,
+    within the cited sql_file's real content -- a mismatched inline
+    statement is rejected even if the filename is also mentioned;
+    (b) if the prompt inlines no DDL text at all (the realistic real-world
+    shape: "reapply <file path>" via a tool call, not re-typing the SQL),
+    the cited sql_file's own repo-relative path must appear literally in
+    the prompt text, so it's unambiguous which file is really being
+    authorized to run. Fails closed on ambiguity in all cases."""
+    prompt_without_block = CATEGORY_B_BLOCK_RE.sub("", prompt_text)
+    sql_file = (evidence.get("sql_file") or "").strip()
+    repo_root = _resolve_repo_root(evidence.get("repo", ""))
+    sql_text = _read_repo_file(repo_root, sql_file) if (repo_root and sql_file) else None
+    # Extract just the DDL statement itself (from its opener keyword to the
+    # end of its semicolon-bounded chunk), not the whole chunk -- a chunk
+    # commonly includes surrounding prose ("## SCOPE\nReapply X:\nCREATE
+    # TABLE ...") which would never literally match the pure SQL file
+    # content even when the statement itself does.
+    inline_statements = []
+    for chunk in prompt_without_block.split(";"):
+        opener_match = RISKY_DDL_OPENER_RE.search(chunk)
+        if opener_match:
+            inline_statements.append(chunk[opener_match.start():])
+    if inline_statements:
+        if sql_text is None:
+            return False, "prompt-file inlines DDL statements but the cited sql_file could not be read to verify them against"
+        sql_normalized = re.sub(r"\s+", " ", sql_text).lower()
+        unmatched = []
+        for stmt in inline_statements:
+            stmt_normalized = re.sub(r"\s+", " ", stmt).strip().lower()
+            if stmt_normalized and stmt_normalized not in sql_normalized:
+                unmatched.append(stmt.strip().splitlines()[0][:80])
+        if unmatched:
+            return False, f"{len(unmatched)} DDL statement(s) inlined in the prompt's own SCOPE do not appear in the cited sql_file's real content -- SCOPE may authorize different DDL than the evidence claims: {unmatched}"
+        return True, f"{len(inline_statements)} inlined DDL statement(s) in the prompt's SCOPE all verified present in the cited sql_file's real content"
+    if sql_file and sql_file in prompt_without_block:
+        return True, f"prompt-file's own SCOPE literally names the cited sql_file ({sql_file!r}) and inlines no other DDL text"
+    return False, (
+        f"prompt-file's SCOPE neither inlines DDL matching the cited sql_file's content nor literally "
+        f"names {sql_file!r} -- cannot verify the SCOPE will actually execute the reviewed SQL and not "
+        "something else"
+    )
+
+
 def check_ddl_authorization(text):
     hits = find_ddl_references(text)
     if not hits:
@@ -762,17 +818,28 @@ def check_ddl_authorization(text):
     # above has already failed to find a valid reference.
     category_b_evidence = parse_category_b_block(text)
     category_b_result = None
+    binding_ok, binding_detail = False, None
     if category_b_evidence is not None:
         category_b_result = check_category_b_recovery(category_b_evidence)
-        if category_b_result["category_b_valid"]:
+        # Critical binding check (real gap closed after independent review,
+        # 2026-08-03): the 10 conditions alone only verify PROPERTIES of the
+        # cited sql_file -- they never verify that file is what this
+        # prompt's own SCOPE will actually execute. Both must pass.
+        binding_ok, binding_detail = _prompt_scope_matches_cited_sql(text, category_b_evidence)
+        category_b_result["conditions"].append({
+            "id": "11_scope_matches_cited_sql", "description": "Prompt SCOPE verified to execute the cited sql_file, not different DDL",
+            "passed": binding_ok, "detail": binding_detail,
+        })
+        if category_b_result["category_b_valid"] and binding_ok:
             explanation = make_explanation(
                 summary="Live DDL authorized as a deterministic Category B recovery.",
                 reasoning=(
                     f"Matched DDL language ({', '.join(hits)}); no Category A PRE-APPROVED-LIVE-DDL "
                     "citation was present, but a CATEGORY-B-DETERMINISTIC-RECOVERY evidence block was, "
-                    "and all 10 of the Owner's deterministic conditions (UMR-20260803-025317-0c64) "
-                    "verified true against real repo/task-record evidence -- no human/PM/AI judgment "
-                    "call required for this class of action."
+                    "all 10 of the Owner's deterministic conditions (UMR-20260803-025317-0c64) verified "
+                    "true against real repo/task-record evidence, AND the prompt's own SCOPE was "
+                    "independently verified to actually execute the cited, reviewed sql_file (not "
+                    "different DDL) -- no human/PM/AI judgment call required for this class of action."
                 ),
             )
             decision = emit_allow(
@@ -792,7 +859,8 @@ def check_ddl_authorization(text):
             f"Matched DDL/DCL language ({', '.join(hits)}) and no PRE-APPROVED-LIVE-DDL: line cited a "
             "real, existing decision-log record or a sufficiently detailed dated note"
             + (", and the CATEGORY-B-DETERMINISTIC-RECOVERY evidence block present did not satisfy "
-               "all 10 required conditions" if category_b_result is not None else "")
+               "all 10 required conditions and/or the prompt-SCOPE-matches-cited-SQL binding check"
+               if category_b_result is not None else "")
             + "."
         ),
         recommended_action=(
