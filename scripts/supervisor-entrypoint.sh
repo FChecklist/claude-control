@@ -52,6 +52,32 @@ HOLD_FOR_OWNER_SIGNOFF=$(python3 -c "import yaml; print(yaml.safe_load(open('$TA
 
 cd "$WORKSPACE"
 git fetch origin
+
+# --- WORKSPACE-RESYNC-BLOCK-START (real gap: GAP-SUPERVISOR-RETRIGGER-STALE-WORKSPACE,
+# UMR-20260803-025317-0c64, fixed UMR-20260803-040529-15c9): `veridian-task.py adopt`
+# checks out this workspace to a DETACHED HEAD snapshot of $BRANCH at adoption time.
+# Nothing previously re-synced that snapshot to the branch's current remote tip on a
+# later retrigger (archive review.json + `systemctl --user restart` the same
+# veridian-supervisor@<task_id> unit) -- a review after additional commits were pushed
+# to an already-adopted branch silently reviewed stale, pre-push content, computed
+# below from whatever HEAD happened to already be checked out. Real, directly-observed
+# incident: claude-control PR #123 got 4 consecutive `AUDIT: FAIL` comments reporting an
+# IDENTICAL `git diff --stat` line despite 4 real fix commits landing on the branch in
+# between. Real fix: always fetch and hard-reset this workspace to the real current
+# remote tip of $BRANCH before computing anything the review depends on -- a plain
+# `git fetch origin` (above) only refreshes the remote-tracking ref, it does not move
+# this workspace's own checked-out HEAD. `checkout -f` is safe here: this is a
+# dedicated per-task worktree (not the shared main clone), and any local
+# modifications in it are, by construction, either already pushed (real, wanted) or
+# stray leftovers from an earlier run (safe to discard -- the branch's real content on
+# GitHub is the only source of truth a review should ever trust).
+RESYNC_BEFORE_SHA=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
+git fetch origin "$BRANCH"
+git checkout -f "origin/$BRANCH" >> "$TASK_DIR/supervisor.log" 2>&1
+RESYNC_AFTER_SHA=$(git rev-parse HEAD)
+echo "Workspace resync (branch=$BRANCH): $RESYNC_BEFORE_SHA -> $RESYNC_AFTER_SHA" >> "$TASK_DIR/supervisor.log"
+# --- WORKSPACE-RESYNC-BLOCK-END ---
+
 DEFAULT_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@')
 
 TIER=$(python3 /opt/veridian/scripts/risk-tier.py "$WORKSPACE" "origin/$DEFAULT_BRANCH" 2>>"$TASK_DIR/supervisor.log")
