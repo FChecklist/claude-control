@@ -12892,3 +12892,130 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260803-131612-adopted-fix-pr812-progress-md-wholesale-replace/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-132457-adopted-fix-pr813-progress-md-wholesale-replace
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''fix PR813 PROGRESS.md wholesale-replace'' on compliance-tracker
+      reached status=blocked. Superboss-approved (tier=tier1), but the merge itself
+      FAILED (gh pr view confirms state=OPEN, mergedAt=; see supervisor.log) — needs
+      manual attention, NOT actually merged: https://github.com/FChecklist/compliance-tracker/pull/813'
+    where: '/opt/veridian/ai-os/tasks/task-20260803-132457-adopted-fix-pr813-progress-md-wholesale-replace/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/813'
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-132928-pm-decision--trigger-review-now-for-fini
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''PM decision, trigger review now for finished PRs
+      812 through 816, do not wait for OCID-052'' on compliance-tracker reached status=blocked.
+      credit accountant rejected auto-fix attempt 1, no further metered spend without
+      human review: {"approved": false, "increment_number": 1, "reason": "existing software/mechanism
+      already covers this (system_index match) -- use it instead of spending AI credits",
+      "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260803-132928-pm-decision--trigger-review-now-for-fini/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-134949-adopted-fix-pr817-progress-md-wholesale-replace
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''fix PR817 PROGRESS.md wholesale-replace'' on compliance-tracker
+      reached status=completed. Superboss-approved (tier=tier1, hold_for_owner_signoff=False),
+      merged autonomously per Owner''s 2026-07-31 full-approval-autonomy directive:
+      https://github.com/FChecklist/compliance-tracker/pull/817'
+    where: '/opt/veridian/ai-os/tasks/task-20260803-134949-adopted-fix-pr817-progress-md-wholesale-replace/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/817'
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-140937-adopted-fix-real-yaml-parsererror-in-active-clai
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''fix real YAML ParserError in ACTIVE-CLAIMS.yaml (PM
+      decision UMR-20260803-140106-6307)'' on compliance-tracker reached status=completed.
+      Superboss-approved (tier=tier1, hold_for_owner_signoff=False), merged autonomously
+      per Owner''s 2026-07-31 full-approval-autonomy directive: https://github.com/FChecklist/compliance-tracker/pull/818'
+    where: '/opt/veridian/ai-os/tasks/task-20260803-140937-adopted-fix-real-yaml-parsererror-in-active-clai/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/818'
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-142213-pm-decision--register-and-fix-active-cla
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''PM decision, register and fix ACTIVE-CLAIMS.yaml
+      parse error, investigate unattributed automated conflict resolution commits''
+      on compliance-tracker reached status=blocked. credit accountant rejected auto-fix
+      attempt 1, no further metered spend without human review: {"approved": false,
+      "increment_number": 1, "reason": "existing software/mechanism already covers this
+      (system_index match) -- use it instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260803-142213-pm-decision--register-and-fix-active-cla/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-142324-pm-decision--add-real-yaml-safe-load-ci
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''PM decision, add real yaml safe load CI guardrail
+      for ACTIVE-CLAIMS.yaml to prevent recurrence'' on compliance-tracker reached status=blocked.
+      credit accountant rejected auto-fix attempt 1, no further metered spend without
+      human review: {"approved": false, "increment_number": 1, "reason": "existing software/mechanism
+      already covers this (system_index match) -- use it instead of spending AI credits",
+      "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260803-142324-pm-decision--add-real-yaml-safe-load-ci/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-143157-adopted-governance-yaml-parse-guardrail-script
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''governance-yaml-parse guardrail script, CI wiring
+      blocked on OAuth scope (PM UMR-20260803-142956-d931)'' on compliance-tracker reached
+      status=completed. Superboss-approved (tier=tier1, hold_for_owner_signoff=False),
+      merged autonomously per Owner''s 2026-07-31 full-approval-autonomy directive:
+      https://github.com/FChecklist/compliance-tracker/pull/820'
+    where: '/opt/veridian/ai-os/tasks/task-20260803-143157-adopted-governance-yaml-parse-guardrail-script/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/820'
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-145409-adopted-ocid-052-item-2-3-real-test-execution-re
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''OCID-052 Item 2+3 real test execution results (PM
+      UMR-20260803-142956-d931)'' on compliance-tracker reached status=completed. Superboss-approved
+      (tier=tier1, hold_for_owner_signoff=False), merged autonomously per Owner''s 2026-07-31
+      full-approval-autonomy directive: https://github.com/FChecklist/compliance-tracker/pull/822'
+    where: '/opt/veridian/ai-os/tasks/task-20260803-145409-adopted-ocid-052-item-2-3-real-test-execution-re/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/822'
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-151126-adopted-ocid-047-real-role-rights-matrix-executi
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''OCID-047 real role/rights matrix execution (PM UMR-20260803-145921-c0c4)''
+      on compliance-tracker reached status=completed. Superboss-approved (tier=tier1,
+      hold_for_owner_signoff=False), merged autonomously per Owner''s 2026-07-31 full-approval-autonomy
+      directive: https://github.com/FChecklist/compliance-tracker/pull/823'
+    where: '/opt/veridian/ai-os/tasks/task-20260803-151126-adopted-ocid-047-real-role-rights-matrix-executi/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/823'
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-152718-adopted-ocid-048-real-cross-org-isolation-execut
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''OCID-048 real cross-org isolation execution (PM UMR-20260803-151912-8be6)''
+      on compliance-tracker reached status=blocked. Superboss-approved (tier=tier1),
+      but the merge itself FAILED (gh pr view confirms state=OPEN, mergedAt=; see supervisor.log)
+      — needs manual attention, NOT actually merged: https://github.com/FChecklist/compliance-tracker/pull/825'
+    where: '/opt/veridian/ai-os/tasks/task-20260803-152718-adopted-ocid-048-real-cross-org-isolation-execut/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/825'
+    last_touched: '2026-08-03'
