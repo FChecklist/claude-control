@@ -12026,3 +12026,15 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260803-032349-adopted-register-category-a-b-production-db-gove/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/763'
     last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-035801-adopted-sec-06-enforced----claude-control-pr--12
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''SEC-06 ENFORCED -- claude-control PR #123 merged
+      (UMR-20260803-035625-5bf4)'' on compliance-tracker reached status=completed. Superboss-approved
+      (tier=tier1, hold_for_owner_signoff=False), merged autonomously per Owner''s 2026-07-31
+      full-approval-autonomy directive: https://github.com/FChecklist/compliance-tracker/pull/764'
+    where: '/opt/veridian/ai-os/tasks/task-20260803-035801-adopted-sec-06-enforced----claude-control-pr--12/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/764'
+    last_touched: '2026-08-03'
