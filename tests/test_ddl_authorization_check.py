@@ -827,3 +827,58 @@ def test_matching_inline_sql_with_surrounding_prose_still_matches(fixture_repo):
         {"repo": "fixture-repo", "sql_file": "drizzle/0001_idempotent.sql"},
     )
     assert ok is True, detail
+
+
+# =====================================================================
+# Regression tests for the incomplete-DDL-coverage gap found by a THIRD
+# independent review round (claude-control PR #123, 3rd AUDIT: FAIL,
+# 2026-08-03): several destructive DDL forms were silently treated as
+# idempotent-by-omission since they never entered the risky-statement scan.
+# =====================================================================
+
+
+@pytest.mark.parametrize("label,sql", [
+    ("TRUNCATE", "TRUNCATE compliance.audit_log;"),
+    ("DROP SCHEMA", "DROP SCHEMA reporting;"),
+    ("DROP SEQUENCE", "DROP SEQUENCE lead_seq;"),
+    ("DROP DATABASE", "DROP DATABASE staging;"),
+    ("DROP CONSTRAINT", "ALTER TABLE leads DROP CONSTRAINT leads_pk;"),
+    ("DROP EXTENSION", 'DROP EXTENSION "uuid-ossp";'),
+    ("ALTER SCHEMA RENAME", "ALTER SCHEMA old_name RENAME TO new_name;"),
+    ("ALTER SEQUENCE RENAME", "ALTER SEQUENCE old_seq RENAME TO new_seq;"),
+    ("CREATE ROLE", "CREATE ROLE backdoor LOGIN SUPERUSER;"),
+    ("ALTER ROLE", "ALTER ROLE anon SUPERUSER;"),
+])
+def test_previously_omitted_ddl_forms_are_now_flagged_unguarded(label, sql):
+    """Real gap: these forms were entirely absent from RISKY_DDL_OPENER_RE,
+    so a Category B evidence SQL file containing any of them would have
+    been silently classified idempotent/safe by omission -- must now be
+    flagged as unguarded, since none of them has an IF NOT EXISTS-style
+    guard in this bare form."""
+    ok, detail = dac._is_idempotent_sql(sql)
+    assert ok is False, (label, detail)
+
+
+def test_grant_revoke_are_explicitly_carved_out_as_inherently_idempotent():
+    """GRANT/REVOKE ARE now matched by RISKY_DDL_OPENER_RE (closing the
+    silent-omission gap) but are explicitly, auditably carved out as
+    inherently idempotent -- real Postgres semantics (re-granting/re-
+    revoking is a documented no-op), not a loophole. The real migration-0264
+    this module's docstring cites uses several bare GRANT statements with
+    no guard; this carve-out is why that's still correctly idempotent."""
+    ok, detail = dac._is_idempotent_sql(
+        "GRANT SELECT, INSERT, UPDATE, DELETE ON compliance.widget_teams TO app_runtime;\n"
+        "REVOKE ALL ON compliance.legacy_table FROM anon;\n"
+    )
+    assert ok is True, detail
+
+
+def test_grant_with_actually_destructive_ddl_alongside_still_fails():
+    """Confirms the GRANT carve-out doesn't accidentally exempt OTHER
+    statements in the same file -- a genuinely unguarded DROP alongside a
+    safe GRANT must still fail overall."""
+    ok, detail = dac._is_idempotent_sql(
+        "GRANT SELECT ON compliance.widget_teams TO app_runtime;\n"
+        "DROP TABLE compliance.audit_log;\n"
+    )
+    assert ok is False, detail

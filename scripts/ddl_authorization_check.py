@@ -352,15 +352,25 @@ UMR_ID_RE = re.compile(r"UMR-\d{8}-\d{6}-[0-9a-f]{4}", re.IGNORECASE)
 
 # A real DDL statement opener that, unguarded, is not obviously safe to
 # re-run: CREATE without IF NOT EXISTS, ALTER/DROP without IF EXISTS, ADD
-# COLUMN without IF NOT EXISTS, etc. Deliberately mirrors the shape-classes
-# already listed in DDL_KEYWORD_PATTERNS above rather than inventing new
-# ones.
+# COLUMN without IF NOT EXISTS, etc. Real gap found and fixed in independent
+# review (2026-08-03, claude-control PR #123 3rd AUDIT: FAIL): the original
+# version only recognized a narrow subset of DDL_KEYWORD_PATTERNS above,
+# silently treating everything else (TRUNCATE, DROP SCHEMA/SEQUENCE/
+# DATABASE/CONSTRAINT/EXTENSION, RENAME clauses on ALTER SCHEMA/SEQUENCE/
+# INDEX, CREATE/ALTER/DROP ROLE/USER) as already-safe-by-omission --
+# contradicting this module's own "fails closed on anything ambiguous"
+# claim for a gate that can auto-authorize live production DDL with no
+# human in the loop. Now mirrors DDL_KEYWORD_PATTERNS' full breadth (minus
+# GRANT/REVOKE, which get an explicit inherently-idempotent carve-out below
+# -- they are genuinely, documented no-ops on rerun in Postgres, not an
+# omission).
 RISKY_DDL_OPENER_RE = re.compile(
     r"^\s*(CREATE\s+(?:UNIQUE\s+)?(?:OR\s+REPLACE\s+)?(?:MATERIALIZED\s+)?"
-    r"(?:TABLE|INDEX|POLICY|TRIGGER|TYPE|SCHEMA|SEQUENCE|VIEW|FUNCTION)|"
-    r"ALTER\s+(?:TABLE|FUNCTION)|"
-    r"DROP\s+(?:TABLE|INDEX|POLICY|TRIGGER|TYPE|VIEW|FUNCTION)|"
-    r"ADD\s+COLUMN|DROP\s+COLUMN|ADD\s+CONSTRAINT)\b",
+    r"(?:TABLE|INDEX|POLICY|TRIGGER|TYPE|SCHEMA|EXTENSION|SEQUENCE|VIEW|FUNCTION|ROLE|USER)|"
+    r"ALTER\s+(?:TABLE|FUNCTION|SCHEMA|SEQUENCE|INDEX|TYPE|ROLE|USER)|"
+    r"DROP\s+(?:TABLE|INDEX|POLICY|TRIGGER|TYPE|VIEW|FUNCTION|SCHEMA|SEQUENCE|DATABASE|ROLE|USER|EXTENSION)|"
+    r"ADD\s+COLUMN|DROP\s+COLUMN|ADD\s+CONSTRAINT|DROP\s+CONSTRAINT|TRUNCATE|REASSIGN\s+OWNED|"
+    r"GRANT|REVOKE)\b",
     re.IGNORECASE | re.MULTILINE,
 )
 
@@ -379,8 +389,18 @@ IDEMPOTENCY_GUARD_RE = re.compile(
 # which would have caused a false-negative rejection of a migration that IS
 # safe to rerun.
 INHERENTLY_IDEMPOTENT_STATEMENT_RE = re.compile(
-    r"\bALTER\s+TABLE\b.*\b(?:ENABLE|DISABLE)\s+ROW\s+LEVEL\s+SECURITY\b",
-    re.IGNORECASE | re.DOTALL,
+    r"\bALTER\s+TABLE\b.*\b(?:ENABLE|DISABLE)\s+ROW\s+LEVEL\s+SECURITY\b|"
+    # GRANT/REVOKE are matched by RISKY_DDL_OPENER_RE above (added per
+    # independent review, 2026-08-03) but are genuinely, documented no-ops
+    # on rerun in Postgres -- re-granting an already-granted privilege, or
+    # revoking an already-absent one, is not an error. Carved out explicitly
+    # here (rather than left out of the risky-opener list entirely) so the
+    # reasoning is auditable, not a silent omission -- the real
+    # migration-0264 this module's docstring cites uses several GRANT
+    # statements with no IF NOT EXISTS-style guard (none exists for GRANT),
+    # and this carve-out is why that's still correctly classified idempotent.
+    r"^\s*GRANT\b|^\s*REVOKE\b",
+    re.IGNORECASE | re.DOTALL | re.MULTILINE,
 )
 
 DO_BLOCK_RE = re.compile(r"DO\s+\$\$.*?END\s+\$\$\s*;", re.IGNORECASE | re.DOTALL)
