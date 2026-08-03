@@ -11841,3 +11841,188 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260803-010228-adopted-pm-answer-task210700-terminal-state/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/754'
     last_touched: '2026-08-03'
+
+  - id: WORKER-20260802-231454-ocid-020-continue-certification-sweep-ac
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''OCID-020 continue certification sweep across untested
+      surface areas'' on compliance-tracker reached status=blocked. Superboss-approved
+      (tier=tier1), but the merge itself FAILED (gh pr view confirms state=OPEN, mergedAt=;
+      see supervisor.log) — needs manual attention, NOT actually merged: https://github.com/FChecklist/compliance-tracker/pull/755'
+    where: '/opt/veridian/ai-os/tasks/task-20260802-231454-ocid-020-continue-certification-sweep-ac/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/755'
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-002020-adopted-ocid020-continuation-sweep-findings
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''ocid020-continuation-sweep-findings'' on compliance-tracker
+      reached status=completed. Superboss-approved (tier=tier1, hold_for_owner_signoff=False),
+      merged autonomously per Owner''s 2026-07-31 full-approval-autonomy directive:
+      https://github.com/FChecklist/compliance-tracker/pull/755'
+    where: '/opt/veridian/ai-os/tasks/task-20260803-002020-adopted-ocid020-continuation-sweep-findings/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/755'
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-005948-pm-decision-on-blocked-cert-sweep-qualit
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''PM decision on blocked cert sweep quality gate failure''
+      on compliance-tracker reached status=blocked. credit accountant rejected auto-fix
+      attempt 1, no further metered spend without human review: {"approved": false,
+      "increment_number": 1, "reason": "existing software/mechanism already covers this
+      (system_index match) -- use it instead of spending AI credits", "reviewer": "deterministic"}'
+    where: '/opt/veridian/ai-os/tasks/task-20260803-005948-pm-decision-on-blocked-cert-sweep-qualit/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/757'
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-005952-pm-decision-trigger-backlog-pr-review-no
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''PM decision trigger backlog PR review now capacity
+      is free'' on compliance-tracker reached status=blocked. credit accountant rejected
+      auto-fix attempt 1, no further metered spend without human review: {"approved":
+      false, "increment_number": 1, "reason": "existing software/mechanism already covers
+      this (system_index match) -- use it instead of spending AI credits", "reviewer":
+      "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260803-005952-pm-decision-trigger-backlog-pr-review-no/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-010937-pm-decision-proceed-with-pr-755-and-756
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''PM decision proceed with PR 755 and 756 branch is
+      not live'' on compliance-tracker reached status=blocked. credit accountant rejected
+      auto-fix attempt 1, no further metered spend without human review: {"approved":
+      false, "increment_number": 1, "reason": "existing software/mechanism already covers
+      this (system_index match) -- use it instead of spending AI credits", "reviewer":
+      "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260803-010937-pm-decision-proceed-with-pr-755-and-756/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-011047-adopted-migration-drift-0264-email-intel-fix
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''migration-drift-0264-email-intel-fix'' on compliance-tracker
+      reached status=completed. Superboss-approved (tier=tier1, hold_for_owner_signoff=False),
+      merged autonomously per Owner''s 2026-07-31 full-approval-autonomy directive:
+      https://github.com/FChecklist/compliance-tracker/pull/756'
+    where: '/opt/veridian/ai-os/tasks/task-20260803-011047-adopted-migration-drift-0264-email-intel-fix/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/756'
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-011611-pm-confirmation-continue-watching-pr-bac
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''PM confirmation continue watching PR backlog'' on
+      compliance-tracker reached status=blocked. credit accountant rejected auto-fix
+      attempt 1, no further metered spend without human review: {"approved": false,
+      "increment_number": 1, "reason": "existing software/mechanism already covers this
+      (system_index match) -- use it instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260803-011611-pm-confirmation-continue-watching-pr-bac/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-014130-adopted-correct-stale-pr756-blocked-claim
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''correct-stale-pr756-blocked-claim'' on compliance-tracker
+      reached status=completed. Superboss-approved (tier=tier1, hold_for_owner_signoff=False),
+      merged autonomously per Owner''s 2026-07-31 full-approval-autonomy directive:
+      https://github.com/FChecklist/compliance-tracker/pull/759'
+    where: '/opt/veridian/ai-os/tasks/task-20260803-014130-adopted-correct-stale-pr756-blocked-claim/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/759'
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-020701-pm-real-decision-on-pr-756-retroactive-p
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''PM real decision on PR 756 retroactive production
+      DB authorization'' on compliance-tracker reached status=blocked. credit accountant
+      rejected auto-fix attempt 1, no further metered spend without human review: {"approved":
+      false, "increment_number": 1, "reason": "existing software/mechanism already covers
+      this (system_index match) -- use it instead of spending AI credits", "reviewer":
+      "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260803-020701-pm-real-decision-on-pr-756-retroactive-p/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-020705-pm-confirms-pr-756-real-merge-and-flags
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: Server-worker task 'PM confirms PR 756 real merge and flags PR 759 stale
+      claim' on compliance-tracker reached status=blocked. periodic checkpoint
+    where: /opt/veridian/ai-os/tasks/task-20260803-020705-pm-confirms-pr-756-real-merge-and-flags/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-022230-adopted-ocid020-continuation-blocker-resolved-fi
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''ocid020-continuation-blocker-resolved-findings''
+      on compliance-tracker reached status=blocked. Superboss rejected: https://github.com/FChecklist/compliance-tracker/pull/757
+      — see review.json for issues'
+    where: '/opt/veridian/ai-os/tasks/task-20260803-022230-adopted-ocid020-continuation-blocker-resolved-fi/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/757'
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-022501-adopted-confirm-continue-watching-pr-backlog
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''confirm-continue-watching-pr-backlog'' on compliance-tracker
+      reached status=completed. Superboss-approved (tier=tier1, hold_for_owner_signoff=False),
+      merged autonomously per Owner''s 2026-07-31 full-approval-autonomy directive:
+      https://github.com/FChecklist/compliance-tracker/pull/758'
+    where: '/opt/veridian/ai-os/tasks/task-20260803-022501-adopted-confirm-continue-watching-pr-backlog/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/758'
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-024902-checkpoint-refresh-finish-rebasing-pr-75
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Checkpoint refresh finish rebasing PR 754 757 758''
+      on compliance-tracker reached status=blocked. credit accountant rejected auto-fix
+      attempt 1, no further metered spend without human review: {"approved": false,
+      "increment_number": 1, "reason": "existing software/mechanism already covers this
+      (system_index match) -- use it instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260803-024902-checkpoint-refresh-finish-rebasing-pr-75/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-031423-adopted-category-b-deterministic-recovery-ddl-ga
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Category B deterministic-recovery DDL gate (UMR-20260803-025317-0c64)''
+      on claude-control reached status=blocked. Superboss rejected: https://github.com/FChecklist/claude-control/pull/123
+      — see review.json for issues'
+    where: '/opt/veridian/ai-os/tasks/task-20260803-031423-adopted-category-b-deterministic-recovery-ddl-ga/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/123'
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-032349-adopted-register-category-a-b-production-db-gove
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Register Category A/B production-DB governance split
+      (UMR-20260803-025317-0c64)'' on compliance-tracker reached status=blocked. Superboss
+      rejected: https://github.com/FChecklist/compliance-tracker/pull/763 — see review.json
+      for issues'
+    where: '/opt/veridian/ai-os/tasks/task-20260803-032349-adopted-register-category-a-b-production-db-gove/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/763'
+    last_touched: '2026-08-03'
