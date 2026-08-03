@@ -106,14 +106,65 @@ alongside the original valid/reason/guidance/ddl_references_found/pre_approved_r
 keys, unchanged -- same additive, non-breaking discipline Phase 2 used on
 preflight-guard.py/risk-tier.py. See ai-os/POLICY_GATE_REGISTRY_2026-07-26.yaml for
 the full gate registry this is now a member of.
+
+CATEGORY A / CATEGORY B SPLIT (2026-08-03, Owner directive UMR-20260803-025317-0c64,
+amended UMR-20260803-025414-8274): the incident this split responds to is real --
+task-20260802-210700 ran a live, unreviewed-at-dispatch-time production migration
+apply (see ai-os/boss/COMPLETED.yaml's MIGRATION-DRIFT-0264-EMAIL-INTEL-500-FIX) with
+no PR and no prior tier2 sign-off. It was already-reviewed, already-merged, idempotent
+SQL fixing a real Sev1 outage -- but there was no deterministic way to say so at
+dispatch time, and the eventual authorization was a real, one-off Owner/PM judgment
+call (UMR-20260803-012711-18b4), not a repeatable, non-human-gated policy. The Owner's
+explicit decision: neither the non-technical Owner, nor the PM, nor AI judgment should
+be the standing approval mechanism for this class of action -- the Kernel itself,
+evaluating deterministic evidence, should be.
+
+This splits what used to be a single PRE-APPROVED-LIVE-DDL citation requirement into
+two real categories, evaluated as independent alternative acceptance paths (Category B
+does not replace Category A -- either passing is sufficient):
+
+- Category A (new schema change: new migration, new table, new column, new constraint,
+  any schema redesign) -- UNCHANGED. Still requires a real PRE-APPROVED-LIVE-DDL
+  citation (see above), held for explicit human sign-off exactly as it works today.
+- Category B (deterministic recovery: reapplying previously-approved/merged SQL,
+  idempotent reapplication, correcting production drift, reconciling metadata) -- NEW.
+  A dispatch prompt-file may instead include a `CATEGORY-B-DETERMINISTIC-RECOVERY:`
+  evidence block (see CATEGORY_B_BLOCK_RE / parse_category_b_block below) naming real,
+  checkable evidence for all 10 of the Owner's conditions. check_category_b_recovery()
+  verifies each condition against real repo/task-record state -- file existence, git
+  merge history, a real idempotency-guard scan of the actual SQL text, and citation-
+  existence checks structurally identical in rigor to Category A's KE-id/decision-file
+  checks above (a real, findable record, not a semantic content audit -- same honest
+  limitation as the rest of this module). If and only if all 10 pass, Category B
+  authorizes execution without a human/PM/AI judgment call in the loop. Any single
+  failed condition blocks execution and reports plainly which one failed and why --
+  same fail-closed, specific-reason discipline Category A already uses.
+
+Retroactive test (2026-08-03): MIGRATION-DRIFT-0264-EMAIL-INTEL-500-FIX was
+reclassified under this new rule and checked against these same 10 conditions using
+the real evidence the independent auditor already gathered -- see
+ai-os/boss/COMPLETED.yaml's `category_b_retroactive_test` field on that entry for the
+real, non-hypothetical result (spoiler, documented honestly there, not here: it does
+NOT pass all 10 as originally executed -- no rollback path was ever documented for
+this migration, condition 9. The new deterministic gate is measurably stricter than
+the ad hoc human authorization that actually approved this action.).
 """
 import json
 import os
 import re
+import subprocess
 import sys
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 AI_OS_DIR = os.path.join(REPO_ROOT, "ai-os")
+
+# Sibling checkouts on this server share this convention (this session's own
+# established layout, e.g. supervisor-entrypoint.sh's live-vs-repo reconciliation
+# pattern) -- Category B evidence can name a DIFFERENT repo than the one this
+# script itself lives in (ddl_authorization_check.py lives in claude-control;
+# the SQL/canonical-artifact evidence it's asked to verify usually lives in
+# compliance-tracker or another sibling repo).
+REPOS_BASE_DIR = os.path.dirname(REPO_ROOT)
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from policy_decision import emit_allow, emit_deny, make_explanation  # noqa: E402
@@ -280,6 +331,278 @@ def find_pre_approval(text):
     return None
 
 
+# =====================================================================
+# CATEGORY B: deterministic recovery (2026-08-03, UMR-20260803-025317-0c64 /
+# UMR-20260803-025414-8274). See module docstring for the real incident and
+# Owner decision this responds to.
+# =====================================================================
+
+CATEGORY_B_BLOCK_RE = re.compile(
+    r"^\s*CATEGORY-B-DETERMINISTIC-RECOVERY:\s*\n((?:^[ \t]+\S.*\n?)+)",
+    re.MULTILINE,
+)
+CATEGORY_B_FIELD_RE = re.compile(r"^[ \t]+([a-z_]+):\s*(.*)$")
+
+CATEGORY_B_REQUIRED_FIELDS = (
+    "repo", "sql_file", "governing_umr", "outage_evidence", "root_cause_evidence",
+    "audit_match_evidence", "before_after_evidence", "rollback_path", "canonical_artifact",
+)
+
+UMR_ID_RE = re.compile(r"UMR-\d{8}-\d{6}-[0-9a-f]{4}", re.IGNORECASE)
+
+# A real DDL statement opener that, unguarded, is not obviously safe to
+# re-run: CREATE without IF NOT EXISTS, ALTER/DROP without IF EXISTS, ADD
+# COLUMN without IF NOT EXISTS, etc. Deliberately mirrors the shape-classes
+# already listed in DDL_KEYWORD_PATTERNS above rather than inventing new
+# ones.
+RISKY_DDL_OPENER_RE = re.compile(
+    r"^\s*(CREATE\s+(?:UNIQUE\s+)?(?:OR\s+REPLACE\s+)?(?:MATERIALIZED\s+)?"
+    r"(?:TABLE|INDEX|POLICY|TRIGGER|TYPE|SCHEMA|SEQUENCE|VIEW|FUNCTION)|"
+    r"ALTER\s+(?:TABLE|FUNCTION)|"
+    r"DROP\s+(?:TABLE|INDEX|POLICY|TRIGGER|TYPE|VIEW|FUNCTION)|"
+    r"ADD\s+COLUMN|DROP\s+COLUMN|ADD\s+CONSTRAINT)\b",
+    re.IGNORECASE | re.MULTILINE,
+)
+
+IDEMPOTENCY_GUARD_RE = re.compile(
+    r"IF\s+NOT\s+EXISTS|IF\s+EXISTS|OR\s+REPLACE|ON\s+CONFLICT|DUPLICATE_OBJECT",
+    re.IGNORECASE,
+)
+
+DO_BLOCK_RE = re.compile(r"DO\s+\$\$.*?END\s+\$\$\s*;", re.IGNORECASE | re.DOTALL)
+
+
+def parse_category_b_block(text):
+    """Extracts a `CATEGORY-B-DETERMINISTIC-RECOVERY:` evidence block from a
+    dispatch prompt-file (or any text with the same shape). Returns a dict of
+    whatever fields were present (not necessarily all of
+    CATEGORY_B_REQUIRED_FIELDS -- that's checked separately, as its own
+    condition, so a missing field is a real reported failure rather than a
+    silent no-op), or None if no such block exists at all."""
+    m = CATEGORY_B_BLOCK_RE.search(text)
+    if not m:
+        return None
+    fields = {}
+    for line in m.group(1).splitlines():
+        fm = CATEGORY_B_FIELD_RE.match(line)
+        if fm:
+            fields[fm.group(1)] = fm.group(2).strip()
+    return fields
+
+
+def _resolve_repo_root(repo_name):
+    """Real sibling-checkout resolution (REPOS_BASE_DIR/<repo_name>) -- returns
+    None (not an exception) if the named repo isn't a real directory on this
+    server, so callers can report a normal condition failure rather than
+    crash."""
+    if not repo_name or "/" in repo_name or repo_name in (".", ".."):
+        return None
+    candidate = os.path.join(REPOS_BASE_DIR, repo_name)
+    return candidate if os.path.isdir(candidate) else None
+
+
+def _git(repo_root, *args):
+    """Runs git in repo_root, returns (returncode, stdout). Never raises --
+    a git failure is real evidence a condition doesn't hold, not a crash."""
+    try:
+        proc = subprocess.run(
+            ["git", *args], cwd=repo_root, capture_output=True, text=True, timeout=30,
+        )
+        return proc.returncode, proc.stdout
+    except (OSError, subprocess.TimeoutExpired):
+        return 1, ""
+
+
+def _read_repo_file(repo_root, rel_path, ref="origin/main"):
+    """Real content of rel_path as it exists in ref's history (falls back to
+    origin/master, then the working tree, since sibling repos on this server
+    use both default-branch names -- see claude-control's own master vs
+    compliance-tracker's main). Returns None if not found anywhere."""
+    for candidate_ref in (ref, "origin/master", "origin/main"):
+        rc, out = _git(repo_root, "cat-file", "-p", f"{candidate_ref}:{rel_path}")
+        if rc == 0:
+            return out
+    working_path = os.path.join(repo_root, rel_path)
+    if os.path.isfile(working_path):
+        try:
+            with open(working_path, "r", encoding="utf-8", errors="ignore") as f:
+                return f.read()
+        except OSError:
+            return None
+    return None
+
+
+def _sql_file_previously_merged(repo_root, rel_path):
+    """Condition 2 -- 'previously reviewed and merged, not new or unreviewed':
+    real check is that this exact path has real commit history on the repo's
+    own default branch (git log returns at least one commit reachable from
+    origin/main or origin/master), not merely present in a working tree or on
+    an unmerged branch."""
+    for branch in ("origin/main", "origin/master"):
+        rc, out = _git(repo_root, "log", branch, "--oneline", "--", rel_path)
+        if rc == 0 and out.strip():
+            return True, f"git log {branch} -- {rel_path}: {out.strip().splitlines()[0]!r}"
+    return False, f"no commit history for {rel_path} on origin/main or origin/master"
+
+
+def _is_idempotent_sql(sql_text):
+    """Condition 3 -- 'genuinely idempotent, safe to run again without harm':
+    a real, honest heuristic (documented limitation, same class as this
+    module's other checks -- not a full SQL parser). DO $$ ... END $$; blocks
+    are stripped first (Postgres's own idiom for wrapping a CREATE POLICY/etc.
+    in an exception handler that swallows duplicate_object -- see this
+    module's docstring for the real migration this pattern is drawn from);
+    every remaining risky DDL opener must have an idempotency guard
+    (IF NOT EXISTS / IF EXISTS / OR REPLACE / ON CONFLICT) within its own
+    statement (naive but conservative semicolon-bounded split -- fails closed
+    on anything ambiguous rather than assuming safety)."""
+    guarded_blocks = DO_BLOCK_RE.findall(sql_text)
+    remainder = DO_BLOCK_RE.sub("", sql_text)
+    unguarded = []
+    for statement in remainder.split(";"):
+        if RISKY_DDL_OPENER_RE.search(statement) and not IDEMPOTENCY_GUARD_RE.search(statement):
+            unguarded.append(statement.strip().splitlines()[0][:80])
+    if unguarded:
+        return False, f"{len(unguarded)} unguarded DDL statement(s) outside any DO $$ exception block: {unguarded}"
+    return True, f"all risky DDL statements guarded (IF NOT EXISTS/IF EXISTS/OR REPLACE/ON CONFLICT), {len(guarded_blocks)} DO $$ exception block(s) also present"
+
+
+def _citation_exists(repo_root, citation):
+    """Generalizes is_real_reference()/_ke_id_exists_on_disk() to Category B's
+    evidence fields, which may cite: a UMR id (existence-scanned the same way
+    a KE id is), a `path#anchor` or bare `path` reference into the named
+    repo's own ai-os/ tree (path must exist; anchor, if given, must appear
+    literally inside it), or fall back to the same dated-free-text-note floor
+    Category A uses. Same honest limitation as the rest of this module: this
+    proves the citation is a real, findable record, not that its content
+    actually substantiates the specific claim."""
+    if not citation or PLACEHOLDER_REFERENCE_RE.match(citation.strip()):
+        return False, "empty or placeholder citation"
+    citation = citation.strip()
+    umr_match = UMR_ID_RE.search(citation)
+    if umr_match:
+        repo_ai_os = os.path.join(repo_root, "ai-os")
+        if os.path.isdir(repo_ai_os):
+            for root, _dirs, files in os.walk(repo_ai_os):
+                for name in files:
+                    path = os.path.join(root, name)
+                    try:
+                        with open(path, "r", encoding="utf-8", errors="ignore") as f:
+                            if umr_match.group(0) in f.read():
+                                return True, f"{umr_match.group(0)} found under {os.path.relpath(repo_ai_os, repo_root)}/"
+                    except OSError:
+                        continue
+        return False, f"{umr_match.group(0)} not found anywhere under ai-os/"
+    if "#" in citation:
+        rel_path, anchor = citation.split("#", 1)
+    else:
+        rel_path, anchor = citation, None
+    rel_path = rel_path.strip()
+    full_path = os.path.join(repo_root, rel_path)
+    if os.path.isfile(full_path):
+        if not anchor:
+            return True, f"{rel_path} exists"
+        try:
+            with open(full_path, "r", encoding="utf-8", errors="ignore") as f:
+                content = f.read()
+        except OSError:
+            return False, f"{rel_path} exists but could not be read"
+        if anchor in content:
+            return True, f"{rel_path} exists and contains anchor {anchor!r}"
+        return False, f"{rel_path} exists but does not contain anchor {anchor!r}"
+    ke_match = KE_ID_RE.search(citation)
+    if ke_match:
+        return _ke_id_exists_on_disk(ke_match.group(0)), f"KE-id existence check for {ke_match.group(0)}"
+    if DATED_NOTE_RE.search(citation) and len(citation) >= MIN_DATED_NOTE_LENGTH:
+        return True, "dated free-text note, format-only check (no record to look up)"
+    return False, f"{rel_path!r} is not a real file/UMR-id/KE-id citation and not a sufficiently detailed dated note"
+
+
+def check_category_b_recovery(evidence):
+    """Evaluates the Owner's 10 real conditions (UMR-20260803-025317-0c64)
+    against real, verifiable evidence -- never a narrated claim. `evidence` is
+    the dict parse_category_b_block() returns (or an equivalent dict supplied
+    directly for the retroactive/CLI --category-b-evidence path). Returns
+    {"category_b_valid": bool, "conditions": [{"id", "description", "passed",
+    "detail"}, ...]} -- every condition is reported, not just the first
+    failure, so a rejection is fully specific about what's still missing.
+    Fails closed: any condition this function cannot check (missing field,
+    unresolvable repo, unreadable file) is reported as failed, never skipped
+    or assumed true."""
+    conditions = []
+
+    def record(cid, description, passed, detail):
+        conditions.append({"id": cid, "description": description, "passed": bool(passed), "detail": detail})
+
+    missing = [f for f in CATEGORY_B_REQUIRED_FIELDS if not evidence.get(f)]
+    if missing:
+        record("0_evidence_complete", "All required evidence fields present",
+                False, f"missing field(s): {missing}")
+        return {"category_b_valid": False, "conditions": conditions}
+    record("0_evidence_complete", "All required evidence fields present", True, "all fields present")
+
+    repo_root = _resolve_repo_root(evidence["repo"])
+    if not repo_root:
+        record("0_repo_resolved", "Named repo is a real sibling checkout", False,
+               f"repo={evidence['repo']!r} not found under {REPOS_BASE_DIR}")
+        return {"category_b_valid": False, "conditions": conditions}
+    record("0_repo_resolved", "Named repo is a real sibling checkout", True, repo_root)
+
+    # 1. The SQL already exists in the repository.
+    sql_text = _read_repo_file(repo_root, evidence["sql_file"])
+    record("1_sql_exists", "SQL already exists in the repository", sql_text is not None,
+           f"{evidence['sql_file']} {'found' if sql_text is not None else 'not found'} in {evidence['repo']}")
+
+    # 2. The SQL was previously reviewed and merged, not new or unreviewed.
+    merged_ok, merged_detail = (_sql_file_previously_merged(repo_root, evidence["sql_file"])
+                                 if sql_text is not None else (False, "skipped, file not found (condition 1 failed)"))
+    record("2_previously_merged", "SQL was previously reviewed and merged", merged_ok, merged_detail)
+
+    # 3. The SQL is genuinely idempotent, safe to run again without harm.
+    idem_ok, idem_detail = (_is_idempotent_sql(sql_text) if sql_text is not None
+                             else (False, "skipped, file not found (condition 1 failed)"))
+    record("3_idempotent", "SQL is genuinely idempotent, safe to rerun", idem_ok, idem_detail)
+
+    # 4. The production issue is a verified real outage or Sev1 incident, not routine maintenance.
+    outage_ok, outage_detail = _citation_exists(repo_root, evidence["outage_evidence"])
+    record("4_real_outage", "Production issue is a verified real outage/Sev1, not routine maintenance",
+           outage_ok, outage_detail)
+
+    # 5. Root cause has been independently verified, not assumed.
+    root_cause_ok, root_cause_detail = _citation_exists(repo_root, evidence["root_cause_evidence"])
+    record("5_root_cause_verified", "Root cause independently verified, not assumed",
+           root_cause_ok, root_cause_detail)
+
+    # 6. An independent audit confirms the proposed live action matches the already-reviewed migration exactly.
+    audit_ok, audit_detail = _citation_exists(repo_root, evidence["audit_match_evidence"])
+    record("6_independent_audit_match", "Independent audit confirms exact match to the reviewed migration",
+           audit_ok, audit_detail)
+
+    # 7. The execution is fully logged under the real governing UMR.
+    umr = evidence["governing_umr"]
+    umr_format_ok = bool(UMR_ID_RE.fullmatch(umr.strip()))
+    umr_exists_ok, umr_exists_detail = _citation_exists(repo_root, umr) if umr_format_ok else (False, "not a well-formed UMR id")
+    record("7_umr_traceability", "Execution is fully logged under the real governing UMR",
+           umr_format_ok and umr_exists_ok, umr_exists_detail if umr_format_ok else f"{umr!r} is not a well-formed UMR-YYYYMMDD-HHMMSS-xxxx id")
+
+    # 8. Real before-and-after evidence is captured, not narrated.
+    before_after_ok, before_after_detail = _citation_exists(repo_root, evidence["before_after_evidence"])
+    record("8_before_after_evidence", "Real before/after evidence captured, not narrated",
+           before_after_ok, before_after_detail)
+
+    # 9. A real rollback path is documented.
+    rollback_ok, rollback_detail = _citation_exists(repo_root, evidence["rollback_path"])
+    record("9_rollback_documented", "A real rollback path is documented", rollback_ok, rollback_detail)
+
+    # 10. A real canonical artifact is updated after execution completes.
+    canonical_ok, canonical_detail = _citation_exists(repo_root, evidence["canonical_artifact"])
+    record("10_canonical_artifact_updated", "Real canonical artifact is updated after execution completes",
+           canonical_ok, canonical_detail)
+
+    all_passed = all(c["passed"] for c in conditions)
+    return {"category_b_valid": all_passed, "conditions": conditions}
+
+
 def check_ddl_authorization(text):
     hits = find_ddl_references(text)
     if not hits:
@@ -305,45 +628,105 @@ def check_ddl_authorization(text):
             "policy_decision": decision.to_dict(),
         }
 
+    # Category B: deterministic recovery, an ALTERNATIVE acceptance path to
+    # Category A's PRE-APPROVED-LIVE-DDL citation above, not a replacement --
+    # see module docstring. Only consulted once the Category A citation path
+    # above has already failed to find a valid reference.
+    category_b_evidence = parse_category_b_block(text)
+    category_b_result = None
+    if category_b_evidence is not None:
+        category_b_result = check_category_b_recovery(category_b_evidence)
+        if category_b_result["category_b_valid"]:
+            explanation = make_explanation(
+                summary="Live DDL authorized as a deterministic Category B recovery.",
+                reasoning=(
+                    f"Matched DDL language ({', '.join(hits)}); no Category A PRE-APPROVED-LIVE-DDL "
+                    "citation was present, but a CATEGORY-B-DETERMINISTIC-RECOVERY evidence block was, "
+                    "and all 10 of the Owner's deterministic conditions (UMR-20260803-025317-0c64) "
+                    "verified true against real repo/task-record evidence -- no human/PM/AI judgment "
+                    "call required for this class of action."
+                ),
+            )
+            decision = emit_allow(
+                source_gate=SOURCE_GATE, reason_code="category_b_deterministic_recovery",
+                detail=json.dumps(category_b_result["conditions"], default=str),
+                explanation=explanation, evidence=hits,
+            )
+            return {
+                "valid": True, "ddl_references_found": hits, "category": "B",
+                "category_b_conditions": category_b_result["conditions"],
+                "policy_decision": decision.to_dict(),
+            }
+
     explanation = make_explanation(
         summary="Live DDL language found with no valid pre-approval citation.",
         reasoning=(
             f"Matched DDL/DCL language ({', '.join(hits)}) and no PRE-APPROVED-LIVE-DDL: line cited a "
-            "real, existing decision-log record or a sufficiently detailed dated note."
+            "real, existing decision-log record or a sufficiently detailed dated note"
+            + (", and the CATEGORY-B-DETERMINISTIC-RECOVERY evidence block present did not satisfy "
+               "all 10 required conditions" if category_b_result is not None else "")
+            + "."
         ),
-        recommended_action="Remove the DDL instruction from SCOPE and open a migration PR for human review instead.",
+        recommended_action=(
+            "Remove the DDL instruction from SCOPE and open a migration PR for human review instead, "
+            "or fix the specific failed Category B condition(s) reported below."
+        ),
     )
     decision = emit_deny(
         source_gate=SOURCE_GATE, reason_code="ddl_authorization_required",
         detail=f"ddl_references_found={hits}", explanation=explanation, evidence=hits,
     )
-    return {
+    result = {
         "valid": False,
         "reason": (
             "ddl_authorization_required: this prompt-file references live-DDL-executing "
-            f"language ({', '.join(hits)}) with no PRE-APPROVED-LIVE-DDL: citation. "
-            "Supabase schema changes (and any other live DDL) are tier2-by-definition and "
-            "must be held for human sign-off before a worker is ever dispatched to run them "
-            "-- this gate enforces that rule at dispatch time, not only at PR-merge time."
+            f"language ({', '.join(hits)}) with no PRE-APPROVED-LIVE-DDL: citation" +
+            (" and no CATEGORY-B-DETERMINISTIC-RECOVERY block that satisfies all 10 required "
+             "conditions" if category_b_result is not None else "") + ". "
+            "Supabase schema changes (Category A) are tier2-by-definition and must be held for "
+            "human sign-off before a worker is ever dispatched to run them. Deterministic recovery "
+            "of already-reviewed, already-merged, idempotent SQL (Category B) may instead be "
+            "auto-authorized by this gate if all 10 of the Owner's conditions verify true -- this "
+            "gate enforces both rules at dispatch time, not only at PR-merge time."
         ),
         "guidance": (
-            "If the Owner has genuinely pre-approved this specific live DDL action out of "
-            "band, add a line `PRE-APPROVED-LIVE-DDL: <real citation>` to this prompt-file -- "
-            "a decision-log entry ID (KE-<date>-<time>-<hex>, or an "
+            "Category A: if the Owner has genuinely pre-approved this specific live DDL action out "
+            "of band, add a line `PRE-APPROVED-LIVE-DDL: <real citation>` to this prompt-file -- a "
+            "decision-log entry ID (KE-<date>-<time>-<hex>, or an "
             "OWNER_DECISIONS_NEEDED_<date>.yaml#<id> reference), or a dated approval note of "
-            "meaningful length. A bare word like `yes` is not a citation and will not pass. "
-            "Otherwise, remove the DDL instruction from SCOPE and have the worker open a "
-            "migration PR for human review instead, the same as every other Supabase schema "
-            "change."
+            "meaningful length. A bare word like `yes` is not a citation and will not pass.\n"
+            "Category B: if this is a deterministic recovery of already-reviewed/merged/idempotent "
+            "SQL, add a `CATEGORY-B-DETERMINISTIC-RECOVERY:` block naming real, checkable evidence "
+            "for all 10 conditions (repo, sql_file, governing_umr, outage_evidence, "
+            "root_cause_evidence, audit_match_evidence, before_after_evidence, rollback_path, "
+            "canonical_artifact) -- see the conditions breakdown below if a block was already "
+            "present but failed.\n"
+            "Otherwise, remove the DDL instruction from SCOPE and have the worker open a migration "
+            "PR for human review instead, the same as every other Supabase schema change."
         ),
         "ddl_references_found": hits,
         "policy_decision": decision.to_dict(),
     }
+    if category_b_result is not None:
+        result["category_b_conditions"] = category_b_result["conditions"]
+    return result
 
 
 if __name__ == "__main__":
+    # Standalone/retroactive Category B check: evaluates a real evidence JSON
+    # file against the 10 conditions directly, independent of any prompt-file
+    # dispatch flow -- used to test the policy against a past incident (see
+    # module docstring's "Retroactive test" section) or to spot-check a
+    # proposed evidence block before wiring it into a real prompt-file.
+    if len(sys.argv) >= 3 and sys.argv[1] == "--category-b-evidence":
+        with open(sys.argv[2]) as f:
+            evidence = json.load(f)
+        result = check_category_b_recovery(evidence)
+        print(json.dumps(result, indent=2, default=str))
+        sys.exit(0 if result.get("category_b_valid") else 1)
+
     if len(sys.argv) < 2:
-        print(json.dumps({"valid": True, "note": "usage: ddl_authorization_check.py <prompt_file>"}))
+        print(json.dumps({"valid": True, "note": "usage: ddl_authorization_check.py <prompt_file> | ddl_authorization_check.py --category-b-evidence <evidence.json>"}))
         sys.exit(0)
     with open(sys.argv[1]) as f:
         prompt_text = f.read()

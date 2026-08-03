@@ -7,11 +7,19 @@ apply_migration, before any PR/CI/human review happened. Run with:
 python3 -m pytest tests/ -k ddl_authorization
 """
 import os
+import subprocess
 import sys
+
+import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "scripts"))
 
-from ddl_authorization_check import check_ddl_authorization  # noqa: E402
+import ddl_authorization_check as dac  # noqa: E402
+from ddl_authorization_check import (  # noqa: E402
+    check_category_b_recovery,
+    check_ddl_authorization,
+    parse_category_b_block,
+)
 
 
 def test_no_ddl_language_passes():
@@ -381,3 +389,235 @@ PRE-APPROVED-LIVE-DDL: KE-20260726-999999-dead
 """
     result = check_ddl_authorization(text)
     assert result["valid"] is False, result
+
+
+# =====================================================================
+# Category B: deterministic recovery (UMR-20260803-025317-0c64 /
+# UMR-20260803-025414-8274). Uses a real, throwaway git repo fixture (not
+# compliance-tracker directly) so these tests don't depend on that sibling
+# repo's exact current content -- same real-evidence discipline as the rest
+# of this module (real file existence, real git history, real idempotency
+# scan), just against a controlled fixture instead of live server state.
+# =====================================================================
+
+
+def _run(cmd, cwd):
+    subprocess.run(cmd, cwd=cwd, check=True, capture_output=True, text=True)
+
+
+@pytest.fixture
+def fixture_repo(tmp_path, monkeypatch):
+    """A real git repo at <tmp_path>/repos/fixture-repo, with a merged (on
+    origin/main) idempotent SQL migration and an ai-os/boss/COMPLETED.yaml
+    citing real evidence -- exactly the shape check_category_b_recovery()
+    inspects. REPOS_BASE_DIR is monkeypatched so _resolve_repo_root('fixture-repo')
+    finds it."""
+    repos_base = tmp_path / "repos"
+    repo_root = repos_base / "fixture-repo"
+    repo_root.mkdir(parents=True)
+    _run(["git", "init"], repo_root)
+    _run(["git", "checkout", "-b", "main"], repo_root)
+
+    sql_dir = repo_root / "drizzle"
+    sql_dir.mkdir()
+    (sql_dir / "0001_idempotent.sql").write_text(
+        "ALTER TABLE compliance.widgets ADD COLUMN IF NOT EXISTS foo text;\n"
+        "CREATE TABLE IF NOT EXISTS compliance.widget_teams (id text PRIMARY KEY);\n"
+        "CREATE INDEX IF NOT EXISTS idx_widget_teams_id ON compliance.widget_teams(id);\n"
+        "DO $$ BEGIN\n"
+        "  CREATE POLICY app_scoped ON compliance.widget_teams FOR ALL TO app_runtime USING (true);\n"
+        "EXCEPTION WHEN duplicate_object THEN NULL; END $$;\n"
+    )
+    (sql_dir / "0002_non_idempotent.sql").write_text(
+        "CREATE TABLE compliance.risky (id text PRIMARY KEY);\n"
+        "ALTER TABLE compliance.risky DROP COLUMN legacy;\n"
+    )
+
+    ai_os = repo_root / "ai-os" / "boss"
+    ai_os.mkdir(parents=True)
+    (ai_os / "COMPLETED.yaml").write_text(
+        "- id: FIXTURE-INCIDENT\n"
+        "  summary: real Sev1 outage, root cause 42703 missing column, fixed 2026-08-03\n"
+        "  governing_umr: UMR-20260803-025317-0c64\n"
+        "  auditor_match: independent audit confirmed exact match to reviewed migration\n"
+        "  before_after: information_schema before/after captured, live retest 200 OK\n"
+    )
+
+    _run(["git", "add", "-A"], repo_root)
+    _run(["git", "commit", "-m", "fixture: add idempotent + non-idempotent migrations"], repo_root)
+    _run(["git", "branch", "origin/main", "main"], repo_root)
+
+    monkeypatch.setattr(dac, "REPOS_BASE_DIR", str(repos_base))
+    return str(repo_root)
+
+
+VALID_EVIDENCE_BASE = {
+    "repo": "fixture-repo",
+    "sql_file": "drizzle/0001_idempotent.sql",
+    "governing_umr": "UMR-20260803-025317-0c64",
+    "outage_evidence": "ai-os/boss/COMPLETED.yaml#real Sev1 outage",
+    "root_cause_evidence": "ai-os/boss/COMPLETED.yaml#root cause 42703",
+    "audit_match_evidence": "ai-os/boss/COMPLETED.yaml#independent audit confirmed exact match",
+    "before_after_evidence": "ai-os/boss/COMPLETED.yaml#information_schema before/after",
+    "rollback_path": "ai-os/boss/COMPLETED.yaml#FIXTURE-INCIDENT",
+    "canonical_artifact": "ai-os/boss/COMPLETED.yaml",
+}
+
+
+def test_category_b_all_conditions_pass_for_well_evidenced_recovery(fixture_repo):
+    result = check_category_b_recovery(dict(VALID_EVIDENCE_BASE))
+    assert result["category_b_valid"] is True, result["conditions"]
+    assert len(result["conditions"]) == 12  # 0_evidence_complete + 0_repo_resolved + 10 real conditions
+    assert all(c["passed"] for c in result["conditions"]), result["conditions"]
+
+
+def test_category_b_missing_required_field_fails_closed(fixture_repo):
+    evidence = dict(VALID_EVIDENCE_BASE)
+    del evidence["rollback_path"]
+    result = check_category_b_recovery(evidence)
+    assert result["category_b_valid"] is False
+    assert result["conditions"][0]["id"] == "0_evidence_complete"
+    assert "rollback_path" in result["conditions"][0]["detail"]
+
+
+def test_category_b_unresolvable_repo_fails_closed(fixture_repo):
+    evidence = dict(VALID_EVIDENCE_BASE)
+    evidence["repo"] = "not-a-real-repo-anywhere"
+    result = check_category_b_recovery(evidence)
+    assert result["category_b_valid"] is False
+    assert any(c["id"] == "0_repo_resolved" and not c["passed"] for c in result["conditions"])
+
+
+def test_category_b_nonexistent_sql_file_fails_condition_1(fixture_repo):
+    evidence = dict(VALID_EVIDENCE_BASE)
+    evidence["sql_file"] = "drizzle/does_not_exist.sql"
+    result = check_category_b_recovery(evidence)
+    assert result["category_b_valid"] is False
+    conditions_by_id = {c["id"]: c for c in result["conditions"]}
+    assert conditions_by_id["1_sql_exists"]["passed"] is False
+
+
+def test_category_b_unmerged_sql_file_fails_condition_2(fixture_repo, tmp_path):
+    # A file that exists in the working tree but was never committed to
+    # origin/main is not "previously reviewed and merged."
+    unmerged = os.path.join(fixture_repo, "drizzle", "0003_unmerged.sql")
+    with open(unmerged, "w") as f:
+        f.write("CREATE TABLE IF NOT EXISTS compliance.new_thing (id text PRIMARY KEY);\n")
+    evidence = dict(VALID_EVIDENCE_BASE)
+    evidence["sql_file"] = "drizzle/0003_unmerged.sql"
+    result = check_category_b_recovery(evidence)
+    assert result["category_b_valid"] is False
+    conditions_by_id = {c["id"]: c for c in result["conditions"]}
+    # Condition 1 (real _read_repo_file falls back to the working tree) may
+    # still find it -- the real, load-bearing check is condition 2, which
+    # only looks at origin/main's committed history.
+    assert conditions_by_id["2_previously_merged"]["passed"] is False
+
+
+def test_category_b_non_idempotent_sql_fails_condition_3(fixture_repo):
+    evidence = dict(VALID_EVIDENCE_BASE)
+    evidence["sql_file"] = "drizzle/0002_non_idempotent.sql"
+    result = check_category_b_recovery(evidence)
+    assert result["category_b_valid"] is False
+    conditions_by_id = {c["id"]: c for c in result["conditions"]}
+    assert conditions_by_id["3_idempotent"]["passed"] is False
+    assert "CREATE TABLE compliance.risky" in conditions_by_id["3_idempotent"]["detail"] or \
+           "DROP COLUMN" in str(conditions_by_id["3_idempotent"]["detail"])
+
+
+def test_category_b_fabricated_citation_fails_condition(fixture_repo):
+    evidence = dict(VALID_EVIDENCE_BASE)
+    evidence["root_cause_evidence"] = "ai-os/boss/COMPLETED.yaml#this-anchor-does-not-exist"
+    result = check_category_b_recovery(evidence)
+    assert result["category_b_valid"] is False
+    conditions_by_id = {c["id"]: c for c in result["conditions"]}
+    assert conditions_by_id["5_root_cause_verified"]["passed"] is False
+
+
+def test_category_b_malformed_umr_fails_condition_7(fixture_repo):
+    evidence = dict(VALID_EVIDENCE_BASE)
+    evidence["governing_umr"] = "not-a-real-umr-id"
+    result = check_category_b_recovery(evidence)
+    assert result["category_b_valid"] is False
+    conditions_by_id = {c["id"]: c for c in result["conditions"]}
+    assert conditions_by_id["7_umr_traceability"]["passed"] is False
+
+
+def test_category_b_evidence_block_parses_from_prompt_file():
+    text = """
+## SCOPE
+Reapply an already-merged idempotent migration.
+
+CATEGORY-B-DETERMINISTIC-RECOVERY:
+  repo: fixture-repo
+  sql_file: drizzle/0001_idempotent.sql
+  governing_umr: UMR-20260803-025317-0c64
+  outage_evidence: ai-os/boss/COMPLETED.yaml#real Sev1 outage
+  root_cause_evidence: ai-os/boss/COMPLETED.yaml#root cause 42703
+  audit_match_evidence: ai-os/boss/COMPLETED.yaml#independent audit confirmed exact match
+  before_after_evidence: ai-os/boss/COMPLETED.yaml#information_schema before/after
+  rollback_path: ai-os/boss/COMPLETED.yaml#FIXTURE-INCIDENT
+  canonical_artifact: ai-os/boss/COMPLETED.yaml
+"""
+    evidence = parse_category_b_block(text)
+    assert evidence is not None
+    assert evidence["repo"] == "fixture-repo"
+    assert evidence["governing_umr"] == "UMR-20260803-025317-0c64"
+
+
+def test_category_b_end_to_end_through_check_ddl_authorization_allows(fixture_repo):
+    text = """
+## SCOPE
+Reapply drizzle/0001_idempotent.sql (already merged, idempotent) to fix a
+real production drift outage:
+CREATE TABLE IF NOT EXISTS compliance.widget_teams (id text PRIMARY KEY);
+
+CATEGORY-B-DETERMINISTIC-RECOVERY:
+  repo: fixture-repo
+  sql_file: drizzle/0001_idempotent.sql
+  governing_umr: UMR-20260803-025317-0c64
+  outage_evidence: ai-os/boss/COMPLETED.yaml#real Sev1 outage
+  root_cause_evidence: ai-os/boss/COMPLETED.yaml#root cause 42703
+  audit_match_evidence: ai-os/boss/COMPLETED.yaml#independent audit confirmed exact match
+  before_after_evidence: ai-os/boss/COMPLETED.yaml#information_schema before/after
+  rollback_path: ai-os/boss/COMPLETED.yaml#FIXTURE-INCIDENT
+  canonical_artifact: ai-os/boss/COMPLETED.yaml
+"""
+    result = check_ddl_authorization(text)
+    assert result["valid"] is True, result
+    assert result["category"] == "B"
+    assert all(c["passed"] for c in result["category_b_conditions"])
+
+
+def test_category_b_end_to_end_through_check_ddl_authorization_blocks_when_incomplete(fixture_repo):
+    text = """
+## SCOPE
+Run: CREATE TABLE compliance.risky (id text PRIMARY KEY);
+
+CATEGORY-B-DETERMINISTIC-RECOVERY:
+  repo: fixture-repo
+  sql_file: drizzle/0002_non_idempotent.sql
+  governing_umr: UMR-20260803-025317-0c64
+  outage_evidence: ai-os/boss/COMPLETED.yaml#real Sev1 outage
+  root_cause_evidence: ai-os/boss/COMPLETED.yaml#root cause 42703
+  audit_match_evidence: ai-os/boss/COMPLETED.yaml#independent audit confirmed exact match
+  before_after_evidence: ai-os/boss/COMPLETED.yaml#information_schema before/after
+  rollback_path: ai-os/boss/COMPLETED.yaml#FIXTURE-INCIDENT
+  canonical_artifact: ai-os/boss/COMPLETED.yaml
+"""
+    result = check_ddl_authorization(text)
+    assert result["valid"] is False, result
+    assert "category_b_conditions" in result
+    conditions_by_id = {c["id"]: c for c in result["category_b_conditions"]}
+    assert conditions_by_id["3_idempotent"]["passed"] is False
+
+
+def test_category_b_does_not_interfere_with_category_a_when_no_block_present():
+    """No CATEGORY-B block at all -- behaves exactly as before this change."""
+    text = """
+## SCOPE
+Run: DROP TABLE stale_leads;
+"""
+    result = check_ddl_authorization(text)
+    assert result["valid"] is False, result
+    assert "category_b_conditions" not in result
