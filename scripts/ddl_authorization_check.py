@@ -403,6 +403,26 @@ INHERENTLY_IDEMPOTENT_STATEMENT_RE = re.compile(
     re.IGNORECASE | re.DOTALL | re.MULTILINE,
 )
 
+SQL_LINE_COMMENT_RE = re.compile(r"--[^\n]*")
+SQL_BLOCK_COMMENT_RE = re.compile(r"/\*.*?\*/", re.DOTALL)
+
+
+def _strip_sql_comments(sql_text):
+    """Real gap found and fixed in independent review (2026-08-03, PR #123
+    4th AUDIT: FAIL): both IDEMPOTENCY_GUARD_RE and
+    DO_BLOCK_EXCEPTION_GUARD_RE searched raw, uncommented text, so a
+    comment merely containing the words "IF EXISTS" (e.g. "-- TODO: add IF
+    EXISTS here") or "EXCEPTION WHEN duplicate_object" could make a
+    genuinely unguarded DROP/ALTER/CREATE/DO block pass its guard check
+    with no real guard present. Strips `--` line comments and `/* */` block
+    comments before any guard/opener matching. Heuristic, not a full SQL
+    parser (same class as this module's other checks) -- does not account
+    for `--`/`/*` appearing inside a string literal, which would be
+    unusual in a DDL migration file."""
+    text = SQL_BLOCK_COMMENT_RE.sub(" ", sql_text)
+    text = SQL_LINE_COMMENT_RE.sub("", text)
+    return text
+
 DO_BLOCK_RE = re.compile(r"DO\s+\$\$.*?END\s+\$\$\s*;", re.IGNORECASE | re.DOTALL)
 
 # Only a DO $$ block that actually swallows Postgres's real re-run error
@@ -516,7 +536,10 @@ def _is_idempotent_sql(sql_text):
     incorrectly passed. Every risky DDL opener (guarded or not) must have an
     idempotency guard (IF NOT EXISTS / IF EXISTS / OR REPLACE / ON CONFLICT)
     within its own statement (naive but conservative semicolon-bounded split
-    -- fails closed on anything ambiguous rather than assuming safety)."""
+    -- fails closed on anything ambiguous rather than assuming safety).
+    SQL comments are stripped first (see _strip_sql_comments) so a comment
+    mentioning guard keywords can't fake a real guard."""
+    sql_text = _strip_sql_comments(sql_text)
     guarded_spans = [m.span() for m in DO_BLOCK_RE.finditer(sql_text) if DO_BLOCK_EXCEPTION_GUARD_RE.search(m.group(0))]
     remainder_parts = []
     cursor = 0

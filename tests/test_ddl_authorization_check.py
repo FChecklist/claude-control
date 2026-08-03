@@ -882,3 +882,62 @@ def test_grant_with_actually_destructive_ddl_alongside_still_fails():
         "DROP TABLE compliance.audit_log;\n"
     )
     assert ok is False, detail
+
+
+# =====================================================================
+# Regression tests for the SQL-comment guard bypass found by a FOURTH
+# independent review round (claude-control PR #123, 4th AUDIT: FAIL,
+# 2026-08-03): guard-keyword matching searched raw text including
+# comments, so a comment merely mentioning "IF EXISTS" could fake a guard
+# on a genuinely unguarded statement.
+# =====================================================================
+
+
+def test_guard_keyword_inside_a_line_comment_does_not_fake_a_guard():
+    """The exact real attack the auditor described: a `--` comment
+    mentioning 'IF EXISTS' must not make a genuinely unguarded DROP pass."""
+    sql = (
+        "-- TODO: add IF EXISTS here before shipping\n"
+        "DROP TABLE compliance.audit_log;\n"
+    )
+    ok, detail = dac._is_idempotent_sql(sql)
+    assert ok is False, detail
+
+
+def test_guard_keyword_inside_a_block_comment_does_not_fake_a_guard():
+    sql = (
+        "/* this should really say IF NOT EXISTS but doesn't yet */\n"
+        "CREATE TABLE compliance.risky (id text PRIMARY KEY);\n"
+    )
+    ok, detail = dac._is_idempotent_sql(sql)
+    assert ok is False, detail
+
+
+def test_exception_handler_mentioned_only_in_a_comment_does_not_fake_a_do_block_guard():
+    """Same class of bug for the DO $$ block guard specifically: a comment
+    mentioning EXCEPTION WHEN duplicate_object inside a DO block that has
+    no REAL exception handler must not exempt it."""
+    sql = (
+        "CREATE TABLE IF NOT EXISTS compliance.guard_check (id text PRIMARY KEY);\n"
+        "DO $$ BEGIN\n"
+        "  -- EXCEPTION WHEN duplicate_object THEN NULL; (not actually here)\n"
+        "  CREATE POLICY app_scoped ON compliance.guard_check FOR ALL TO app_runtime USING (true);\n"
+        "END $$;\n"
+    )
+    ok, detail = dac._is_idempotent_sql(sql)
+    assert ok is False, detail
+
+
+def test_real_comments_in_a_genuinely_guarded_file_still_pass():
+    """Confirms the fix didn't over-correct: ordinary descriptive comments
+    (the real shape migration-0264 itself uses) alongside real, present
+    guards still pass."""
+    sql = (
+        "-- Helpdesk gap-closure Phase 0, closes 3 confirmed-real gaps\n"
+        "-- versus Odoo's stock Helpdesk app.\n"
+        "CREATE TABLE IF NOT EXISTS compliance.ticket_teams (id text PRIMARY KEY);\n"
+        "/* real block comment, unrelated to guards */\n"
+        "ALTER TABLE compliance.tickets ADD COLUMN IF NOT EXISTS team_id text;\n"
+    )
+    ok, detail = dac._is_idempotent_sql(sql)
+    assert ok is True, detail
