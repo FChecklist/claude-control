@@ -12701,3 +12701,194 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260803-102030-adopted-register-gap-audit-check-issue-comment-s/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/805'
     last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-103115-pm-decision--authorize-real-fix-of-gap-4
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''PM decision, authorize real fix of GAP-403-VS-500-CLM-HR-PERFORMANCE
+      as OCID-020 in scope gap closure'' on compliance-tracker reached status=blocked.
+      credit accountant rejected auto-fix attempt 1, no further metered spend without
+      human review: {"approved": false, "increment_number": 1, "reason": "existing software/mechanism
+      already covers this (system_index match) -- use it instead of spending AI credits",
+      "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260803-103115-pm-decision--authorize-real-fix-of-gap-4/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-103713-adopted-fix-gap-403-vs-500-clm-hr-performance
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Fix GAP-403-VS-500-CLM-HR-PERFORMANCE'' on compliance-tracker
+      reached status=completed. Superboss-approved (tier=tier1, hold_for_owner_signoff=False),
+      merged autonomously per Owner''s 2026-07-31 full-approval-autonomy directive:
+      https://github.com/FChecklist/compliance-tracker/pull/806'
+    where: '/opt/veridian/ai-os/tasks/task-20260803-103713-adopted-fix-gap-403-vs-500-clm-hr-performance/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/806'
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-111329-pm-decision--use-idle-capacity-to-fix-ga
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''PM decision, use idle capacity to fix GAP-ERP-CRM-403-NO-UX-EXPLANATION
+      while Vercel deploy clears'' on compliance-tracker reached status=blocked. credit
+      accountant rejected auto-fix attempt 1, no further metered spend without human
+      review: {"approved": false, "increment_number": 1, "reason": "existing software/mechanism
+      already covers this (system_index match) -- use it instead of spending AI credits",
+      "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260803-111329-pm-decision--use-idle-capacity-to-fix-ga/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-112240-adopted-fix-gap-erp-crm-403-no-ux-explanation
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Fix GAP-ERP-CRM-403-NO-UX-EXPLANATION'' on compliance-tracker
+      reached status=completed. Superboss-approved (tier=tier1, hold_for_owner_signoff=False),
+      merged autonomously per Owner''s 2026-07-31 full-approval-autonomy directive:
+      https://github.com/FChecklist/compliance-tracker/pull/809'
+    where: '/opt/veridian/ai-os/tasks/task-20260803-112240-adopted-fix-gap-erp-crm-403-no-ux-explanation/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/809'
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-114250-adopted-live-re-verify-clm-and-erp-crm-ux-gap-fi
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Live re-verify CLM and ERP/CRM UX gap fixes'' on
+      compliance-tracker reached status=completed. Superboss-approved (tier=tier1, hold_for_owner_signoff=False),
+      merged autonomously per Owner''s 2026-07-31 full-approval-autonomy directive:
+      https://github.com/FChecklist/compliance-tracker/pull/810'
+    where: '/opt/veridian/ai-os/tasks/task-20260803-114250-adopted-live-re-verify-clm-and-erp-crm-ux-gap-fi/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/810'
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-120229-adopted-ocid-047-052-business-certification-plan
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''OCID-047-052 Business Certification planning'' on
+      compliance-tracker reached status=completed. Superboss-approved (tier=tier1, hold_for_owner_signoff=False),
+      merged autonomously per Owner''s 2026-07-31 full-approval-autonomy directive:
+      https://github.com/FChecklist/compliance-tracker/pull/811'
+    where: '/opt/veridian/ai-os/tasks/task-20260803-120229-adopted-ocid-047-052-business-certification-plan/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/811'
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-120302-register-ocid-047-roles-rights-responsib
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Register OCID-047 Roles Rights Responsibilities Certification,
+      planning only, child of OCID-020 Business Certification'' on compliance-tracker
+      reached status=blocked. credit accountant rejected auto-fix attempt 1, no further
+      metered spend without human review: {"approved": false, "increment_number": 1,
+      "reason": "existing software/mechanism already covers this (system_index match)
+      -- use it instead of spending AI credits", "reviewer": "deterministic"}'
+    where: '/opt/veridian/ai-os/tasks/task-20260803-120302-register-ocid-047-roles-rights-responsib/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/814'
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-120306-register-ocid-048-multi-organization-mul
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Register OCID-048 Multi Organization Multi Tenant
+      Multi Brand Isolation Certification, planning only, child of OCID-020 Business
+      Certification'' on compliance-tracker reached status=blocked. Superboss-approved
+      (tier=tier1), but the merge itself FAILED (gh pr view confirms state=OPEN, mergedAt=;
+      see supervisor.log) — needs manual attention, NOT actually merged: https://github.com/FChecklist/compliance-tracker/pull/816'
+    where: '/opt/veridian/ai-os/tasks/task-20260803-120306-register-ocid-048-multi-organization-mul/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/816'
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-120310-register-ocid-049-subscription-plan-enti
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Register OCID-049 Subscription Plan Entitlement Certification,
+      planning only, child of OCID-020 Business Certification'' on compliance-tracker
+      reached status=blocked. Superboss rejected: https://github.com/FChecklist/compliance-tracker/pull/813
+      — see review.json for issues'
+    where: '/opt/veridian/ai-os/tasks/task-20260803-120310-register-ocid-049-subscription-plan-enti/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/813'
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-120314-register-ocid-050-data-state-certificati
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Register OCID-050 Data State Certification, Empty
+      Sample Large Data, planning only, child of OCID-020 Business Certification'' on
+      compliance-tracker reached status=blocked. Superboss-approved (tier=tier1), but
+      the merge itself FAILED (gh pr view confirms state=OPEN, mergedAt=; see supervisor.log)
+      — needs manual attention, NOT actually merged: https://github.com/FChecklist/compliance-tracker/pull/812'
+    where: '/opt/veridian/ai-os/tasks/task-20260803-120314-register-ocid-050-data-state-certificati/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/812'
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-120639-register-ocid-051-cross-surface-certific
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Register OCID-051 Cross Surface Certification, Browser
+      and Mobile PWA, planning only, child of OCID-020 Business Certification'' on compliance-tracker
+      reached status=blocked. Superboss-approved (tier=tier1), but the merge itself
+      FAILED (gh pr view confirms state=OPEN, mergedAt=; see supervisor.log) — needs
+      manual attention, NOT actually merged: https://github.com/FChecklist/compliance-tracker/pull/815'
+    where: '/opt/veridian/ai-os/tasks/task-20260803-120639-register-ocid-051-cross-surface-certific/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/815'
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-125054-register-ocid-052-veri-chat-ai-escalatio
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Register OCID-052 VERI Chat AI Escalation Deterministic
+      Software Execution Certification, planning only, child of OCID-020 Business Certification''
+      on compliance-tracker reached status=blocked. credit accountant rejected auto-fix
+      attempt 1, no further metered spend without human review: {"approved": false,
+      "increment_number": 1, "reason": "existing software/mechanism already covers this
+      (system_index match) -- use it instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260803-125054-register-ocid-052-veri-chat-ai-escalatio/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-131318-adopted-fix-pr815-progress-md-wholesale-replace
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''fix PR815 PROGRESS.md wholesale-replace'' on compliance-tracker
+      reached status=blocked. Superboss rejected: https://github.com/FChecklist/compliance-tracker/pull/815
+      — see review.json for issues'
+    where: '/opt/veridian/ai-os/tasks/task-20260803-131318-adopted-fix-pr815-progress-md-wholesale-replace/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/815'
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-131440-adopted-fix-pr816-progress-md-wholesale-replace
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''fix PR816 PROGRESS.md wholesale-replace'' on compliance-tracker
+      reached status=blocked. Superboss-approved (tier=tier1), but the merge itself
+      FAILED (gh pr view confirms state=OPEN, mergedAt=; see supervisor.log) — needs
+      manual attention, NOT actually merged: https://github.com/FChecklist/compliance-tracker/pull/816'
+    where: '/opt/veridian/ai-os/tasks/task-20260803-131440-adopted-fix-pr816-progress-md-wholesale-replace/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/816'
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-131612-adopted-fix-pr812-progress-md-wholesale-replace
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: Server-worker task 'fix PR812 PROGRESS.md wholesale-replace' on compliance-tracker
+      reached status=blocked. supervisor could not resolve a real PR for branch 'worker/task-20260803-120314-register-ocid-050-data-state-certificati'
+      (gh pr create failed, no existing open PR found for it) — refusing to proceed
+      rather than risk operating on an unrelated PR via gh's empty-argument fallback.
+      See supervisor.log.
+    where: /opt/veridian/ai-os/tasks/task-20260803-131612-adopted-fix-pr812-progress-md-wholesale-replace/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-03'
