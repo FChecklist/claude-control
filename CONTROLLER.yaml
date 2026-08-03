@@ -12038,3 +12038,109 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260803-035801-adopted-sec-06-enforced----claude-control-pr--12/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/764'
     last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-040532-pm-authorization-to-fix-supervisor-retri
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''PM authorization to fix supervisor retrigger stale
+      workspace gap'' on compliance-tracker reached status=blocked. credit accountant
+      rejected auto-fix attempt 1, no further metered spend without human review: {"approved":
+      false, "increment_number": 1, "reason": "existing software/mechanism already covers
+      this (system_index match) -- use it instead of spending AI credits", "reviewer":
+      "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260803-040532-pm-authorization-to-fix-supervisor-retri/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-040852-ocid-022-veridian-end-user-experience-fo
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''OCID-022 VERIDIAN End User Experience Foundation
+      document only'' on compliance-tracker reached status=blocked. credit accountant
+      rejected auto-fix attempt 1, no further metered spend without human review: {"approved":
+      false, "increment_number": 1, "reason": "existing software/mechanism already covers
+      this (system_index match) -- use it instead of spending AI credits", "reviewer":
+      "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260803-040852-ocid-022-veridian-end-user-experience-fo/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-041002-ocid-023-veridian-universal-end-user-wor
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''OCID-023 VERIDIAN Universal End User Work Model document
+      only'' on compliance-tracker reached status=blocked. credit accountant rejected
+      auto-fix attempt 1, no further metered spend without human review: {"approved":
+      false, "increment_number": 1, "reason": "existing software/mechanism already covers
+      this (system_index match) -- use it instead of spending AI credits", "reviewer":
+      "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260803-041002-ocid-023-veridian-universal-end-user-wor/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-041006-ocid-024-veridian-laptop-web-browser-run
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''OCID-024 VERIDIAN Laptop Web Browser Runtime document
+      only'' on compliance-tracker reached status=blocked. credit accountant rejected
+      auto-fix attempt 1, no further metered spend without human review: {"approved":
+      false, "increment_number": 1, "reason": "existing software/mechanism already covers
+      this (system_index match) -- use it instead of spending AI credits", "reviewer":
+      "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260803-041006-ocid-024-veridian-laptop-web-browser-run/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-041115-ocid-025-veridian-mobile-pwa-and-veri-ch
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''OCID-025 VERIDIAN Mobile PWA and VERI Chat Runtime
+      document only'' on compliance-tracker reached status=blocked. credit accountant
+      rejected auto-fix attempt 1, no further metered spend without human review: {"approved":
+      false, "increment_number": 1, "reason": "existing software/mechanism already covers
+      this (system_index match) -- use it instead of spending AI credits", "reviewer":
+      "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260803-041115-ocid-025-veridian-mobile-pwa-and-veri-ch/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-041146-adopted-fix-supervisor-retrigger-stale-workspace
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Fix supervisor retrigger stale-workspace gap (UMR-20260803-040529-15c9)''
+      on claude-control reached status=completed. Superboss-approved (tier=tier1, hold_for_owner_signoff=False),
+      merged autonomously per Owner''s 2026-07-31 full-approval-autonomy directive:
+      https://github.com/FChecklist/claude-control/pull/124'
+    where: '/opt/veridian/ai-os/tasks/task-20260803-041146-adopted-fix-supervisor-retrigger-stale-workspace/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/claude-control/pull/124'
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-043303-adopted-ocid-040-real-status-snapshot-of-ocid-02
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''OCID-040 real status snapshot of OCID-022-039 (UMR-20260803-042918-60b8)''
+      on compliance-tracker reached status=completed. Superboss-approved (tier=tier1,
+      hold_for_owner_signoff=False), merged autonomously per Owner''s 2026-07-31 full-approval-autonomy
+      directive: https://github.com/FChecklist/compliance-tracker/pull/769'
+    where: '/opt/veridian/ai-os/tasks/task-20260803-043303-adopted-ocid-040-real-status-snapshot-of-ocid-02/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/769'
+    last_touched: '2026-08-03'
+
+  - id: WORKER-20260803-045507-adopted-register-sec-07---ocid-overlap-resolutio
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Register SEC-07 + OCID overlap-resolution decision
+      (UMR-20260803-045159-ec55)'' on compliance-tracker reached status=completed. Superboss-approved
+      (tier=tier1, hold_for_owner_signoff=False), merged autonomously per Owner''s 2026-07-31
+      full-approval-autonomy directive: https://github.com/FChecklist/compliance-tracker/pull/770'
+    where: '/opt/veridian/ai-os/tasks/task-20260803-045507-adopted-register-sec-07---ocid-overlap-resolutio/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/770'
+    last_touched: '2026-08-03'
