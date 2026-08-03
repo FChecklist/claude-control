@@ -81,6 +81,18 @@ def run_json(cmd, step):
              stdout=proc.stdout[-2000:], stderr=proc.stderr[-2000:])
 
 
+def _slugify_title(title):
+    """MUST exactly mirror veridian-task.py cmd_create's own slug computation
+    (task_id = f"task-{ts}-{slug}") -- this is what makes task_key a real
+    predictor of collisions on the eventual task_id, not an independent
+    guess. Two concurrent --title collisions get different timestamped
+    task_ids (task_id can never collide by construction) but the identical
+    slug, which is exactly what task_key (task-20260731-074406's structural
+    duplicate-task constraint, claimed via superboss-register.py's
+    claim-task-key / UNIQUE(task_key) index) is built to catch."""
+    return "".join(c if c.isalnum() else "-" for c in title.lower())[:40].strip("-")
+
+
 def run_owner_engine_gate(text, session_id):
     """OWNER DIRECTIVE 2026-07-25 (KE-20260725-061008-8423) point 2, NON
     NEGOTIABLE: 'AI will not analyze any chat given by owner in raw format
@@ -235,6 +247,18 @@ def cmd_submit(args):
     log_result = run_json(log_cmd, "log-instruction")
     instruction_id = log_result.get("instruction_id")
 
+    # Structural duplicate-task constraint (task-20260731-074406), advisory
+    # half: submit only ever has --text, never a real --title (that's
+    # cmd_start's job, where the actual atomic claim-task-key happens below
+    # in cmd_start) -- so this is a read-only check-task-key lookup against
+    # the same slug this text's keywords would produce, surfaced alongside
+    # the existing fuzzy check-duplicate/search below, not a hard block.
+    task_key_candidate = _slugify_title(keyword_str)
+    task_key_check = run_json(
+        ["python3", SUPERBOSS, "check-task-key", "--task-key", task_key_candidate],
+        "check-task-key",
+    )
+
     dup_result = run_json(
         ["python3", SUPERBOSS, "check-duplicate", keyword_str],
         "check-duplicate",
@@ -300,6 +324,9 @@ def cmd_submit(args):
             "request": capability_request,
             "response": capability_response,
         },
+        "task_key_candidate": task_key_candidate,
+        "task_key_already_claimed": task_key_check.get("already_claimed", False),
+        "task_key_existing_task_id": task_key_check.get("existing_task_id"),
         "duplicate_found": bool(dup_result.get("found", 0) > 0),
         "duplicate_evidence": dup_result.get("matches", []),
         "prior_search_results": search_result,
@@ -363,12 +390,59 @@ def cmd_start(args):
         fail("ddl_authorization_check.py did not return parseable JSON",
              stdout=ddl_proc.stdout, stderr=ddl_proc.stderr)
     if not ddl_result.get("valid", False):
+        # Category B (UMR-20260803-025317-0c64): if a CATEGORY-B-DETERMINISTIC-RECOVERY
+        # block was present but didn't satisfy all 10 conditions, surface the real
+        # per-condition breakdown here too -- so a rejection reported to the dispatcher
+        # says plainly which specific condition failed, not just that DDL was found.
         fail(
             "ddl_authorization_check.py rejected this prompt-file -- dispatch blocked "
-            "until an explicit, citable Owner approval is added",
+            "until an explicit, citable Owner approval (Category A) or a fully-satisfied "
+            "deterministic recovery evidence block (Category B) is added",
             reason=ddl_result.get("reason"),
             guidance=ddl_result.get("guidance"),
+            category_b_conditions=ddl_result.get("category_b_conditions"),
             prompt_file=args.prompt_file,
+        )
+    elif ddl_result.get("category") == "B":
+        # Real, deterministic Category B authorization -- not narrated, not a
+        # human/PM/AI judgment call. Logged here (not just inside
+        # ddl_authorization_check.py's own return value) so task-gateway.py's own
+        # stdout/dispatch log carries which conditions were verified and how, for
+        # whoever reviews this task's real dispatch record later.
+        print(json.dumps({
+            "category_b_authorized": True,
+            "conditions": ddl_result.get("category_b_conditions"),
+        }, default=str), file=sys.stderr)
+
+    # Structural duplicate-task constraint (task-20260731-074406, real
+    # #634-vs-#639 / #641-vs-#629 duplicate-dispatch incidents this session):
+    # task_key is the SAME title-derived slug veridian-task.py's cmd_create
+    # uses for task_id (see _slugify_title) -- task_id itself can never
+    # collide (timestamp-prefixed), so it was never what caught these.
+    # Claimed here, immediately before veridian-task.py create actually
+    # spends real resources (worktree/branch/systemd unit) on this task, via
+    # superboss-register.py's atomic UNIQUE(task_key) insert -- a genuine
+    # duplicate now fails loudly before any of that is spent, instead of
+    # silently duplicating an already-in-flight task.
+    task_key = _slugify_title(args.title)
+    claim_proc = run(["python3", SUPERBOSS, "claim-task-key",
+                       "--task-key", task_key, "--title", args.title,
+                       "--source", "ai_agent"])
+    try:
+        claim_result = json.loads(claim_proc.stdout)
+    except json.JSONDecodeError:
+        fail("claim-task-key did not return parseable JSON",
+             stdout=claim_proc.stdout, stderr=claim_proc.stderr)
+    if not claim_result.get("claimed", False):
+        fail(
+            "duplicate task_key -- an earlier task already claimed this exact "
+            "title-derived key, dispatch blocked before any resources were spent",
+            task_key=task_key,
+            existing_task_id=claim_result.get("existing_task_id"),
+            existing_title=claim_result.get("existing_title"),
+            existing_ts=claim_result.get("existing_ts"),
+            guidance="if this is a genuine new task, give it a title that isn't "
+                     "identical (after lowercasing/slugifying to 40 chars) to the prior one",
         )
 
     # Real, machine-readable hold-for-signoff (2026-07-26, root-caused against
