@@ -385,6 +385,12 @@ INHERENTLY_IDEMPOTENT_STATEMENT_RE = re.compile(
 
 DO_BLOCK_RE = re.compile(r"DO\s+\$\$.*?END\s+\$\$\s*;", re.IGNORECASE | re.DOTALL)
 
+# Only a DO $$ block that actually swallows Postgres's real re-run error
+# (duplicate_object -- CREATE POLICY/CREATE TRIGGER/etc. have no IF NOT
+# EXISTS form) is a genuine idempotency guard. A DO block with no such
+# handler provides no rerun-safety at all and must not be exempted.
+DO_BLOCK_EXCEPTION_GUARD_RE = re.compile(r"EXCEPTION\s+WHEN\s+duplicate_object", re.IGNORECASE)
+
 
 def parse_category_b_block(text):
     """Extracts a `CATEGORY-B-DETERMINISTIC-RECOVERY:` evidence block from a
@@ -427,17 +433,32 @@ def _git(repo_root, *args):
         return 1, ""
 
 
+def _safe_join(repo_root, rel_path):
+    """Resolves rel_path against repo_root and verifies the real result stays
+    inside repo_root -- returns None if it escapes (a `..`-containing
+    evidence field, an absolute path, or a symlink pointing outside). Real
+    gap found in independent review (2026-08-03): the original bare-path
+    resolution had no such check, so a Category B evidence field could name
+    a path outside the intended sibling repo entirely."""
+    root_real = os.path.realpath(repo_root)
+    candidate_real = os.path.realpath(os.path.join(repo_root, rel_path))
+    if candidate_real == root_real or candidate_real.startswith(root_real + os.sep):
+        return candidate_real
+    return None
+
+
 def _read_repo_file(repo_root, rel_path, ref="origin/main"):
     """Real content of rel_path as it exists in ref's history (falls back to
     origin/master, then the working tree, since sibling repos on this server
     use both default-branch names -- see claude-control's own master vs
-    compliance-tracker's main). Returns None if not found anywhere."""
+    compliance-tracker's main). Returns None if not found anywhere, or if
+    rel_path resolves outside repo_root (see _safe_join)."""
     for candidate_ref in (ref, "origin/master", "origin/main"):
         rc, out = _git(repo_root, "cat-file", "-p", f"{candidate_ref}:{rel_path}")
         if rc == 0:
             return out
-    working_path = os.path.join(repo_root, rel_path)
-    if os.path.isfile(working_path):
+    working_path = _safe_join(repo_root, rel_path)
+    if working_path and os.path.isfile(working_path):
         try:
             with open(working_path, "r", encoding="utf-8", errors="ignore") as f:
                 return f.read()
@@ -462,24 +483,49 @@ def _sql_file_previously_merged(repo_root, rel_path):
 def _is_idempotent_sql(sql_text):
     """Condition 3 -- 'genuinely idempotent, safe to run again without harm':
     a real, honest heuristic (documented limitation, same class as this
-    module's other checks -- not a full SQL parser). DO $$ ... END $$; blocks
-    are stripped first (Postgres's own idiom for wrapping a CREATE POLICY/etc.
-    in an exception handler that swallows duplicate_object -- see this
-    module's docstring for the real migration this pattern is drawn from);
-    every remaining risky DDL opener must have an idempotency guard
-    (IF NOT EXISTS / IF EXISTS / OR REPLACE / ON CONFLICT) within its own
-    statement (naive but conservative semicolon-bounded split -- fails closed
-    on anything ambiguous rather than assuming safety)."""
-    guarded_blocks = DO_BLOCK_RE.findall(sql_text)
-    remainder = DO_BLOCK_RE.sub("", sql_text)
+    module's other checks -- not a full SQL parser). A DO $$ ... END $$;
+    block is only treated as guarding its own contents if it ACTUALLY
+    contains `EXCEPTION WHEN duplicate_object` (Postgres's real idiom for
+    swallowing a re-run's "already exists" error -- see this module's
+    docstring for the real migration this pattern is drawn from) -- a DO
+    block with no such handler is not exempted and its contents are scanned
+    for risky DDL exactly like any other statement. Real gap found and fixed
+    in independent review (2026-08-03): the original version stripped EVERY
+    DO $$ ... END $$; block unconditionally, so a DO block wrapping
+    genuinely unguarded DDL with no exception handling at all would have
+    incorrectly passed. Every risky DDL opener (guarded or not) must have an
+    idempotency guard (IF NOT EXISTS / IF EXISTS / OR REPLACE / ON CONFLICT)
+    within its own statement (naive but conservative semicolon-bounded split
+    -- fails closed on anything ambiguous rather than assuming safety)."""
+    guarded_spans = [m.span() for m in DO_BLOCK_RE.finditer(sql_text) if DO_BLOCK_EXCEPTION_GUARD_RE.search(m.group(0))]
+    remainder_parts = []
+    cursor = 0
+    for start, end in guarded_spans:
+        remainder_parts.append(sql_text[cursor:start])
+        cursor = end
+    remainder_parts.append(sql_text[cursor:])
+    remainder = "".join(remainder_parts)
+    guarded_blocks = [sql_text[s:e] for s, e in guarded_spans]
+    # Any DO $$ block WITHOUT a duplicate_object exception handler is
+    # deliberately left in `remainder` (not stripped) so its own contents --
+    # e.g. a CREATE POLICY with no IF NOT EXISTS equivalent and no exception
+    # handling -- get scanned for risky, unguarded DDL exactly like any
+    # other statement, rather than being exempted just for living inside a
+    # DO block.
     unguarded = []
     for statement in remainder.split(";"):
-        if (RISKY_DDL_OPENER_RE.search(statement)
+        opener_match = RISKY_DDL_OPENER_RE.search(statement)
+        if (opener_match
                 and not IDEMPOTENCY_GUARD_RE.search(statement)
                 and not INHERENTLY_IDEMPOTENT_STATEMENT_RE.search(statement)):
-            unguarded.append(statement.strip().splitlines()[0][:80])
+            # Report the matched opener's own line, not necessarily the
+            # statement chunk's first line (a DO $$ BEGIN wrapper with no
+            # exception handler puts its real risky statement, e.g. CREATE
+            # POLICY, on a later line of the same semicolon-bounded chunk).
+            opener_line = statement[:opener_match.start()].rpartition("\n")[2] + statement[opener_match.start():]
+            unguarded.append(opener_line.strip().splitlines()[0][:80])
     if unguarded:
-        return False, f"{len(unguarded)} unguarded DDL statement(s) outside any DO $$ exception block: {unguarded}"
+        return False, f"{len(unguarded)} unguarded DDL statement(s) found (outside any real, EXCEPTION WHEN duplicate_object-guarded DO $$ block): {unguarded}"
     return True, f"all risky DDL statements guarded (IF NOT EXISTS/IF EXISTS/OR REPLACE/ON CONFLICT), {len(guarded_blocks)} DO $$ exception block(s) also present"
 
 
@@ -518,21 +564,31 @@ def _scoped_yaml_entry_block(content, entry_id):
     return "".join(lines[start:end])
 
 
-def _citation_exists(repo_root, citation):
+def _citation_exists(repo_root, citation, require_anchor=False):
     """Generalizes is_real_reference()/_ke_id_exists_on_disk() to Category B's
     evidence fields, which may cite: a UMR id (existence-scanned the same way
     a KE id is), a `path#entry_id` or `path#entry_id::detail phrase`
-    reference into the named repo's own ai-os/ tree, or a bare `path`. When
-    the anchor names a real YAML `id:` entry, matching is SCOPED to that
-    entry's own block (see _scoped_yaml_entry_block) -- not the whole file --
-    so a detail phrase must actually appear within the cited entry, not
-    merely somewhere else in a large shared file like COMPLETED.yaml. If the
-    anchor doesn't resolve to a real YAML entry id, falls back to a weaker
-    whole-file substring search (logged as such). Falls back further to the
-    same dated-free-text-note floor Category A uses. Same honest limitation
-    as the rest of this module throughout: this proves the citation is a
-    real, findable, correctly-scoped record, not that its content is
-    semantically accurate."""
+    reference into the named repo's own ai-os/ tree, or (only when
+    require_anchor is False) a bare `path`. When the anchor names a real
+    YAML `id:` entry, matching is SCOPED to that entry's own block (see
+    _scoped_yaml_entry_block) -- not the whole file -- so a detail phrase
+    must actually appear within the cited entry, not merely somewhere else
+    in a large shared file like COMPLETED.yaml. If the anchor doesn't
+    resolve to a real YAML entry id, falls back to a weaker whole-file
+    substring search (logged as such). Falls back further to the same
+    dated-free-text-note floor Category A uses. Same honest limitation as
+    the rest of this module throughout: this proves the citation is a real,
+    findable, correctly-scoped record, not that its content is semantically
+    accurate.
+
+    require_anchor=True (used for the claim-substantiating conditions --
+    outage/root-cause/audit-match/before-after/rollback, NOT sql_file or
+    canonical_artifact) rejects a bare file path with no anchor at all. Real
+    gap found in independent review (2026-08-03): the original version
+    accepted ANY existing file cited with no anchor as full proof for 6 of
+    the 10 conditions -- e.g. citing 'README.md' with no anchor would have
+    passed. A citation for these conditions must name something specific
+    and checkable, not merely point at a file that happens to exist."""
     if not citation or PLACEHOLDER_REFERENCE_RE.match(citation.strip()):
         return False, "empty or placeholder citation"
     citation = citation.strip()
@@ -555,7 +611,11 @@ def _citation_exists(repo_root, citation):
     else:
         rel_path, anchor = citation, None
     rel_path = rel_path.strip()
-    full_path = os.path.join(repo_root, rel_path)
+    if require_anchor and not anchor:
+        return False, f"{rel_path!r} has no #anchor -- a bare file path is not sufficient evidence for this condition"
+    full_path = _safe_join(repo_root, rel_path)
+    if full_path is None:
+        return False, f"{rel_path!r} resolves outside the named repo -- rejected"
     if os.path.isfile(full_path):
         if not anchor:
             return True, f"{rel_path} exists"
@@ -581,7 +641,7 @@ def _citation_exists(repo_root, citation):
     ke_match = KE_ID_RE.search(citation)
     if ke_match:
         return _ke_id_exists_on_disk(ke_match.group(0)), f"KE-id existence check for {ke_match.group(0)}"
-    if DATED_NOTE_RE.search(citation) and len(citation) >= MIN_DATED_NOTE_LENGTH:
+    if not require_anchor and DATED_NOTE_RE.search(citation) and len(citation) >= MIN_DATED_NOTE_LENGTH:
         return True, "dated free-text note, format-only check (no record to look up)"
     return False, f"{rel_path!r} is not a real file/UMR-id/KE-id citation and not a sufficiently detailed dated note"
 
@@ -632,17 +692,17 @@ def check_category_b_recovery(evidence):
     record("3_idempotent", "SQL is genuinely idempotent, safe to rerun", idem_ok, idem_detail)
 
     # 4. The production issue is a verified real outage or Sev1 incident, not routine maintenance.
-    outage_ok, outage_detail = _citation_exists(repo_root, evidence["outage_evidence"])
+    outage_ok, outage_detail = _citation_exists(repo_root, evidence["outage_evidence"], require_anchor=True)
     record("4_real_outage", "Production issue is a verified real outage/Sev1, not routine maintenance",
            outage_ok, outage_detail)
 
     # 5. Root cause has been independently verified, not assumed.
-    root_cause_ok, root_cause_detail = _citation_exists(repo_root, evidence["root_cause_evidence"])
+    root_cause_ok, root_cause_detail = _citation_exists(repo_root, evidence["root_cause_evidence"], require_anchor=True)
     record("5_root_cause_verified", "Root cause independently verified, not assumed",
            root_cause_ok, root_cause_detail)
 
     # 6. An independent audit confirms the proposed live action matches the already-reviewed migration exactly.
-    audit_ok, audit_detail = _citation_exists(repo_root, evidence["audit_match_evidence"])
+    audit_ok, audit_detail = _citation_exists(repo_root, evidence["audit_match_evidence"], require_anchor=True)
     record("6_independent_audit_match", "Independent audit confirms exact match to the reviewed migration",
            audit_ok, audit_detail)
 
@@ -654,16 +714,16 @@ def check_category_b_recovery(evidence):
            umr_format_ok and umr_exists_ok, umr_exists_detail if umr_format_ok else f"{umr!r} is not a well-formed UMR-YYYYMMDD-HHMMSS-xxxx id")
 
     # 8. Real before-and-after evidence is captured, not narrated.
-    before_after_ok, before_after_detail = _citation_exists(repo_root, evidence["before_after_evidence"])
+    before_after_ok, before_after_detail = _citation_exists(repo_root, evidence["before_after_evidence"], require_anchor=True)
     record("8_before_after_evidence", "Real before/after evidence captured, not narrated",
            before_after_ok, before_after_detail)
 
     # 9. A real rollback path is documented.
-    rollback_ok, rollback_detail = _citation_exists(repo_root, evidence["rollback_path"])
+    rollback_ok, rollback_detail = _citation_exists(repo_root, evidence["rollback_path"], require_anchor=True)
     record("9_rollback_documented", "A real rollback path is documented", rollback_ok, rollback_detail)
 
     # 10. A real canonical artifact is updated after execution completes.
-    canonical_ok, canonical_detail = _citation_exists(repo_root, evidence["canonical_artifact"])
+    canonical_ok, canonical_detail = _citation_exists(repo_root, evidence["canonical_artifact"], require_anchor=True)
     record("10_canonical_artifact_updated", "Real canonical artifact is updated after execution completes",
            canonical_ok, canonical_detail)
 

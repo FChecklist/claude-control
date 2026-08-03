@@ -460,7 +460,7 @@ VALID_EVIDENCE_BASE = {
     "audit_match_evidence": "ai-os/boss/COMPLETED.yaml#independent audit confirmed exact match",
     "before_after_evidence": "ai-os/boss/COMPLETED.yaml#information_schema before/after",
     "rollback_path": "ai-os/boss/COMPLETED.yaml#FIXTURE-INCIDENT",
-    "canonical_artifact": "ai-os/boss/COMPLETED.yaml",
+    "canonical_artifact": "ai-os/boss/COMPLETED.yaml#FIXTURE-INCIDENT",
 }
 
 
@@ -577,7 +577,7 @@ CATEGORY-B-DETERMINISTIC-RECOVERY:
   audit_match_evidence: ai-os/boss/COMPLETED.yaml#independent audit confirmed exact match
   before_after_evidence: ai-os/boss/COMPLETED.yaml#information_schema before/after
   rollback_path: ai-os/boss/COMPLETED.yaml#FIXTURE-INCIDENT
-  canonical_artifact: ai-os/boss/COMPLETED.yaml
+  canonical_artifact: ai-os/boss/COMPLETED.yaml#FIXTURE-INCIDENT
 """
     evidence = parse_category_b_block(text)
     assert evidence is not None
@@ -601,7 +601,7 @@ CATEGORY-B-DETERMINISTIC-RECOVERY:
   audit_match_evidence: ai-os/boss/COMPLETED.yaml#independent audit confirmed exact match
   before_after_evidence: ai-os/boss/COMPLETED.yaml#information_schema before/after
   rollback_path: ai-os/boss/COMPLETED.yaml#FIXTURE-INCIDENT
-  canonical_artifact: ai-os/boss/COMPLETED.yaml
+  canonical_artifact: ai-os/boss/COMPLETED.yaml#FIXTURE-INCIDENT
 """
     result = check_ddl_authorization(text)
     assert result["valid"] is True, result
@@ -623,7 +623,7 @@ CATEGORY-B-DETERMINISTIC-RECOVERY:
   audit_match_evidence: ai-os/boss/COMPLETED.yaml#independent audit confirmed exact match
   before_after_evidence: ai-os/boss/COMPLETED.yaml#information_schema before/after
   rollback_path: ai-os/boss/COMPLETED.yaml#FIXTURE-INCIDENT
-  canonical_artifact: ai-os/boss/COMPLETED.yaml
+  canonical_artifact: ai-os/boss/COMPLETED.yaml#FIXTURE-INCIDENT
 """
     result = check_ddl_authorization(text)
     assert result["valid"] is False, result
@@ -641,3 +641,91 @@ Run: DROP TABLE stale_leads;
     result = check_ddl_authorization(text)
     assert result["valid"] is False, result
     assert "category_b_conditions" not in result
+
+
+# =====================================================================
+# Regression tests for 3 real gaps found by independent review of the
+# original Category B implementation (claude-control PR #123, AUDIT: FAIL,
+# 2026-08-03) -- fixed same day, before merge.
+# =====================================================================
+
+
+def test_bare_path_citation_with_no_anchor_is_rejected_for_claim_fields(fixture_repo):
+    """Real gap: citing an existing file with NO #anchor used to pass as
+    full proof for outage/root-cause/audit-match/before-after/rollback/
+    canonical_artifact -- e.g. citing README.md (which exists but proves
+    nothing about the specific claim) would have auto-authorized live
+    production DDL. Now rejected: these 6 fields require an anchor."""
+    readme = os.path.join(fixture_repo, "README.md")
+    with open(readme, "w") as f:
+        f.write("just a readme, proves nothing about any specific incident\n")
+    _run(["git", "add", "-A"], fixture_repo)
+    _run(["git", "commit", "-m", "add readme"], fixture_repo)
+    _run(["git", "branch", "-f", "origin/main", "main"], fixture_repo)
+
+    for field in ("outage_evidence", "root_cause_evidence", "audit_match_evidence",
+                  "before_after_evidence", "rollback_path", "canonical_artifact"):
+        evidence = dict(VALID_EVIDENCE_BASE)
+        evidence[field] = "README.md"  # exists, but no #anchor
+        result = check_category_b_recovery(evidence)
+        assert result["category_b_valid"] is False, (field, result["conditions"])
+
+
+def test_path_traversal_in_citation_is_rejected(fixture_repo, tmp_path):
+    """Real gap: an evidence field naming a path with '..' could resolve
+    outside the named sibling repo entirely, with no check. A secret file
+    outside the repo must not be usable as evidence."""
+    outside_secret = tmp_path / "outside-repo-secret.txt"
+    outside_secret.write_text("real Sev1 outage, root cause 42703, rollback documented, all here")
+    evidence = dict(VALID_EVIDENCE_BASE)
+    evidence["outage_evidence"] = "../../outside-repo-secret.txt#anything"
+    result = check_category_b_recovery(evidence)
+    assert result["category_b_valid"] is False
+    conditions_by_id = {c["id"]: c for c in result["conditions"]}
+    assert conditions_by_id["4_real_outage"]["passed"] is False
+
+
+def test_path_traversal_in_sql_file_is_rejected(fixture_repo, tmp_path):
+    """Same real gap, for condition 1's sql_file field via _read_repo_file's
+    working-tree fallback."""
+    outside = tmp_path / "outside-migration.sql"
+    outside.write_text("CREATE TABLE IF NOT EXISTS compliance.x (id text PRIMARY KEY);\n")
+    evidence = dict(VALID_EVIDENCE_BASE)
+    evidence["sql_file"] = "../../outside-migration.sql"
+    result = check_category_b_recovery(evidence)
+    assert result["category_b_valid"] is False
+    conditions_by_id = {c["id"]: c for c in result["conditions"]}
+    assert conditions_by_id["1_sql_exists"]["passed"] is False
+
+
+def test_do_block_without_exception_handler_does_not_exempt_unguarded_ddl(fixture_repo):
+    """Real gap: EVERY DO $$ ... END $$; block was stripped and treated as
+    safe, regardless of whether it actually contained exception handling.
+    A DO block wrapping a genuinely unguarded CREATE POLICY (no IF NOT
+    EXISTS equivalent exists for CREATE POLICY, no EXCEPTION WHEN
+    duplicate_object either) must still fail condition 3."""
+    sql_path = os.path.join(fixture_repo, "drizzle", "0005_do_no_exception.sql")
+    with open(sql_path, "w") as f:
+        f.write(
+            "CREATE TABLE IF NOT EXISTS compliance.no_guard (id text PRIMARY KEY);\n"
+            "DO $$ BEGIN\n"
+            "  CREATE POLICY app_scoped ON compliance.no_guard FOR ALL TO app_runtime USING (true);\n"
+            "END $$;\n"  # no EXCEPTION WHEN duplicate_object -- real gap
+        )
+    ok, detail = dac._is_idempotent_sql(open(sql_path).read())
+    assert ok is False, detail
+    assert "CREATE POLICY" in str(detail)
+
+
+def test_do_block_with_real_exception_handler_still_passes(fixture_repo):
+    """Confirms the fix didn't over-correct: a DO block that DOES contain a
+    real duplicate_object exception handler (the actual pattern used by the
+    real migration-0264 this module's docstring cites) still passes."""
+    sql_text = (
+        "CREATE TABLE IF NOT EXISTS compliance.guarded (id text PRIMARY KEY);\n"
+        "DO $$ BEGIN\n"
+        "  CREATE POLICY app_scoped ON compliance.guarded FOR ALL TO app_runtime USING (true);\n"
+        "EXCEPTION WHEN duplicate_object THEN NULL; END $$;\n"
+    )
+    ok, detail = dac._is_idempotent_sql(sql_text)
+    assert ok is True, detail
