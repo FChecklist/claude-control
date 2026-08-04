@@ -14737,3 +14737,32 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260804-212524-adopted-ocid-068-rule-7--real-completion-evidenc/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/veridian-scripts/pull/35'
     last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-213923-investigate-real-duplicate-dispatch-re-t
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Investigate real duplicate dispatch re-trigger bug''
+      on veridian-scripts reached status=blocked. STOPPED: real duplicate. This exact
+      UMR-20260804-213847-4b56 root-cause investigation is being actively executed by
+      the interactive session right now. Real root cause found (dispatch-owner-task.sh''s
+      own dual-dispatch design + real anti-starvation aging + real concurrency backpressure,
+      confirmed against real ts_submitted/ts_dispatched timestamps), real fix implemented
+      and opened as PR #47 (veridian-scripts, fix/dispatch-owner-task-ocid-evidence-supersession),
+      real tests passing (69/69). Do not re-investigate; if resuming, check PR #47''s
+      real merge status first.'
+    where: /opt/veridian/ai-os/tasks/task-20260804-213923-investigate-real-duplicate-dispatch-re-t/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-215649-adopted-root-cause-fix--ocid-evidence-supersessi
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Root-cause fix: OCID-evidence supersession, UMR-20260804-213847-4b56''
+      on veridian-scripts reached status=completed. Superboss-approved (tier=tier1,
+      hold_for_owner_signoff=False), merged autonomously per Owner''s 2026-07-31 full-approval-autonomy
+      directive: https://github.com/FChecklist/veridian-scripts/pull/47'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-215649-adopted-root-cause-fix--ocid-evidence-supersessi/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/veridian-scripts/pull/47'
+    last_touched: '2026-08-04'
