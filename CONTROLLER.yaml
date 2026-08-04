@@ -13931,3 +13931,104 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260804-080927-adopted-housekeeping--correct-stale-pr--789---pr/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/883'
     last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-094418-adopted-ocid-038-real-gap-closure--stage-1-pre-a
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''OCID-038 real gap closure: Stage 1 pre-authentication
+      domain-based brand resolution'' on compliance-tracker reached status=completed.
+      Superboss-approved (tier=tier2, hold_for_owner_signoff=False), merged autonomously
+      per Owner''s 2026-07-31 full-approval-autonomy directive: https://github.com/FChecklist/compliance-tracker/pull/886'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-094418-adopted-ocid-038-real-gap-closure--stage-1-pre-a/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/886'
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-094823-pm-decision--resolve-the-ocid-050-and-oc
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''PM decision: resolve the OCID-050 and OCID-051 UMR
+      ambiguity, mint a real distinct UMR for OCID-051 and correct the record'' on compliance-tracker
+      reached status=blocked. credit accountant rejected auto-fix attempt 1, no further
+      metered spend without human review: {"approved": false, "increment_number": 3,
+      "reason": "existing software/mechanism already covers this (system_index match)
+      -- use it instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-094823-pm-decision--resolve-the-ocid-050-and-oc/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-112519-adopted-register-ocid-067-vedtocp--locked--regis
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Register OCID-067 VEDTOCP: LOCKED, registration/planning
+      only'' on compliance-tracker reached status=completed. Superboss-approved (tier=tier1,
+      hold_for_owner_signoff=False), merged autonomously per Owner''s 2026-07-31 full-approval-autonomy
+      directive: https://github.com/FChecklist/compliance-tracker/pull/890'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-112519-adopted-register-ocid-067-vedtocp--locked--regis/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/890'
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-114041-adopted-ocid-037--veridian-universal-knowledge-a
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''OCID-037: VERIDIAN Universal Knowledge and Service
+      Catalog v1.0 -- rebased onto origin/main, real conflicts resolved'' on compliance-tracker
+      reached status=completed. Superboss-approved (tier=tier1, hold_for_owner_signoff=False),
+      merged autonomously per Owner''s 2026-07-31 full-approval-autonomy directive:
+      https://github.com/FChecklist/compliance-tracker/pull/785'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-114041-adopted-ocid-037--veridian-universal-knowledge-a/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/785'
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-115414-pm-decision-ocid-067-locked-status-gate
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: Server-worker task 'PM decision OCID-067 LOCKED status gate' on compliance-tracker
+      reached status=blocked. periodic checkpoint
+    where: /opt/veridian/ai-os/tasks/task-20260804-115414-pm-decision-ocid-067-locked-status-gate/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-115419-ocid-037-resolve-real-merge-conflict-on
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''OCID-037 resolve real merge conflict on PR 785''
+      on compliance-tracker reached status=blocked. credit accountant rejected auto-fix
+      attempt 1, no further metered spend without human review: {"approved": false,
+      "increment_number": 1, "reason": "existing software/mechanism already covers this
+      (system_index match) -- use it instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-115419-ocid-037-resolve-real-merge-conflict-on/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-115640-ocid-038-investigate-stalled-sub-agent-v
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''OCID-038 investigate stalled sub-agent VERI To Do
+      root cause'' on compliance-tracker reached status=blocked. credit accountant rejected
+      auto-fix attempt 1, no further metered spend without human review: {"approved":
+      false, "increment_number": 1, "reason": "existing software/mechanism already covers
+      this (system_index match) -- use it instead of spending AI credits", "reviewer":
+      "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-115640-ocid-038-investigate-stalled-sub-agent-v/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-115645-ocid-037-trigger-real-review-on-mergeabl
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''OCID-037 trigger real review on mergeable PR 785''
+      on compliance-tracker reached status=blocked. credit accountant rejected auto-fix
+      attempt 1, no further metered spend without human review: {"approved": false,
+      "increment_number": 1, "reason": "existing software/mechanism already covers this
+      (system_index match) -- use it instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-115645-ocid-037-trigger-real-review-on-mergeabl/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
