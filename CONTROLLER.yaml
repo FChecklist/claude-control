@@ -14175,3 +14175,565 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260804-165736-adopted-ocid-001--006--correct-umr-tasks-store-a/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/912'
     last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-161612-ocid-020-authorize-applying-already-merg
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''OCID-020 authorize applying already merged migration
+      0312 to fix real production host_domain gap'' on compliance-tracker reached status=blocked.
+      credit accountant rejected auto-fix attempt 1, no further metered spend without
+      human review: {"approved": false, "increment_number": 1, "reason": "existing software/mechanism
+      already covers this (system_index match) -- use it instead of spending AI credits",
+      "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-161612-ocid-020-authorize-applying-already-merg/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-161617-ocid-053-registration-only-universal-kno
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''OCID-053 registration only Universal Knowledge Graph
+      Traceability Reference Chain and Platform Freeze Certification'' on compliance-tracker
+      reached status=blocked. credit accountant rejected auto-fix attempt 1, no further
+      metered spend without human review: {"approved": false, "increment_number": 1,
+      "reason": "existing software/mechanism already covers this (system_index match)
+      -- use it instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-161617-ocid-053-registration-only-universal-kno/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-161621-ocid-054-registration-and-discovery-only
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''OCID-054 registration and discovery only Universal
+      Repository Reconciliation and Clean State Certification'' on compliance-tracker
+      reached status=blocked. credit accountant rejected auto-fix attempt 1, no further
+      metered spend without human review: {"approved": false, "increment_number": 1,
+      "reason": "existing software/mechanism already covers this (system_index match)
+      -- use it instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-161621-ocid-054-registration-and-discovery-only/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-161625-ocid-055-registration-and-discovery-only
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''OCID-055 registration and discovery only Universal
+      Repository Governance and Canonical Registration'' on compliance-tracker reached
+      status=blocked. credit accountant rejected auto-fix attempt 1, no further metered
+      spend without human review: {"approved": false, "increment_number": 1, "reason":
+      "existing software/mechanism already covers this (system_index match) -- use it
+      instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-161625-ocid-055-registration-and-discovery-only/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-161630-ocid-056-registration-and-safe-discovery
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''OCID-056 registration and safe discovery only Platform
+      Security Reconciliation and Credential Governance Certification'' on compliance-tracker
+      reached status=blocked. credit accountant rejected auto-fix attempt 1, no further
+      metered spend without human review: {"approved": false, "increment_number": 1,
+      "reason": "existing software/mechanism already covers this (system_index match)
+      -- use it instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-161630-ocid-056-registration-and-safe-discovery/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-164217-ocid-058-registration-only-universal-tas
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''OCID-058 registration only Universal Task Registry
+      Multi Actor Runtime and Execution Certification'' on compliance-tracker reached
+      status=blocked. credit accountant rejected auto-fix attempt 1, no further metered
+      spend without human review: {"approved": false, "increment_number": 1, "reason":
+      "existing software/mechanism already covers this (system_index match) -- use it
+      instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-164217-ocid-058-registration-only-universal-tas/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-164222-ocid-059-registration-only-universal-bro
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''OCID-059 registration only Universal Browser PWA
+      Offline Synchronization and Runtime Certification'' on compliance-tracker reached
+      status=blocked. credit accountant rejected auto-fix attempt 1, no further metered
+      spend without human review: {"approved": false, "increment_number": 1, "reason":
+      "existing software/mechanism already covers this (system_index match) -- use it
+      instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-164222-ocid-059-registration-only-universal-bro/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-164226-ocid-060-registration-only-veridian-plat
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''OCID-060 registration only VERIDIAN Platform Constitution
+      Freeze Production Readiness and Release Certification'' on compliance-tracker
+      reached status=blocked. credit accountant rejected auto-fix attempt 1, no further
+      metered spend without human review: {"approved": false, "increment_number": 1,
+      "reason": "existing software/mechanism already covers this (system_index match)
+      -- use it instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-164226-ocid-060-registration-only-veridian-plat/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-164230-pm-decision-proceed-with-real-conflict-r
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''PM decision proceed with real conflict resolution
+      on the eight OCID-053 through 060 registration PRs'' on compliance-tracker reached
+      status=blocked. credit accountant rejected auto-fix attempt 1, no further metered
+      spend without human review: {"approved": false, "increment_number": 1, "reason":
+      "existing software/mechanism already covers this (system_index match) -- use it
+      instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-164230-pm-decision-proceed-with-real-conflict-r/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-164310-ocid-061-registration-only-universal-det
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''OCID-061 registration only Universal Deterministic
+      Input Runtime and Intent Resolution Certification'' on compliance-tracker reached
+      status=blocked. credit accountant rejected auto-fix attempt 1, no further metered
+      spend without human review: {"approved": false, "increment_number": 1, "reason":
+      "existing software/mechanism already covers this (system_index match) -- use it
+      instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-164310-ocid-061-registration-only-universal-det/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-170327-adopted-ocid-068--governance-runtime-consolidati
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''OCID-068: governance runtime consolidation owner
+      review package, states 1-6 (UMR-20260804-164614-bc46)'' on compliance-tracker
+      reached status=completed. Superboss-approved (tier=tier1, hold_for_owner_signoff=False),
+      merged autonomously per Owner''s 2026-07-31 full-approval-autonomy directive:
+      https://github.com/FChecklist/compliance-tracker/pull/913'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-170327-adopted-ocid-068--governance-runtime-consolidati/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/913'
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-170616-register-ocid-001-through-ocid-006-as-su
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Register OCID-001 through OCID-006 as superseded
+      earlier generation, real work starts OCID-012'' on compliance-tracker reached
+      status=blocked. credit accountant rejected auto-fix attempt 1, no further metered
+      spend without human review: {"approved": false, "increment_number": 1, "reason":
+      "existing software/mechanism already covers this (system_index match) -- use it
+      instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-170616-register-ocid-001-through-ocid-006-as-su/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-170620-urgent-correction-ocid-001-through-006-r
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Urgent correction OCID-001 through 006 registration
+      falsely claimed no prior real UMR'' on compliance-tracker reached status=blocked.
+      credit accountant rejected auto-fix attempt 1, no further metered spend without
+      human review: {"approved": false, "increment_number": 1, "reason": "existing software/mechanism
+      already covers this (system_index match) -- use it instead of spending AI credits",
+      "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-170620-urgent-correction-ocid-001-through-006-r/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-170624-ocid-068-registration-and-real-discovery
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''OCID-068 registration and real discovery only Universal
+      Governance Runtime Consolidation'' on compliance-tracker reached status=blocked.
+      credit accountant rejected auto-fix attempt 1, no further metered spend without
+      human review: {"approved": false, "increment_number": 1, "reason": "existing software/mechanism
+      already covers this (system_index match) -- use it instead of spending AI credits",
+      "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-170624-ocid-068-registration-and-real-discovery/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-175929-ocid-068-addendum-deterministic-state-ma
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''OCID-068 addendum deterministic state machine execution
+      up to the implementation gate'' on compliance-tracker reached status=blocked.
+      credit accountant rejected auto-fix attempt 1, no further metered spend without
+      human review: {"approved": false, "increment_number": 1, "reason": "existing software/mechanism
+      already covers this (system_index match) -- use it instead of spending AI credits",
+      "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-175929-ocid-068-addendum-deterministic-state-ma/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-175936-ocid-068-requirement-addition-structured
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''OCID-068 requirement addition structured deterministic
+      OCID UMR PR commit path linkage'' on compliance-tracker reached status=blocked.
+      credit accountant rejected auto-fix attempt 1, no further metered spend without
+      human review: {"approved": false, "increment_number": 1, "reason": "existing software/mechanism
+      already covers this (system_index match) -- use it instead of spending AI credits",
+      "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-175936-ocid-068-requirement-addition-structured/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-181309-adopted-ocid-068--structured-ocid-umr-pr-commit
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''OCID-068: structured OCID/UMR/PR/commit traceability
+      + verified DB path resolution (UMR-20260804-170055-a069, UMR-20260804-180210-9e2c)''
+      on veridian-scripts reached status=completed. Superboss-approved (tier=tier1,
+      hold_for_owner_signoff=False), merged autonomously per Owner''s 2026-07-31 full-approval-autonomy
+      directive: https://github.com/FChecklist/veridian-scripts/pull/20'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-181309-adopted-ocid-068--structured-ocid-umr-pr-commit/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/veridian-scripts/pull/20'
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-183824-ocid-020-urgent-correction-real-merge-fa
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''OCID-020 urgent correction real merge failure on
+      PR 900 not applied not verified'' on compliance-tracker reached status=blocked.
+      credit accountant rejected auto-fix attempt 1, no further metered spend without
+      human review: {"approved": false, "increment_number": 1, "reason": "existing software/mechanism
+      already covers this (system_index match) -- use it instead of spending AI credits",
+      "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-183824-ocid-020-urgent-correction-real-merge-fa/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-192235-adopted-ocid-068-recovered-pre-pr20-local-hotfix
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''OCID-068 recovered pre-PR20 local hotfixes, conflicts
+      resolved (UMR-20260804-185749-c565)'' on veridian-scripts reached status=completed.
+      Superboss-approved (tier=tier1, hold_for_owner_signoff=False), merged autonomously
+      per Owner''s 2026-07-31 full-approval-autonomy directive: https://github.com/FChecklist/veridian-scripts/pull/21'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-192235-adopted-ocid-068-recovered-pre-pr20-local-hotfix/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/veridian-scripts/pull/21'
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-193840-ocid-068-one-time-owner-authorized-real
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''OCID-068 one time Owner authorized real implementation
+      of ocid_artifact_links traceability table'' on compliance-tracker reached status=blocked.
+      credit accountant rejected auto-fix attempt 1, no further metered spend without
+      human review: {"approved": false, "increment_number": 1, "reason": "existing software/mechanism
+      already covers this (system_index match) -- use it instead of spending AI credits",
+      "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-193840-ocid-068-one-time-owner-authorized-real/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-193845-test-dispatch-short-probe
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''test dispatch short probe'' on veridian-scripts reached
+      status=completed. Superboss-approved (tier=tier1, hold_for_owner_signoff=False),
+      merged autonomously per Owner''s 2026-07-31 full-approval-autonomy directive:
+      https://github.com/FChecklist/veridian-scripts/pull/22'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-193845-test-dispatch-short-probe/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/veridian-scripts/pull/22'
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-193850-deterministic-canonical-database-path-re
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Deterministic canonical database path resolution
+      for superboss-register'' on veridian-scripts reached status=blocked. Superboss-approved
+      (tier=tier1), but the merge itself FAILED (gh pr view confirms state=OPEN, mergedAt=;
+      see supervisor.log) — needs manual attention, NOT actually merged: https://github.com/FChecklist/veridian-scripts/pull/24'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-193850-deterministic-canonical-database-path-re/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/veridian-scripts/pull/24'
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-194230-deterministic-canonical-database-path-re
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Deterministic canonical database path resolution,
+      full spec'' on veridian-scripts reached status=completed. Superboss-approved (tier=tier1,
+      hold_for_owner_signoff=False), merged autonomously per Owner''s 2026-07-31 full-approval-autonomy
+      directive: https://github.com/FChecklist/veridian-scripts/pull/25'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-194230-deterministic-canonical-database-path-re/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/veridian-scripts/pull/25'
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-195249-adopted-docs-sec-07-violation-finding-registrati
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''docs SEC-07 violation finding registration (PR 886
+      OCID-038), UMR-20260804-194323-0bc5'' on compliance-tracker reached status=completed.
+      Superboss-approved (tier=tier1, hold_for_owner_signoff=False), merged autonomously
+      per Owner''s 2026-07-31 full-approval-autonomy directive: https://github.com/FChecklist/compliance-tracker/pull/919'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-195249-adopted-docs-sec-07-violation-finding-registrati/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/919'
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-200223-adopted-ocid-068-rule-1--reuse-umr-on-resume--um
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''OCID-068 Rule 1: reuse UMR on resume, UMR-20260804-194355-be9c''
+      on veridian-scripts reached status=completed. Superboss-approved (tier=tier1,
+      hold_for_owner_signoff=False), merged autonomously per Owner''s 2026-07-31 full-approval-autonomy
+      directive: https://github.com/FChecklist/veridian-scripts/pull/26'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-200223-adopted-ocid-068-rule-1--reuse-umr-on-resume--um/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/veridian-scripts/pull/26'
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-200931-adopted-ocid-039-real-follow-up-discovery--cmd-k
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''OCID-039 real follow-up discovery (Cmd+K), UMR-20260804-194407-6148''
+      on compliance-tracker reached status=completed. Superboss-approved (tier=tier1,
+      hold_for_owner_signoff=False), merged autonomously per Owner''s 2026-07-31 full-approval-autonomy
+      directive: https://github.com/FChecklist/compliance-tracker/pull/920'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-200931-adopted-ocid-039-real-follow-up-discovery--cmd-k/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/920'
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-201534-ocid-068-deterministic-execution-guardra
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''OCID-068 deterministic execution guardrails addendum,
+      urgent'' on veridian-scripts reached status=blocked. STOPPED: real duplicate of
+      already-in-progress interactive work. UMR-20260804-180711-7f96''s Rule 1 (UMR-reuse-on-resume)
+      is already implemented, independently reviewed (2 real reject rounds fixed), and
+      open as PR #26 (feat/ocid068-rule1-umr-reuse-on-resume, veridian-scripts) as of
+      this stop. Do not redo Rule 1 -- if resuming this scope, start from Rule 2 onward,
+      and first check PR #26''s real merge status.'
+    where: /opt/veridian/ai-os/tasks/task-20260804-201534-ocid-068-deterministic-execution-guardra/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-201653-resolve-real-merge-conflicts-on-pr-21--o
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Resolve real merge conflicts on PR 21, orphaned local
+      hotfixes'' on veridian-scripts reached status=completed. Superboss-approved (tier=tier1,
+      hold_for_owner_signoff=False), merged autonomously per Owner''s 2026-07-31 full-approval-autonomy
+      directive: https://github.com/FChecklist/veridian-scripts/pull/27'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-201653-resolve-real-merge-conflicts-on-pr-21--o/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/veridian-scripts/pull/27'
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-201659-pm-decision--merge-pr-21-real-recovered
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''PM decision, merge PR 21 real recovered hotfixes''
+      on veridian-scripts reached status=blocked. Superboss-approved (tier=tier1), but
+      the merge itself FAILED (gh pr view confirms state=OPEN, mergedAt=; see supervisor.log)
+      — needs manual attention, NOT actually merged: https://github.com/FChecklist/veridian-scripts/pull/28'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-201659-pm-decision--merge-pr-21-real-recovered/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/veridian-scripts/pull/28'
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-204342-adopted-ocid-068-rule-2--dispatch-outcome-classi
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''OCID-068 Rule 2: dispatch outcome classification,
+      UMR-20260804-203846-e722'' on veridian-scripts reached status=completed. Superboss-approved
+      (tier=tier1, hold_for_owner_signoff=False), merged autonomously per Owner''s 2026-07-31
+      full-approval-autonomy directive: https://github.com/FChecklist/veridian-scripts/pull/29'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-204342-adopted-ocid-068-rule-2--dispatch-outcome-classi/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/veridian-scripts/pull/29'
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-205120-adopted-ocid-068-rule-3--no-premature-umr-mintin
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''OCID-068 Rule 3: no premature UMR minting, UMR-20260804-203846-e722''
+      on veridian-scripts reached status=completed. Superboss-approved (tier=tier1,
+      hold_for_owner_signoff=False), merged autonomously per Owner''s 2026-07-31 full-approval-autonomy
+      directive: https://github.com/FChecklist/veridian-scripts/pull/30'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-205120-adopted-ocid-068-rule-3--no-premature-umr-mintin/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/veridian-scripts/pull/30'
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-205531-ocid-034-universal-context-and-predictiv
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''OCID-034 Universal Context and Predictive Runtime
+      documentation'' on compliance-tracker reached status=blocked. STOPPED: real duplicate.
+      OCID-034 already has a real, genuinely merged canonical documentation-only artifact
+      -- PR #779 (compliance-tracker), mergedAt 2026-08-03T07:03:19Z, file ai-os/VERIDIAN_UNIVERSAL_CONTEXT_AND_PREDICTIVE_RUNTIME_2026-08-03.md.
+      Independently re-confirmed via fresh clone earlier this session, per UMR-20260804-194151-4a59.
+      Do not write a duplicate.'
+    where: /opt/veridian/ai-os/tasks/task-20260804-205531-ocid-034-universal-context-and-predictiv/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-205536-hard-rule-7-compliance-audit-on-ocid-038
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Hard Rule 7 compliance audit on OCID-038 merged history''
+      on compliance-tracker reached status=blocked. STOPPED: real duplicate. This exact
+      SEC-07/Hard-Rule-7 audit on PR #886 was already completed this session per UMR-20260804-194323-0bc5:
+      genuine violation confirmed, registered as GAP-SEC07-OCID038-PREMATURE-IMPLEMENTATION-PR886
+      in MASTER-TRACKER.yaml via PR #919 (compliance-tracker), genuinely merged. Do
+      not re-audit or re-register.'
+    where: /opt/veridian/ai-os/tasks/task-20260804-205536-hard-rule-7-compliance-audit-on-ocid-038/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-205540-ocid-016-real-broader-scan-continuation
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''OCID-016 real broader scan continuation check'' on
+      veridian-scripts reached status=blocked. STOPPED: real duplicate. This Server
+      Artifact Traceability tranche check was already done this session per UMR-20260804-194343-e28e:
+      PR #749 (tranche 4) found to have a real reject (conflicts with main, CI not green
+      on current head) -- real evidence in its own review.json. Needs a rebase-onto-main
+      + fresh CI trigger pass, NOT a new tranche 5. If resuming this scope, start from
+      PR #749''s own real conflict, do not open a new tranche PR.'
+    where: /opt/veridian/ai-os/tasks/task-20260804-205540-ocid-016-real-broader-scan-continuation/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-205545-ocid-068-guardrails-addendum-real-status
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''OCID-068 guardrails addendum real status check and
+      continuation'' on veridian-scripts reached status=blocked. STOPPED: real duplicate.
+      OCID-068 seven-rule guardrails addendum Rules 1-4 are ALREADY genuinely implemented
+      and merged this session: Rule 1 = PR #26, Rule 2 = PR #29, Rule 3 = PR #30, Rule
+      4 = PR #31 (all veridian-scripts, all real independent-review-approved merges).
+      Rules 5-7 remain, in progress by the interactive session per UMR-20260804-205741-cf3f.
+      Do not redo Rules 1-4; if resuming, start from Rule 5 and check for the latest
+      PR state first.'
+    where: /opt/veridian/ai-os/tasks/task-20260804-205545-ocid-068-guardrails-addendum-real-status/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-205548-ocid-039-real-production-certification-d
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''OCID-039 real production certification discovery
+      continuation'' on compliance-tracker reached status=blocked. STOPPED: real duplicate.
+      This OCID-039 Cmd+K discovery follow-up was already completed this session per
+      UMR-20260804-194407-6148: real code-level investigation, no bug found, self-corrected
+      an initial wrong hypothesis, documented via PR #920 (compliance-tracker), genuinely
+      merged. Do not re-investigate the same item.'
+    where: /opt/veridian/ai-os/tasks/task-20260804-205548-ocid-039-real-production-certification-d/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-210434-adopted-ocid-068-rule-4--pm-visible-real-counts
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''OCID-068 Rule 4: PM-visible real counts, UMR-20260804-205741-cf3f''
+      on veridian-scripts reached status=completed. Superboss-approved (tier=tier1,
+      hold_for_owner_signoff=False), merged autonomously per Owner''s 2026-07-31 full-approval-autonomy
+      directive: https://github.com/FChecklist/veridian-scripts/pull/32'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-210434-adopted-ocid-068-rule-4--pm-visible-real-counts/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/veridian-scripts/pull/32'
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-210534-ocid-068-guardrails-addendum-continue-ru
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''OCID-068 guardrails addendum continue Rules 2 through
+      7'' on veridian-scripts reached status=blocked. STOPPED: real duplicate. This
+      exact UMR (checkpoint refresh after Rule 1) is being actively executed by the
+      interactive session right now. Rules 1-5 are ALL genuinely merged as of this stop:
+      Rule 1=PR #26, Rule 2=PR #29, Rule 3=PR #30, Rule 4=PR #31, Rule 5=PR #33 (in
+      review). Do not redo any of these; if resuming, start from Rule 6 and check the
+      latest PR/merge state first.'
+    where: /opt/veridian/ai-os/tasks/task-20260804-210534-ocid-068-guardrails-addendum-continue-ru/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-210538-ocid-068-guardrails-addendum-continue-ru
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''OCID-068 guardrails addendum continue Rules 4 through
+      7'' on veridian-scripts reached status=blocked. STOPPED: real duplicate. This
+      exact UMR (continue Rules 4-7) is being actively executed by the interactive session
+      right now. Rules 1-5 are ALL genuinely merged as of this stop: Rule 1=PR #26,
+      Rule 2=PR #29, Rule 3=PR #30, Rule 4=PR #31, Rule 5=PR #33 (in review). Do not
+      redo any of these; if resuming, start from Rule 6 and check the latest PR/merge
+      state first.'
+    where: /opt/veridian/ai-os/tasks/task-20260804-210538-ocid-068-guardrails-addendum-continue-ru/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-211318-adopted-ocid-068-rule-5--real-stall-detection--u
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''OCID-068 Rule 5: real stall detection, UMR-20260804-205741-cf3f''
+      on veridian-scripts reached status=completed. Superboss-approved (tier=tier1,
+      hold_for_owner_signoff=False), merged autonomously per Owner''s 2026-07-31 full-approval-autonomy
+      directive: https://github.com/FChecklist/veridian-scripts/pull/33'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-211318-adopted-ocid-068-rule-5--real-stall-detection--u/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/veridian-scripts/pull/33'
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-211822-adopted-ocid-068-rule-6--zero-duplication-by-oci
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''OCID-068 Rule 6: zero-duplication by OCID, UMR-20260804-205741-cf3f''
+      on veridian-scripts reached status=completed. Superboss-approved (tier=tier1,
+      hold_for_owner_signoff=False), merged autonomously per Owner''s 2026-07-31 full-approval-autonomy
+      directive: https://github.com/FChecklist/veridian-scripts/pull/34'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-211822-adopted-ocid-068-rule-6--zero-duplication-by-oci/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/veridian-scripts/pull/34'
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-212524-adopted-ocid-068-rule-7--real-completion-evidenc
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''OCID-068 Rule 7: real completion evidence, UMR-20260804-205741-cf3f''
+      on veridian-scripts reached status=completed. Superboss-approved (tier=tier1,
+      hold_for_owner_signoff=False), merged autonomously per Owner''s 2026-07-31 full-approval-autonomy
+      directive: https://github.com/FChecklist/veridian-scripts/pull/35'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-212524-adopted-ocid-068-rule-7--real-completion-evidenc/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/veridian-scripts/pull/35'
+    last_touched: '2026-08-04'
