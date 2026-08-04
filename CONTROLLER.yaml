@@ -13906,3 +13906,28 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260804-073231-adopted-ocid-063-discovery-doc--mechanical-hando/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/879'
     last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-080245-adopted-ocid-062-architecture-doc--merged-origin
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''OCID-062 architecture doc: merged origin/main + real
+      §3.8 Ollama addition (closes OCID-064, UMR-20260804-073906-3dd0)'' on compliance-tracker
+      reached status=completed. Superboss-approved (tier=tier1, hold_for_owner_signoff=False),
+      merged autonomously per Owner''s 2026-07-31 full-approval-autonomy directive:
+      https://github.com/FChecklist/compliance-tracker/pull/876'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-080245-adopted-ocid-062-architecture-doc--merged-origin/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/876'
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-080927-adopted-housekeeping--correct-stale-pr--789---pr
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Housekeeping: correct stale PR #789 + PR #879 OPEN/IN-PROGRESS
+      labels in ACTIVE-CLAIMS.yaml'' on compliance-tracker reached status=completed.
+      Superboss-approved (tier=tier1, hold_for_owner_signoff=False), merged autonomously
+      per Owner''s 2026-07-31 full-approval-autonomy directive: https://github.com/FChecklist/compliance-tracker/pull/883'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-080927-adopted-housekeeping--correct-stale-pr--789---pr/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/883'
+    last_touched: '2026-08-04'
