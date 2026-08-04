@@ -13501,3 +13501,142 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260803-225133-pm-decision-to-resolve-blocked-ocid-038/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-08-04'
+
+  - id: WORKER-20260803-214944-pm-final-decision--ocid-020-independentl
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''PM final decision, OCID-020 independently verified
+      complete, OCID-021 real implementation authorized to begin'' on compliance-tracker
+      reached status=blocked. credit accountant rejected auto-fix attempt 1, no further
+      metered spend without human review: {"approved": false, "increment_number": 1,
+      "reason": "existing software/mechanism already covers this (system_index match)
+      -- use it instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260803-214944-pm-final-decision--ocid-020-independentl/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-003251-adopted-adopted--review-pr-854----ocid-038-gap-c
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Adopted: review PR 854 -- OCID-038 gap closure +
+      quality-gate block resolution'' on compliance-tracker reached status=completed.
+      Superboss-approved (tier=tier1, hold_for_owner_signoff=False), merged autonomously
+      per Owner''s 2026-07-31 full-approval-autonomy directive: https://github.com/FChecklist/compliance-tracker/pull/854'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-003251-adopted-adopted--review-pr-854----ocid-038-gap-c/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/854'
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-010526-adopted-adopted--review-pr-856----gap-ocid038-ta
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Adopted: review PR 856 -- GAP-OCID038-TASKENGINE-MOTHERROUTER-UNWIRED
+      fix'' on compliance-tracker reached status=completed. Superboss-approved (tier=tier1,
+      hold_for_owner_signoff=False), merged autonomously per Owner''s 2026-07-31 full-approval-autonomy
+      directive: https://github.com/FChecklist/compliance-tracker/pull/856'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-010526-adopted-adopted--review-pr-856----gap-ocid038-ta/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/856'
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-011434-pm-confirmation-to-proceed-with-gap-ocid
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''PM confirmation to proceed with GAP-OCID038-TASKENGINE-MOTHERROUTER-UNWIRED''
+      on compliance-tracker reached status=blocked. credit accountant rejected auto-fix
+      attempt 1, no further metered spend without human review: {"approved": false,
+      "increment_number": 1, "reason": "existing software/mechanism already covers this
+      (system_index match) -- use it instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-011434-pm-confirmation-to-proceed-with-gap-ocid/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-011908-pm-decision--hold-on-the-two-remaining-o
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''PM decision, hold on the two remaining OCID-038 gaps
+      pending a real written discovery brief'' on compliance-tracker reached status=blocked.
+      credit accountant rejected auto-fix attempt 1, no further metered spend without
+      human review: {"approved": false, "increment_number": 1, "reason": "existing software/mechanism
+      already covers this (system_index match) -- use it instead of spending AI credits",
+      "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-011908-pm-decision--hold-on-the-two-remaining-o/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-013021-adopted-adopted--review-pr-859----ocid-038-proje
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Adopted: review PR 859 -- OCID-038 PROJEXA discovery
+      brief (docs only)'' on compliance-tracker reached status=completed. Superboss-approved
+      (tier=tier1, hold_for_owner_signoff=False), merged autonomously per Owner''s 2026-07-31
+      full-approval-autonomy directive: https://github.com/FChecklist/compliance-tracker/pull/859'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-013021-adopted-adopted--review-pr-859----ocid-038-proje/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/859'
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-015023-adopted-adopted--review-pr-860----ocid-038-schem
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Adopted: review PR 860 -- OCID-038 schema investigation
+      3 steps + grep-miscount correction'' on compliance-tracker reached status=completed.
+      Superboss-approved (tier=tier1, hold_for_owner_signoff=False), merged autonomously
+      per Owner''s 2026-07-31 full-approval-autonomy directive: https://github.com/FChecklist/compliance-tracker/pull/860'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-015023-adopted-adopted--review-pr-860----ocid-038-schem/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/860'
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-015845-pm-decision--proceed-with-the-mechanical
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''PM decision, proceed with the mechanical GAP-OCID038-PROJEXA-OWN-SCHEMA
+      checks, hold the brand identity question for the Owner'' on compliance-tracker
+      reached status=blocked. credit accountant rejected auto-fix attempt 1, no further
+      metered spend without human review: {"approved": false, "increment_number": 1,
+      "reason": "existing software/mechanism already covers this (system_index match)
+      -- use it instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-015845-pm-decision--proceed-with-the-mechanical/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-021332-adopted-adopted--review-pr-862----active-claims
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Adopted: review PR 862 -- ACTIVE-CLAIMS stale entry
+      cleanup (housekeeping)'' on compliance-tracker reached status=completed. Superboss-approved
+      (tier=tier2, hold_for_owner_signoff=False), merged autonomously per Owner''s 2026-07-31
+      full-approval-autonomy directive: https://github.com/FChecklist/compliance-tracker/pull/862'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-021332-adopted-adopted--review-pr-862----active-claims/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/862'
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-021521-adopted-adopted--review-pr-853----gap-veri-chat
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Adopted: review PR 853 -- GAP-VERI-CHAT-NO-VISIBLE-DETERMINISTIC-VS-AI-SIGNAL,
+      conflict resolved'' on compliance-tracker reached status=blocked. Superboss-approved
+      (tier=tier1), but the merge itself FAILED (gh pr view confirms state=OPEN, mergedAt=;
+      see supervisor.log) — needs manual attention, NOT actually merged: https://github.com/FChecklist/compliance-tracker/pull/853'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-021521-adopted-adopted--review-pr-853----gap-veri-chat/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/853'
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-022117-adopted-adopted--review-pr-782----ocid-036-doc
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Adopted: review PR 782 -- OCID-036 doc, real merge
+      conflict resolved'' on compliance-tracker reached status=completed. Superboss-approved
+      (tier=tier1, hold_for_owner_signoff=False), merged autonomously per Owner''s 2026-07-31
+      full-approval-autonomy directive: https://github.com/FChecklist/compliance-tracker/pull/782'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-022117-adopted-adopted--review-pr-782----ocid-036-doc/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/782'
+    last_touched: '2026-08-04'
