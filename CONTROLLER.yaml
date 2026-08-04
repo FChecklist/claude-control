@@ -14032,3 +14032,41 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260804-115645-ocid-037-trigger-real-review-on-mergeabl/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-125247-ocid-020-concrete-redirect-stop-open-end
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''OCID-020 concrete redirect stop open ended deliberation''
+      on compliance-tracker reached status=blocked. credit accountant rejected auto-fix
+      attempt 1, no further metered spend without human review: {"approved": false,
+      "increment_number": 1, "reason": "existing software/mechanism already covers this
+      (system_index match) -- use it instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-125247-ocid-020-concrete-redirect-stop-open-end/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-135104-adopted-ocid-020--live-re-verification-of-gap-ve
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''OCID-020: live re-verification of GAP-VERI-TODO-STUCK-LOADING-NOT-READY
+      and GAP-MOBILE-VIEWPORT-BLANK-CONTENT'' on compliance-tracker reached status=blocked.
+      Superboss-approved (tier=tier1), but the merge itself FAILED (gh pr view confirms
+      state=OPEN, mergedAt=; see supervisor.log) — needs manual attention, NOT actually
+      merged: https://github.com/FChecklist/compliance-tracker/pull/895'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-135104-adopted-ocid-020--live-re-verification-of-gap-ve/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/895'
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-135922-adopted-ocid-020-concrete-redirect--live-re-veri
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''OCID-020 concrete redirect: live re-verification,
+      both gaps not reproduced'' on compliance-tracker reached status=completed. Superboss-approved
+      (tier=tier1, hold_for_owner_signoff=False), merged autonomously per Owner''s 2026-07-31
+      full-approval-autonomy directive: https://github.com/FChecklist/compliance-tracker/pull/895'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-135922-adopted-ocid-020-concrete-redirect--live-re-veri/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/895'
+    last_touched: '2026-08-04'
