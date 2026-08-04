@@ -13679,3 +13679,182 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260804-032350-adopted-adopted--review-branch-chore-active-clai/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/864'
     last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-031540-pm-decision--resolve-credit-accountant-b
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''PM decision: resolve credit accountant block and
+      resume OCID-021 real implementation, then close the two remaining Wave 1 gaps''
+      on compliance-tracker reached status=blocked. Superboss-approved (tier=tier1),
+      but the merge itself FAILED (gh pr view confirms state=OPEN, mergedAt=; see supervisor.log)
+      — needs manual attention, NOT actually merged: https://github.com/FChecklist/compliance-tracker/pull/865'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-031540-pm-decision--resolve-credit-accountant-b/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/865'
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-040750-register-ocid-053--universal-knowledge-g
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Register OCID-053, Universal Knowledge Graph, Traceability,
+      Reference Chain, and Platform Freeze Certification, discovery and integrity repair
+      phase only'' on compliance-tracker reached status=blocked. credit accountant rejected
+      auto-fix attempt 1, no further metered spend without human review: {"approved":
+      false, "increment_number": 1, "reason": "existing software/mechanism already covers
+      this (system_index match) -- use it instead of spending AI credits", "reviewer":
+      "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-040750-register-ocid-053--universal-knowledge-g/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-040754-register-ocid-054--universal-repository
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Register OCID-054, Universal Repository Reconciliation
+      and Clean State Certification, discovery and inventory phase only, credential
+      rotation and repository deletion withheld pending explicit real time Owner confirmation''
+      on compliance-tracker reached status=blocked. credit accountant rejected auto-fix
+      attempt 1, no further metered spend without human review: {"approved": false,
+      "increment_number": 1, "reason": "existing software/mechanism already covers this
+      (system_index match) -- use it instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-040754-register-ocid-054--universal-repository/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-040758-register-ocid-055--universal-repository
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Register OCID-055, Universal Repository Governance
+      and Canonical Registration, cataloging phase only, visibility changes and ownership
+      or permission changes withheld pending explicit real time Owner confirmation''
+      on compliance-tracker reached status=blocked. credit accountant rejected auto-fix
+      attempt 1, no further metered spend without human review: {"approved": false,
+      "increment_number": 1, "reason": "existing software/mechanism already covers this
+      (system_index match) -- use it instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-040758-register-ocid-055--universal-repository/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-040801-register-ocid-056--platform-security-rec
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Register OCID-056, Platform Security Reconciliation
+      and Credential Governance Certification, discovery and audit phase only, all production
+      credential rotation withheld pending explicit real time Owner confirmation provider
+      by provider'' on compliance-tracker reached status=blocked. credit accountant
+      rejected auto-fix attempt 1, no further metered spend without human review: {"approved":
+      false, "increment_number": 1, "reason": "existing software/mechanism already covers
+      this (system_index match) -- use it instead of spending AI credits", "reviewer":
+      "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-040801-register-ocid-056--platform-security-rec/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-040805-register-ocid-057--universal-knowledge-g
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Register OCID-057, Universal Knowledge Graph, UMR
+      Governance and Cross Reference Certification, discovery and deduplication proposal
+      phase, real merges held for independent verification'' on compliance-tracker reached
+      status=blocked. credit accountant rejected auto-fix attempt 1, no further metered
+      spend without human review: {"approved": false, "increment_number": 1, "reason":
+      "existing software/mechanism already covers this (system_index match) -- use it
+      instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-040805-register-ocid-057--universal-knowledge-g/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-045439-register-ocid-058--universal-regist
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Register OCID-058, Universal Task Registry Multi
+      Actor Runtime and Execution Certification, discovery and verification phase, no
+      execution architecture changes'' on compliance-tracker reached status=blocked.
+      credit accountant rejected auto-fix attempt 1, no further metered spend without
+      human review: {"approved": false, "increment_number": 1, "reason": "existing software/mechanism
+      already covers this (system_index match) -- use it instead of spending AI credits",
+      "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-045439-register-ocid-058--universal-task-regist/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-045443-register-ocid-059--universal-browser--pw
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Register OCID-059, Universal Browser, PWA, Offline
+      Synchronization and Runtime Certification, discovery and verification phase, no
+      runtime architecture changes'' on compliance-tracker reached status=blocked. credit
+      accountant rejected auto-fix attempt 1, no further metered spend without human
+      review: {"approved": false, "increment_number": 1, "reason": "existing software/mechanism
+      already covers this (system_index match) -- use it instead of spending AI credits",
+      "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-045443-register-ocid-059--universal-browser--pw/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-045447-register-ocid-060--veridian-platform-con
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Register OCID-060, VERIDIAN Platform Constitution
+      Freeze, Production Readiness and Release Certification, gap analysis only, the
+      freeze itself is not authorized and cannot legally trigger yet'' on compliance-tracker
+      reached status=blocked. credit accountant rejected auto-fix attempt 1, no further
+      metered spend without human review: {"approved": false, "increment_number": 1,
+      "reason": "existing software/mechanism already covers this (system_index match)
+      -- use it instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-045447-register-ocid-060--veridian-platform-con/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-054220-register-ocid-061--universal-determinist
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Register OCID-061, Universal Deterministic Input
+      Runtime and Intent Resolution Certification, design and mapping phase only, pending
+      the rest of the prompt'' on compliance-tracker reached status=blocked. credit
+      accountant rejected auto-fix attempt 1, no further metered spend without human
+      review: {"approved": false, "increment_number": 1, "reason": "existing software/mechanism
+      already covers this (system_index match) -- use it instead of spending AI credits",
+      "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-054220-register-ocid-061--universal-determinist/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-054224-pm-decision--ocid-012-confirmed-by-the-o
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''PM decision: OCID-012 confirmed by the Owner as not
+      real, remove every reference to it across OCID-053 through 061 and confirm OCID-020
+      and OCID-021 as the real parent chain'' on compliance-tracker reached status=blocked.
+      credit accountant rejected auto-fix attempt 1, no further metered spend without
+      human review: {"approved": false, "increment_number": 1, "reason": "existing software/mechanism
+      already covers this (system_index match) -- use it instead of spending AI credits",
+      "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-054224-pm-decision--ocid-012-confirmed-by-the-o/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-054228-register-ocid-062--mini-veridian-runtime
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Register OCID-062, Mini VERIDIAN Runtime Architecture,
+      design and specification phase only, real browser or PWA code implementation held
+      until its own stated dependencies land'' on compliance-tracker reached status=blocked.
+      credit accountant rejected auto-fix attempt 1, no further metered spend without
+      human review: {"approved": false, "increment_number": 1, "reason": "existing software/mechanism
+      already covers this (system_index match) -- use it instead of spending AI credits",
+      "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-054228-register-ocid-062--mini-veridian-runtime/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
