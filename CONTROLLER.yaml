@@ -13858,3 +13858,51 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260804-054228-register-ocid-062--mini-veridian-runtime/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
     last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-032121-group-c-closure--review-and-merge-the-ni
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Group C closure: review and merge the nine stale
+      open documentation-only PRs'' on compliance-tracker reached status=blocked. credit
+      accountant rejected auto-fix attempt 1, no further metered spend without human
+      review: {"approved": false, "increment_number": 3, "reason": "existing software/mechanism
+      already covers this (system_index match) -- use it instead of spending AI credits",
+      "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-032121-group-c-closure--review-and-merge-the-ni/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-064835-pm-decision--continue-monitoring-pr-19-a
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''PM decision: continue monitoring PR 19 and PR 789
+      to real verdicts'' on compliance-tracker reached status=blocked. periodic checkpoint'
+    where: /opt/veridian/ai-os/tasks/task-20260804-064835-pm-decision--continue-monitoring-pr-19-a/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-064929-adopted-ocid-063-mechanical-handoff-envelope-on
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''OCID-063 mechanical handoff envelope on the existing
+      checkpoint path'' on veridian-scripts reached status=completed. Superboss-approved
+      (tier=tier1, hold_for_owner_signoff=False), merged autonomously per Owner''s 2026-07-31
+      full-approval-autonomy directive: https://github.com/FChecklist/veridian-scripts/pull/19'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-064929-adopted-ocid-063-mechanical-handoff-envelope-on/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/veridian-scripts/pull/19'
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-073231-adopted-ocid-063-discovery-doc--mechanical-hando
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''OCID-063 discovery doc: mechanical handoff envelope
+      vs 5 real mechanisms'' on compliance-tracker reached status=blocked. Superboss-approved
+      (tier=tier1), but the merge itself FAILED (gh pr view confirms state=OPEN, mergedAt=;
+      see supervisor.log) — needs manual attention, NOT actually merged: https://github.com/FChecklist/compliance-tracker/pull/879'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-073231-adopted-ocid-063-discovery-doc--mechanical-hando/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/879'
+    last_touched: '2026-08-04'
