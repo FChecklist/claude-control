@@ -14070,3 +14070,43 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260804-135922-adopted-ocid-020-concrete-redirect--live-re-veri/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/895'
     last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-135204-ocid-020-trigger-real-review-on-mergeabl
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''OCID-020 trigger real review on mergeable PR 895''
+      on compliance-tracker reached status=blocked. credit accountant rejected auto-fix
+      attempt 1, no further metered spend without human review: {"approved": false,
+      "increment_number": 1, "reason": "existing software/mechanism already covers this
+      (system_index match) -- use it instead of spending AI credits", "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-135204-ocid-020-trigger-real-review-on-mergeabl/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-144006-ocid-020-group-f-real-business-certifica
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''OCID-020 Group F real business certification next
+      concrete testing step'' on compliance-tracker reached status=blocked. credit accountant
+      rejected auto-fix attempt 1, no further metered spend without human review: {"approved":
+      false, "increment_number": 1, "reason": "existing software/mechanism already covers
+      this (system_index match) -- use it instead of spending AI credits", "reviewer":
+      "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-144006-ocid-020-group-f-real-business-certifica/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-150813-adopted-gap-api-me-500-subscription-plan-status
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''GAP-API-ME-500-SUBSCRIPTION-PLAN-STATUS: real live
+      production 500 on GET /api/me, discovery only'' on compliance-tracker reached
+      status=completed. Superboss-approved (tier=tier1, hold_for_owner_signoff=False),
+      merged autonomously per Owner''s 2026-07-31 full-approval-autonomy directive:
+      https://github.com/FChecklist/compliance-tracker/pull/898'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-150813-adopted-gap-api-me-500-subscription-plan-status/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/898'
+    last_touched: '2026-08-04'
