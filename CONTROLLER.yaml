@@ -14110,3 +14110,68 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260804-150813-adopted-gap-api-me-500-subscription-plan-status/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/898'
     last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-153149-ocid-020-real-critical-regression-trigge
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''OCID-020 real critical regression trigger review
+      and root cause on PR 898'' on compliance-tracker reached status=blocked. credit
+      accountant rejected auto-fix attempt 1, no further metered spend without human
+      review: {"approved": false, "increment_number": 1, "reason": "existing software/mechanism
+      already covers this (system_index match) -- use it instead of spending AI credits",
+      "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-153149-ocid-020-real-critical-regression-trigge/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-153925-ocid-020-attempt-real-production-log-acc
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''OCID-020 attempt real production log access for /api/me
+      500 root cause'' on compliance-tracker reached status=blocked. credit accountant
+      rejected auto-fix attempt 1, no further metered spend without human review: {"approved":
+      false, "increment_number": 1, "reason": "existing software/mechanism already covers
+      this (system_index match) -- use it instead of spending AI credits", "reviewer":
+      "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-153925-ocid-020-attempt-real-production-log-acc/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-160451-adopted-ocid-020--close-gap-api-me-500----produc
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''OCID-020: close GAP-API-ME-500 -- production migration
+      0312 applied, live-verified (UMR-20260804-155457-a16d)'' on compliance-tracker
+      reached status=blocked. Superboss-approved (tier=tier1), but the merge itself
+      FAILED (gh pr view confirms state=OPEN, mergedAt=; see supervisor.log) — needs
+      manual attention, NOT actually merged: https://github.com/FChecklist/compliance-tracker/pull/900'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-160451-adopted-ocid-020--close-gap-api-me-500----produc/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/900'
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-163850-adopted-ocid-001--006--earlier-generation-regist
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''OCID-001..006: earlier-generation registration, corrected
+      framing (UMR-20260804-163645-e196)'' on compliance-tracker reached status=completed.
+      Superboss-approved (tier=tier1, hold_for_owner_signoff=False), merged autonomously
+      per Owner''s 2026-07-31 full-approval-autonomy directive: https://github.com/FChecklist/compliance-tracker/pull/907'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-163850-adopted-ocid-001--006--earlier-generation-regist/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/907'
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-165736-adopted-ocid-001--006--correct-umr-tasks-store-a
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''OCID-001..006: correct umr_tasks store access claim
+      in merged PR #907'' on compliance-tracker reached status=completed. Superboss-approved
+      (tier=tier1, hold_for_owner_signoff=False), merged autonomously per Owner''s 2026-07-31
+      full-approval-autonomy directive: https://github.com/FChecklist/compliance-tracker/pull/912'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-165736-adopted-ocid-001--006--correct-umr-tasks-store-a/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/912'
+    last_touched: '2026-08-04'
