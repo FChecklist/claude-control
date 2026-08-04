@@ -13640,3 +13640,42 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260804-022117-adopted-adopted--review-pr-782----ocid-036-doc/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/782'
     last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-023244-pm-decision--clean-up-the-stale-active-c
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''PM decision, clean up the stale ACTIVE-CLAIMS entry
+      and resolve the stale PR 853 conflict'' on compliance-tracker reached status=blocked.
+      credit accountant rejected auto-fix attempt 1, no further metered spend without
+      human review: {"approved": false, "increment_number": 1, "reason": "existing software/mechanism
+      already covers this (system_index match) -- use it instead of spending AI credits",
+      "reviewer": "deterministic"}'
+    where: /opt/veridian/ai-os/tasks/task-20260804-023244-pm-decision--clean-up-the-stale-active-c/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-032056-adopted-adopted--review-pr-863----product-branch
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Adopted: review PR 863 -- product_branches schema
+      root-cause fix (docs only)'' on compliance-tracker reached status=completed. Superboss-approved
+      (tier=tier1, hold_for_owner_signoff=False), merged autonomously per Owner''s 2026-07-31
+      full-approval-autonomy directive: https://github.com/FChecklist/compliance-tracker/pull/863'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-032056-adopted-adopted--review-pr-863----product-branch/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/863'
+    last_touched: '2026-08-04'
+
+  - id: WORKER-20260804-032350-adopted-adopted--review-branch-chore-active-clai
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Adopted: review branch chore/active-claims-close-ocid021-item2
+      -- OCID-021 docs update + credit-accountant unblock'' on compliance-tracker reached
+      status=blocked. Superboss-approved (tier=tier1), but the merge itself FAILED (gh
+      pr view confirms state=OPEN, mergedAt=; see supervisor.log) — needs manual attention,
+      NOT actually merged: https://github.com/FChecklist/compliance-tracker/pull/864'
+    where: '/opt/veridian/ai-os/tasks/task-20260804-032350-adopted-adopted--review-branch-chore-active-clai/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/864'
+    last_touched: '2026-08-04'
