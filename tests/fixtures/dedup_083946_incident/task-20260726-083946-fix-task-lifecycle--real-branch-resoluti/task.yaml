@@ -1,0 +1,11 @@
+id: task-20260726-083946-fix-task-lifecycle--real-branch-resoluti
+title: 'Fix TASK lifecycle: real branch resolution + real HOLD_FOR_OWNER_SIGNOFF enforcement'
+status: failed
+repo: claude-control
+created_at: '2026-07-26T08:39:46.931179+00:00'
+last_checkpoint_at: '2026-07-26T09:00:00.000000+00:00'
+completed_steps:
+- 'Read supervisor-entrypoint.sh, veridian-task.py, tight_task_validation.py.'
+- 'Implemented gap 1 (real branch resolution) and gap 2 (HOLD_FOR_OWNER_SIGNOFF enforcement).'
+remaining_steps:
+- 'Open PR against claude-control.'
