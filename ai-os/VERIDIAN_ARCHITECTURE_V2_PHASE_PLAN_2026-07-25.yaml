@@ -213,6 +213,21 @@ phases:
   success_criteria:
   - 'python3 scripts/superboss-register.py query-knowledge "veridian_v2_compiler_pipeline"
     --tag domain:veridian_architecture_v2  # found=1'
+  completed_by_task: task-20260725-231836-phase2-prompt-compiler-pipeline-core-non
+  evidence: 'compliance-tracker src/lib/prompt-compiler/ (Layer 2-5 pipeline + 13
+    engine modules deepening/closing engine-prompt-compiler/optimizer/expansion/
+    testing/benchmark/portability/ab/ranking/recommendation/similarity, engine-intent/
+    entity/variable/context/confidence, pipeline-lightweight-analysis/context-assembly/
+    prompt-construction/verification), extends scripts/prompt_gateway/engine/
+    {classifier,prompt_engine,context_engine}.py. capability-registry-service.ts
+    extended with a prompt_version entity type (engine-prompt-similarity, reuses
+    the existing embeddings.ts/pgvector infra, no parallel store). 100 unit tests
+    passing (bun test), tsc/eslint clean. Smoke test:
+    bun scripts/prompt-compiler-smoke-test.ts, exit 0, real Layer 2-5 run within
+    all 4 document-specified latency budgets. Pure/deterministic/no-LLM-call
+    pipeline per the Owner''s 2026-07-25 UX directive reconciliation -- the
+    machine-language-output contract, not a second AI pass.
+    knowledge_engine: KE-20260725-233806-1d75.'
   - A compliance-tracker-side smoke test the dispatched task must define and paste
     real output for (e.g. a CLI/route that classifies+compiles+versions one real sample
     prompt end to end, exit 0) -- cannot be pre-specified here since the target module
