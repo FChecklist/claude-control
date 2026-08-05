@@ -16037,3 +16037,382 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260805-checkpoint-pr959-adoption/ on VERIDIAN-DEV
       server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/compliance-tracker/pull/959'
     last_touched: '2026-08-05'
+
+  - id: WORKER-20260805-174606-adopted-umr-20260805-165906-0923-ocid-020-gtm-ca
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: Server-worker task 'UMR-20260805-165906-0923 OCID-020 GTM category 15 multi
+      tenant and category 16 role permission blocked' on veridian-scripts reached status=blocked.
+      supervisor failed to produce a review verdict — see supervisor.log
+    where: /opt/veridian/ai-os/tasks/task-20260805-174606-adopted-umr-20260805-165906-0923-ocid-020-gtm-ca/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-05'
+
+  - id: WORKER-20260805-174820-adopted-umr-20260805-165906-0923-ocid-020-gtm-ca
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: Server-worker task 'UMR-20260805-165906-0923 OCID-020 GTM category 25 production
+      readiness synthesis FINAL' on veridian-scripts reached status=blocked. supervisor
+      failed to produce a review verdict — see supervisor.log
+    where: /opt/veridian/ai-os/tasks/task-20260805-174820-adopted-umr-20260805-165906-0923-ocid-020-gtm-ca/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-05'
+
+  - id: WORKER-20260805-193308-ocid-020-gtm-certification--build-real-d
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: Server-worker task 'OCID-020 GTM certification, build real deterministic
+      check scripts, this is the actual missing work' on veridian-scripts reached status=failed.
+      worker exited with code 1; failure signature recorded for circuit breaker; pushed
+      whatever progress existed; systemd will retry up to the burst limit
+    where: /opt/veridian/ai-os/tasks/task-20260805-193308-ocid-020-gtm-certification--build-real-d/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-05'
+
+  - id: WORKER-20260805-193418-ocid-020-category-19-real-fail--superbos
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: Server-worker task 'OCID-020 category 19 real fail, superboss-register.sqlite
+      backup is stale' on veridian-scripts reached status=failed. worker exited with
+      code 1; failure signature recorded for circuit breaker; pushed whatever progress
+      existed; systemd will retry up to the burst limit
+    where: /opt/veridian/ai-os/tasks/task-20260805-193418-ocid-020-category-19-real-fail--superbos/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-05'
+
+  - id: WORKER-20260805-193423-real-corruption-in-superboss-register-sq
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: Server-worker task 'Real corruption in superboss-register.sqlite, install
+      recovery tooling only, do not touch data' on veridian-scripts reached status=failed.
+      worker exited with code 1; failure signature recorded for circuit breaker; pushed
+      whatever progress existed; systemd will retry up to the burst limit
+    where: /opt/veridian/ai-os/tasks/task-20260805-193423-real-corruption-in-superboss-register-sq/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-05'
+
+  - id: WORKER-20260805-193428-owner-directive--checkpoint-discipline-b
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: Server-worker task 'Owner directive, checkpoint discipline before real
+      weekly usage limit hits, ensure zero real work loss' on veridian-scripts reached
+      status=failed. worker exited with code 1; failure signature recorded for circuit
+      breaker; pushed whatever progress existed; systemd will retry up to the burst
+      limit
+    where: /opt/veridian/ai-os/tasks/task-20260805-193428-owner-directive--checkpoint-discipline-b/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-05'
+
+  - id: WORKER-20260805-193433-ocid-020-gtm-certification--build-real-c
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''OCID-020 GTM certification: build real check scripts
+      for the last 8 categories (5,6,7,9,15,16,24,25)'' on veridian-scripts reached
+      status=failed. worker exited with code 1; failure signature recorded for circuit
+      breaker; pushed whatever progress existed; systemd will retry up to the burst
+      limit'
+    where: /opt/veridian/ai-os/tasks/task-20260805-193433-ocid-020-gtm-certification--build-real-c/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-05'
+
+  - id: WORKER-20260805-193438-ocid-020-gtm-certification-category-19
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''OCID-020 GTM certification category 19: build the
+      permanent superboss-register.sqlite backup generator + systemd timer'' on veridian-scripts
+      reached status=failed. worker exited with code 1; failure signature recorded for
+      circuit breaker; pushed whatever progress existed; systemd will retry up to the
+      burst limit'
+    where: /opt/veridian/ai-os/tasks/task-20260805-193438-ocid-020-gtm-certification-category-19/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-05'
+
+  - id: WORKER-20260805-193521-pm-decision--resume-real-unaffected-ocid
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: Server-worker task 'PM decision, resume real unaffected OCID-020 work while
+      corruption decision stays pending' on veridian-scripts reached status=failed.
+      worker exited with code 1; failure signature recorded for circuit breaker; pushed
+      whatever progress existed; systemd will retry up to the burst limit
+    where: /opt/veridian/ai-os/tasks/task-20260805-193521-pm-decision--resume-real-unaffected-ocid/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-05'
+
+  - id: WORKER-20260805-193527-pm-correction--pr-873-was-my-own-error
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: Server-worker task 'PM correction, PR 873 was my own error, real target
+      is PR 962' on veridian-scripts reached status=failed. worker exited with code
+      1; failure signature recorded for circuit breaker; pushed whatever progress existed;
+      systemd will retry up to the burst limit
+    where: /opt/veridian/ai-os/tasks/task-20260805-193527-pm-correction--pr-873-was-my-own-error/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-05'
+
+  - id: WORKER-20260805-193531-owner-directive--real-60-minute-window-b
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: Server-worker task 'Owner directive, real 60 minute window before weekly
+      tokens exhaust, tighten checkpoint cadence' on veridian-scripts reached status=failed.
+      worker exited with code 1; failure signature recorded for circuit breaker; pushed
+      whatever progress existed; systemd will retry up to the burst limit
+    where: /opt/veridian/ai-os/tasks/task-20260805-193531-owner-directive--real-60-minute-window-b/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-05'
+
+  - id: WORKER-20260805-193537-pm-decision--prioritize-finishing-the-gt
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: Server-worker task 'PM decision, prioritize finishing the GTM script build
+      over forcing PR merge retriggers, real time constraint' on veridian-scripts reached
+      status=failed. worker exited with code 1; failure signature recorded for circuit
+      breaker; pushed whatever progress existed; systemd will retry up to the burst
+      limit
+    where: /opt/veridian/ai-os/tasks/task-20260805-193537-pm-decision--prioritize-finishing-the-gt/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-05'
+
+  - id: WORKER-20260805-193621-owner-directive--session-ending-now--fin
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: Server-worker task 'Owner directive, session ending now, final real checkpoint,
+      save everything' on veridian-scripts reached status=failed. worker exited with
+      code 1; failure signature recorded for circuit breaker; pushed whatever progress
+      existed; systemd will retry up to the burst limit
+    where: /opt/veridian/ai-os/tasks/task-20260805-193621-owner-directive--session-ending-now--fin/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-05'
+
+  - id: WORKER-20260805-193627-retract-pr--955-s-incorrect-ocid-artifac
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: 'Server-worker task ''Retract PR #955''s incorrect ocid_artifact_links
+      deprecation claim (real audit FAIL, confirmed correct)'' on compliance-tracker
+      reached status=failed. worker exited with code 1; failure signature recorded for
+      circuit breaker; pushed whatever progress existed; systemd will retry up to the
+      burst limit'
+    where: /opt/veridian/ai-os/tasks/task-20260805-193627-retract-pr--955-s-incorrect-ocid-artifac/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-05'
+
+  - id: WORKER-20260805-193711-build-a-real-deterministic-pm-report-scr
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: Server-worker task 'Build a real deterministic PM report script, replace
+      AI-generated V3 cycle reports' on veridian-scripts reached status=failed. worker
+      exited with code 1; failure signature recorded for circuit breaker; pushed whatever
+      progress existed; systemd will retry up to the burst limit
+    where: /opt/veridian/ai-os/tasks/task-20260805-193711-build-a-real-deterministic-pm-report-scr/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-05'
+
+  - id: WORKER-20260805-193715-real-correction--skill-md-content-pasted
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: Server-worker task 'Real correction, SKILL.md content pasted directly,
+      unblock the deterministic report script build' on veridian-scripts reached status=failed.
+      worker exited with code 1; failure signature recorded for circuit breaker; pushed
+      whatever progress existed; systemd will retry up to the burst limit
+    where: /opt/veridian/ai-os/tasks/task-20260805-193715-real-correction--skill-md-content-pasted/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-05'
+
+  - id: WORKER-20260805-193759-owner-directive--complete-the-pm-report
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: Server-worker task 'Owner directive, complete the pm-report-v3 build now,
+      this is the real top priority' on veridian-scripts reached status=failed. worker
+      exited with code 1; failure signature recorded for circuit breaker; pushed whatever
+      progress existed; systemd will retry up to the burst limit
+    where: /opt/veridian/ai-os/tasks/task-20260805-193759-owner-directive--complete-the-pm-report/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-05'
+
+  - id: WORKER-20260805-193804-owner-directive--urgent--ship-a-minimal
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: Server-worker task 'Owner directive, urgent, ship a minimal working version
+      now, defer polish' on veridian-scripts reached status=failed. worker exited with
+      code 1; failure signature recorded for circuit breaker; pushed whatever progress
+      existed; systemd will retry up to the burst limit
+    where: /opt/veridian/ai-os/tasks/task-20260805-193804-owner-directive--urgent--ship-a-minimal/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-05'
+
+  - id: WORKER-20260805-193847-real-pm-authored-draft-transferred--revi
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: Server-worker task 'Real PM authored draft transferred, review test and
+      land it urgently' on veridian-scripts reached status=failed. worker exited with
+      code 1; failure signature recorded for circuit breaker; pushed whatever progress
+      existed; systemd will retry up to the burst limit
+    where: /opt/veridian/ai-os/tasks/task-20260805-193847-real-pm-authored-draft-transferred--revi/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-05'
+
+  - id: WORKER-20260805-193853-pm-decision--stop-the-draft-based-rework
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: Server-worker task 'PM decision, stop the draft based rework, adopt real
+      PR 91 as canonical' on veridian-scripts reached status=failed. worker exited with
+      code 1; failure signature recorded for circuit breaker; pushed whatever progress
+      existed; systemd will retry up to the burst limit
+    where: /opt/veridian/ai-os/tasks/task-20260805-193853-pm-decision--stop-the-draft-based-rework/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-05'
+
+  - id: WORKER-20260805-193937-sync-real-skill-md-section-8--gtm-score
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: Server-worker task 'Sync real SKILL.md section 8 (GTM score bucket mapping
+      + readiness thresholds) into the repo, server-verifiable' on veridian-scripts
+      reached status=failed. worker exited with code 1; failure signature recorded for
+      circuit breaker; pushed whatever progress existed; systemd will retry up to the
+      burst limit
+    where: /opt/veridian/ai-os/tasks/task-20260805-193937-sync-real-skill-md-section-8--gtm-score/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-05'
+
+  - id: WORKER-20260805-193944-pr-91-merged--now-enable-the-timer-and-c
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: Server-worker task 'PR 91 merged, now enable the timer and close the two
+      writer script gaps' on veridian-scripts reached status=failed. worker exited with
+      code 1; failure signature recorded for circuit breaker; pushed whatever progress
+      existed; systemd will retry up to the burst limit
+    where: /opt/veridian/ai-os/tasks/task-20260805-193944-pr-91-merged--now-enable-the-timer-and-c/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-05'
+
+  - id: WORKER-20260805-193951-build-a-deterministic-writer-for-pm-deci
+    project: veridian
+    type: worker-task
+    status: failed
+    summary: Server-worker task 'Build a deterministic writer for pm_decisions_pending
+      inserts/resolves (replace ad hoc SQL)' on veridian-scripts reached status=failed.
+      worker exited with code 1; failure signature recorded for circuit breaker; pushed
+      whatever progress existed; systemd will retry up to the burst limit
+    where: /opt/veridian/ai-os/tasks/task-20260805-193951-build-a-deterministic-writer-for-pm-deci/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-05'
+
+  - id: WORKER-20260805-checkpoint-pr62-adoption
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''feat: gtm_certification_categories schema, 25 real
+      rows under OCID-020'' on veridian-scripts reached status=blocked. supervisor failed
+      to produce a review verdict — see supervisor.log'
+    where: /opt/veridian/ai-os/tasks/task-20260805-checkpoint-pr62-adoption/ on VERIDIAN-DEV
+      server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-05'
+
+  - id: WORKER-20260805-checkpoint-pr65-adoption
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''feat: real deterministic GTM check scripts -- database,
+      API, governance testing'' on veridian-scripts reached status=blocked. supervisor
+      failed to produce a review verdict — see supervisor.log'
+    where: /opt/veridian/ai-os/tasks/task-20260805-checkpoint-pr65-adoption/ on VERIDIAN-DEV
+      server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-05'
+
+  - id: WORKER-20260805-checkpoint-pr66-adoption
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''feat: GTM checks for static code analysis, security
+      audit, documentation audit'' on veridian-scripts reached status=blocked. supervisor
+      failed to produce a review verdict — see supervisor.log'
+    where: /opt/veridian/ai-os/tasks/task-20260805-checkpoint-pr66-adoption/ on VERIDIAN-DEV
+      server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-05'
+
+  - id: WORKER-20260805-checkpoint-pr67-adoption
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''fix: exclude 16 confirmed gitleaks false positives,
+      fix trivy false-negative bug'' on veridian-scripts reached status=blocked. supervisor
+      failed to produce a review verdict — see supervisor.log'
+    where: /opt/veridian/ai-os/tasks/task-20260805-checkpoint-pr67-adoption/ on VERIDIAN-DEV
+      server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-05'
+
+  - id: WORKER-20260805-checkpoint-pr70-adoption
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''feat: GTM checks batch 2 -- architecture, a11y, browser/responsive,
+      monitoring, backup, deployment'' on veridian-scripts reached status=blocked. supervisor
+      failed to produce a review verdict — see supervisor.log'
+    where: /opt/veridian/ai-os/tasks/task-20260805-checkpoint-pr70-adoption/ on VERIDIAN-DEV
+      server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-05'
+
+  - id: WORKER-20260805-checkpoint-pr75-adoption
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''docs: PROGRESS.md checkpoint -- OCID-020 GTM certification
+      session state'' on veridian-scripts reached status=blocked. supervisor failed
+      to produce a review verdict — see supervisor.log'
+    where: /opt/veridian/ai-os/tasks/task-20260805-checkpoint-pr75-adoption/ on VERIDIAN-DEV
+      server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-05'
+
+  - id: WORKER-20260805-checkpoint-pr95-adoption
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''feat: land the shared gtm_write_category_result.py
+      writer on main'' on veridian-scripts reached status=blocked. supervisor failed
+      to produce a review verdict — see supervisor.log'
+    where: /opt/veridian/ai-os/tasks/task-20260805-checkpoint-pr95-adoption/ on VERIDIAN-DEV
+      server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-05'
+
+  - id: WORKER-20260805-checkpoint-pr962-adoption
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''fix: patch next and postcss for 13 real CVEs (6 HIGH,
+      7 MEDIUM)'' on compliance-tracker reached status=blocked. supervisor failed to
+      produce a review verdict — see supervisor.log'
+    where: /opt/veridian/ai-os/tasks/task-20260805-checkpoint-pr962-adoption/ on VERIDIAN-DEV
+      server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-05'
+
+  - id: WORKER-20260805-checkpoint-pr964-adoption
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''docs: PROGRESS.md checkpoint -- OCID-020 GTM certification
+      session state'' on compliance-tracker reached status=blocked. supervisor failed
+      to produce a review verdict — see supervisor.log'
+    where: /opt/veridian/ai-os/tasks/task-20260805-checkpoint-pr964-adoption/ on VERIDIAN-DEV
+      server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-05'
