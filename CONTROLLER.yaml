@@ -16454,3 +16454,55 @@ entries:
     where: '/opt/veridian/ai-os/tasks/task-20260806-025647-owner-authorization--execute-sqlite3-dot/
       on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/veridian-scripts/pull/97'
     last_touched: '2026-08-06'
+
+  - id: WORKER-20260806-030104-owner-directive--source-proper-sqlite3-b
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Owner directive, source proper sqlite3 build for
+      corruption recovery, and resolve item F per new architecture decision'' on veridian-scripts
+      reached status=blocked. Superboss-approved (tier=tier1), but the merge itself
+      FAILED (gh pr view confirms state=OPEN, mergedAt=; see supervisor.log) — needs
+      manual attention, NOT actually merged: https://github.com/FChecklist/veridian-scripts/pull/99'
+    where: '/opt/veridian/ai-os/tasks/task-20260806-030104-owner-directive--source-proper-sqlite3-b/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/veridian-scripts/pull/99'
+    last_touched: '2026-08-06'
+
+  - id: WORKER-20260806-031225-owner-directive--close-the-deterministic
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Owner directive, close the deterministic script consolidation
+      as an SOP, real infra bug found, fix and finish all four pieces'' on veridian-scripts
+      reached status=completed. Superboss-approved (tier=tier1, hold_for_owner_signoff=False),
+      merged autonomously per Owner''s 2026-07-31 full-approval-autonomy directive:
+      https://github.com/FChecklist/veridian-scripts/pull/100'
+    where: '/opt/veridian/ai-os/tasks/task-20260806-031225-owner-directive--close-the-deterministic/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/veridian-scripts/pull/100'
+    last_touched: '2026-08-06'
+
+  - id: WORKER-20260806-032356-clarification--not-a-real-collision--bot
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Clarification, not a real collision, both units are
+      your own real task chain, continue'' on veridian-scripts reached status=blocked.
+      Superboss rejected: https://github.com/FChecklist/veridian-scripts/pull/101 —
+      see review.json for issues'
+    where: '/opt/veridian/ai-os/tasks/task-20260806-032356-clarification--not-a-real-collision--bot/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/veridian-scripts/pull/101'
+    last_touched: '2026-08-06'
+
+  - id: WORKER-20260806-checkpoint-pr98-adoption
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''fix: hard-stop on real Anthropic weekly usage-limit
+      429, don''t retry-storm'' on veridian-scripts reached status=blocked. PR #98 closed
+      2026-08-06T03:29:24Z (superseded by/reconciled into PR #100, same repo, same root-cause
+      fix -- see PR #100''s own comment thread and PROGRESS.md on worker/task-20260806-031225-owner-directive--close-the-deterministic).
+      Cancelling this adoption task -- nothing left to review here, avoid wasting a
+      supervisor review cycle on a closed PR.'
+    where: /opt/veridian/ai-os/tasks/task-20260806-checkpoint-pr98-adoption/ on VERIDIAN-DEV
+      server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-06'
