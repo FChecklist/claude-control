@@ -16416,3 +16416,41 @@ entries:
     where: /opt/veridian/ai-os/tasks/task-20260805-checkpoint-pr964-adoption/ on VERIDIAN-DEV
       server (task.yaml, worker.log, review.json)
     last_touched: '2026-08-05'
+
+  - id: WORKER-20260806-024154-owner-authorization--enable-the-pm-repor
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: 'Server-worker task ''Owner authorization, enable the pm-report timer as
+      the 19th real unit'' on veridian-scripts reached status=blocked. Superboss-approved
+      (tier=tier1), but the merge itself FAILED (gh pr view confirms state=OPEN, mergedAt=;
+      see supervisor.log) — needs manual attention, NOT actually merged: https://github.com/FChecklist/veridian-scripts/pull/96'
+    where: '/opt/veridian/ai-os/tasks/task-20260806-024154-owner-authorization--enable-the-pm-repor/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/veridian-scripts/pull/96'
+    last_touched: '2026-08-06'
+
+  - id: WORKER-20260806-025037-item-f--correct-the-false-domain-conflic
+    project: veridian
+    type: worker-task
+    status: blocked
+    summary: Server-worker task 'Item F, correct the false domain conflict record, do
+      not touch live domain routing' on claude-control reached status=blocked. supervisor
+      could not resolve a real PR for branch 'worker/task-20260806-025037-item-f--correct-the-false-domain-conflic'
+      (gh pr create failed, no existing open PR found for it) — refusing to proceed
+      rather than risk operating on an unrelated PR via gh's empty-argument fallback.
+      See supervisor.log.
+    where: /opt/veridian/ai-os/tasks/task-20260806-025037-item-f--correct-the-false-domain-conflic/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json)
+    last_touched: '2026-08-06'
+
+  - id: WORKER-20260806-025647-owner-authorization--execute-sqlite3-dot
+    project: veridian
+    type: worker-task
+    status: done
+    summary: 'Server-worker task ''Owner authorization, execute sqlite3 dot recover
+      on the real corrupted file_inventory table now'' on veridian-scripts reached status=completed.
+      Superboss-approved (tier=tier1, hold_for_owner_signoff=False), merged autonomously
+      per Owner''s 2026-07-31 full-approval-autonomy directive: https://github.com/FChecklist/veridian-scripts/pull/97'
+    where: '/opt/veridian/ai-os/tasks/task-20260806-025647-owner-authorization--execute-sqlite3-dot/
+      on VERIDIAN-DEV server (task.yaml, worker.log, review.json); PR: https://github.com/FChecklist/veridian-scripts/pull/97'
+    last_touched: '2026-08-06'
