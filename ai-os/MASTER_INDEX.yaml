@@ -3350,6 +3350,117 @@ registries:
       and is the more reliable command for scripted use)'
     github_branch_protection: "gh api repos/FChecklist/<repo>/branches/<default-branch>/protection/required_status_checks
       --jq '.contexts'"
+- id: vercel_github_state_census_2026_08_06_refresh
+  type: infrastructure_state_snapshot
+  path: ai-os/MASTER_INDEX.yaml (this entry -- companion refresh to registries.vercel_github_state_census_2026_07_26,
+    not a replacement of it; that entry's own narrative/discrepancy history is left as the historical
+    record it documents itself to be)
+  scope: 'Real, fresh (not from memory) live re-enumeration of GitHub repos under FChecklist (via `gh
+    repo list FChecklist --json name,visibility,isPrivate,defaultBranchRef,url,isEmpty`, the authoritative
+    org-wide list -- NOT the do_github() local-clone walk in scripts/knowledge_registry_multisource.py,
+    which only sees repos with a local checkout under /opt/veridian/repos/ and therefore both misses
+    real un-cloned repos and can include non-repo local worktree dirs like compliance-tracker-pr906-wt)
+    and Vercel projects (`vercel project ls --token $VERCEL_ACCESS_TOKEN --scope meet-track-s-projects`),
+    run 2026-08-06T19:2x UTC under UMR-20260806-140841-46d1. Written because registries.vercel_github_state_census_2026_07_26
+    is now 11 days stale and undercounts real GitHub repos 7-vs-15 -- generate_wiring_registry.py''s
+    build_vercel_and_github() reads BOTH this entry and the 2026_07_26 one (merged, this entry''s values
+    win on key collision) so wiring_registry''s github_repo/vercel_project entity_type coverage reflects
+    current live state without hand-editing the original narrative entry''s prose.'
+  status: live_snapshot_2026_08_06
+  vercel:
+    team_scope: meet-track-s-projects (unchanged from registries.vercel_github_state_census_2026_07_26)
+    reconfirmation: 'Live `vercel project ls` returns exactly the same 3 projects as the 2026-07-26 census
+      (veridian-compliance-ai, projexa, veda-advisors) -- no new Vercel project exists. One real drift
+      noted, not requiring a wiring_registry field change (no such field is tracked there): veridian-compliance-ai''s
+      latest production URL is https://projexa-ai.com again as of this query, whereas the 2026-08-02 correction
+      in the 2026_07_26 entry recorded it as veridian-aios.com -- domain assignment has moved again since
+      then. Real live churn, not a data-entry error.'
+    projects: {}
+  github:
+    org_or_user_account: FChecklist (personal User account, unchanged from registries.vercel_github_state_census_2026_07_26)
+    enumeration_method: 'gh repo list FChecklist --limit 100 --json name,visibility,isPrivate,defaultBranchRef,url,isEmpty
+      -- the real org-wide source of truth (15 repos total), cross-checked against the 7 already in
+      registries.vercel_github_state_census_2026_07_26.github.repos (all 7 still exist, no repo removed).
+      compliance-tracker-pr906-wt (seen in some local-clone-derived listings, e.g. scripts/knowledge_registry_multisource.py''s
+      do_github() output) does NOT appear in this live org-wide list -- confirmed it is a local git worktree
+      directory under /opt/veridian/repos/, not a real distinct GitHub repo, so it is correctly NOT registered
+      as a github_repo entity.'
+    open_pr_count_refresh_for_existing_repos: 'Drift found via `gh api "search/issues?q=repo:FChecklist/<repo>+type:pr+state:open"`
+      --jq .total_count (cross-checked against `gh pr list --state open --json number --limit 500` for
+      compliance-tracker, both return 223, so this is real, not a search-index artifact): compliance-tracker
+      30->223, claude-control 7->10, projexa 2->3. Unchanged: veda-advisors=11, global-revenue-engine=0,
+      veridian-brain=0, sumeet-spec=0. global-revenue-engine reconfirmed still empty (isEmpty=true, no
+      default branch) via this same live `gh repo list` call -- no change from the 2026-07-26 finding.'
+    repos:
+      compliance-tracker:
+        open_pr_count: 223
+      claude-control:
+        open_pr_count: 10
+      projexa:
+        open_pr_count: 3
+      veridian-scripts:
+        visibility: PRIVATE
+        default_branch: main
+        open_pr_count: 41
+        required_status_checks_contexts: UNVERIFIABLE -- 403 (private repo, Free plan), confirmed live
+          via `gh api repos/FChecklist/veridian-scripts/branches/main/protection/required_status_checks`
+        active_workflows: []
+        active_workflows_source: live `gh api repos/FChecklist/veridian-scripts/actions/workflows`, queried
+          2026-08-06 -- returned zero workflows (this repo runs entirely via the server-side systemd cron/dispatch
+          pipeline documented elsewhere in this file, not GitHub Actions)
+      veridian-ai-os:
+        visibility: PRIVATE
+        default_branch: main
+        open_pr_count: 3
+        required_status_checks_contexts: UNVERIFIABLE -- 403 (private repo, Free plan), confirmed live
+        active_workflows: []
+      veridian-ui-kit:
+        visibility: PUBLIC
+        default_branch: master
+        open_pr_count: 0
+        required_status_checks_contexts: none configured -- branch not protected (live 404 on the required_status_checks
+          endpoint, confirmed 2026-08-06)
+        active_workflows: []
+      zai-independent-audit-2026-07-30:
+        visibility: PUBLIC
+        default_branch: main
+        open_pr_count: 0
+        required_status_checks_contexts: none configured -- branch not protected (live 404, confirmed
+          2026-08-06)
+        active_workflows: []
+      zai-sap-reports-queue:
+        visibility: PUBLIC
+        default_branch: main
+        open_pr_count: 0
+        required_status_checks_contexts: none configured -- branch not protected (live 404, confirmed
+          2026-08-06)
+        active_workflows: []
+        note: not present in registries.vercel_github_state_census_2026_07_26 or in this task's own SPEC-provided
+          repo list -- found only via live `gh repo list`, per this task's own instruction to enumerate
+          rather than guess a fixed list.
+      infisuite-reverse-engineering:
+        visibility: PRIVATE
+        default_branch: main
+        open_pr_count: 0
+        required_status_checks_contexts: UNVERIFIABLE -- 403 (private repo, Free plan), confirmed live
+        active_workflows: []
+      odoo-reverse-engineering:
+        visibility: PRIVATE
+        default_branch: main
+        open_pr_count: 0
+        required_status_checks_contexts: UNVERIFIABLE -- 403 (private repo, Free plan), confirmed live
+        active_workflows: []
+      zoho-reverse-engineering:
+        visibility: PRIVATE
+        default_branch: main
+        open_pr_count: 0
+        required_status_checks_contexts: UNVERIFIABLE -- 403 (private repo, Free plan), confirmed live
+        active_workflows: []
+  supabase: 'Out of scope for this refresh entry -- registries.database_catalog (backed by ai-os/DATABASE_CATALOG.json)
+    already covers every real Supabase table/project this account has, per this task''s (UMR-20260806-140841-46d1)
+    own instruction not to duplicate that ingestion path. No supabase_project entity_type exists in wiring_registry''s
+    CHECK constraint (only supabase_table does), confirmed via the live schema, so there is no separate
+    project-level entity to add here regardless.'
 - id: task_lifecycle_branch_resolution_and_signoff_fix
   type: task_lifecycle_bugfix
   path: scripts/supervisor-entrypoint.sh + scripts/veridian-task.py + scripts/tight_task_validation.py
