@@ -85,8 +85,22 @@ onto `main` once #301 merges).
   own PRs are expected to be small bookkeeping-only diffs given the real
   diagnosis work is already merged.
 
+## Update: supervisor outcome (post-resume)
+The supervisor review itself passed on all 3 -- Superboss-approved
+(tier1/tier2), confirming the quality-gate fix worked end-to-end, not just
+at the gate step. All 3 landed back at `status: blocked` shortly after,
+but for a real, distinct, out-of-scope reason: the actual `gh pr merge`
+step failed. Their PRs (`compliance-tracker` #1085/#1087/#1086) are now
+stale against a since-advanced `main` --
+`mergeStateStatus=DIRTY`/`mergeable=CONFLICTING` (confirmed live via
+`gh pr view`). This is a stale-branch merge-conflict problem, unrelated to
+quality-gate routing, and is left for the owner rather than fixed here to
+avoid scope creep beyond this task's actual title.
+
 ## Out of scope, left for the owner
 - `veridian-scripts` PR #301 and #305 both still need human/owner review
   and merge -- external, not redispatchable from here.
-- The 3 resumed tasks' `pending_review` -> final outcome is now in the
-  normal supervisor review pipeline.
+- `compliance-tracker` PRs #1085/#1087/#1086 need a real rebase/merge-
+  conflict resolution (separate bug in the merge pipeline, not
+  quality-gate routing) before these 3 tasks can reach a true terminal
+  state.
