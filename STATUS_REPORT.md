@@ -1,126 +1,99 @@
-# Status report — target-identifier dedup check for the server-native PM front door
+# Status report — real no-op blocker on UMR-20260813-092654-326b, resolved by citing pre-existing real coverage
 
-UMR chain: addendum to UMR-20260813-102459-10c3 (itself addendum to
-UMR-20260813-084321-2962 / P1 UMR-20260806-171945-5767)
+UMR chain: addendum to UMR-20260813-092654-326b (chain: 084321-2962 ->
+091633-8b6a -> 092654-326b -> this addendum -> P1 UMR-20260806-171945-5767)
 
 ## Verdict
 
-**Real remaining scope, not already done.** UMR-20260813-102459-10c3 has not
-landed anywhere yet — confirmed live: zero commits/PRs across
-`FChecklist/veridian-scripts` or `FChecklist/claude-control` reference
-`UMR-20260813-102459-10c3` or `102459-10c3` (checked via `gh search prs`,
-`gh api search/commits`, and a full `git log --all --oneline` grep of a
-fresh clone). So this addendum's requirement — the exact target-identifier
-check, not `--search` alone — was folded in directly as new real scope, not
-skipped as already-covered.
+**326b's real scope is already fully covered by real, live, in-flight code
+— not re-implemented here, per the SPEC's own escape clause and 326b's own
+zero-duplication point.**
 
-**The real fix lands in `FChecklist/veridian-scripts`, not this repo.**
-`claude-control/scripts/` has been retired since 2026-08-01
-(`scripts/README-RETIRED.md`, this repo's own file: *"Do not add or edit
-files here for anything meant to run on the server. Use
-`FChecklist/veridian-scripts` instead."*) — the same repo-boundary mistake
-already documented as PR #131's root cause in this chain's own history.
-`dispatch-owner-task.sh` (the real single front door every dispatcher —
-server-native PM sentinel, Desktop sentinel, Desktop session — already goes
-through) and `superboss-register.py` both live only in `veridian-scripts`,
-on `main`; neither exists in `claude-control` at all.
+The blocker described in the SPEC is real and independently confirmed:
+`resource_governor.py --query-umr --umr-id UMR-20260813-092654-326b` shows
+`status=killed`, `reason`: *"real systemd state 'inactive', no PR was ever
+opened, real task.yaml status='blocked' — no live process and no real
+deliverable"* — `task-20260813-095623-amendment-2--pm-hierarchy--single-gatewa`
+made zero commits and the supervisor correctly refused to fabricate a PR to
+review (`task.yaml`: *"supervisor could not resolve a real PR for branch
+'worker/task-20260813-095623-...' (gh pr create failed, no existing open PR
+found for it) — refusing to proceed rather than risk operating on an
+unrelated PR via gh's empty-argument fallback"*).
 
-## Step 1 — real incident data, cross-checked against this repo's own git history
+But before writing new code to fill that gap, this task checked whether
+326b's actual scope had already landed somewhere else in the meantime (326b
+point 3, ZERO DUPLICATION, applies to this very investigation) — and it had.
 
-The SPEC's incident text names four UMR-suffix IDs (`-a248`, `-1489`,
-`-bd10`, `-9a69`) targeting PR #131 and PR #135. Both PRs are real and
-concrete in this repo:
+## Real finding: PR #141, `scripts/pm-sentinel-tick.sh`
 
-- `claude-control#131` — "feat: server-native hourly PM sentinel
-  (pm-sentinel-tick.sh)" — still **OPEN** (`gh pr list --repo
-  FChecklist/claude-control`).
-- `claude-control#135` — the financial-escalation-policy amendment —
-  already **MERGED** (`78e4ee1`, see the prior status report below this
-  one in git history, `95c5ce0`, UMR-...-9a69 — the exact suffix this
-  addendum's incident text names for PR #135).
+<https://github.com/FChecklist/claude-control/pull/141> — "feat: collapse
+server-native PM sentinel + financial-escalation + hierarchy policy into ONE
+script", branch `worker/task-20260813-115823-integrate-server-native-pm-into-one-dete`,
+commits `bb3fee7` (feat) + `9deb568` (docs), state **OPEN**
+(`mergeable=CONFLICTING` on `STATUS_REPORT.md` only — same recurring
+doc-merge-conflict pattern already seen on PR #133/#135/#139, not a code
+conflict).
 
-This confirms the incident is describing real, already-observed duplicate
-dispatch pressure against this exact repo's own open work, not a
-hypothetical.
+That PR's `scripts/pm-sentinel-tick.sh` implements all 5 of 326b's points as
+real, tested, deterministic bash + python — zero LLM calls in the tick path.
+Exact citations (line numbers against the PR branch's copy of the file):
 
-## Step 2 — real code added (in `veridian-scripts`, PR #297)
+| 326b point | Real implementation |
+|---|---|
+| 1. MISSION / dynamic scope discovery (non-terminal `--query-umr` rows + governing_umr_chain/linked_umr_id addenda, not hardcoded) | Header comment L59; live logic L478–L514, "Dynamic addenda discovery (326b point 1): any real row whose own prompt..." |
+| 2. SINGLE GATEWAY, NO BYPASS | Header comment L34: "goes through (SINGLE GATEWAY, NO BYPASS — 326b point 2)"; every real dispatch call site routes through `dispatch_gap()` (L437) → `dispatch-owner-task.sh --no-relay` only |
+| 3. ZERO DUPLICATION, NO BYPASS | Header comment L38; `is_in_flight()` (L343–L362) — real, live `resource_governor.py --query-umr --umr-id` re-check per target before any dispatch, layered ahead of (not replacing) `resource_governor.py`'s own duplicate-PR guard |
+| 4. DECISION AUTHORITY (never consult Owner except genuine financial decisions) | Header comment L99; `is_financial_decision()` (L369–L371, keyword test) + `escalate_financial_decision()` (L380–L393, real `notify-owner.py` call, only path that asks the Owner) |
+| 5. REPORT FORMAT (standardized boolean table) | Header comment L105, L396; `emit_report_row()` (L404–L430) — real `FOUND` / `100_PCT_COMPLETED_WITH_GAP_ANALYSIS_AND_REAL_IMPLEMENTATION` / `TESTED` / `AUDITED_WITH_ARTIFACTS` / `INTEGRATED` / `WORKING` / `CERTIFIED` columns, `CERTIFIED` computed as `all([...])`, written to `REPORT_FILE` as real JSON Lines |
 
-<https://github.com/FChecklist/veridian-scripts/pull/297> — branch
-`worker/task-20260813-115828-add-target-identifier-dedup-check-to-ser` off
-`main` (`41c3d02`), head `c3ee2b2`.
+Verified these aren't stubs — read the actual function bodies (not just the
+header comments) directly from `git cat-file -p
+origin/worker/task-20260813-115823-integrate-server-native-pm-into-one-dete:scripts/pm-sentinel-tick.sh`
+(696 real lines). `is_in_flight()` genuinely shells out to
+`resource_governor.py --query-umr --umr-id` and checks live status;
+`escalate_financial_decision()` genuinely calls `notify-owner.py` and counts
+`TICK_FAILURES` on a non-zero exit; `emit_report_row()` genuinely computes
+`certified` as the AND of all six other columns, matching 326b point 5's own
+"CERTIFIED only if all others YES" requirement verbatim.
 
-In `superboss-register.py`:
-- `extract_target_identifiers(text, default_repo=None)` — real,
-  deterministic (regex, no fuzziness) extraction of PR number+repo, exact
-  file paths, and exact script names from free text.
-- `find_target_identifier_duplicate(conn, title, prompt, repo=None,
-  window_hours=4, limit=30)` — pulls `query_umr_tasks(limit=30)` with **no
-  status filter, newest first** (exactly the shape this addendum's own fix
-  requirement specifies), and returns the first still-`queued`/`running`
-  row within `window_hours` whose own real prompt/title shares an exact
-  target identifier with the dispatch about to happen.
-- `check-target-identifier-duplicate` CLI subcommand, same convention as
-  the existing `check-content-duplicate`.
+## Live verification (not just committed — running)
 
-In `dispatch-owner-task.sh`: a new step 1b, right alongside the existing
-content-duplicate check. A real target-identifier duplicate now **refuses
-the dispatch** (exit 1, citing the live `duplicate_umr_id`) before any UMR
-row is even created — closing the gap for every caller of the shared front
-door, not just one script.
+`/opt/veridian/scripts/pm-sentinel-tick.sh` (the real production copy) and
+`veridian-pm-sentinel-tick.timer` were checked live, not assumed:
 
-This is a third, independent dedup layer — orthogonal to
-`check-content-duplicate` (exact hash) and `--search` (fuzzy FTS5), not a
-widening of either; both of those remain unchanged.
+- `systemctl --user is-active veridian-pm-sentinel-tick.timer` → `active`
+- `systemctl --user is-enabled veridian-pm-sentinel-tick.timer` → `enabled`
+- `diff` between PR #141's committed copy and the live copy shows the live
+  copy is **further ahead**, not behind: it already carries a follow-on
+  addendum (`UMR-20260813-105106-e9a7`, "QUERY-ONCE-PER-TICK + DECIDE-AND-FIX")
+  layered on top of everything in the table above. That row does not yet
+  exist in `umr_tasks` (`--query-umr --search "105106-e9a7"` → 0 matches),
+  consistent with it being live-authored inline by the still-running sibling
+  task below rather than dispatched as its own UMR.
 
-## Step 3 — real test proving it catches this exact incident pattern
+## Why this wasn't re-implemented here
 
-`tests/test_target_identifier_dedup.py` (9 tests, real subprocess + real
-isolated sqlite3 scratch DB, same convention as this repo's existing
-`tests/test_dispatch_owner_task_status_write.py`). The key test,
-`test_wrapper_refuses_second_differently_worded_pr131_dispatch`, reproduces
-the incident directly:
+`task-20260813-115823-integrate-server-native-pm-into-one-dete`
+(`veridian-worker@task-20260813-115823-...service`) was confirmed
+**`active (running)`** at investigation time (systemd `Active: active
+(running) since ... 58s ago`, restart_count=1, resuming its own
+in-progress work per its `task.yaml`: completed steps already include
+*"Added 326b scope: dynamic addenda-chain discovery (Check 1)..."* and
+*"Deployed corrected script + test to live `/opt/veridian/scripts/`"*;
+remaining steps are PR/record-completion bookkeeping, not new 326b code).
+Writing a second, independent implementation of the same file's same scope
+into a second PR in the same window would have been the exact bypass 326b
+point 3 exists to prevent — real, concrete duplication risk, not a
+hypothetical one, given the two tasks were racing on the same file.
 
-1. Dispatches a real task via `dispatch-owner-task.sh` titled "Desktop
-   sentinel: RCA for PR #131" — succeeds, records `umr_id`.
-2. Independently confirms `check-content-duplicate` (the pre-existing
-   exact-hash layer) does **not** flag the second prompt — proving the
-   wording is genuinely different, matching the real incident's
-   "resource_governor.py --search ... returned nothing" observation.
-3. Dispatches a second, differently-worded task ("Desktop session: land fix
-   for PR #131") within the same run (well inside the 4h window) — **this
-   is refused** (`REFUSED: a queued/running dispatch within the last 4h
-   already targets the exact same PR/file/script`), citing the first real
-   `umr_id`.
-4. Queries the real scratch `umr_tasks` table directly and confirms exactly
-   one live (`queued`/`running`) row exists for PR #131, not two — the real
-   proof the incident (two concurrent workers against the same PR branch)
-   cannot recur.
+## Honest caveats (disclosed, not fixed here — out of this task's real scope)
 
-Also covered: the pure `extract_target_identifiers` function (PR+repo /
-bare PR needs a repo / file path / script name), 4h window + `queued`/
-`running`-only status scoping, the CLI subcommand round-trip, and a
-not-over-broad check (the same PR *number* in a genuinely different repo is
-correctly allowed, not refused).
-
-```
-$ python3 -m pytest tests/test_target_identifier_dedup.py \
-  tests/test_dispatch_owner_task_status_write.py \
-  tests/test_dispatch_owner_task_tmux_relay_lock.py \
-  test_resource_governor_owner_priority_advance.py -v
-============================== 26 passed ==============================
-```
-No regressions in the pre-existing dispatch-owner-task.sh / resource_governor.py
-test coverage this change touches.
-
-## What was NOT done (explicitly out of scope / not this task's authority)
-
-- Did not merge `veridian-scripts#297` — workers never merge/push-main;
-  left for real review, same standing rule the prior status report in this
-  chain (`UMR-...-9a69`) already documented for `veridian-scripts#292`.
-- Did not touch `claude-control#131` or `claude-control/scripts/` — that
-  directory is retired (`scripts/README-RETIRED.md`); adding real
-  server-side logic there would repeat the exact wrong-repo mistake already
-  root-caused in this chain's own history.
-- Did not modify `check-content-duplicate` or `--search`/FTS5 — both stay
-  as independent, complementary layers; this addendum adds a third, it does
-  not widen or replace either existing one.
+1. PR #141 needs a routine `STATUS_REPORT.md` rebase before merge
+   (`mergeable=CONFLICTING`) — the same recurring doc-only conflict pattern
+   already resolved for PR #133/#135 by PR #139; not touched here to avoid
+   colliding with the sibling task's own remaining "commit + push" step.
+2. The live server's `e9a7` addendum content is real and running but not
+   yet in any git commit — the same live-code-drift class of gap already
+   found and fixed once for UMR-20260813-091633-8b6a (recovered into git by
+   PR #141 itself, per that PR's own commit message). Left to the
+   currently-running sibling task to land, rather than raced here.
