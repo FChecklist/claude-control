@@ -119,12 +119,15 @@ representing real unfinished work"), it was **not** force-closed via
 `mark-umr-terminal` -- forcibly terminating a real, actively-running
 worker's row is a different, riskier action than reconciling a stuck queued
 row, and the constraint is explicit. It was left to reach its own real
-terminal status through the normal task lifecycle (its own dispatched
-worker's instructions already require it to record a real, honest
-`mark-umr-terminal` outcome on completion).
+terminal status through the normal task lifecycle. Re-checked live near the
+end of this task: it had, on its own, reached real `status=completed_unmerged`
+(`ts_completed` 2026-08-13T15:14:14Z) -- confirming this was the right call;
+no forced write was ever necessary.
 
 No rows were mass-deleted. No row representing real unfinished work was
-closed.
+closed. All 10 of the 12:40:20-12:41:41 batch had reached a real terminal
+status on their own by the end of this task, without any write from this
+task.
 
 ## E. Live proof
 The fix has not yet been deployed live (pending review/merge of PR #297 and
