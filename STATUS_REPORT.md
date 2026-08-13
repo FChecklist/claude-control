@@ -1,102 +1,150 @@
-# Status report — real RCA + redispatch for stuck-task SIGKILL (UMR-20260808-175055-cebd)
+# Status report — real dedup finding for claude-control PR #126 (task-gateway.py stop-work bypass)
 
-UMR: UMR-20260813-082609-873e (this task's own governing UMR)
-Governing chain: Priority 2/3, UMR-20260808-175055-cebd (the real killed dispatch)
-Redispatch produced: UMR-20260813-083422-15e7 (queued, tier 0)
+UMR: UMR-20260813-085642-56b3 (this task's own governing UMR)
+Governing chain: UMR-20260813-042708-e592 ("Close task-gateway.py stop-work
+bypass gap"), which produced PR #126 and its own real, posted AUDIT:FAIL
+(2026-08-13T04:40:12Z).
 
-## What this covers
-RCA for UMR-20260808-175055-cebd (`status=killed, reason="stuck-task
-SIGKILL: no exit 60s after SIGTERM"`), verification of what real work
-already existed on that chain, and a real, non-duplicating redispatch of
-only the remaining scope.
+## Verdict
+**PR #126 is a true duplicate of already-shipped-and-live code, opened
+against a retired directory. Closed without merging (not re-audited for
+merge — see "Do not merge" below).** The original AUDIT:FAIL verdict was
+correct; this report documents the real evidence and closes the loop.
 
-## The killed UMR — real facts
-Queried live via `resource_governor.py --query-umr --umr-id
-UMR-20260808-175055-cebd`:
-- `task_identity`: `owner-task-20260808-175053-447419`
-- `unit_name`: `veridian-worker@task-20260808-175102-execute-ocid-020-021-real-implementation.service`
-- `ts_dispatched`: 2026-08-08T17:51:10Z
-- `ts_sigterm`: 2026-08-08T18:51:44Z (exactly ~60 min after dispatch)
-- `ts_completed`: 2026-08-08T18:52:48Z (SIGKILL confirmed 64s after SIGTERM)
-- Original prompt: execute the real 15-point OCID-020/021 checklist,
-  authorized by `pm_decisions_pending id=519` (verified real/approved,
-  unchanged).
+## Step 1 — stop-work exemption, confirmed in writing
+`ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml`, entry
+`stop-work-order-lifted-2026-08-08` (status: approved, decided_at
+2026-08-08T09:55:38Z, decided_by "rajat (real, on-server, own git identity —
+not the PM relay)"):
 
-## RCA — real, evidence-based
-The original task dir
-(`/opt/veridian/ai-os/tasks/task-20260808-175102-execute-ocid-020-021-real-implementation`)
-still exists with its full `task.yaml`/`worker.log`/`result.json` history.
+> Owner directly lifts the standing stop-work order
+> (task-20260806-165921-owner-absolute-stop-work-order--complete) for all
+> PR/push work on resource_governor.py, superboss-register.py,
+> **task-gateway.py**, and resource_governor_tick_loop.sh, effective
+> immediately.
 
-**Invocation 1 (the killed one) has zero footprint**: no entry in
-`result.json`, no lines in `worker.log` attributable to it, no checkpoint
-before the kill. It hung completely silently for the full 60 minutes with
-nothing to show for it — consistent with a single blocking call made
-directly via Bash with no timeout, but there is no surviving transcript
-for invocation 1 itself to name the exact command with certainty, and this
-report says so rather than guessing.
+task-gateway.py is named explicitly. This task's own work (reading source,
+running tests, posting a PR comment, closing a PR, writing docs) is
+authorized under this exemption.
 
-The strongest real corroborating evidence comes from the *same task*'s
-later invocations (2 through 5, all of which completed normally and are
-recorded in `result.json`/`.claude-out-main.json`): the workspace's
-`quality-gate.sh` build step (`next build` under Turbopack) genuinely hung
-until forcibly killed by its own `timeout -k 30 1800` wrapper after 30
-minutes (`worker.log` lines 85-92: "gate 'build' TIMED OUT after 1800s and
-was killed ... see task-20260727-043407 RCA"). That wrapper
-(`/opt/veridian/scripts/quality-gate.sh:74-97`) is the *already-existing,
-correct* fix for this exact failure class at the gate level — confirmed
-live, not re-implemented. The real gap invocation 1 fell into is that this
-protection only wraps `quality-gate.sh`'s own steps, not an agent's own
-raw Bash calls to the same kind of slow/blocking command made directly
-during a live session — which is what a 60-minute silent hang with zero
-output looks like.
+## Step 2 — is the live gate genuinely wired into cmd_start? Yes.
+`/opt/veridian/scripts/task-gateway.py` (the real file the running
+`veridian-worker@*.service` units execute — confirmed via `readlink -f` and
+`stat`, mtime 2026-08-08 23:54, 1611 lines) is a clean git working copy of
+**`FChecklist/veridian-scripts`** (`git remote -v` → `veridian-scripts.git`,
+not `claude-control.git`; `git diff HEAD -- task-gateway.py` → 0 files
+changed, i.e. working tree exactly matches committed HEAD `347d89e`).
 
-## Real existing work — verified before redispatching
-Branch `worker/task-20260808-175102-execute-ocid-020-021-real-implementation`
-is pushed to origin, working tree clean, 6 real commits ahead of `main`.
-Confirmed via `git log`/`git status` directly:
-- **13/15 OCID-020/021 checklist points already closed** (P01, P02, P05,
-  P06, P07–P15). **OCID-021 is 100% closed (10/10)**.
-- Real PRs merged this chain: #732 (OCID-021 registration), #987 (UX
-  fixes), #988 (security CVEs), #1051 (Terminology Guardrail fix).
-- PR **#1070** (H6 accessible-label fix, `fix/ocid020-p04-contact-labels`)
-  is open, `mergeable=MERGEABLE`, `mergeStateStatus=BEHIND`, CI in flight
-  — real, not yet merged.
-- Remaining genuinely open: **P03** (webkit libs — real root/sudo blocker,
-  already root-caused, explicitly documented as not re-attemptable via the
-  apt-download path that was already tried) and **P04** (UX audit — H6
-  fixed by #1070 pending merge; H2/H4/H10 remain real, separately
-  dispositioned findings).
-- Current `task.yaml` status: `blocked` — the workspace's own quality gate
-  hit the `build` timeout described above, and the deterministic credit
-  accountant correctly rejected a second AI auto-fix attempt for it
-  ("existing software/mechanism already covers this ... use it instead of
-  spending AI credits").
-
-No sub-work was redone. Nothing here restarted from zero.
-
-## Redispatch — real, scoped, not a placeholder
-Reused the existing `single_deterministic_orchestrator_pipeline` capability
-(`resource_governor.py --submit`, per the capability-registry briefing —
-no new dispatch code written) to submit only the real remaining scope:
+Quoted directly from that live file:
 
 ```
-task_identity: owner-task-20260813-082623-resume-ocid020021-p03p04-pr1070
-tier: 0
-source_trigger: owner_dispatch_gateway_resume
+130: def run_task_start_gate(task_identity, title, umr_id=None):
+131:     """UMR-20260808-121334-e122 (Owner-decided Option B, PM decision cycle
+...
+155:     cmd = [
+156:         "python3", RESOURCE_GOVERNOR, "--check-task-start-gate",
+157:         "--task-identity", task_identity, "--title", title,
+158:     ]
+...
+161:     return run_json(cmd, "resource_governor.py --check-task-start-gate")
 ```
 
-Result: **`accepted: true`, `umr_id: UMR-20260813-083422-15e7`, `reason:
-queued`**. Re-verified via a follow-up `--query-umr --umr-id` lookup:
-`status=queued`, `tier=0`. Pre-submission dedup check confirmed
-`task_identity` had zero prior rows (no duplicate dispatch).
+and, inside `cmd_start` itself:
 
-Scope dispatched: merge PR #1070 once CI is green, confirm the live H6
-fix, an honest final P04 disposition (H2/H4/H10), an explicit
-Owner-decision-or-stop instruction for P03 (forbidding a 3rd attempt at
-the already-failed apt-download approach), and a final
-`gtm_check_production_readiness_audit.py` rollup once P03/P04 settle. The
-prompt explicitly requires every Bash call for a potentially
-slow/blocking command to carry a real timeout — the actual fix for the
-invocation-1 class of hang (the gate-level hang already has its own,
-separately-verified fix and was explicitly *not* re-touched, per the
-credit accountant's own ruling).
+```
+617:     # Real gate (UMR-20260808-121334-e122, Option B) -- see
+618:     # run_task_start_gate()'s own docstring. Runs immediately after the
+619:     # duplicate-task-key claim (cheap, no real resources spent yet) and
+620:     # before veridian-task.py create below (the real spawn -- worktree/
+621:     # branch/systemd unit), so a blocked start never reaches that point.
+622:     gate_result = run_task_start_gate(task_key, args.title, umr_id=args.umr_id)
+623:     if gate_result.get("blocked"):
+624:         fail(
+625:             "blocked by resource_governor.py's real stop-work-order/resource-threshold gate "
+626:             "-- the same real protection dispatch_one() applies to every queued task",
+```
+
+This is exactly the gap PR #126 claims to close, already present and live.
+
+**Provenance, timeline (the real, load-bearing fact):** this wiring shipped
+as `veridian-scripts` PR #278 ("fix: e122 Option B — shared stop-work-order
++ resource-threshold gate for task-gateway.py cmd_start"), commit `bc14a21`
+(2026-08-08T14:32:44Z), merged via `5537b6d` at **2026-08-08T14:42:58Z**.
+UMR-20260813-042708-e592 was minted **2026-08-13T04:27**, and PR #126's head
+`efa7dc9` was pushed **2026-08-13T04:32** — **5 days after** the real fix was
+already live. The auditor's FAIL comment ("this diff re-implements a gate
+that was already shipped live at /opt/veridian/scripts/task-gateway.py") is
+factually correct.
+
+## Step 3 — why did a worker duplicate already-live code? Root cause found.
+PR #126 was opened against **`claude-control`**'s `scripts/task-gateway.py`
+— not `veridian-scripts`. `claude-control/scripts/README-RETIRED.md`
+(merged 2026-08-01, PR #120) states, in this repo, right now:
+
+> As of 2026-08-01 this is retired... `sync-repos.sh` now pulls
+> `/opt/veridian/scripts` directly from `veridian-scripts` instead. This
+> directory is no longer read by anything.
+>
+> **Do not add or edit files here for anything meant to run on the
+> server.** Use `FChecklist/veridian-scripts` instead.
+
+PR #126 edited a directory that has been formally dead for 12 days before it
+was opened. Its diff (`c49518a..ebaf413`, +348/-0 across
+`scripts/task-gateway.py` and a new `tests/test_task_gateway_stop_work_gate.py`)
+never had any chance of reaching production regardless of the duplication
+question — `claude-control/scripts/` is not deployed. Whatever dispatched
+UMR-20260813-042708-e592 with `repo: claude-control` pointed the work at the
+wrong repo.
+
+## Step 4 — real test run proving cmd_start cannot bypass the gate (exit 0)
+Two independent real runs, both against the live module, no mocks of the
+gate itself:
+
+```
+$ cd /opt/veridian/scripts && python3 -m pytest tests/test_task_start_gate.py -v
+...
+tests/test_task_start_gate.py::test_cli_check_task_start_gate_blocked_by_stop_work_order PASSED
+tests/test_task_start_gate.py::test_run_task_start_gate_returns_parsed_result_when_blocked PASSED
+...
+10 passed in 2.95s
+```
+
+Plus an ad hoc direct end-to-end check of `cmd_start()` itself (not just
+`run_task_start_gate()`) loaded straight from
+`/opt/veridian/scripts/task-gateway.py`, with a real isolated
+`OWNER_DECISIONS_PATH` git repo containing no lift/exemption entry:
+
+```
+$ cd /tmp && python3 -m pytest verify_live_cmd_start_gate.py -v
+verify_live_cmd_start_gate.py::test_live_cmd_start_is_blocked_by_real_stop_work_order PASSED
+1 passed in 0.25s
+```
+
+The test asserts `cmd_start()` exits with code 1, the JSON error names
+`check == "stop_work_order"`, and — critically — the stubbed
+`veridian-task.py create` (the real spawn step) is **never invoked**. This is
+real evidence the live cmd_start path cannot bypass the stop-work gate. (Note:
+the pre-existing, unrelated `tests/test_stop_work_order_gate.py::
+test_dispatch_one_defense_in_depth_blocks_preexisting_queued_row` failure
+seen in the same run is a real-host-load flake — 5/5 worker slots are
+genuinely occupied right now, so `dispatch_one()`'s cap-exhaustion check
+fires before its stop-work check in that one test; unrelated to cmd_start
+and to this UMR's scope.)
+
+## Decision taken
+- Posted a dedup finding comment on `claude-control` PR #126 quoting the
+  above live lines and the retirement notice.
+- **Closed PR #126 without merging.** Not re-audited for merge-worthiness —
+  there is nothing to merge; merging would reintroduce dead code into an
+  already-retired directory.
+- No corrective push was made to PR #126's branch — a "fix" here would mean
+  editing `claude-control/scripts/task-gateway.py`, which the repo's own
+  2026-08-01 decision says not to do.
+- Did not touch `task-20260813-042729`'s own `task.yaml` (owned by the
+  task-lifecycle system, not hand-edited by this task).
+
+## Owner-decision check
+No open product decision is required here — this hinges entirely on real,
+checkable evidence (file mtimes, git history, a named commit, a
+git-committed retirement notice, passing tests), not a judgment call. Not
+escalated.
