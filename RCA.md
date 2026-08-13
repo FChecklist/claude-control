@@ -1,5 +1,44 @@
 # RCA: UMR-20260813-170234-5828 (mechanically marked `killed`)
 
+## Update (2nd dispatch, task-20260813-184537, 18:45:37Z) -- confirmed duplicate, self-amplifying-RCA-cascade recurrence
+
+This task (`task-20260813-184537-rca--umr-20260813-170234-5828-killed`, governing row
+`UMR-20260813-181754-bc34`) is a **second, real dispatch targeting the identical UMR**
+as the RCA below -- ~12 minutes after the first (`task-20260813-183318-...`, merged as
+`claude-control` PR #173, commit `cbc2ec1`, already in `origin/master` before this
+task's own branch was even created; confirmed via `git merge-base --is-ancestor cbc2ec1
+origin/master` -> yes).
+
+Re-verified live, not trusted from the dispatching prompt's summary:
+`resource_governor.py --query-umr --umr-id UMR-20260813-170234-5828` right now still
+shows `status=completed_unmerged` with the exact same `reason` recorded below (citing
+PR #307 / commit `37d210a`) -- **zero drift** since the first RCA corrected it. There is
+no new gap. No redispatch is warranted, and re-running `mark-umr-terminal` against an
+already-correct row would be a redundant write for zero new information, not a real fix.
+
+**Root cause of the duplicate dispatch itself** (not of the original `killed`
+mislabel): the exact same bug class already root-caused in
+`RCA_20260813_stop_the_self_amplifying_rca_cascade.md` (this same repo). In
+`pm-sentinel-tick.sh`, `dispatch_gap()`'s `is_in_flight("$target_key")` guard (line
+~605) only checks its own per-tick state file for a prior dispatch still
+`queued`/`dispatched`/`running`; the moment the first RCA (`task-183318`) reached a
+real terminal status quickly (`completed_unmerged` inside ~5 minutes), it was no longer
+"in flight" by that narrow definition, so nothing stopped a later tick's Check 2a
+(`--status killed --limit 15`) or Check 1 (tracked-chain head) from dispatching this
+exact `target_key` again. The identifier-level fix that closes this
+(`find_target_identifier_duplicate()`/`check-target-identifier-duplicate`, extended for
+`statuses=queued,dispatched,running,completed,completed_unmerged` and
+`window_hours<=0`) is still **open, unmerged**, confirmed live just now:
+`gh pr view 297/306 --repo FChecklist/veridian-scripts` -> both `state=OPEN`,
+`mergedAt=null`. This is a real, live recurrence of an already-diagnosed-but-not-yet-
+deployed bug, not a hypothetical -- third confirmed occurrence of this duplicate-RCA
+pattern overall (after the `5045`/`7641` pair documented in the cascade RCA).
+
+Out of scope here: merging `veridian-scripts` PR #297/#306 (external, needs
+owner/human review, already tracked in the cascade RCA's own "out of scope" section).
+No code change was needed for this occurrence -- only this honest record that it is a
+duplicate, so nothing further is dispatched against it.
+
 ## Summary
 
 `UMR-20260813-170234-5828` dispatched `task-20260813-170300-fix-real-audit-fail-on-veridian-scripts`,
