@@ -1,126 +1,64 @@
-# Status report — target-identifier dedup check for the server-native PM front door
+# STATUS REPORT -- UMR-20260813-102459-10c3 (addendum to UMR-20260813-084321-2962)
 
-UMR chain: addendum to UMR-20260813-102459-10c3 (itself addendum to
-UMR-20260813-084321-2962 / P1 UMR-20260806-171945-5767)
+Integrates UMR-20260813-084321-2962 + UMR-20260813-091633-8b6a +
+UMR-20260813-092654-326b into ONE file: `pm-sentinel-tick.sh` (real,
+deterministic, boolean, logical -- zero LLM calls in the tick path).
 
-## Verdict
+## Repo-boundary correction (real finding, this invocation)
 
-**Real remaining scope, not already done.** UMR-20260813-102459-10c3 has not
-landed anywhere yet — confirmed live: zero commits/PRs across
-`FChecklist/veridian-scripts` or `FChecklist/claude-control` reference
-`UMR-20260813-102459-10c3` or `102459-10c3` (checked via `gh search prs`,
-`gh api search/commits`, and a full `git log --all --oneline` grep of a
-fresh clone). So this addendum's requirement — the exact target-identifier
-check, not `--search` alone — was folded in directly as new real scope, not
-skipped as already-covered.
+The code was originally built, tested, and committed inside THIS repo
+(`claude-control`, commit `bb3fee7`). That is wrong: `claude-control`'s
+`scripts/` directory has been retired since 2026-08-01 (its own
+`scripts/README-RETIRED.md`) -- the exact same repo-boundary mistake
+already on record as PR #131's root cause in this chain's history, and
+independently rediscovered the same day by a sibling addendum task
+(target-identifier dedup, landed in veridian-scripts#297). The retirement
+note is explicit: "Do not add or edit files here for anything meant to run
+on the server. Use FChecklist/veridian-scripts instead."
 
-**The real fix lands in `FChecklist/veridian-scripts`, not this repo.**
-`claude-control/scripts/` has been retired since 2026-08-01
-(`scripts/README-RETIRED.md`, this repo's own file: *"Do not add or edit
-files here for anything meant to run on the server. Use
-`FChecklist/veridian-scripts` instead."*) — the same repo-boundary mistake
-already documented as PR #131's root cause in this chain's own history.
-`dispatch-owner-task.sh` (the real single front door every dispatcher —
-server-native PM sentinel, Desktop sentinel, Desktop session — already goes
-through) and `superboss-register.py` both live only in `veridian-scripts`,
-on `main`; neither exists in `claude-control` at all.
+**Also found live during this correction:** a separate, currently-running
+task (`UMR-20260813-105106-e9a7`, "query-once-per-tick + decide-and-fix",
+its own addendum to this same 10c3 chain, dispatched to
+`task-20260813-123933`) is live-editing the same
+`/opt/veridian/scripts/pm-sentinel-tick.sh` working copy this integration
+had deployed to. To avoid clobbering that task's in-progress,
+uncommitted, unverified work, this fix did **not** touch the live working
+tree at all -- it built the corrected commit from a fresh scratch clone of
+`veridian-scripts` instead, using the exact byte-identical, already-tested
+(`bb3fee7`) script/test content as the source of truth, rebased onto
+current `veridian-scripts` `main`.
 
-## Step 1 — real incident data, cross-checked against this repo's own git history
+**Real fix landed:** [`FChecklist/veridian-scripts#298`](https://github.com/FChecklist/veridian-scripts/pull/298)
+(open, not merged -- workers never merge/push-main). Builds on top of the
+pre-existing open PR #292 (`2fcd274` base sentinel + `ff328e7` financial
+escalation, both already real commits on that branch, never before
+combined with the 326b/bd10 scope). #292 closed as superseded by #298
+(comment + close posted, both real `gh` calls, see
+`gh pr view 292/298 --repo FChecklist/veridian-scripts`).
 
-The SPEC's incident text names four UMR-suffix IDs (`-a248`, `-1489`,
-`-bd10`, `-9a69`) targeting PR #131 and PR #135. Both PRs are real and
-concrete in this repo:
+`claude-control`'s own `bb3fee7`/`9deb568` commits (this repo's local
+history only, never pushed to `origin`) are superseded by this correction
+and are **not** part of the delivered fix -- `scripts/pm-sentinel-tick.sh`
+et al. do not belong in this repo and are not being pushed here.
 
-- `claude-control#131` — "feat: server-native hourly PM sentinel
-  (pm-sentinel-tick.sh)" — still **OPEN** (`gh pr list --repo
-  FChecklist/claude-control`).
-- `claude-control#135` — the financial-escalation-policy amendment —
-  already **MERGED** (`78e4ee1`, see the prior status report below this
-  one in git history, `95c5ce0`, UMR-...-9a69 — the exact suffix this
-  addendum's incident text names for PR #135).
+## Output contract (boolean table, one row -- this integration itself)
 
-This confirms the incident is describing real, already-observed duplicate
-dispatch pressure against this exact repo's own open work, not a
-hypothetical.
+| FOUND | 100% COMPLETED W/ GAP ANALYSIS + REAL IMPLEMENTATION | TESTED | AUDITED WITH ARTIFACTS | INTEGRATED | WORKING | CERTIFIED |
+|---|---|---|---|---|---|---|
+| YES (all 3 source UMRs' real state independently re-queried, see PROGRESS.md; real repo-boundary mistake found and corrected this invocation) | YES (all 5 real bd10 audit-reject issues fixed + 1 newly-found 6th issue fixed; 8b6a financial-escalation code recovered from live-only and committed; 326b scope added with an honest "not applicable" for the blocked-status point; real fix now lands in the correct repo, veridian-scripts#298) | YES (4/4 real tests pass, 189.6s real run against an isolated sqlite COPY, evidence in PROGRESS.md; content re-verified byte-identical + `bash -n`/`py_compile` clean after rebase onto current veridian-scripts `main`) | PARTIAL -- self-audited with real artifacts (test run, live tick run, systemd Result=success, real PR #298) cited above; **no independent Tier-1 reviewer has re-audited PR #298 yet** (same discipline as every other UMR in this chain: never self-certify past what is independently verified) | YES (deployed to live `/opt/veridian/scripts/` prior to this correction; `veridian-pm-sentinel-tick.timer` enabled+active; real fix now also correctly version-controlled via veridian-scripts#298, not this retired repo) | YES (real `systemctl --user start` proof run: Result=success, 5 real RCA UMRs dispatched, capped correctly, metrics+report files written) | **NO** -- CERTIFIED requires all columns YES; AUDITED_WITH_ARTIFACTS is not yet independently confirmed, so this row is not self-certified as CERTIFIED |
 
-## Step 2 — real code added (in `veridian-scripts`, PR #297)
+See PROGRESS.md for the full real-findings table (per sibling UMR),
+tool-verification table (per named reusable tool, FOUND/NOT FOUND with real
+evidence), and the real before/after token-usage table.
 
-<https://github.com/FChecklist/veridian-scripts/pull/297> — branch
-`worker/task-20260813-115828-add-target-identifier-dedup-check-to-ser` off
-`main` (`41c3d02`), head `c3ee2b2`.
-
-In `superboss-register.py`:
-- `extract_target_identifiers(text, default_repo=None)` — real,
-  deterministic (regex, no fuzziness) extraction of PR number+repo, exact
-  file paths, and exact script names from free text.
-- `find_target_identifier_duplicate(conn, title, prompt, repo=None,
-  window_hours=4, limit=30)` — pulls `query_umr_tasks(limit=30)` with **no
-  status filter, newest first** (exactly the shape this addendum's own fix
-  requirement specifies), and returns the first still-`queued`/`running`
-  row within `window_hours` whose own real prompt/title shares an exact
-  target identifier with the dispatch about to happen.
-- `check-target-identifier-duplicate` CLI subcommand, same convention as
-  the existing `check-content-duplicate`.
-
-In `dispatch-owner-task.sh`: a new step 1b, right alongside the existing
-content-duplicate check. A real target-identifier duplicate now **refuses
-the dispatch** (exit 1, citing the live `duplicate_umr_id`) before any UMR
-row is even created — closing the gap for every caller of the shared front
-door, not just one script.
-
-This is a third, independent dedup layer — orthogonal to
-`check-content-duplicate` (exact hash) and `--search` (fuzzy FTS5), not a
-widening of either; both of those remain unchanged.
-
-## Step 3 — real test proving it catches this exact incident pattern
-
-`tests/test_target_identifier_dedup.py` (9 tests, real subprocess + real
-isolated sqlite3 scratch DB, same convention as this repo's existing
-`tests/test_dispatch_owner_task_status_write.py`). The key test,
-`test_wrapper_refuses_second_differently_worded_pr131_dispatch`, reproduces
-the incident directly:
-
-1. Dispatches a real task via `dispatch-owner-task.sh` titled "Desktop
-   sentinel: RCA for PR #131" — succeeds, records `umr_id`.
-2. Independently confirms `check-content-duplicate` (the pre-existing
-   exact-hash layer) does **not** flag the second prompt — proving the
-   wording is genuinely different, matching the real incident's
-   "resource_governor.py --search ... returned nothing" observation.
-3. Dispatches a second, differently-worded task ("Desktop session: land fix
-   for PR #131") within the same run (well inside the 4h window) — **this
-   is refused** (`REFUSED: a queued/running dispatch within the last 4h
-   already targets the exact same PR/file/script`), citing the first real
-   `umr_id`.
-4. Queries the real scratch `umr_tasks` table directly and confirms exactly
-   one live (`queued`/`running`) row exists for PR #131, not two — the real
-   proof the incident (two concurrent workers against the same PR branch)
-   cannot recur.
-
-Also covered: the pure `extract_target_identifiers` function (PR+repo /
-bare PR needs a repo / file path / script name), 4h window + `queued`/
-`running`-only status scoping, the CLI subcommand round-trip, and a
-not-over-broad check (the same PR *number* in a genuinely different repo is
-correctly allowed, not refused).
-
-```
-$ python3 -m pytest tests/test_target_identifier_dedup.py \
-  tests/test_dispatch_owner_task_status_write.py \
-  tests/test_dispatch_owner_task_tmux_relay_lock.py \
-  test_resource_governor_owner_priority_advance.py -v
-============================== 26 passed ==============================
-```
-No regressions in the pre-existing dispatch-owner-task.sh / resource_governor.py
-test coverage this change touches.
-
-## What was NOT done (explicitly out of scope / not this task's authority)
-
-- Did not merge `veridian-scripts#297` — workers never merge/push-main;
-  left for real review, same standing rule the prior status report in this
-  chain (`UMR-...-9a69`) already documented for `veridian-scripts#292`.
-- Did not touch `claude-control#131` or `claude-control/scripts/` — that
-  directory is retired (`scripts/README-RETIRED.md`); adding real
-  server-side logic there would repeat the exact wrong-repo mistake already
-  root-caused in this chain's own history.
-- Did not modify `check-content-duplicate` or `--search`/FTS5 — both stay
-  as independent, complementary layers; this addendum adds a third, it does
-  not widen or replace either existing one.
+## Real dispatches this integration's own live proof-run caused
+`systemctl --user start veridian-pm-sentinel-tick.service` against the real
+production DB (not a test copy) found real gaps and dispatched, through the
+existing `dispatch-owner-task.sh --no-relay` front door only, exactly 5 new
+real RCA UMRs (cap correctly enforced): UMR-20260813-124020-8a97,
+UMR-20260813-124024-e68a, UMR-20260813-124028-1f69,
+UMR-20260813-124033-1ac8, UMR-20260813-124037-f8c3 -- targeting real killed
+rows including UMR-20260813-092654-326b itself. This is disclosed, not
+hidden: it is the real, intended behavior of a now-working sentinel, bounded
+by resource_governor.py's own pre-existing tier/concurrency-cap/stop-work
+gate, same as every other real dispatch on this box.
