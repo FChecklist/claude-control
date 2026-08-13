@@ -18,6 +18,16 @@ reached production despite being merged, because of this.
 `sync-repos.sh` now pulls `/opt/veridian/scripts` directly from
 `veridian-scripts` instead. This directory is no longer read by anything.
 
+**2026-08-13 (task-20260813-103224, UMR-20260813-101142-5d24):** `deploy-live-scripts.sh`
+itself has now been deleted outright from this directory (was: present but unused/dead
+since 2026-08-01, contradicting this file's own "retire explicitly" intent and risking
+someone re-wiring it back in pointed at the wrong repo). It still exists, correctly
+un-tracked-as-live, in `git log` history here if anyone needs the old copy-based
+mechanism for reference. The real, current, still-in-place mechanism remains
+`sync-repos.sh`'s direct `git pull --ff-only` inside `/opt/veridian/scripts` (see
+`FChecklist/veridian-scripts`'s own `sync-repos.sh` and, new as of this task,
+`check_live_scripts_drift.py` in that same repo for a real live-vs-origin drift check).
+
 **Do not add or edit files here for anything meant to run on the server.**
 Use [`FChecklist/veridian-scripts`](https://github.com/FChecklist/veridian-scripts)
 instead. The two files that existed only here
