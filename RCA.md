@@ -1,123 +1,86 @@
-# RCA -- UMR-20260813-060311-6eea (status=killed, verified already correctly terminal)
+# RCA -- UMR-20260813-111352-6973 (SPEC claim: status=running vs. live systemd success; verified already correctly terminal, no gap)
 
 ## Governing chain
-- This RCA task: `task-20260813-145737-rca--umr-20260813-060311-6eea-killed`,
-  governing UMR `UMR-20260813-124141-7641` (PM-sentinel tick).
-- Subject UMR: `UMR-20260813-060311-6eea`, dispatched
-  `task-20260813-060321-real-tier-1-audit-of-pr--249---worker-ex` (Tier-1
-  audit of `veridian-scripts` PR #249).
-- This is at least the **2nd** RCA dispatch for this exact subject UMR. The
-  1st, `task-20260813-093638-rca--umr-20260813-060311-6eea-killed`
-  (governed by `UMR-20260813-091810-5045`), already did the real diagnostic
-  work and corrected the subject row's `reason` -- but never committed its
-  own `claude-control` artifact (no PROGRESS.md/RCA.md commit on its own
-  branch), so `reconcile_stale_running_workers.py` later closed *that* task's
-  own governing UMR as `completed_unmerged`, and a fresh PM-sentinel tick
-  re-dispatched this task against the same subject row.
+- This RCA task: `task-20260813-160301-rca--umr-20260813-111352-6973-status-run`,
+  governing UMR `UMR-20260813-131701-2b6a` (PM-sentinel tick).
+- Subject UMR: `UMR-20260813-111352-6973`, `task_identity=owner-task-20260813-111351-1537211`,
+  dispatched `veridian-worker@task-20260813-131109-execute-the-real-merge-for-audit-approve.service`
+  (title: "Execute the real merge for audit-approved PR 136").
 
-## Real recorded fact BEFORE this task (verified live, not trusted from the
-briefing summary)
-`resource_governor.py --query-umr --umr-id UMR-20260813-060311-6eea`:
-- `status=killed`
-- `ts_dispatched=2026-08-13T06:03:28Z`, `ts_completed=2026-08-13T09:43:03Z`
-- `reason`: "RCA (UMR-20260813-091810-5045): real primary deliverable WAS
-  produced -- Tier-1 audit comment posted on veridian-scripts PR #249 (id
-  5276657173, 2026-08-13T06:15:24Z, verdict AUDIT:FAIL, cites this exact
-  UMR). Only the secondary claude-control documentation-PR step failed (no
-  commits between master and worker branch -- worker never committed
-  PROGRESS.md). Row was mislabeled by reconcile_owner_dispatch_status.py
-  PRE-FIX apply_correction() at 07:02:01Z (commit b13833a fixed
-  ts_completed/reason backfill 9min later at 07:11:52Z but does not
-  retroactively backfill already-killed rows). Remaining scope already
-  carried forward independently under UMR-20260813-090037-9a34 ... not
-  redispatched here, out of this UMR's scope. Correcting stale
-  reason=queued/ts_completed=null to reflect real evidence; status remains
-  killed (no claude-control artifact was ever produced by this dispatch)."
+## The SPEC's claim (checked live, not trusted)
+The SPEC asserted `resource_governor.py --query-umr --umr-id UMR-20260813-111352-6973` showed
+`status=running` while the real systemd unit was already terminal (success) -- the known
+exit-write-back-bug class where a `running`/`dispatched` row never gets corrected after its
+worker actually finishes.
 
-This reason is not a stale/mechanical kill message -- it is itself the
-output of a real, independent, prior RCA (the 1st dispatch, above),
-carrying real evidence (a specific GitHub comment id/timestamp/verdict) and
-a real cross-reference to the row that carried the remaining scope forward.
+## Real recorded fact (verified live, not trusted from the SPEC summary)
 
-## Independent re-verification of the two cross-referenced rows (not trusted
-from the subject row's own reason text alone)
+**Real systemd state** (`systemctl --user show ...`):
+- `ActiveState=inactive`, `SubState=dead`, `Result=success` -- the unit ran once and exited clean.
 
-- `UMR-20260813-091810-5045` (the RCA that produced the correction above):
-  `status=completed_unmerged`, `ts_completed=2026-08-13T10:56:40Z`, reason
-  confirms `reconcile_stale_running_workers.py` found the RCA task's worker
-  unit inactive with real completion candidates (git branch existed) but no
-  merged PR for *that task's own* branch -- consistent with "did the real
-  diagnostic work, never committed its own claude-control artifact."
-- `UMR-20260813-090037-9a34` (the row the remaining scope was carried
-  forward to): `status=completed`, `ts_completed=2026-08-13T14:54:00Z`,
-  corrected by a separate, already-merged RCA
-  (`task-20260813-145003-rca--umr-20260813-090037-9a34-killed`, PR #156,
-  merged into this repo's `main` as `a94410e`, present in this task's own
-  starting history). Real evidence: `veridian-scripts` PR #249 merged
-  (`dbcb636`, `mergedAt=2026-08-13T10:39:54Z`) after an independent Tier-1
-  `AUDIT:PASS` against commit `24a6f1f`.
+**Real journal** (`journalctl --user -u ...`):
+```
+Aug 13 13:11:13 ... Started veridian-worker@task-...-execute-the-real-merge-for-audit-approve.service ...
+Aug 13 13:19:22 ... Consumed 28.234s CPU time, 433.7M memory peak, 0B memory swap peak.
+```
 
-Both cross-referenced rows check out. There is no dangling or contradicted
-claim anywhere in the chain.
+**Real DB row** (`resource_governor.py --query-umr --umr-id UMR-20260813-111352-6973`, queried live at
+the start of this task):
+- `status=completed` (**not** `running`)
+- `ts_dispatched=2026-08-13T13:11:13.189245+00:00` -- matches the journal's `Started` line exactly.
+- `ts_completed=2026-08-13T13:19:02.153385+00:00` -- ~20s before the journal's stop-accounting line,
+  consistent with normal `ExecStopPost` write-back-then-cleanup ordering, not a stall.
+- `outputs_json.file_path` points at a real, on-disk `STATUS_REPORT.md` in the task's own workspace.
 
-## Root cause
+**Canonical cross-check tool** (`superboss-register.py reconcile-umr-status --umr-id UMR-20260813-111352-6973`,
+the mechanism purpose-built for exactly this class of check):
+```json
+{"umr_id": "UMR-20260813-111352-6973", "is_stale": false, "current_status": "completed",
+ "proposed_status": null, "evidence": {"pr_evidence": [], "note": "no real merged-PR evidence found -- no reconciliation needed"}}
+```
 
-**No further gap exists on the subject UMR row itself.** `status=killed` is
-the honest, correct terminal state: real substantive work happened (the
-Tier-1 audit comment on PR #249, and -- via the row it cites -- the actual
-PR #249 fix, audit, and merge), but the specific deliverable this dispatch's
-own task was scoped to produce (a `claude-control` documentation commit on
-its own auto-provisioned branch) never happened, and that is exactly what
-`killed` + this reason correctly records.
+So: as of this task actually running, the row is **already** correctly, honestly terminal. No live
+instance of the exit-write-back-bug exists on this row right now.
 
-The real, structural root cause is a **redispatch loop**, the same pattern
-already independently diagnosed and partially fixed elsewhere in this
-governing chain (see `RCA_20260813_stop_routing_killed_task_rca_through_
-quality_gate.md`'s "same UMR row already RCA'd in memory" finding, and
-`eb50a21`/`037908b`'s fixes for `UMR-20260813-115911-df5c`'s own redispatch
-loop): a PM-sentinel tick dispatches an RCA task against a `status=killed`
-row; the dispatched worker does real, correct diagnostic work and even
-corrects the row's `reason` in place via `mark-umr-terminal`/direct write,
-but if *that worker's own* `claude-control` branch never gets a committed
-PROGRESS.md/PR, its own governing UMR closes as `completed_unmerged`
-(not `completed`) once reconciled -- and nothing in the dispatch-time gate
-checks "does this killed row's own `reason` already cite a completed prior
-RCA" before queuing another one. The 1st dispatch
-(`task-20260813-093638`, UMR-091810-5045) hit exactly this: real work,
-no committed artifact, so this 2nd dispatch was queued.
+## Was the SPEC's claim ever true?
+Almost certainly yes, at some earlier moment -- `ts_completed` (13:19:02) sits well before this RCA
+task was dispatched, so the SPEC's PM-sentinel-tick snapshot most plausibly observed the row mid-flight
+(`running`/`dispatched`) during the ~8-minute window between `ts_dispatched` (13:11:13) and
+`ts_completed` (13:19:02), before the worker's own `ExecStopPost` hook
+(`worker-exit-status-bridge.py`) wrote the real terminal status back. That is an ordinary async
+completion race, not a stuck/buggy write-back -- the row genuinely was still running when observed,
+and genuinely finished and self-corrected shortly after, well before anyone acted on the stale
+snapshot. This is the same "self-resolved between snapshot and RCA" shape already seen twice
+elsewhere in this repo's history (`UMR-20260813-124141-7641`'s RCA of `UMR-20260813-060311-6eea`;
+`UMR-20260813-100904-...`'s RCA of `UMR-20260813-085615-c1dc`).
 
-This task closes the loop for real: it commits a real `claude-control`
-artifact (this file + PROGRESS.md) on its own branch, so its own governing
-UMR (`UMR-20260813-124141-7641`) can close as `completed`, not
-`completed_unmerged` -- breaking the specific mechanism that caused the
-redispatch.
+## What the subject task's real work actually was (for completeness, not re-derived from scratch)
+`STATUS_REPORT.md` in the task's own workspace records real, substantive work: it re-checked PR #136
+(`FChecklist/claude-control`)'s live mergeability, found it genuinely `DIRTY`/`mergeable=false` (three
+newer merges, PR #137/#139/#140, landed on `master` after PR #136's base and touch the same
+full-file-rewrite `STATUS_REPORT.md`), correctly declined to force a stale-content merge per its own
+SPEC's explicit instruction, and instead filed a `insert-pm-decision-pending` entry recommending
+rebase + fresh audit, or simply closing PR #136 (since its one actionable finding, a PR #131 audit
+FAIL, had already taken effect independently).
 
-## Action taken
+**Independently re-verified live** (`gh api repos/FChecklist/claude-control/pulls/136`): PR #136 is now
+real `state=closed`, `merged=false`, `closed_at=2026-08-13T14:09:40Z` by `FChecklist` -- consistent
+with (and following) the task's own recommended low-risk action.
 
-No fix to the subject row (`UMR-20260813-060311-6eea`) or its two
-cross-referenced rows was needed -- all three are already correctly,
-honestly terminal with real evidence. No remaining scope to redispatch:
-the only open thread (`veridian-scripts` PR #249's successor work) is
-already tracked independently under `UMR-20260813-090037-9a34`, itself
-already closed `completed`.
+**Independent prior corroboration, found in this repo's own already-merged history**: the root
+`STATUS_REPORT.md` from a later, already-merged task (`UMR-20260813-120205-1f32`,
+`task-20260813-143157`) had *already* independently re-verified this exact row and recorded:
+`UMR-20260813-111352-6973` -> `completed` -> "`claude-control` PR #136 confirmed real CLOSED (not
+merged) -- superseded." This RCA is therefore at minimum the 2nd/3rd independent confirmation that
+this row has no gap.
 
-This task's own real deliverable is this documentation commit, closing
-the artifact gap that caused the prior redispatch.
+## Disposition
+No fix, no redispatch, no `mark-umr-terminal` write needed. The subject row was already honestly
+`completed` with real evidence before this task started, cross-confirmed by the canonical
+`reconcile-umr-status` tool and by an independent, already-merged prior task's own verification.
+The SPEC's `status=running` observation reflects a real but transient mid-flight snapshot, not a
+current gap -- the row self-corrected via its own normal `ExecStopPost` write-back path well before
+this RCA task ran.
 
-## Structural gap flagged for Owner/PM visibility (NOT fixed here -- out of
-this RCA task's own narrow scope)
-
-The dispatch-time gate that queues RCA tasks against `status=killed` rows
-has no check for "does this row's own `reason` already cite a completed
-prior RCA UMR." Without that check, any `killed` row whose correcting RCA
-task itself failed to commit a `claude-control` artifact (a real, recurring
-failure mode -- see `UMR-20260813-091810-5045` here, and the 3 cases in
-`RCA_20260813_stop_routing_killed_task_rca_through_quality_gate.md`) will
-keep being redispatched indefinitely, each new dispatch re-deriving the
-same already-correct conclusion at real token cost. A real fix would have
-the PM-sentinel tick's own dispatch-time gate parse the target row's
-`reason` for an `RCA (UMR-...)` citation and skip redispatch when that
-cited UMR is itself already terminal with a real correction -- not
-implemented here (would require identifying and safely editing the
-PM-sentinel tick's own dispatch-candidate-selection code, a wider blast
-radius than this RCA's own scope).
+This task's real deliverable is this documentation commit (closing out
+`UMR-20260813-131701-2b6a` honestly) plus the `agent_work_briefing.py record-completion` write-back.
