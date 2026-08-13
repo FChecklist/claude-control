@@ -1,103 +1,188 @@
-# Status report — real re-check of PR #136's merge state (audit was real, merge execution was not)
+# Status report — 326b's real scope is already covered (verified); the real bug is a wrong-repo commit-verification defect that spuriously re-dispatched this task
 
-UMR chain: addendum to UMR-20260813-101225-a248 (chain: UMR-20260813-084321-2962
--> a248 -> this addendum, UMR-20260813-111352-6973 -> P1 UMR-20260806-171945-5767)
+UMR chain: addendum to UMR-20260813-092654-326b (chain: 084321-2962 ->
+091633-8b6a -> 092654-326b -> this addendum, UMR-20260813-104321-99ff ->
+P1 UMR-20260806-171945-5767)
 
 ## Verdict
 
-**PR #136 genuinely cannot be merged right now, and forcing it would be a real
-regression, not a stale-check false alarm.** The prior tier-1 APPROVE was real
-and correctly scoped at the time it was granted. What changed since then is
-also real: three more sequential worker tasks (PR #137, #139, #140) landed on
-`master` after PR #136's base commit, before PR #136's own merge step ran. A
-new audit-then-merge cycle is needed, not a forced merge of the stale diff —
-so that is what this task dispatches, per its own SPEC's explicit instruction
-not to force a stale-approval merge when mergeability has changed.
+**326b's real scope (PM hierarchy / single-gateway / zero-duplication /
+dynamic-scope / standardized boolean-table report) is already implemented as
+real, tested code — independently re-verified here, not just trusted from
+the prior finding — and this task's own SPEC premise ("the prior worker made
+ZERO commits") is false for the most recent prior attempt.** The genuinely
+new finding of this task is a real, precisely-located bug in the platform's
+own reconciliation pipeline that caused that prior attempt's real work to be
+wrongly treated as "no commit evidence," triggering the spurious re-dispatch
+that created this task in the first place.
 
-## Step 1 — real current mergeable state (`gh pr view` / GitHub REST, both agree)
+## Part 1 — the SPEC's premise, checked against live state
+
+The SPEC's "zero commits" claim is true only of the *original* 326b dispatch
+(`task-20260813-095623-amendment-2--pm-hierarchy--single-gatewa`, UMR
+`092654-326b` itself, real `status=killed`, confirmed via
+`resource_governor.py --query-umr --umr-id UMR-20260813-092654-326b`:
+`reason`: *"real systemd state 'inactive', no PR was ever opened ... no live
+process and no real deliverable"*).
+
+It is **not** true of the task this task was actually re-queued to replace:
+`task-20260813-123927-fix-326b-real-no-op-blocker-with-real-im` (same title,
+prior timestamp). That task:
+
+- Made a real commit (`4eadc5a`, `docs: real dedup finding for
+  UMR-20260813-092654-326b (PR #141 already covers it, not re-implemented)`,
+  `STATUS_REPORT.md` rewritten with full citations).
+- Pushed branch `worker/task-20260813-123927-fix-326b-real-no-op-blocker-with-real-im`.
+- Opened a real, currently **OPEN** PR: **#142**,
+  <https://github.com/FChecklist/claude-control/pull/142>
+  ("docs: real dedup finding for UMR-20260813-092654-326b (already covered by
+  PR 141)"), `task.yaml` last checkpoint `status: pending_review`.
+
+That is real, non-empty, auditable work — not a no-op.
+
+## Part 2 — independently re-verifying PR #142's own finding
+
+PR #142's claim: 326b's scope is already implemented in
+`scripts/pm-sentinel-tick.sh` on **PR #141** (still OPEN,
+`worker/task-20260813-115823-integrate-server-native-pm-into-one-dete`,
+commit `bb3fee7`). Re-checked directly rather than trusted:
 
 ```
-state:              open
-merged:              false
-mergedAt:             null
-mergeable:            false
-mergeable_state:      dirty       (gh pr view's mergeStateStatus: DIRTY)
-head_sha:             317fabf6dab870c546fb7c2f411139d1f6ee60ca   (unchanged since approval)
-base_ref:             master
+$ git show bb3fee7 --stat
+ scripts/pm-sentinel-tick.sh                       | 696 ++++++++++++++
+ scripts/systemd/veridian-pm-sentinel-tick.service |  34 ++
+ scripts/systemd/veridian-pm-sentinel-tick.timer   |  19 +
+ scripts/test_pm_sentinel_tick.py                  | 363 +++++++++
+ 4 files changed, 1112 insertions(+)
+
+$ git show bb3fee7:scripts/pm-sentinel-tick.sh | sed -n '1,24p'
+#!/usr/bin/env bash
+# pm-sentinel-tick.sh -- ONE integrated deterministic server-native PM tick.
+# ...
+#   3. UMR-20260813-092654-326b -- hierarchy / single-gateway / zero-dup /
+#      dynamic-scope / standardized boolean-table report format. Real
+#      finding: the dispatched task for this UMR (task-20260813-095623)
+#      never started real work (task.yaml status=blocked, zero files
+#      modified, zero PR) before being reconciled to status=killed -- none of
+#      this scope existed anywhere before this integration.
+# ...
+# below goes through the EXISTING single front door, dispatch-owner-task.sh
 ```
 
-`gh pr view 136 --json state,mergeable,mergeStateStatus,headRefOid,baseRefName`
-and `GET /repos/FChecklist/claude-control/pulls/136` (raw REST, to sidestep a
-local CLI output-truncation quirk) were cross-checked and agree exactly. This
-is a real, current `DIRTY`/`mergeable=false`, not the `UNKNOWN`/"still
-computing" state the governing SPEC's incident text described — GitHub has
-finished computing it, and the real answer is "conflicted."
+Confirmed: a real, 696-line, tested (`test_pm_sentinel_tick.py`, 363 lines)
+implementation of 326b's scope exists on PR #141. `gh pr view 141` confirms
+`state: OPEN`, `mergeStateStatus: DIRTY` (a `STATUS_REPORT.md`-only doc
+conflict, the same recurring pattern already seen on PR #133/#135/#139 — not
+a code conflict).
 
-## Step 2 — why: the head did not move, but `master` moved past it
+**Disposition: not re-implemented here.** PR #141 is real and open; PR #142
+already recorded this exact finding. Writing a third copy of the same
+citation would itself be the duplication 326b point 3 exists to forbid.
 
-`git merge-base origin/master 317fabf6...` = `ec606ae` (PR #134's merge
-commit) — three real merges behind current `origin/master` tip
-(`674421d`, PR #140). All three of those (`8a1f4d6`/PR #137,
-`ead8711`→`95c5ce0`/PR #139, `674421d`→`8d6816a`/PR #140) touch the exact same
-file PR #136 touches, `STATUS_REPORT.md` — this repo's convention is a
-**full-file rewrite** per task (each task's status report replaces the whole
-file, it does not append), so any two of these tasks whose branches both
-started before the other merged are guaranteed to conflict on that file. A
-real dry-run merge (`git merge --no-commit --no-ff` of current `origin/master`
-into PR #136's real head, in a disposable clone) reproduces exactly one real
-conflict: `CONFLICT (content): Merge conflict in STATUS_REPORT.md`.
+## Part 3 — the real, new finding: why this task got spuriously re-dispatched
 
-So: **head did not move** (still `317fabf`, exactly what was audited — the
-"no new commits since approval" precondition is genuinely met on PR #136's
-own branch), but **mergeability changed** because `master` moved. That is
-squarely the SPEC's second branch ("if a NEW audit is needed because
-mergeability changed ... dispatch that instead of forcing a stale-approval
-merge"), not the first ("if mergeable/CLEAN ... execute the real merge").
-`gh pr merge 136` was deliberately **not** run — GitHub would refuse it
-anyway while `mergeable=false`, and even a manual rebase-and-force-push here
-would itself count as a new, unaudited commit under the SPEC's own rule.
+`resource_governor.py --query-umr --umr-id UMR-20260813-104321-99ff` (this
+task's own governing UMR) records the real re-dispatch reason:
 
-## Step 3 — this is not just a mechanical rebase; the stale content itself matters
+> `reconcile_stale_running_workers.py (STEP 3, task-20260807-052027): unit
+> veridian-worker@task-20260813-123927-fix-326b-real-no-op-blocker-with-real-im.service
+> confirmed ActiveState=failed; ... task.yaml's own last checkpoint
+> status='pending_review', no real commit evidence accepted -- genuinely
+> ambiguous (worker likely killed/crashed mid-work), real re-queue`
 
-PR #136's actual diff (151 insertions / 143 deletions, `STATUS_REPORT.md`
-only) is a full-file rewrite whose content is "real Tier-1 audit of PR #131
-(FAIL) + live-timer stop for UMR-20260813-101225-a248". Checked live:
-`claude-control#131` (the server-native PM sentinel PR that audit failed) is
-now **`closed`, `merged: false`** — i.e. the real, correct outcome of that
-audit finding already happened independently of this PR merging. Meanwhile
-three newer, unrelated status reports (PR #137 dead-script deletion, PR #139
-PR #135 re-check + financial-escalation dedup, PR #140 target-identifier
-dedup) have already landed as the current `STATUS_REPORT.md` on `master`.
-Because this repo's `STATUS_REPORT.md` convention is "latest full snapshot,
-not an append-only log", merging PR #136's stale snapshot verbatim now would
-silently overwrite and discard all three of those newer reports on `master`'s
-live file (each remains recoverable from git history regardless, but the
-live file would regress). Reconciling that — deciding what, if anything, of
-PR #136's now-superseded finding is still worth keeping in the current
-snapshot — is a real editorial judgment call, exactly the kind of thing a
-fresh audit should make, not something this merge-execution task should
-silently resolve by picking a merge strategy.
+But real commit evidence *did* exist (`4eadc5a`, PR #142, both live). Traced
+why the evidence gate rejected it — a real, precisely-located bug, not a
+guess:
 
-## Action taken
+1. `task.yaml` (`task-20260813-123927-fix-326b-real-no-op-blocker-with-real-im/task.yaml`)
+   records `repo: claude-control`, last checkpoint
+   `status: pending_review`, `files_modified: []`, `recent_commits[0]:
+   '4eadc5a docs: ...'`. This makes `reconcile_stale_running_workers.py`'s
+   own `_first_recent_commit_sha()` (scripts/reconcile_stale_running_workers.py:246-285)
+   produce a real candidate: `{"kind": "commit_sha", "value": "4eadc5a", ...}`.
+2. That candidate is then submitted via `mark-umr-terminal --commit-sha
+   4eadc5a --repo <repo>`. `reconcile_stale_running_workers.py`'s own
+   `REPO_LOCAL_PATHS` dict (scripts/reconcile_stale_running_workers.py:100-105)
+   and `MARK_TERMINAL_REPO_CHOICES` tuple (line 110) **do not contain
+   `"claude-control"`** — even though `/opt/veridian/repos/claude-control`
+   is a real, existing local checkout, and `claude-control` is this
+   platform's own primary/default repo (`DEFAULT_REPO = "claude-control"`
+   in `scripts/auto_phase_continuation.py:71` and
+   `scripts/phase-continuation-tick.py:100`).
+3. Because `repo` isn't in `MARK_TERMINAL_REPO_CHOICES`,
+   `_mark_terminal()`'s own fallback (`reconcile_stale_running_workers.py:327`,
+   `repo if repo in MARK_TERMINAL_REPO_CHOICES else "veridian-scripts"`)
+   silently substitutes **`veridian-scripts`** as the `--repo` value, and
+   because `REPO_LOCAL_PATHS.get("claude-control")` is also `None`,
+   `--repo-root` is never passed at all (line 328-329, `if repo_root: cmd
+   += [...]`).
+4. `superboss-register.py`'s `cmd_mark_umr_terminal()` (line 7074-7076) then
+   resolves the verification path as: `args.repo_root or
+   DEFAULT_OCID_RESOLVER_REPO_LOCAL_PATHS.get(args.repo, ...["veridian-scripts"])`
+   — i.e. it verifies commit `4eadc5a` against the **`veridian-scripts`**
+   checkout, not `claude-control`, where that commit does not exist.
+   `validate_umr_terminal_completion_evidence()` correctly refuses (the sha
+   is real, just not in the repo being checked), and
+   `reconcile_stale_running_workers.py` falls through to its last branch
+   (line 456-467): "genuinely ambiguous ... real re-queue" — spawning this
+   task.
 
-- **Not merged.** `gh pr merge 136` was not executed — real precondition
-  (`mergeable=CLEAN`) is not met.
-- **Dispatched, not forced.** Filed a real PM-decision-pending entry
-  (`insert-pm-decision-pending`, `--related-umr UMR-20260813-101225-a248`)
-  recommending: rebase PR #136's branch onto current `origin/master`,
-  reconcile `STATUS_REPORT.md` (fold forward whatever of the PR #131
-  FAIL/live-timer finding is still non-duplicated by the three newer
-  reports), get a fresh tier-1 audit on the *rebased* head (its SHA will
-  differ from the already-audited `317fabf`), then merge. Given PR #131 is
-  already closed, the lowest-risk alternative the same decision entry
-  surfaces is simply closing PR #136 without merging (its actionable
-  consequence already happened); that judgment call is left to the fresh
-  audit rather than decided here.
+`superboss-register.py`'s own `DEFAULT_OCID_RESOLVER_REPO_LOCAL_PATHS`
+(line 3800-3804), the single source `p_markterm --repo`'s argparse
+`choices` are drawn from (line 9388-9389: `choices=list(...)`), has the
+identical gap: `{"compliance-tracker", "veridian-scripts", "projexa"}`,
+no `"claude-control"` entry — so this is not a copy/paste slip local to the
+reconcile script, it is a real, shared, upstream gap in the one canonical
+repo-path table both callers key off.
 
-## Independent verification
+**This is a real zero-duplication-policy defect in its own right**: 326b's
+point 3 exists precisely so the platform doesn't do the exact thing this bug
+caused — dispatch a second, redundant worker for already-completed work.
+The fix (add `"claude-control": "/opt/veridian/repos/claude-control"` to
+`DEFAULT_OCID_RESOLVER_REPO_LOCAL_PATHS` in `scripts/superboss-register.py`,
+and mirror it into `REPO_LOCAL_PATHS`/`MARK_TERMINAL_REPO_CHOICES` in
+`scripts/reconcile_stale_running_workers.py`) lives in the `veridian-scripts`
+repo, not `claude-control` (this task's own assigned repo per its
+`inputs_json.repo`). Editing `/opt/veridian/scripts` directly on this host
+would itself violate 326b point 2 (SINGLE GATEWAY, NO BYPASS — "never raw
+tmux, never direct file/git edits") and that live directory currently
+carries unrelated uncommitted local changes from other in-flight work
+(`git -C /opt/veridian/scripts status`: `dispatch_core.py`,
+`pm-sentinel-tick.sh`, `quality-gate.sh`, `resource_governor.py`,
+`test_pm_sentinel_tick.py` all locally modified) — not a safe target for an
+out-of-scope drive-by edit.
 
-- `gh pr view 136 --json state,mergedAt` / REST `merged`+`merged_at`: still
-  `false`/`null` at the end of this task — confirms nothing was merged.
-- `git log origin/master` after this task's own doc-only commit below:
-  `origin/master` advances by exactly this task's one new commit, not by
-  PR #136's `317fabf`.
+**Real action taken instead**: logged as a real, durable registry issue
+(`superboss-register.py add-issue`, see below) with the exact file/line
+citations above, so a properly repo-scoped task can apply the one-line fix
+through the normal single-gateway dispatch flow, instead of being lost or
+silently re-discovered by a future duplicate investigation.
+
+## Completed
+
+- [x] Independently re-verified the SPEC's "zero commits" premise against
+      live `resource_governor.py --query-umr` / `gh` state — false for the
+      most recent prior attempt (`task-20260813-123927`, real commit
+      `4eadc5a`, real OPEN PR #142).
+- [x] Independently re-verified PR #142's own citation (PR #141,
+      `scripts/pm-sentinel-tick.sh`, commit `bb3fee7`) directly against the
+      real commit content, not trusted secondhand.
+- [x] Traced the real root cause of why this task was spuriously
+      re-dispatched despite real prior work existing: a shared repo-path
+      table gap (`claude-control` missing from
+      `DEFAULT_OCID_RESOLVER_REPO_LOCAL_PATHS` / `REPO_LOCAL_PATHS` /
+      `MARK_TERMINAL_REPO_CHOICES`) causing `mark-umr-terminal` to verify
+      real commit evidence against the wrong local repo checkout.
+- [x] Logged that finding as a real, durable registry issue with exact
+      file/line citations (not a raw edit to the live, out-of-scope
+      `veridian-scripts` deployment).
+
+## Remaining
+
+- [ ] The one-line fix itself (`REPO_LOCAL_PATHS` / `DEFAULT_OCID_RESOLVER_REPO_LOCAL_PATHS`
+      / `MARK_TERMINAL_REPO_CHOICES` additions) needs a task dispatched
+      against the `veridian-scripts` repo through the normal single gateway
+      — out of this task's own repo scope (`claude-control`).
+- [ ] PR #141 and PR #142 both still need their routine `STATUS_REPORT.md`
+      rebase (`mergeable=DIRTY`/`CONFLICTING`, doc-only) before merge — that
+      is those PRs' own follow-up, not duplicated here.
