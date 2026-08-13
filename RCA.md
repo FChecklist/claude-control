@@ -1,86 +1,121 @@
-# RCA -- UMR-20260813-111352-6973 (SPEC claim: status=running vs. live systemd success; verified already correctly terminal, no gap)
+# RCA: UMR-20260813-170234-5828 (mechanically marked `killed`)
 
-## Governing chain
-- This RCA task: `task-20260813-160301-rca--umr-20260813-111352-6973-status-run`,
-  governing UMR `UMR-20260813-131701-2b6a` (PM-sentinel tick).
-- Subject UMR: `UMR-20260813-111352-6973`, `task_identity=owner-task-20260813-111351-1537211`,
-  dispatched `veridian-worker@task-20260813-131109-execute-the-real-merge-for-audit-approve.service`
-  (title: "Execute the real merge for audit-approved PR 136").
+## Summary
 
-## The SPEC's claim (checked live, not trusted)
-The SPEC asserted `resource_governor.py --query-umr --umr-id UMR-20260813-111352-6973` showed
-`status=running` while the real systemd unit was already terminal (success) -- the known
-exit-write-back-bug class where a `running`/`dispatched` row never gets corrected after its
-worker actually finishes.
+`UMR-20260813-170234-5828` dispatched `task-20260813-170300-fix-real-audit-fail-on-veridian-scripts`,
+whose job was to fix a real, posted `AUDIT:FAIL` on `FChecklist/veridian-scripts#307`
+(governing chain: Priority-1 `UMR-20260806-171945-5767`, direct follow-up to the audit
+`UMR-20260813-155242-46d8`). The row was mechanically relabeled `killed` with reason
+"no PR was ever opened ... no live process and no real deliverable". **That reason is
+false.** The real deliverable exists and was independently re-verified live against
+GitHub. The row has been corrected to `completed_unmerged`.
 
-## Real recorded fact (verified live, not trusted from the SPEC summary)
+## What actually happened
 
-**Real systemd state** (`systemctl --user show ...`):
-- `ActiveState=inactive`, `SubState=dead`, `Result=success` -- the unit ran once and exited clean.
+1. The task's own SPEC required the worker to push a fix commit to the **same, already
+   existing** branch/PR (`FChecklist/veridian-scripts#307`) rather than open a new PR --
+   explicit instruction (e): *"Push to the SAME branch so the existing PR updates ...
+   Do NOT self-merge and do NOT post your own AUDIT:PASS."*
+2. The worker did exactly that (per its own `task.yaml` `completed_steps`, independently
+   re-verified, not just trusted):
+   - Restored `task_kind='veridian_task_create'` scoping in `scan_stuck_tasks()`.
+   - Removed the unconditional, unguarded `_dispatch_core().log_dispatch_decision(r)`
+     call from `run_tick()` (confirmed live: `log_dispatch_decision` has no definition
+     anywhere in this repo's history, branch or main -- deletion was the correct fix,
+     not an import/alias wiring).
+   - Split the unrelated regressions out so `resource_governor.py` vs `main` is a clean
+     additive diff, scoped to the telemetry-retention feature.
+   - Re-ran the full suite.
+   - Pushed commit `37d210aab1ecc399e3352429d0229db063f47952` to the existing PR branch
+     (`worker/task-20260813-145927-bound-register-growth`).
+   - Posted a real PR comment (`2026-08-13T17:22:38Z`) summarizing the fix and
+     re-requesting audit -- no self-merge, no self AUDIT:PASS.
+3. **Independently re-verified live (not trusted from any self-report):**
+   - `gh pr view 307 --repo FChecklist/veridian-scripts` -> `state=OPEN`,
+     `mergeable=MERGEABLE`, `mergeStateStatus=CLEAN`,
+     `headRefOid=37d210aab1ecc399e3352429d0229db063f47952`.
+   - `git log --oneline -1 37d210a` in `/opt/veridian/repos/veridian-scripts` -> commit
+     genuinely exists: `fix(resource_governor): remove 2 real regressions flagged by
+     AUDIT:FAIL on #307 (UMR-20260813-170234-5828)`.
+   - PR comment timeline confirms the real audit-fail (`16:45:09Z`) and the real fix
+     comment (`17:22:38Z`).
+4. Because the task's **own** `task.yaml` records `repo: claude-control`,
+   `branch: worker/task-20260813-170300-fix-real-audit-fail-on-veridian-scripts` (the
+   scaffolding workspace for this task, not the repo the actual fix lives in), and that
+   workspace genuinely has zero commits ahead of master (confirmed correct by the
+   task's own supervisor: *"no changes to commit and zero commits ahead of master --
+   genuine no-op"*), the task ended in `status=blocked` after the supervisor correctly
+   refused to fabricate a PR for the wrong repo/branch (a documented past incident, PR
+   #84) rather than silently falling back to an unrelated PR.
 
-**Real journal** (`journalctl --user -u ...`):
+## Root cause
+
+`reconcile_owner_dispatch_status.py`'s `collect_evidence()`
+(`scripts/reconcile_owner_dispatch_status.py:247-252`) only searches for a PR match on
+the task's **own** `task.yaml` `repo` + `branch` fields:
+
+```python
+pr_match = None
+if yml.get("repo") and yml.get("branch"):
+    for pr in _fetch_prs(yml["repo"], pr_cache):
+        if pr["headRefName"] == yml["branch"]:
+            pr_match = pr
+            break
 ```
-Aug 13 13:11:13 ... Started veridian-worker@task-...-execute-the-real-merge-for-audit-approve.service ...
-Aug 13 13:19:22 ... Consumed 28.234s CPU time, 433.7M memory peak, 0B memory swap peak.
+
+For a task whose real deliverable is a direct push to a **different, external** repo
+(here `FChecklist/veridian-scripts`, never named in this task's own `task.yaml`
+`repo`/`branch`, which point at `claude-control`), `pr_match` stays `None`
+unconditionally. Combined with `real_active='inactive'` (both the worker and supervisor
+systemd units had finished), the script falls into its last branch
+(`scripts/reconcile_owner_dispatch_status.py:373-380`):
+
+```python
+if not pr_match and real_active in ("inactive", "no_unit", "unknown", "failed"):
+    evidence["bucket"] = "STALE_LABEL_TERMINAL"
+    evidence["new_status"] = "killed"
+    evidence["reason"] = (
+        f"real systemd state '{real_active}', no PR was ever opened, real task.yaml status="
+        f"'{yml.get('status')}' -- no live process and no real deliverable; mechanically "
+        "correctable to killed (orphaned dispatch, never produced a real artifact)."
+    )
 ```
 
-**Real DB row** (`resource_governor.py --query-umr --umr-id UMR-20260813-111352-6973`, queried live at
-the start of this task):
-- `status=completed` (**not** `running`)
-- `ts_dispatched=2026-08-13T13:11:13.189245+00:00` -- matches the journal's `Started` line exactly.
-- `ts_completed=2026-08-13T13:19:02.153385+00:00` -- ~20s before the journal's stop-accounting line,
-  consistent with normal `ExecStopPost` write-back-then-cleanup ordering, not a stall.
-- `outputs_json.file_path` points at a real, on-disk `STATUS_REPORT.md` in the task's own workspace.
+This is a **false conclusion**: it conflates "no PR in this task's own dispatch repo"
+with "no real deliverable anywhere" -- ignoring that the real, verifiable evidence lives
+on a different repo entirely.
 
-**Canonical cross-check tool** (`superboss-register.py reconcile-umr-status --umr-id UMR-20260813-111352-6973`,
-the mechanism purpose-built for exactly this class of check):
-```json
-{"umr_id": "UMR-20260813-111352-6973", "is_stale": false, "current_status": "completed",
- "proposed_status": null, "evidence": {"pr_evidence": [], "note": "no real merged-PR evidence found -- no reconciliation needed"}}
-```
+**This is a confirmed second, independent occurrence** of the exact same bug class
+already root-caused and documented for `UMR-20260813-155242-46d8` (see
+`docs: real RCA for UMR-20260813-155242-46d8`, commit `14bd73f`), whose own RCA
+explicitly flagged fixing this reconciler blind spot as an out-of-scope future follow-up.
+It has now recurred, confirming the fix is still needed.
 
-So: as of this task actually running, the row is **already** correctly, honestly terminal. No live
-instance of the exit-write-back-bug exists on this row right now.
+## Resolution
 
-## Was the SPEC's claim ever true?
-Almost certainly yes, at some earlier moment -- `ts_completed` (13:19:02) sits well before this RCA
-task was dispatched, so the SPEC's PM-sentinel-tick snapshot most plausibly observed the row mid-flight
-(`running`/`dispatched`) during the ~8-minute window between `ts_dispatched` (13:11:13) and
-`ts_completed` (13:19:02), before the worker's own `ExecStopPost` hook
-(`worker-exit-status-bridge.py`) wrote the real terminal status back. That is an ordinary async
-completion race, not a stuck/buggy write-back -- the row genuinely was still running when observed,
-and genuinely finished and self-corrected shortly after, well before anyone acted on the stale
-snapshot. This is the same "self-resolved between snapshot and RCA" shape already seen twice
-elsewhere in this repo's history (`UMR-20260813-124141-7641`'s RCA of `UMR-20260813-060311-6eea`;
-`UMR-20260813-100904-...`'s RCA of `UMR-20260813-085615-c1dc`).
+- No redispatch is warranted: the real, in-scope work is genuinely done and
+  independently verified live (PR #307 open, mergeable, awaiting a fresh audit under
+  the governing chain `UMR-20260813-155242-46d8`).
+- Recorded the honest terminal outcome:
+  ```
+  python3 scripts/superboss-register.py mark-umr-terminal \
+    --umr-id UMR-20260813-170234-5828 \
+    --status completed_unmerged \
+    --commit-sha 37d210aab1ecc399e3352429d0229db063f47952 \
+    --pr-number 307 --repo veridian-scripts \
+    --reason "..."
+  ```
+  This passed `validate_umr_terminal_completion_evidence()`'s real
+  commit-exists-but-not-ancestor-of-main gate (PR #307 is open, unmerged --
+  `completed_unmerged`, not `completed`, is the honest status).
 
-## What the subject task's real work actually was (for completeness, not re-derived from scratch)
-`STATUS_REPORT.md` in the task's own workspace records real, substantive work: it re-checked PR #136
-(`FChecklist/claude-control`)'s live mergeability, found it genuinely `DIRTY`/`mergeable=false` (three
-newer merges, PR #137/#139/#140, landed on `master` after PR #136's base and touch the same
-full-file-rewrite `STATUS_REPORT.md`), correctly declined to force a stale-content merge per its own
-SPEC's explicit instruction, and instead filed a `insert-pm-decision-pending` entry recommending
-rebase + fresh audit, or simply closing PR #136 (since its one actionable finding, a PR #131 audit
-FAIL, had already taken effect independently).
+## Real remaining follow-up (out of scope here, noted for traceability)
 
-**Independently re-verified live** (`gh api repos/FChecklist/claude-control/pulls/136`): PR #136 is now
-real `state=closed`, `merged=false`, `closed_at=2026-08-13T14:09:40Z` by `FChecklist` -- consistent
-with (and following) the task's own recommended low-risk action.
-
-**Independent prior corroboration, found in this repo's own already-merged history**: the root
-`STATUS_REPORT.md` from a later, already-merged task (`UMR-20260813-120205-1f32`,
-`task-20260813-143157`) had *already* independently re-verified this exact row and recorded:
-`UMR-20260813-111352-6973` -> `completed` -> "`claude-control` PR #136 confirmed real CLOSED (not
-merged) -- superseded." This RCA is therefore at minimum the 2nd/3rd independent confirmation that
-this row has no gap.
-
-## Disposition
-No fix, no redispatch, no `mark-umr-terminal` write needed. The subject row was already honestly
-`completed` with real evidence before this task started, cross-confirmed by the canonical
-`reconcile-umr-status` tool and by an independent, already-merged prior task's own verification.
-The SPEC's `status=running` observation reflects a real but transient mid-flight snapshot, not a
-current gap -- the row self-corrected via its own normal `ExecStopPost` write-back path well before
-this RCA task ran.
-
-This task's real deliverable is this documentation commit (closing out
-`UMR-20260813-131701-2b6a` honestly) plus the `agent_work_briefing.py record-completion` write-back.
+1. A fresh audit of PR #307 head `37d210a` belongs to the governing audit chain
+   `UMR-20260813-155242-46d8`, not to this UMR.
+2. The systemic fix to `reconcile_owner_dispatch_status.py` -- teaching
+   `collect_evidence()` to also check for real evidence of external-repo actions
+   (e.g. PR/commit references in the task's own prompt/completed_steps, not just
+   `yml["repo"]`/`yml["branch"]`) before concluding "no PR was ever opened" -- remains
+   undone. This is now a confirmed *recurring* bug (2 independent occurrences), not a
+   one-off; a dedicated task should fix it directly rather than deferring a third time.
