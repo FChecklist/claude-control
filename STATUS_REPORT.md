@@ -1,188 +1,152 @@
-# Status report — 326b's real scope is already covered (verified); the real bug is a wrong-repo commit-verification defect that spuriously re-dispatched this task
+# Status report — query-once-per-tick + decide-and-fix-not-decide-and-ask: real code already built, real gap found and fixed on its own PR
 
-UMR chain: addendum to UMR-20260813-092654-326b (chain: 084321-2962 ->
-091633-8b6a -> 092654-326b -> this addendum, UMR-20260813-104321-99ff ->
-P1 UMR-20260806-171945-5767)
+UMR chain: addendum to UMR-20260813-102459-10c3 (chain: 084321-2962 ->
+102459-10c3 -> this addendum -> P1 UMR-20260806-171945-5767). Governing
+UMR for this task: `UMR-20260813-105106-e9a7`.
 
 ## Verdict
 
-**326b's real scope (PM hierarchy / single-gateway / zero-duplication /
-dynamic-scope / standardized boolean-table report) is already implemented as
-real, tested code — independently re-verified here, not just trusted from
-the prior finding — and this task's own SPEC premise ("the prior worker made
-ZERO commits") is false for the most recent prior attempt.** The genuinely
-new finding of this task is a real, precisely-located bug in the platform's
-own reconciliation pipeline that caused that prior attempt's real work to be
-wrongly treated as "no commit evidence," triggering the spurious re-dispatch
-that created this task in the first place.
+**Both Owner directives were already built as real, runtime-enforced code
+in `pm-sentinel-tick.sh` on `FChecklist/veridian-scripts#299` by a prior
+invocation of this exact UMR** (that invocation's own worker unit went
+`ActiveState=inactive` with an ambiguous `task.yaml` checkpoint, which is
+why the platform re-queued this UMR as a fresh task — see
+`resource_governor.py --query-umr --umr-id UMR-20260813-105106-e9a7`,
+`reason` field). Independently re-verifying that PR from a **fresh clone**
+(not this box's live checkout, not trusted from the prior self-report)
+found one real, concrete gap — PR #299 was missing the two systemd unit
+files its own script docstring assumes exist — which is fixed here, on
+that same PR, with the fix pushed and PR #298 (the now-fully-superseded
+predecessor) closed to keep exactly one live PR for this file.
 
-## Part 1 — the SPEC's premise, checked against live state
+## Part 1 — what was already real (independently re-verified, not trusted)
 
-The SPEC's "zero commits" claim is true only of the *original* 326b dispatch
-(`task-20260813-095623-amendment-2--pm-hierarchy--single-gatewa`, UMR
-`092654-326b` itself, real `status=killed`, confirmed via
-`resource_governor.py --query-umr --umr-id UMR-20260813-092654-326b`:
-`reason`: *"real systemd state 'inactive', no PR was ever opened ... no live
-process and no real deliverable"*).
+`FChecklist/veridian-scripts#299` (`pm-sentinel-tick.sh`, single squashed
+commit `9e3469f`, base = current `main`, `mergeable=MERGEABLE`,
+`mergeStateStatus=CLEAN`) contains both directives as real code, not
+narration:
 
-It is **not** true of the task this task was actually re-queued to replace:
-`task-20260813-123927-fix-326b-real-no-op-blocker-with-real-im` (same title,
-prior timestamp). That task:
+1. **QUERY ONCE PER TICK** — `get_umr_row()` / `cache_put_row()` /
+   `already_queried_this_tick()`, a real **on-disk** per-tick cache
+   (`CACHE_DIR="$(mktemp -d ...)"`, `trap 'rm -rf "$CACHE_DIR"' EXIT`) —
+   deliberately not a bash associative array, because every call site
+   invokes these functions via `$(...)` command substitution, which bash
+   always forks a subshell for; an in-memory `declare -A` write there would
+   be silently lost the instant the subshell exits. The script's own header
+   comment documents this as a real bug the test itself caught during
+   development. Every bulk listing query (killed-row scan, running-row
+   cross-check, `completed_unmerged` PR audit) populates the same cache via
+   `cache_put_row()`; every per-row loop calls
+   `already_queried_this_tick()` first and skips a row a prior check this
+   same tick already fetched+handled. `cached_gh_pr_view` does the same for
+   `gh pr view` / `gh api .../comments` calls, keyed by `(repo, pr_number)`.
+2. **DECIDE-AND-FIX, NOT DECIDE-AND-ASK** — every real gap-detection call
+   site calls `record_finding()` immediately before `dispatch_gap()`
+   (`FINDINGS_LOGGED`); `dispatch_gap()` — the one real gateway every
+   finding must go through, itself calling `dispatch-owner-task.sh
+   --no-relay`, the same single front door `resource_governor.py`'s
+   tier/concurrency-cap/`EMERGENCY_STOP`/stop-work gate already sits behind
+   — increments `FINDINGS_ACTIONED` on every one of its own real terminal
+   outcomes (dispatched, dispatch attempted-but-failed, already in-flight,
+   per-tick cap reached, genuine financial escalation). At tick end, if
+   `FINDINGS_LOGGED != FINDINGS_ACTIONED` the tick fails loudly
+   (`DECIDE-AND-FIX VIOLATION`, non-zero exit) instead of silently leaving a
+   finding undecided.
 
-- Made a real commit (`4eadc5a`, `docs: real dedup finding for
-  UMR-20260813-092654-326b (PR #141 already covers it, not re-implemented)`,
-  `STATUS_REPORT.md` rewritten with full citations).
-- Pushed branch `worker/task-20260813-123927-fix-326b-real-no-op-blocker-with-real-im`.
-- Opened a real, currently **OPEN** PR: **#142**,
-  <https://github.com/FChecklist/claude-control/pull/142>
-  ("docs: real dedup finding for UMR-20260813-092654-326b (already covered by
-  PR 141)"), `task.yaml` last checkpoint `status: pending_review`.
-
-That is real, non-empty, auditable work — not a no-op.
-
-## Part 2 — independently re-verifying PR #142's own finding
-
-PR #142's claim: 326b's scope is already implemented in
-`scripts/pm-sentinel-tick.sh` on **PR #141** (still OPEN,
-`worker/task-20260813-115823-integrate-server-native-pm-into-one-dete`,
-commit `bb3fee7`). Re-checked directly rather than trusted:
+Real test evidence, re-run independently in a throwaway clone
+(`/tmp/vs-review`, not this box's live checkout) rather than trusted from
+the prior invocation's own report:
 
 ```
-$ git show bb3fee7 --stat
- scripts/pm-sentinel-tick.sh                       | 696 ++++++++++++++
- scripts/systemd/veridian-pm-sentinel-tick.service |  34 ++
- scripts/systemd/veridian-pm-sentinel-tick.timer   |  19 +
- scripts/test_pm_sentinel_tick.py                  | 363 +++++++++
- 4 files changed, 1112 insertions(+)
-
-$ git show bb3fee7:scripts/pm-sentinel-tick.sh | sed -n '1,24p'
-#!/usr/bin/env bash
-# pm-sentinel-tick.sh -- ONE integrated deterministic server-native PM tick.
-# ...
-#   3. UMR-20260813-092654-326b -- hierarchy / single-gateway / zero-dup /
-#      dynamic-scope / standardized boolean-table report format. Real
-#      finding: the dispatched task for this UMR (task-20260813-095623)
-#      never started real work (task.yaml status=blocked, zero files
-#      modified, zero PR) before being reconciled to status=killed -- none of
-#      this scope existed anywhere before this integration.
-# ...
-# below goes through the EXISTING single front door, dispatch-owner-task.sh
+$ python3 -m pytest test_pm_sentinel_tick.py -v
+PmSentinelTickKilledRowTest::test_first_tick_dispatches_real_rca_for_seeded_killed_row PASSED
+PmSentinelTickKilledRowTest::test_second_tick_does_not_duplicate_already_in_flight_dispatch PASSED
+PmSentinelTickFinancialEscalationTest::test_financial_gap_escalates_to_owner_instead_of_dispatching PASSED
+PmSentinelTickDispatchFailurePropagatesTest::test_real_dispatch_failure_makes_tick_exit_nonzero PASSED
+PmSentinelTickQueryOncePerTickTest::test_same_row_queried_at_most_once_per_tick PASSED
+PmSentinelTickDecideAndFixTest::test_every_finding_gets_a_same_tick_dispatch PASSED
+6 passed in 291.89s
 ```
 
-Confirmed: a real, 696-line, tested (`test_pm_sentinel_tick.py`, 363 lines)
-implementation of 326b's scope exists on PR #141. `gh pr view 141` confirms
-`state: OPEN`, `mergeStateStatus: DIRTY` (a `STATUS_REPORT.md`-only doc
-conflict, the same recurring pattern already seen on PR #133/#135/#139 — not
-a code conflict).
+`PmSentinelTickQueryOncePerTickTest` seeds one real `umr_id` that is
+*both* a tracked-chain head *and* `status='killed'` — the concrete overlap
+case where, pre-addendum, Check 1 and Check 2a would each independently
+issue their own real `resource_governor.py --query-umr --umr-id <same id>`
+call for the identical row — and asserts, via a real logging shim that
+execs the real `resource_governor.py` (so real tick behavior is completely
+unchanged), that the id is queried exactly once. `PmSentinelTickDecideAndFixTest`
+seeds two independent real gaps and asserts each gets its own real
+`dispatch-owner-task.sh` call in the same tick, with
+`FINDINGS_LOGGED`/`FINDINGS_ACTIONED` reconciling and no
+`DECIDE-AND-FIX VIOLATION`.
 
-**Disposition: not re-implemented here.** PR #141 is real and open; PR #142
-already recorded this exact finding. Writing a third copy of the same
-citation would itself be the duplication 326b point 3 exists to forbid.
+## Part 2 — the real gap found on independent review, and the fix
 
-## Part 3 — the real, new finding: why this task got spuriously re-dispatched
+`claude-control#143`'s own audit (posted 2026-08-13T13:08:44Z, before this
+task's re-dispatch) correctly flagged that a documentation-only PR in this
+repo cannot substitute for an independent review of the actual code in
+`veridian-scripts#299`, and that #299 needed that review before merge. This
+task supplies that review, in a fresh clone rather than the live checkout:
 
-`resource_governor.py --query-umr --umr-id UMR-20260813-104321-99ff` (this
-task's own governing UMR) records the real re-dispatch reason:
+- `git diff main pr299 --stat` on a clean clone showed exactly two files:
+  `pm-sentinel-tick.sh` (922 new lines) and `test_pm_sentinel_tick.py` (587
+  new lines) — **no `systemd/` files**, even though the script's own header
+  comment says it is "wired as a systemd --user timer (see
+  `systemd/veridian-pm-sentinel-tick.service` + `.timer` in this same
+  directory)". Those two files were real and already present on the prior,
+  now-superseded `#298` (`git diff pr298 pr299 --stat` confirmed the delta),
+  and already live+active on this box
+  (`systemctl --user show veridian-pm-sentinel-tick.timer -p ActiveState`:
+  `active`) — they were simply dropped when `#299`'s squash commit carried
+  the script and tests forward from `#298` but not the systemd units.
+- Fixed on `#299` itself (commit `5e3eeeb`, pushed to
+  `worker/task-20260813-123933-add-query-once-decide-and-fix`): restored
+  both files, verified **byte-identical** (`diff`, zero delta) to both
+  `#298`'s versions and the live, active deployment — not new/invented
+  content, real already-authored content this PR should have carried
+  forward.
+- Re-ran the full real test suite against the fixed branch: 6/6 pass
+  (unchanged from Part 1 — the fix only added previously-missing files, it
+  did not touch `pm-sentinel-tick.sh` or the tests).
+- `#298` (`feat: collapse server-native PM sentinel + financial-escalation
+  + hierarchy policy into ONE script (10c3)`) closed as superseded — `#299`
+  is now a strict superset (script + tests + systemd units + the
+  query-once/decide-and-fix addendum), so keeping both open would itself be
+  the duplication this UMR chain's own zero-duplication rule forbids.
+- `claude-control#143` (the doc-only status report this audit-failed)
+  closed rather than rebased — its `STATUS_REPORT.md`-only branch had
+  diverged through five more merges to `master` since it was cut
+  (`#144`/`#145`/`#148`), and this report supersedes it directly rather
+  than mechanically replaying a stale rebase.
 
-> `reconcile_stale_running_workers.py (STEP 3, task-20260807-052027): unit
-> veridian-worker@task-20260813-123927-fix-326b-real-no-op-blocker-with-real-im.service
-> confirmed ActiveState=failed; ... task.yaml's own last checkpoint
-> status='pending_review', no real commit evidence accepted -- genuinely
-> ambiguous (worker likely killed/crashed mid-work), real re-queue`
-
-But real commit evidence *did* exist (`4eadc5a`, PR #142, both live). Traced
-why the evidence gate rejected it — a real, precisely-located bug, not a
-guess:
-
-1. `task.yaml` (`task-20260813-123927-fix-326b-real-no-op-blocker-with-real-im/task.yaml`)
-   records `repo: claude-control`, last checkpoint
-   `status: pending_review`, `files_modified: []`, `recent_commits[0]:
-   '4eadc5a docs: ...'`. This makes `reconcile_stale_running_workers.py`'s
-   own `_first_recent_commit_sha()` (scripts/reconcile_stale_running_workers.py:246-285)
-   produce a real candidate: `{"kind": "commit_sha", "value": "4eadc5a", ...}`.
-2. That candidate is then submitted via `mark-umr-terminal --commit-sha
-   4eadc5a --repo <repo>`. `reconcile_stale_running_workers.py`'s own
-   `REPO_LOCAL_PATHS` dict (scripts/reconcile_stale_running_workers.py:100-105)
-   and `MARK_TERMINAL_REPO_CHOICES` tuple (line 110) **do not contain
-   `"claude-control"`** — even though `/opt/veridian/repos/claude-control`
-   is a real, existing local checkout, and `claude-control` is this
-   platform's own primary/default repo (`DEFAULT_REPO = "claude-control"`
-   in `scripts/auto_phase_continuation.py:71` and
-   `scripts/phase-continuation-tick.py:100`).
-3. Because `repo` isn't in `MARK_TERMINAL_REPO_CHOICES`,
-   `_mark_terminal()`'s own fallback (`reconcile_stale_running_workers.py:327`,
-   `repo if repo in MARK_TERMINAL_REPO_CHOICES else "veridian-scripts"`)
-   silently substitutes **`veridian-scripts`** as the `--repo` value, and
-   because `REPO_LOCAL_PATHS.get("claude-control")` is also `None`,
-   `--repo-root` is never passed at all (line 328-329, `if repo_root: cmd
-   += [...]`).
-4. `superboss-register.py`'s `cmd_mark_umr_terminal()` (line 7074-7076) then
-   resolves the verification path as: `args.repo_root or
-   DEFAULT_OCID_RESOLVER_REPO_LOCAL_PATHS.get(args.repo, ...["veridian-scripts"])`
-   — i.e. it verifies commit `4eadc5a` against the **`veridian-scripts`**
-   checkout, not `claude-control`, where that commit does not exist.
-   `validate_umr_terminal_completion_evidence()` correctly refuses (the sha
-   is real, just not in the repo being checked), and
-   `reconcile_stale_running_workers.py` falls through to its last branch
-   (line 456-467): "genuinely ambiguous ... real re-queue" — spawning this
-   task.
-
-`superboss-register.py`'s own `DEFAULT_OCID_RESOLVER_REPO_LOCAL_PATHS`
-(line 3800-3804), the single source `p_markterm --repo`'s argparse
-`choices` are drawn from (line 9388-9389: `choices=list(...)`), has the
-identical gap: `{"compliance-tracker", "veridian-scripts", "projexa"}`,
-no `"claude-control"` entry — so this is not a copy/paste slip local to the
-reconcile script, it is a real, shared, upstream gap in the one canonical
-repo-path table both callers key off.
-
-**This is a real zero-duplication-policy defect in its own right**: 326b's
-point 3 exists precisely so the platform doesn't do the exact thing this bug
-caused — dispatch a second, redundant worker for already-completed work.
-The fix (add `"claude-control": "/opt/veridian/repos/claude-control"` to
-`DEFAULT_OCID_RESOLVER_REPO_LOCAL_PATHS` in `scripts/superboss-register.py`,
-and mirror it into `REPO_LOCAL_PATHS`/`MARK_TERMINAL_REPO_CHOICES` in
-`scripts/reconcile_stale_running_workers.py`) lives in the `veridian-scripts`
-repo, not `claude-control` (this task's own assigned repo per its
-`inputs_json.repo`). Editing `/opt/veridian/scripts` directly on this host
-would itself violate 326b point 2 (SINGLE GATEWAY, NO BYPASS — "never raw
-tmux, never direct file/git edits") and that live directory currently
-carries unrelated uncommitted local changes from other in-flight work
-(`git -C /opt/veridian/scripts status`: `dispatch_core.py`,
-`pm-sentinel-tick.sh`, `quality-gate.sh`, `resource_governor.py`,
-`test_pm_sentinel_tick.py` all locally modified) — not a safe target for an
-out-of-scope drive-by edit.
-
-**Real action taken instead**: logged as a real, durable registry issue
-(`superboss-register.py add-issue`, see below) with the exact file/line
-citations above, so a properly repo-scoped task can apply the one-line fix
-through the normal single-gateway dispatch flow, instead of being lost or
-silently re-discovered by a future duplicate investigation.
+Not done here, out of this task's own scope: actually merging `#299` into
+`veridian-scripts:main` — this platform's own convention is that workers
+open PRs and a separate audit/merge step lands them (see `dispatch-tick`'s
+own `completed_unmerged` PR-audit path, which `pm-sentinel-tick.sh` itself
+reuses rather than reimplements); `#299` is now real, tested, and
+`mergeable=CLEAN` and ready for that step.
 
 ## Completed
 
-- [x] Independently re-verified the SPEC's "zero commits" premise against
-      live `resource_governor.py --query-umr` / `gh` state — false for the
-      most recent prior attempt (`task-20260813-123927`, real commit
-      `4eadc5a`, real OPEN PR #142).
-- [x] Independently re-verified PR #142's own citation (PR #141,
-      `scripts/pm-sentinel-tick.sh`, commit `bb3fee7`) directly against the
-      real commit content, not trusted secondhand.
-- [x] Traced the real root cause of why this task was spuriously
-      re-dispatched despite real prior work existing: a shared repo-path
-      table gap (`claude-control` missing from
-      `DEFAULT_OCID_RESOLVER_REPO_LOCAL_PATHS` / `REPO_LOCAL_PATHS` /
-      `MARK_TERMINAL_REPO_CHOICES`) causing `mark-umr-terminal` to verify
-      real commit evidence against the wrong local repo checkout.
-- [x] Logged that finding as a real, durable registry issue with exact
-      file/line citations (not a raw edit to the live, out-of-scope
-      `veridian-scripts` deployment).
+- [x] Independently re-verified (fresh clone, not the live checkout or the
+      prior invocation's self-report) that both Owner directives
+      (query-once-per-tick, decide-and-fix-not-decide-and-ask) are real,
+      runtime-enforced code in `pm-sentinel-tick.sh` on
+      `veridian-scripts#299`.
+- [x] Independently re-ran the full real test suite (6/6 pass), including
+      the two tests specific to this addendum
+      (`PmSentinelTickQueryOncePerTickTest`,
+      `PmSentinelTickDecideAndFixTest`).
+- [x] Found a real gap on independent review: `#299` was missing the
+      systemd unit files its own script assumes exist.
+- [x] Fixed the gap on `#299` itself (commit `5e3eeeb`), byte-identical to
+      the already-live deployment; re-verified 6/6 tests still pass.
+- [x] Closed `#298` as superseded (now redundant with the fixed `#299`).
+- [x] Closed `#143` (stale, audit-failed, superseded by this report).
 
 ## Remaining
 
-- [ ] The one-line fix itself (`REPO_LOCAL_PATHS` / `DEFAULT_OCID_RESOLVER_REPO_LOCAL_PATHS`
-      / `MARK_TERMINAL_REPO_CHOICES` additions) needs a task dispatched
-      against the `veridian-scripts` repo through the normal single gateway
-      — out of this task's own repo scope (`claude-control`).
-- [ ] PR #141 and PR #142 both still need their routine `STATUS_REPORT.md`
-      rebase (`mergeable=DIRTY`/`CONFLICTING`, doc-only) before merge — that
-      is those PRs' own follow-up, not duplicated here.
+- [ ] `veridian-scripts#299` itself still needs the platform's own
+      independent merge/audit step (out of a worker's own authority —
+      workers do not merge/push-main on this platform) before it lands on
+      `main`.
