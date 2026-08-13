@@ -44,6 +44,20 @@ PROMPT_GATEWAY = f"{SCRIPTS}/prompt_gateway/gateway.py"
 POSTFLIGHT = f"{AI_OS}/scripts/postflight_audit_gate.py"
 TIGHT_VALIDATION = f"{SCRIPTS}/tight_task_validation.py"
 DDL_AUTHORIZATION_CHECK = f"{SCRIPTS}/ddl_authorization_check.py"
+# UMR-20260813-042708-e592 (governing chain UMR-20260806-171945-5767, sibling
+# UMR-20260813-042145-7cc0): real, confirmed gap -- cmd_start spawns a real
+# systemd unit synchronously with zero reference anywhere in this file to
+# resource_governor.py/dispatch_one/stop_work, while dispatch-owner-task.sh's
+# OTHER real channel (resource_governor.py's submit()/dispatch_one()) already
+# gets the real standing-stop-work-order + resource-threshold gate via
+# resource_threshold_block_reason()/_stop_work_order_block_reason(). Wired
+# below via run_task_start_gate(), calling the already-live, already-real
+# resource_governor.py --check-task-start-gate flag (same absolute-path
+# subprocess convention every other constant above already uses -- this file
+# never reimplements a wrapped script's own logic) so there is exactly one
+# enforced stop-work check regardless of which entrypoint (this file or
+# resource_governor.py's own --submit/dispatch_one) started the work.
+RESOURCE_GOVERNOR = f"{SCRIPTS}/resource_governor.py"
 DB_PATH = f"{AI_OS}/memory/superboss-register.sqlite"
 MASTER_INDEX_REGISTRIES_SYNC = f"{AI_OS}/scripts/sync_master_index_registries.py"
 
@@ -79,6 +93,31 @@ def run_json(cmd, step):
     except json.JSONDecodeError:
         fail(f"{step} did not return parseable JSON", command=cmd,
              stdout=proc.stdout[-2000:], stderr=proc.stderr[-2000:])
+
+
+def run_task_start_gate(task_identity, title, umr_id=None):
+    """UMR-20260813-042708-e592: the single enforced entrypoint for cmd_start's
+    real stop-work-order + resource-threshold check, so the same real
+    protection dispatch_one() already applies to every queued row (via
+    resource_threshold_block_reason() + _stop_work_order_block_reason()) also
+    covers this file's own synchronous, direct-spawn cmd_start path. Calls
+    resource_governor.py --check-task-start-gate as a subprocess -- same
+    composition convention this file already uses for every other wrapped
+    script (SUPERBOSS/TIGHT_VALIDATION/DDL_AUTHORIZATION_CHECK/
+    CREDIT_ACCOUNTANT) -- rather than reimplementing or importing that
+    module's internal gate logic directly. Returns the parsed
+    {"blocked": bool, "check": str|None, "detail": str|None} dict; raises via
+    fail() (like every other real wrapper-level failure in this file) if
+    resource_governor.py itself doesn't exit 0 with parseable JSON -- a
+    broken governor is a real gate failure here, never silently skipped."""
+    cmd = [
+        "python3", RESOURCE_GOVERNOR, "--check-task-start-gate",
+        "--task-identity", task_identity, "--title", title,
+        "--task-kind", "veridian_task_create",
+    ]
+    if umr_id:
+        cmd += ["--umr-id", umr_id]
+    return run_json(cmd, "resource_governor.py --check-task-start-gate")
 
 
 def _slugify_title(title):
@@ -443,6 +482,22 @@ def cmd_start(args):
             existing_ts=claim_result.get("existing_ts"),
             guidance="if this is a genuine new task, give it a title that isn't "
                      "identical (after lowercasing/slugifying to 40 chars) to the prior one",
+        )
+
+    # Real gate (UMR-20260813-042708-e592) -- see run_task_start_gate()'s own
+    # docstring. Runs immediately after the duplicate-task-key claim (cheap,
+    # no real resources spent yet) and before veridian-task.py create below
+    # (the real spawn -- worktree/branch/systemd unit), so a task blocked by
+    # the standing stop-work order never reaches that point, matching what
+    # resource_governor.py's own dispatch_one() already enforces for every
+    # queued row.
+    gate_result = run_task_start_gate(task_key, args.title)
+    if gate_result.get("blocked"):
+        fail(
+            "blocked by resource_governor.py's real stop-work-order/resource-threshold gate "
+            "-- the same real protection dispatch_one() applies to every queued task",
+            check=gate_result.get("check"),
+            detail=gate_result.get("detail"),
         )
 
     # Real, machine-readable hold-for-signoff (2026-07-26, root-caused against
