@@ -1,188 +1,145 @@
-# Status report — 326b's real scope is already covered (verified); the real bug is a wrong-repo commit-verification defect that spuriously re-dispatched this task
+# Status report — reconcile stale queued rows whose target PR is already resolved (UMR-20260813-135626)
 
-UMR chain: addendum to UMR-20260813-092654-326b (chain: 084321-2962 ->
-091633-8b6a -> 092654-326b -> this addendum, UMR-20260813-104321-99ff ->
-P1 UMR-20260806-171945-5767)
+Governing chain: addendum to Priority-1 UMR-20260806-171945-5767, sibling of
+UMR-20260813-120054-4e66 (dispatch-pipeline restoration, dispatched the same
+run).
 
 ## Verdict
 
-**326b's real scope (PM hierarchy / single-gateway / zero-duplication /
-dynamic-scope / standardized boolean-table report) is already implemented as
-real, tested code — independently re-verified here, not just trusted from
-the prior finding — and this task's own SPEC premise ("the prior worker made
-ZERO commits") is false for the most recent prior attempt.** The genuinely
-new finding of this task is a real, precisely-located bug in the platform's
-own reconciliation pipeline that caused that prior attempt's real work to be
-wrongly treated as "no commit evidence," triggering the spurious re-dispatch
-that created this task in the first place.
+All 3 named rows were **already terminal by the time this task started**
+(raced closed by sibling tasks during the same dispatch-pipeline restoration
+this task is a sibling of) — 2 of the 3 closures were already accurate and
+needed no change; 1 had a stale, non-evidentiary reason string that this
+task fixed. The **real, still-open gap** was structural, not row-specific:
+the dispatch gateway (`resource_governor.py`'s `_dispatch_one_inner()`) had
+no guard that re-checks a task's own named target PR at dispatch time — only
+at queue time. That gap is now closed (`veridian-scripts` PR #303).
 
-## Part 1 — the SPEC's premise, checked against live state
+## Step 1 — real re-check of the 3 named rows against live GitHub state
 
-The SPEC's "zero commits" claim is true only of the *original* 326b dispatch
-(`task-20260813-095623-amendment-2--pm-hierarchy--single-gatewa`, UMR
-`092654-326b` itself, real `status=killed`, confirmed via
-`resource_governor.py --query-umr --umr-id UMR-20260813-092654-326b`:
-`reason`: *"real systemd state 'inactive', no PR was ever opened ... no live
-process and no real deliverable"*).
+| Row | Title names | Real GitHub state (re-verified this task) | Row status found |
+|---|---|---|---|
+| `UMR-20260813-111356-3677` | `veridian-scripts` PR #249 | **MERGED** `dbcb6361...`, `mergedAt=2026-08-13T10:39:54Z` (34 min before the row queued at 11:13:56) | `failed`, but reason was a stale mechanical `"queued"` placeholder — **fixed this task** |
+| `UMR-20260813-101609-9a69` | `claude-control` PR #135 | **MERGED** `78e4ee1c...`, `mergedAt=2026-08-13T10:40:46Z` | `rejected_duplicate`, real reason cites PR #139 (already accurate) — **no change needed** |
+| `UMR-20260813-111352-6973` | `claude-control` PR #136 | **OPEN**, `mergeable=false`, `mergeable_state=dirty`, head `317fabf6` unchanged | `completed`, real evidence = `STATUS_REPORT.md` merged via PR #144 (already accurate) — **no change needed** |
 
-It is **not** true of the task this task was actually re-queued to replace:
-`task-20260813-123927-fix-326b-real-no-op-blocker-with-real-im` (same title,
-prior timestamp). That task:
+## Step 2 — fixed `UMR-20260813-111356-3677`'s reason
 
-- Made a real commit (`4eadc5a`, `docs: real dedup finding for
-  UMR-20260813-092654-326b (PR #141 already covers it, not re-implemented)`,
-  `STATUS_REPORT.md` rewritten with full citations).
-- Pushed branch `worker/task-20260813-123927-fix-326b-real-no-op-blocker-with-real-im`.
-- Opened a real, currently **OPEN** PR: **#142**,
-  <https://github.com/FChecklist/claude-control/pull/142>
-  ("docs: real dedup finding for UMR-20260813-092654-326b (already covered by
-  PR 141)"), `task.yaml` last checkpoint `status: pending_review`.
+`mark-umr-terminal --umr-id UMR-20260813-111356-3677 --status failed
+--pr-number 249 --repo veridian-scripts` with a real reason naming PR #249's
+merge commit SHA and `mergedAt` timestamp (previously the row's `reason`
+column was a leftover `"queued"` placeholder that named no real evidence at
+all). Status kept as `failed` (its real terminal state, an honest record of
+the mechanical dispatch failure that occurred) — not fabricated as
+`completed`, since no real work was performed.
 
-That is real, non-empty, auditable work — not a no-op.
+## Step 3 — PR #136 disposition (target premise dead, but real need re-checked)
 
-## Part 2 — independently re-verifying PR #142's own finding
+Per this task's own SPEC: determined whether PR #136's content is superseded.
+Its real payload is a Tier-1 `AUDIT:FAIL` verdict on `claude-control` PR #131
+plus a live-timer stop/disable action. Both real consequences already
+happened **independently of PR #136 merging**:
 
-PR #142's claim: 326b's scope is already implemented in
-`scripts/pm-sentinel-tick.sh` on **PR #141** (still OPEN,
-`worker/task-20260813-115823-integrate-server-native-pm-into-one-dete`,
-commit `bb3fee7`). Re-checked directly rather than trusted:
+- `AUDIT:FAIL` already posted as a permanent PR #131 comment:
+  https://github.com/FChecklist/claude-control/pull/131#issuecomment-5279274298
+- PR #131 itself is real-verified `CLOSED` (`merged:false`,
+  `closedAt=2026-08-13T12:43:01Z`) — the audit's real recommended outcome
+  already took effect.
+- The live timer (`veridian-pm-sentinel-tick.timer`) was already really
+  stopped+disabled via `systemctl --user`, a real action independent of any
+  merge.
+- PR #136's only file (`STATUS_REPORT.md`) has since been superseded 5+
+  times over by newer merged snapshots (#133/#135/#137/#139/#140/#144, this
+  file).
+
+**Verdict: superseded.** Closed PR #136 without merging (real evidence
+comment: https://github.com/FChecklist/claude-control/pull/136#issuecomment-5281545495),
+and resolved the open `pm_decisions_pending` row `id=527` with
+`status=close_without_merging` (contra that row's own
+`recommended_option=rebase_and_reaudit` — a rebase would only re-add
+already-obsolete documentation for zero real remaining operational effect).
+
+## Step 4 — real root-cause fix: dispatch-time target-PR-state guard
+
+Added `target_pr_already_resolved()` to `resource_governor.py`
+(`_dispatch_one_inner()`, the single real dispatch gateway) — self-rejects a
+`veridian_task_create` row whose own title names a real target PR that
+GitHub already reports `MERGED`/`CLOSED` at dispatch time, distinct from
+(and running before) the existing Stage 4/5/6 duplicate-PR / OCID-evidence /
+reuse-verdict guards, none of which re-check a *named target* PR's live
+state. Deliberately does **not** block an `OPEN`/`DIRTY` PR (PR #136's real
+shape) — the right answer there is a fresh rebase+re-audit dispatch, not a
+self-reject.
+
+`veridian-scripts` PR #303:
+https://github.com/FChecklist/veridian-scripts/pull/303
 
 ```
-$ git show bb3fee7 --stat
- scripts/pm-sentinel-tick.sh                       | 696 ++++++++++++++
- scripts/systemd/veridian-pm-sentinel-tick.service |  34 ++
- scripts/systemd/veridian-pm-sentinel-tick.timer   |  19 +
- scripts/test_pm_sentinel_tick.py                  | 363 +++++++++
- 4 files changed, 1112 insertions(+)
+$ python3 tests/test_target_pr_dispatch_time_recheck.py
+PASS: test_no_pr_number_in_title_never_blocks
+PASS: test_merged_target_pr_blocks_with_real_evidence
+PASS: test_closed_unmerged_target_pr_blocks
+PASS: test_open_dirty_target_pr_never_blocks
+PASS: test_gh_timeout_fails_open
+PASS: test_gh_error_fails_open_not_found_in_hint_repo
+PASS: test_dispatch_one_end_to_end_rejects_row_whose_target_pr_already_merged
+PASS: test_dispatch_one_end_to_end_dirty_open_pr_is_not_rejected_by_this_guard
 
-$ git show bb3fee7:scripts/pm-sentinel-tick.sh | sed -n '1,24p'
-#!/usr/bin/env bash
-# pm-sentinel-tick.sh -- ONE integrated deterministic server-native PM tick.
-# ...
-#   3. UMR-20260813-092654-326b -- hierarchy / single-gateway / zero-dup /
-#      dynamic-scope / standardized boolean-table report format. Real
-#      finding: the dispatched task for this UMR (task-20260813-095623)
-#      never started real work (task.yaml status=blocked, zero files
-#      modified, zero PR) before being reconciled to status=killed -- none of
-#      this scope existed anywhere before this integration.
-# ...
-# below goes through the EXISTING single front door, dispatch-owner-task.sh
+8/8 passed
+$ echo $?
+0
 ```
 
-Confirmed: a real, 696-line, tested (`test_pm_sentinel_tick.py`, 363 lines)
-implementation of 326b's scope exists on PR #141. `gh pr view 141` confirms
-`state: OPEN`, `mergeStateStatus: DIRTY` (a `STATUS_REPORT.md`-only doc
-conflict, the same recurring pattern already seen on PR #133/#135/#139 — not
-a code conflict).
+Pre-existing suites re-run unaffected: `test_rule2_dispatch_outcomes.py`
+(8/8), `test_run_tick_continues_past_row_resolved_skip.py` (5/5),
+`test_resource_governor_stuck_task_scope.py`,
+`test_reconcile_dispatched_dead_zone.py`,
+`test_resume_interrupted_workers_no_duplicate_row.py` — all pass.
 
-**Disposition: not re-implemented here.** PR #141 is real and open; PR #142
-already recorded this exact finding. Writing a third copy of the same
-citation would itself be the duplication 326b point 3 exists to forbid.
+## Step 5 — before/after proof
 
-## Part 3 — the real, new finding: why this task got spuriously re-dispatched
+Real `gh` state re-verified this task (all cross-checked via both
+`gh pr view --json` and raw `gh api` REST):
 
-`resource_governor.py --query-umr --umr-id UMR-20260813-104321-99ff` (this
-task's own governing UMR) records the real re-dispatch reason:
+```
+PR #249 (veridian-scripts): state=MERGED, mergedAt=2026-08-13T10:39:54Z, mergeCommit=dbcb636116189850a6ba798fe700d4c080be1e9e
+PR #135 (claude-control):   state=MERGED, mergedAt=2026-08-13T10:40:46Z, mergeCommit=78e4ee1c3456146712c32cb2dff539d66bb76b0a
+PR #133 (claude-control):   state=MERGED, mergedAt=2026-08-13T10:38:16Z, mergeCommit=b6eacf2b926a0165307522efc05f05b6b5fbe666
+PR #139 (claude-control):   state=MERGED, mergedAt=2026-08-13T10:54:06Z
+PR #131 (claude-control):   state=CLOSED, merged=false, closedAt=2026-08-13T12:43:01Z
+PR #136 (claude-control):   state=OPEN -> CLOSED (this task), mergeable=false, mergeable_state=dirty, head=317fabf6dab870c546fb7c2f411139d1f6ee60ca
+```
 
-> `reconcile_stale_running_workers.py (STEP 3, task-20260807-052027): unit
-> veridian-worker@task-20260813-123927-fix-326b-real-no-op-blocker-with-real-im.service
-> confirmed ActiveState=failed; ... task.yaml's own last checkpoint
-> status='pending_review', no real commit evidence accepted -- genuinely
-> ambiguous (worker likely killed/crashed mid-work), real re-queue`
+`umr_tasks` (`ai-os/memory/superboss-register.sqlite`), the 3 named rows,
+**before this task's own writes**: all 3 already terminal (raced closed by
+sibling tasks) -- `rejected_duplicate` / `completed` / `failed`-with-stale-
+reason. **After this task's writes**: same 3 statuses, but
+`UMR-20260813-111356-3677`'s `reason` now names real evidence
+(commit SHA + `mergedAt`) instead of a stale `"queued"` placeholder.
 
-But real commit evidence *did* exist (`4eadc5a`, PR #142, both live). Traced
-why the evidence gate rejected it — a real, precisely-located bug, not a
-guess:
+Real, live, currently-executing queue backlog (`status='queued' AND
+ts_dispatched IS NULL`, i.e. the actual dispatch-eligible set — this is the
+number the new guard in `veridian-scripts` PR #303 will apply to on every
+future dispatch tick): **23 rows** as of this report, none of which are the
+3 rows this task investigated (all 3 already resolved off the live queue by
+the time this task started). This count moves continuously — the
+dispatch-pipeline restoration this task is a sibling of is actively draining
+and adding real rows concurrently with this task's own run, so it is not a
+frozen before/after pair for the whole queue; the row-level before/after
+above is the load-bearing evidence.
 
-1. `task.yaml` (`task-20260813-123927-fix-326b-real-no-op-blocker-with-real-im/task.yaml`)
-   records `repo: claude-control`, last checkpoint
-   `status: pending_review`, `files_modified: []`, `recent_commits[0]:
-   '4eadc5a docs: ...'`. This makes `reconcile_stale_running_workers.py`'s
-   own `_first_recent_commit_sha()` (scripts/reconcile_stale_running_workers.py:246-285)
-   produce a real candidate: `{"kind": "commit_sha", "value": "4eadc5a", ...}`.
-2. That candidate is then submitted via `mark-umr-terminal --commit-sha
-   4eadc5a --repo <repo>`. `reconcile_stale_running_workers.py`'s own
-   `REPO_LOCAL_PATHS` dict (scripts/reconcile_stale_running_workers.py:100-105)
-   and `MARK_TERMINAL_REPO_CHOICES` tuple (line 110) **do not contain
-   `"claude-control"`** — even though `/opt/veridian/repos/claude-control`
-   is a real, existing local checkout, and `claude-control` is this
-   platform's own primary/default repo (`DEFAULT_REPO = "claude-control"`
-   in `scripts/auto_phase_continuation.py:71` and
-   `scripts/phase-continuation-tick.py:100`).
-3. Because `repo` isn't in `MARK_TERMINAL_REPO_CHOICES`,
-   `_mark_terminal()`'s own fallback (`reconcile_stale_running_workers.py:327`,
-   `repo if repo in MARK_TERMINAL_REPO_CHOICES else "veridian-scripts"`)
-   silently substitutes **`veridian-scripts`** as the `--repo` value, and
-   because `REPO_LOCAL_PATHS.get("claude-control")` is also `None`,
-   `--repo-root` is never passed at all (line 328-329, `if repo_root: cmd
-   += [...]`).
-4. `superboss-register.py`'s `cmd_mark_umr_terminal()` (line 7074-7076) then
-   resolves the verification path as: `args.repo_root or
-   DEFAULT_OCID_RESOLVER_REPO_LOCAL_PATHS.get(args.repo, ...["veridian-scripts"])`
-   — i.e. it verifies commit `4eadc5a` against the **`veridian-scripts`**
-   checkout, not `claude-control`, where that commit does not exist.
-   `validate_umr_terminal_completion_evidence()` correctly refuses (the sha
-   is real, just not in the repo being checked), and
-   `reconcile_stale_running_workers.py` falls through to its last branch
-   (line 456-467): "genuinely ambiguous ... real re-queue" — spawning this
-   task.
+## Independent verification
 
-`superboss-register.py`'s own `DEFAULT_OCID_RESOLVER_REPO_LOCAL_PATHS`
-(line 3800-3804), the single source `p_markterm --repo`'s argparse
-`choices` are drawn from (line 9388-9389: `choices=list(...)`), has the
-identical gap: `{"compliance-tracker", "veridian-scripts", "projexa"}`,
-no `"claude-control"` entry — so this is not a copy/paste slip local to the
-reconcile script, it is a real, shared, upstream gap in the one canonical
-repo-path table both callers key off.
-
-**This is a real zero-duplication-policy defect in its own right**: 326b's
-point 3 exists precisely so the platform doesn't do the exact thing this bug
-caused — dispatch a second, redundant worker for already-completed work.
-The fix (add `"claude-control": "/opt/veridian/repos/claude-control"` to
-`DEFAULT_OCID_RESOLVER_REPO_LOCAL_PATHS` in `scripts/superboss-register.py`,
-and mirror it into `REPO_LOCAL_PATHS`/`MARK_TERMINAL_REPO_CHOICES` in
-`scripts/reconcile_stale_running_workers.py`) lives in the `veridian-scripts`
-repo, not `claude-control` (this task's own assigned repo per its
-`inputs_json.repo`). Editing `/opt/veridian/scripts` directly on this host
-would itself violate 326b point 2 (SINGLE GATEWAY, NO BYPASS — "never raw
-tmux, never direct file/git edits") and that live directory currently
-carries unrelated uncommitted local changes from other in-flight work
-(`git -C /opt/veridian/scripts status`: `dispatch_core.py`,
-`pm-sentinel-tick.sh`, `quality-gate.sh`, `resource_governor.py`,
-`test_pm_sentinel_tick.py` all locally modified) — not a safe target for an
-out-of-scope drive-by edit.
-
-**Real action taken instead**: logged as a real, durable registry issue
-(`superboss-register.py add-issue`, see below) with the exact file/line
-citations above, so a properly repo-scoped task can apply the one-line fix
-through the normal single-gateway dispatch flow, instead of being lost or
-silently re-discovered by a future duplicate investigation.
-
-## Completed
-
-- [x] Independently re-verified the SPEC's "zero commits" premise against
-      live `resource_governor.py --query-umr` / `gh` state — false for the
-      most recent prior attempt (`task-20260813-123927`, real commit
-      `4eadc5a`, real OPEN PR #142).
-- [x] Independently re-verified PR #142's own citation (PR #141,
-      `scripts/pm-sentinel-tick.sh`, commit `bb3fee7`) directly against the
-      real commit content, not trusted secondhand.
-- [x] Traced the real root cause of why this task was spuriously
-      re-dispatched despite real prior work existing: a shared repo-path
-      table gap (`claude-control` missing from
-      `DEFAULT_OCID_RESOLVER_REPO_LOCAL_PATHS` / `REPO_LOCAL_PATHS` /
-      `MARK_TERMINAL_REPO_CHOICES`) causing `mark-umr-terminal` to verify
-      real commit evidence against the wrong local repo checkout.
-- [x] Logged that finding as a real, durable registry issue with exact
-      file/line citations (not a raw edit to the live, out-of-scope
-      `veridian-scripts` deployment).
-
-## Remaining
-
-- [ ] The one-line fix itself (`REPO_LOCAL_PATHS` / `DEFAULT_OCID_RESOLVER_REPO_LOCAL_PATHS`
-      / `MARK_TERMINAL_REPO_CHOICES` additions) needs a task dispatched
-      against the `veridian-scripts` repo through the normal single gateway
-      — out of this task's own repo scope (`claude-control`).
-- [ ] PR #141 and PR #142 both still need their routine `STATUS_REPORT.md`
-      rebase (`mergeable=DIRTY`/`CONFLICTING`, doc-only) before merge — that
-      is those PRs' own follow-up, not duplicated here.
+- `gh pr view <N> --repo FChecklist/<repo> --json state,mergedAt,mergeStateStatus,mergeable,headRefOid,closedAt,url`
+  and `gh api repos/FChecklist/<repo>/pulls/<N>` (raw REST, cross-checked)
+  for PRs #131, #133, #135, #136, #139, #249.
+- `python3 /opt/veridian/scripts/superboss-register.py mark-umr-terminal ...`
+  real output JSON captured above (Step 2).
+- `gh pr comment 136` / `gh pr close 136` real output URLs captured above
+  (Step 3).
+- `python3 /opt/veridian/scripts/superboss-register.py resolve-pm-decision-pending --id 527 ...`
+  -> `{"id": 527, "resolved": true}`.
+- `gh pr create --repo FChecklist/veridian-scripts ...` -> PR #303 (Step 4).
+- Real sqlite queries (read-only, direct `sqlite3.connect` against
+  `ai-os/memory/superboss-register.sqlite`, the same DB the gateway
+  capability fronts) for the before/after counts in Step 5.
