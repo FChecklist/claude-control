@@ -1,86 +1,102 @@
-# Status report — real tier-1 audit of PR #289 (veridian-scripts)
+# Status report — real RCA + redispatch for stuck-task SIGKILL (UMR-20260808-175055-cebd)
 
-UMR: UMR-20260813-050629-bae4
-Governing chain: UMR-20260806-171945-5767 (Priority 1, addendum — not a new initiative)
-Related chain: UMR-20260813-042145-7cc0 (dispatch that produced PR #289)
+UMR: UMR-20260813-082609-873e (this task's own governing UMR)
+Governing chain: Priority 2/3, UMR-20260808-175055-cebd (the real killed dispatch)
+Redispatch produced: UMR-20260813-083422-15e7 (queued, tier 0)
 
 ## What this covers
-A real, execution-verified tier-1 code audit of `FChecklist/veridian-scripts#289`
-(the `resource_governor.py --query-umr --umr-id X` filter fix), posted as a
-PR comment, followed by merge into `origin/main` since the audit result was PASS.
+RCA for UMR-20260808-175055-cebd (`status=killed, reason="stuck-task
+SIGKILL: no exit 60s after SIGTERM"`), verification of what real work
+already existed on that chain, and a real, non-duplicating redispatch of
+only the remaining scope.
 
-## Audited head commit
-`90df8f611674f0c0f059f7c55be1526a9f2ea688` — confirmed via
-`gh pr view 289 --json headRefOid` and via `git log -1` inside a detached
-worktree checked out at that exact SHA.
+## The killed UMR — real facts
+Queried live via `resource_governor.py --query-umr --umr-id
+UMR-20260808-175055-cebd`:
+- `task_identity`: `owner-task-20260808-175053-447419`
+- `unit_name`: `veridian-worker@task-20260808-175102-execute-ocid-020-021-real-implementation.service`
+- `ts_dispatched`: 2026-08-08T17:51:10Z
+- `ts_sigterm`: 2026-08-08T18:51:44Z (exactly ~60 min after dispatch)
+- `ts_completed`: 2026-08-08T18:52:48Z (SIGKILL confirmed 64s after SIGTERM)
+- Original prompt: execute the real 15-point OCID-020/021 checklist,
+  authorized by `pm_decisions_pending id=519` (verified real/approved,
+  unchanged).
 
-## Method
-All execution happened in two isolated `git worktree --detach` checkouts
-under `/tmp/pr289-audit/` (PR head `90df8f61`, and pre-fix `origin/main`
-`b9acbc4`), so nothing touched the shared, already-dirty
-`/opt/veridian/repos/veridian-scripts` checkout other worker tasks have
-in-flight changes on.
+## RCA — real, evidence-based
+The original task dir
+(`/opt/veridian/ai-os/tasks/task-20260808-175102-execute-ocid-020-021-real-implementation`)
+still exists with its full `task.yaml`/`worker.log`/`result.json` history.
 
-## Evidence gathered (real commands, real output)
+**Invocation 1 (the killed one) has zero footprint**: no entry in
+`result.json`, no lines in `worker.log` attributable to it, no checkpoint
+before the kill. It hung completely silently for the full 60 minutes with
+nothing to show for it — consistent with a single blocking call made
+directly via Bash with no timeout, but there is no surviving transcript
+for invocation 1 itself to name the exact command with certainty, and this
+report says so rather than guessing.
 
-1. **PR's own test suite**, run on PR head:
-   `python3 tests/test_query_umr_by_id.py` → 3/3 PASS.
-2. **Independent CLI execution** against the live production DB:
-   - `--umr-id UMR-20260806-171945-5767` → `count=1`, exact matching row.
-   - `--umr-id UMR-20260813-042145-7cc0` → `count=1`, exact matching row.
-   - `--umr-id UMR-DOES-NOT-EXIST-99999999` → `count=0`.
-3. **Regression control**: the identical `--umr-id UMR-20260806-171945-5767`
-   query run against pre-fix `origin/main` (`b9acbc4`) returned `count=20`
-   (newest rows, ignoring the filter entirely) — proves the bug is real and
-   reproducible, and that the PR's diff is what fixes it, not a no-op.
-4. **`--search` regression check**: `--search "resource_governor" --limit 5`
-   returns identical `count=2` / identical rows on both PR head and pre-fix
-   main — `--search` was not touched or regressed by this diff.
+The strongest real corroborating evidence comes from the *same task*'s
+later invocations (2 through 5, all of which completed normally and are
+recorded in `result.json`/`.claude-out-main.json`): the workspace's
+`quality-gate.sh` build step (`next build` under Turbopack) genuinely hung
+until forcibly killed by its own `timeout -k 30 1800` wrapper after 30
+minutes (`worker.log` lines 85-92: "gate 'build' TIMED OUT after 1800s and
+was killed ... see task-20260727-043407 RCA"). That wrapper
+(`/opt/veridian/scripts/quality-gate.sh:74-97`) is the *already-existing,
+correct* fix for this exact failure class at the gate level — confirmed
+live, not re-implemented. The real gap invocation 1 fell into is that this
+protection only wraps `quality-gate.sh`'s own steps, not an agent's own
+raw Bash calls to the same kind of slow/blocking command made directly
+during a live session — which is what a 60-minute silent hang with zero
+output looks like.
 
-## Deployment-drift check
-`diff` of the live deployed `/opt/veridian/scripts/{resource_governor.py,
-superboss-register.py}` against the PR-head worktree returned **zero diff**
-(byte-identical, exit 0) for both files. `/opt/veridian/scripts` is itself a
-git worktree, already checked out on branch
-`worker/task-20260813-042207-fix-umr-id-filter---audit-failed-supervi` at
-commit `90df8f61`, with `git status --short` clean on both files. Conclusion:
-the live/`origin/main` disagreement the PM flagged was real (`origin/main`
-was 4 days stale and lacked this fix) but was an ordinary clean branch
-checkout of this exact PR, **not** an uncommitted local hack. Live behaviour
-was already byte-identical to the PR. Nothing was overwritten on the live
-box.
+## Real existing work — verified before redispatching
+Branch `worker/task-20260808-175102-execute-ocid-020-021-real-implementation`
+is pushed to origin, working tree clean, 6 real commits ahead of `main`.
+Confirmed via `git log`/`git status` directly:
+- **13/15 OCID-020/021 checklist points already closed** (P01, P02, P05,
+  P06, P07–P15). **OCID-021 is 100% closed (10/10)**.
+- Real PRs merged this chain: #732 (OCID-021 registration), #987 (UX
+  fixes), #988 (security CVEs), #1051 (Terminology Guardrail fix).
+- PR **#1070** (H6 accessible-label fix, `fix/ocid020-p04-contact-labels`)
+  is open, `mergeable=MERGEABLE`, `mergeStateStatus=BEHIND`, CI in flight
+  — real, not yet merged.
+- Remaining genuinely open: **P03** (webkit libs — real root/sudo blocker,
+  already root-caused, explicitly documented as not re-attemptable via the
+  apt-download path that was already tried) and **P04** (UX audit — H6
+  fixed by #1070 pending merge; H2/H4/H10 remain real, separately
+  dispositioned findings).
+- Current `task.yaml` status: `blocked` — the workspace's own quality gate
+  hit the `build` timeout described above, and the deterministic credit
+  accountant correctly rejected a second AI auto-fix attempt for it
+  ("existing software/mechanism already covers this ... use it instead of
+  spending AI credits").
 
-## Verdict
-**PASS** — posted as a real PR comment naming the audited head commit:
-https://github.com/FChecklist/veridian-scripts/pull/289#issuecomment-5276223937
+No sub-work was redone. Nothing here restarted from zero.
 
-## Merge
-Per the SPEC's step 4 (merge only on genuine PASS), PR #289 was merged into
-`origin/main`:
-- `gh pr merge 289 --merge` (FChecklist/veridian-scripts)
-- Verified real: `gh pr view 289 --json state,mergedAt,mergeCommit` →
-  `state=MERGED`, `mergedAt=2026-08-13T05:10:06Z`,
-  `mergeCommit=aec02f15f51c9f7d80d8f9df518f2628eda4fbbf`
-- Verified real: `git log origin/main` shows `aec02f15` as HEAD, with
-  `90df8f61` (the audited commit) merged in as its parent.
+## Redispatch — real, scoped, not a placeholder
+Reused the existing `single_deterministic_orchestrator_pipeline` capability
+(`resource_governor.py --submit`, per the capability-registry briefing —
+no new dispatch code written) to submit only the real remaining scope:
 
-## Register write-back
-Recorded via `python3 /opt/veridian/scripts/agent_work_briefing.py
-record-completion --umr-id UMR-20260813-050629-bae4 --entry-text "..."`
-(the canonical write-back into this UMR's own `ai_agent_registry` row,
-per the deterministic briefing already assembled for this UMR) →
-`AGENT-20260813-050629-bae4`.
+```
+task_identity: owner-task-20260813-082623-resume-ocid020021-p03p04-pr1070
+tier: 0
+source_trigger: owner_dispatch_gateway_resume
+```
 
-No new `wiring_registry` entity was registered — this was an audit + merge
-of existing code, not a new capability, so `--new-entity-record-file` was
-not applicable. No `gtm_certification_categories` mapping applies either.
+Result: **`accepted: true`, `umr_id: UMR-20260813-083422-15e7`, `reason:
+queued`**. Re-verified via a follow-up `--query-umr --umr-id` lookup:
+`status=queued`, `tier=0`. Pre-submission dedup check confirmed
+`task_identity` had zero prior rows (no duplicate dispatch).
 
-## Outcome summary (for the register, against governing chain UMR-20260806-171945-5767)
-| Field | Value |
-|---|---|
-| Audited PR | FChecklist/veridian-scripts#289 |
-| Audited head commit | `90df8f611674f0c0f059f7c55be1526a9f2ea688` |
-| Verdict | PASS |
-| PR comment URL | https://github.com/FChecklist/veridian-scripts/pull/289#issuecomment-5276223937 |
-| Merge commit (origin/main) | `aec02f15f51c9f7d80d8f9df518f2628eda4fbbf` |
-| Deployment drift found | None harmful — live box already matched PR exactly; only `origin/main` was stale, now fixed by this merge |
+Scope dispatched: merge PR #1070 once CI is green, confirm the live H6
+fix, an honest final P04 disposition (H2/H4/H10), an explicit
+Owner-decision-or-stop instruction for P03 (forbidding a 3rd attempt at
+the already-failed apt-download approach), and a final
+`gtm_check_production_readiness_audit.py` rollup once P03/P04 settle. The
+prompt explicitly requires every Bash call for a potentially
+slow/blocking command to carry a real timeout — the actual fix for the
+invocation-1 class of hang (the gate-level hang already has its own,
+separately-verified fix and was explicitly *not* re-touched, per the
+credit accountant's own ruling).
