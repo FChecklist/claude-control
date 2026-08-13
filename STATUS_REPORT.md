@@ -1,145 +1,153 @@
-# Status report — deploy verification + remaining-scope reconciliation for UMR-20260808-183926-70b6 (Standing Parallel mandate)
+# Status report — real Tier-1 audit of PR #131 (server-native PM sentinel) + live-actor risk finding
 
-UMR: UMR-20260813-091314-ba01 (this task's own governing UMR)
-Governing chain: Standing Parallel mandate, UMR-20260808-183926-70b6 (real
-status: `killed`). Its RCA task UMR-20260813-082614-0c10 fixed the mechanical
-root cause via PR #291 (veridian-scripts, merged 2026-08-13T08:40:22Z):
-`fix(worker-entrypoint): quote quality-gate auto-fix search-terms as an exact
-FTS phrase`.
+UMR: UMR-20260813-101225-a248 (this task's own governing UMR)
+Governing chain: UMR-20260813-084321-2962 (build native server-side PM
+sentinel) with amendment UMR-20260813-091633-8b6a. Target:
+`FChecklist/claude-control` PR #131, "feat: server-native hourly PM sentinel
+(pm-sentinel-tick.sh)".
 
-Two-part mandate: (1) verify PR #291 is actually live-deployed, since merging
-alone does not auto-sync to `/opt/veridian/scripts/`; (2) read 70b6's real
-task.yaml to find its real remaining scope and redispatch it.
+## Mandate
 
-## Part 1 — deploy verification: fix was NOT live; deployed it for real
+1. Perform a real, independent Tier-1 audit of PR #131 at its real current
+   head SHA (self-confirmed, not trusted from the dispatching evidence).
+2. Audit it as a privileged autonomous actor (dispatch-only-via-front-door,
+   real zero-duplication, real per-tick cap, financial-only Owner escalation,
+   no fabricated completion).
+3. Compare the live deployed `/opt/veridian/scripts/pm-sentinel-tick.sh`
+   against the PR branch content; if they diverge, audit the running copy.
+4. Post a real `AUDIT:PASS`/`AUDIT:FAIL` comment on PR #131 naming the exact
+   head SHA.
+5. Merge on a real PASS; on a real FAIL, do not merge and make (not
+   escalate) the call on whether the live timer should be stopped.
 
-**Finding: it was not deployed, and the SPEC's own suggested check
-(`deploy-live-scripts.sh`) is itself stale and would have made things worse.**
+## Correction to the dispatching evidence
 
-- Compared the live file directly against git history with `git cat-file
-  blob` (not `git show`, which silently truncated large file output in this
-  environment): `/opt/veridian/scripts/worker-entrypoint.sh` was
-  byte-identical to `veridian-scripts` commit `ed29146` — the commit
-  *immediately before* the fix commit `f854b95`. The fix was genuinely
-  undeployed.
-- `deploy-live-scripts.sh` copies `git ls-files scripts/` from
-  `/opt/veridian/repos/claude-control` into `/opt/veridian/scripts`. But per
-  `scripts/sync-repos.sh`'s own 2026-08-01 comment, that copy mechanism was
-  **retired the same day it was created** after being found to silently
-  overwrite real `veridian-scripts` fixes with claude-control's older,
-  divergent `scripts/` subdirectory (confirmed: claude-control's own copy of
-  `worker-entrypoint.sh` is missing both the `FAILING_GATES` variable and the
-  deterministic-briefing block that are already live). `/opt/veridian/scripts`
-  is itself a real git working copy of `FChecklist/veridian-scripts` (repo
-  created 2026-07-30, description: "Version-controlled snapshot of
-  VERIDIAN-DEV /opt/veridian/scripts (live production automation tree)").
-  Running `deploy-live-scripts.sh` as literally suggested would have
-  **reverted the live tree to a stale, divergent copy** — a real regression,
-  not a fix. Did not run it.
-- Real mechanism is `sync-repos.sh`'s direct `git pull --ff-only` inside
-  `/opt/veridian/scripts`. Ran it (`bash sync-repos.sh`) and it reported
-  `OK: 90df8f6` — but that was the *same* hash already checked out, i.e. a
-  silent no-op that still printed "OK". Root cause: the live checkout was on
-  branch `worker/task-20260813-042207-fix-umr-id-filter---audit-failed-supervi`
-  (a stale feature branch), not `main`, so the plain `git pull` was pulling
-  that branch's own (empty) remote diff, never main's new commits. This is a
-  second real, previously-undetected gap: PR #291 sat merged-but-undeployed
-  for ~47 minutes with no error surfaced anywhere in this path.
-- Fixed for real: `git checkout -B main origin/main` in
-  `/opt/veridian/scripts`, then `git pull --ff-only origin main` — fast-forward
-  `90df8f6..ebe31a9`, 5 files changed. Live checkout now correctly tracks
-  `main`, so future `sync-repos.sh` runs will work without manual
-  intervention.
-- **Verified deployed**: `diff` of live `/opt/veridian/scripts/worker-entrypoint.sh`
-  against `git cat-file blob origin/main:worker-entrypoint.sh` is empty.
-  The fix (`--search-terms "\"quality gate auto-fix retry $FAILING_GATES\""`)
-  is confirmed live, byte-for-byte, not merely merged.
+The task was dispatched with the claim that PR #131 "carries NO posted AUDIT
+comment at all" as of 2026-08-13T09:45-10:05Z. Re-verified via `gh api
+repos/FChecklist/claude-control/issues/131/comments`: this is stale/wrong —
+two comments already existed at that point, an `AUDIT: FAIL` at 09:09:27Z
+and a traceability note at 09:37:16Z, both **before** the claimed evidence
+window. This task performed its own fresh, independent audit rather than
+trusting either that stale claim or the prior comment's conclusions
+verbatim, and reached the same verdict from its own evidence plus
+additional findings the prior comment did not cover.
 
-## Part 2 — 70b6's real remaining scope, and why nothing new was (re)dispatched
+## Head SHA confirmed live
 
-Read 70b6's real task.yaml/PROGRESS.md directly (branch
-`worker/task-20260808-192230-standing-mandate--priorities-1-4-now-run`,
-commit `06cfa0491`, `compliance-tracker` repo — located via the agent's own
-persistent memory file
-`/opt/veridian/ai-os/memory/agents/AGENT-20260808-183926-70b6.md`, not
-guessed or reconstructed).
+`gh api repos/FChecklist/claude-control/pulls/131 --jq '.head.sha'` →
+`6a78798ebd7280c28727879167201591e019fb14` (single commit, no pushes since;
+`mergeable=true`, `mergeable_state=clean`, `state=open`).
 
-Real remaining scope as of the last real checkpoint (2026-08-08T19:30Z):
-1. Re-check once the P2/3 coordinator (`task-20260808-175102`) and P4
-   coordinator (`task-20260808-192224`) have made real progress; pick up
-   only genuinely still-uncovered items, to avoid duplicating their own
-   sub-agent dispatches.
-2. OCID-041/042/043/044/045/046 + OCID-065: 7 items blocked purely by
-   compliance-tracker's branch-protection self-approval deadlock
-   (`required_approving_review_count=1`, `enforce_admins=true`, no second
-   real reviewer identity) — flagged as needing an Owner/governance
-   decision, not code-level work.
-3. OCID-048 (real cross-org isolation gap), OCID-056/059/061 (real
-   unresolved PR conflicts) — explicitly noted in 70b6's own PROGRESS.md as
-   "P4 coordinator's own real work to pick up."
+## Finding 1 — PR #131 as literally proposed is a non-functional no-op
 
-**Re-verified every item live today (2026-08-13), not trusted as of
-2026-08-08, and found it is already fully covered — redispatching a new
-coordinator here would be direct duplication of active sibling work, which
-this chain's own standing mandate explicitly forbids ("Zero duplication
-across all four priorities"):**
+- `dispatch-owner-task.sh` (the script's only real-work path, called at
+  `./dispatch-owner-task.sh` in `pm-sentinel-tick.sh`) does not exist
+  anywhere in `claude-control` — confirmed via `gh api search/code` (0 hits)
+  and direct `contents` 404s on both `scripts/dispatch-owner-task.sh` and
+  `/dispatch-owner-task.sh`.
+- `claude-control/scripts/` has been retired since 2026-08-01
+  (`scripts/README-RETIRED.md`: "no longer read by anything... do not add
+  or edit files here for anything meant to run on the server"). Merging
+  this PR as-is has **zero real production effect** regardless of the
+  missing dependency.
+- The PR branch's `pm-sentinel-tick.sh` (355 lines) is missing the
+  financial-only Owner-escalation amendment required by
+  `UMR-20260813-091633-8b6a` entirely — no `is_financial_decision`/
+  `escalate_financial_decision`/`notify-owner.py` logic anywhere in it.
 
-- **Item 2 (branch-protection deadlock) is already resolved.**
-  `required_approving_review_count=0` now (confirmed via `gh api
-  repos/FChecklist/compliance-tracker/branches/main/protection` earlier
-  today by the RCA task, re-confirmed here). Real PR state of the 6 items:
-  - #796 (OCID-041-linked) and #800 (OCID-042): MERGED 2026-08-08.
-  - #797 (OCID-043): MERGED **2026-08-13T09:01:02Z** — today, in flight.
-  - #799 (OCID-041's actual tracker row): still `mergeable=CONFLICTING`,
-    `mergeStateStatus=DIRTY` — 5 days of intervening `main` history means
-    this needs a real rebase, a mechanical job, not an Owner decision.
-  - #798 and #801: `mergeable=MERGEABLE` but `mergeStateStatus=BEHIND` —
-    need a branch update then merge, also mechanical.
-  - `master_issue_tracker`'s OCID-041 row (`tracker_id=1042`) was itself
-    updated **today at 08:42:09Z** by the RCA task with this exact live
-    state; its `apply_fix_notes` already records this as "Redispatched as
-    real remaining scope."
-- **Item 3 (P4's OCID work, which is literally all of OCID-022..066) has a
-  currently-running sibling task right now**: `task-20260813-091906-rca---resume-priority-4--umr-d3a3--ocid`
-  (title: "RCA + resume Priority 4 (UMR-d3a3, OCID-022-066) after
-  deterministic dedup reject left it blocked with a false running row",
-  status `in_progress`, dispatched by the same PM-sentinel tick that
-  dispatched this task, confirmed via its real `task.yaml`).
-- **Item 1's P1 half has a currently-running sibling**:
-  `task-20260813-091912-rca---resume-killed-p1-addendum-umr-1d97` (status
-  `in_progress`, same tick).
-- **Item 1's P2/3 half is already resolved.** `UMR-20260808-151153-e172`
-  itself completed (registration-only; minted `UMR-20260808-151244-134c` for
-  real OCID-020/021 implementation). The actual P2/3 worker,
-  `task-20260808-175102-execute-ocid-020-021-real-implementation` (real
-  `umr_id` = `UMR-20260808-185252-afba`, not the stale `-cebd` label some
-  earlier notes used), was found stuck/SIGKILLed and RCA'd + redispatched
-  **earlier today** by a separate task, merged as PR #130 (commit
-  `d6e25da`, confirmed directly from this repo's own git log).
+## Finding 2 — real divergence: production is not running this PR's content
 
-**Conclusion: every concrete item in UMR-20260808-183926-70b6's real
-remaining scope already has a real, currently-active or already-merged
-owner.** There is no genuinely uncovered gap for this task to redispatch
-without duplicating in-flight sibling work. No new dispatch was made. If the
-active P4 sibling (`task-20260813-091906`) or P1 sibling
-(`task-20260813-091912`) later report a genuine gap of their own, that is
-their scope to redispatch from — not a fresh duplicate opened here.
+- `diff /opt/veridian/scripts/pm-sentinel-tick.sh <PR #131 branch content>`:
+  real differences (live is 429 lines, PR branch is 355 — live has the
+  financial-escalation amendment, PR branch does not).
+- `diff /opt/veridian/scripts/pm-sentinel-tick.sh <veridian-scripts PR #292
+  branch content>` (head `ff328e7d7c8d3f8f5f26653c8a5c95faf6e87971`): **empty
+  diff** — the live file is byte-identical to PR #292, a *different* PR in a
+  *different* repo, not PR #131.
+- `/opt/veridian/scripts` is a live git working copy currently on branch
+  `worker/task-20260813-091931-amendment--server-native-pm-escalation-p` at
+  that exact commit; `git merge-base --is-ancestor ff328e7d... origin/main`
+  fails — production is running an **unmerged, unreviewed feature branch
+  directly**, not a reviewed/merged commit.
+- `veridian-scripts` PR #292 itself: `gh api .../issues/292/comments` and
+  `.../pulls/292/reviews` both return empty — **0 comments, 0 reviews**,
+  never independently audited.
+- The two systemd unit files (`.service`/`.timer`) *do* match byte-for-byte
+  between PR #131 and the live installed units; only the script diverges.
+
+## Finding 3 — privileged-actor checklist (audited against the live/running copy, since it's the real risk surface)
+
+| Check | Result |
+|---|---|
+| Dispatch only via `dispatch-owner-task.sh` (no raw tmux/file-git edits/`task-gateway.py cmd_start`) | CONFIRMED — only call site producing real work in either version |
+| Real per-tick dispatch cap | CONFIRMED — `MAX_DISPATCHES_PER_TICK=5`, enforced in `dispatch_gap()` |
+| Real zero-duplication, incl. cross-PM-tier | CONFIRMED — own `is_in_flight()` bookkeeping (re-verified live) **plus** `dispatch-owner-task.sh`'s own unconditional `check-content-duplicate --window-hours 6` (content-keyed, not caller-keyed, genuinely cross-tier since it's the one shared front door) |
+| Financial-only Owner escalation | CONFIRMED, live copy only — narrow `FINANCIAL_KEYWORDS` gate checked first in `dispatch_gap()`, escalates via existing `notify-owner.py` and returns without dispatching. **Absent entirely from PR #131's own branch content.** |
+| No fabricated completion | CONFIRMED — neither version calls `mark-umr-terminal` itself; every dispatched prompt is explicitly told "Do not fabricate completion" |
+| Real gap (both versions) | **UNRESOLVED**: the "merge fresh-PASS PR" path (`completed_unmerged` rows that are `MERGEABLE`+`CLEAN`+checks-pass+`APPROVED`) dispatches a worker whose own prompt tells it to itself run `gh pr merge` + `mark-umr-terminal` — conflicts with the standing no-worker-merge rule and never re-checks the *original* PR's own tier1/tier2 classification before authorizing that self-merge. Live, automatic, no additional gate. |
+
+## Finding 4 — re-verified SPEC background evidence (d)
+
+`python3 resource_governor.py --query-umr --umr-id UMR-20260813-084321-2962`
+→ `status=running`, `unit_name=veridian-worker@task-20260813-084351-build-native-server-side-pm-sentinel--sy.service`.
+`systemctl --user show` that unit → `ActiveState=inactive`, `SubState=dead`.
+`journalctl --user -u` that unit → terminated 2026-08-13T09:03:02Z
+("Consumed 6min 49.072s CPU time, 2.0G memory peak"). The exit-write-back-bug
+gap is real and current for this exact chain (not this task's fix target).
+
+## Verdict
+
+**`AUDIT:FAIL`** posted on PR #131 at head `6a78798ebd7280c28727879167201591e019fb14`
+(https://github.com/FChecklist/claude-control/pull/131#issuecomment-5279274298).
+Not merged — confirmed still `state=open`, `merged=false` after posting.
+
+## Live-timer call (evidence-based, non-financial, made directly per this task's own instructions — not escalated)
+
+Stopped and disabled `veridian-pm-sentinel-tick.timer`
+(`systemctl --user stop` + `disable`; confirmed `inactive`/`disabled`,
+removed from `list-timers --all`). Rationale: the code actually running in
+production (a) has never itself been independently audited (PR #292: 0
+comments, 0 reviews), (b) is served from an unmerged feature branch checked
+out directly on the box rather than a reviewed, merged commit, and (c)
+carries the same live tier2-merge-bypass gap from Finding 3 with no
+additional gate protecting it. Re-enable only after: (1) the "merge
+fresh-PASS PR" path is fixed to re-verify the original PR's own risk tier
+before authorizing a self-merge dispatch, and (2) the fixed code lands via a
+normal reviewed, merged PR into `veridian-scripts` `main` and production is
+redeployed from that merged commit, not a live feature-branch checkout.
+
+## Duplication check
+
+- PR #135 (`claude-control`): only touches `STATUS_REPORT.md` — not the same
+  content as #131, not audited here.
+- PR #292 (`veridian-scripts`): real code, but scope differs from #131 (adds
+  the financial-escalation amendment) and is out of this task's target repo
+  — not separately merged/closed here per this task's own "do not
+  duplicate" instruction. Its being unaudited is reported above as evidence
+  for the live-timer call, not fixed by this task.
+- `wiring_registry` row `dispatch_event-owner-task-20260813-101222-1284891`
+  (flagged by the pre-task briefing) is this task's own dispatch event, not
+  separate prior work.
 
 ## Real evidence trail (commands run, not paraphrased)
-- `git cat-file blob origin/main:worker-entrypoint.sh` vs. live file: empty
-  diff (deployed).
-- `bash /opt/veridian/scripts/sync-repos.sh` → log
-  `/opt/veridian/logs/sync-repos-20260813-092715.log`: `veridian-scripts (live,
-  /opt/veridian/scripts) --- OK: 90df8f6` (silent no-op, root-caused and
-  fixed as above).
-- `cd /opt/veridian/scripts && git checkout -B main origin/main && git pull
-  --ff-only origin main` → `Updating 90df8f6..ebe31a9, Fast-forward, 5 files
-  changed, 323 insertions(+), 4 deletions(-)`.
-- `gh pr view 796/797/798/799/800/801 --repo FChecklist/compliance-tracker
-  --json state,mergedAt,mergeable,mergeStateStatus`.
-- `python3 /opt/veridian/scripts/superboss-register.py list-issues
-  --linked-ocid OCID-041` → `tracker_id=1042`, `updated_at=2026-08-13T08:42:09Z`.
-- `cat /opt/veridian/ai-os/tasks/task-20260813-091906-.../task.yaml` and
-  `task-20260813-091912-.../task.yaml` → both `status: in_progress`.
-- `python3 /opt/veridian/scripts/resource_governor.py --query-umr --umr-id
-  UMR-20260808-151153-e172` → `status: completed`.
+
+- `gh api repos/FChecklist/claude-control/pulls/131 --jq '.head.sha,.mergeable,.mergeable_state,.state'`
+- `gh api repos/FChecklist/claude-control/issues/131/comments`
+- `gh api repos/FChecklist/claude-control/pulls/131/commits`
+- `gh api repos/FChecklist/claude-control/contents/scripts/pm-sentinel-tick.sh?ref=6a78798e...`
+- `gh api search/code -f q='dispatch-owner-task.sh repo:FChecklist/claude-control'` → `total_count: 0`
+- `gh api repos/FChecklist/claude-control/contents/scripts/dispatch-owner-task.sh` and `/dispatch-owner-task.sh` → both 404
+- `gh api repos/FChecklist/claude-control/contents/scripts/README-RETIRED.md`
+- `diff /opt/veridian/scripts/pm-sentinel-tick.sh <PR #131 fetched content>`
+- `gh api repos/FChecklist/veridian-scripts/contents/pm-sentinel-tick.sh?ref=ff328e7d...` then `diff` against the live file → empty
+- `cd /opt/veridian/scripts && git status && git log --oneline -3 && git rev-parse --abbrev-ref HEAD && git rev-parse HEAD`
+- `git merge-base --is-ancestor ff328e7d... origin/main` (in `/opt/veridian/scripts`) → not an ancestor
+- `gh api repos/FChecklist/veridian-scripts/issues/292/comments` and `.../pulls/292/reviews` → both empty
+- `ls -la /opt/veridian/scripts/dispatch-owner-task.sh /opt/veridian/scripts/notify-owner.py` → both present live
+- `python3 /opt/veridian/scripts/resource_governor.py --query-umr --umr-id UMR-20260813-084321-2962`
+- `systemctl --user show veridian-worker@task-20260813-084351-....service -p ActiveState -p SubState -p Result`
+- `journalctl --user -u veridian-worker@task-20260813-084351-....service --no-pager`
+- `gh pr comment 131 --repo FChecklist/claude-control --body-file ...` → posted
+- `systemctl --user stop veridian-pm-sentinel-tick.timer && systemctl --user disable veridian-pm-sentinel-tick.timer`
+- `systemctl --user is-active/is-enabled veridian-pm-sentinel-tick.timer` → `inactive`/`disabled`
+- `gh api repos/FChecklist/claude-control/pulls/131 --jq '{state,merged}'` → `{"state":"open","merged":false}` (post-comment re-check)
