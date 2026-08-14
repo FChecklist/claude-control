@@ -270,6 +270,95 @@ def test_untrusted_pr_authors_own_self_posted_pass_is_ignored(monkeypatch):
     assert decision["allowed"] is False
 
 
+def test_self_review_refused_even_with_full_owner_association(monkeypatch):
+    """THE real live scenario, reproducing an independent re-audit's own
+    verified finding against this exact repo: `gh api
+    repos/FChecklist/claude-control/issues/230/comments --jq '.[] |
+    .user.login, .author_association'` shows every PR author AND every audit
+    commenter in claude-control today is the SAME login with OWNER
+    association. An authorAssociation-only check (this fix's first, INSUFFICIENT
+    pass) cannot distinguish that from a genuine third-party auditor -- it
+    must be refused by login identity alone, regardless of association."""
+    head = "fca1a1a" + "0" * 33
+
+    def fake_run_gh(args, timeout=60):
+        return _pr_view_json(
+            head, pr_author="FChecklist",
+            comments=[
+                _comment(f"AUDIT: PASS\nHead SHA audited: `{head}`", "2026-08-14T11:00:00Z",
+                         author="FChecklist", association="OWNER"),
+            ],
+        )
+
+    monkeypatch.setattr(merge_gate, "_run_gh", fake_run_gh)
+    decision = merge_gate.evaluate_gate("ORG/REPO", 999)
+    assert decision["allowed"] is False, (
+        "self-review by the PR's own OWNER-associated author must be refused "
+        "-- this is the exact live gap an independent re-audit found in the "
+        "first, association-only version of this fix"
+    )
+    assert "self-review" in decision["reason"] or "self-review" in str(decision["untrusted_verdicts_skipped"])
+
+
+def test_self_review_refusal_not_bypassable_via_auditor_login_allowlist(monkeypatch):
+    """Even if MERGE_GATE_AUDITOR_LOGINS explicitly allowlists the PR
+    author's own login (a misconfiguration), self-review must still refuse
+    -- the hard invariant is not overridable by the allowlist."""
+    head = "5e1fe1f" + "0" * 33
+    monkeypatch.setenv("MERGE_GATE_AUDITOR_LOGINS", "FChecklist")
+    import importlib
+    importlib.reload(merge_gate)
+    try:
+        def fake_run_gh(args, timeout=60):
+            return _pr_view_json(
+                head, pr_author="FChecklist",
+                comments=[
+                    _comment(f"AUDIT: PASS\nHead SHA audited: `{head}`", "2026-08-14T11:00:00Z",
+                             author="FChecklist", association="OWNER"),
+                ],
+            )
+
+        monkeypatch.setattr(merge_gate, "_run_gh", fake_run_gh)
+        decision = merge_gate.evaluate_gate("ORG/REPO", 999)
+        assert decision["allowed"] is False
+    finally:
+        monkeypatch.delenv("MERGE_GATE_AUDITOR_LOGINS", raising=False)
+        importlib.reload(merge_gate)
+
+
+def test_self_review_escape_hatch_requires_explicit_env_opt_in(monkeypatch):
+    """MERGE_GATE_ALLOW_SELF_REVIEW is the one documented, loud, explicit
+    escape hatch -- off by default (proven by every test above using no
+    env var at all), and this module never sets it itself anywhere in its
+    own code (grep-verified: no os.environ.setdefault/os.putenv calls)."""
+    import inspect
+    source = inspect.getsource(merge_gate)
+    assert "os.environ[\"MERGE_GATE_ALLOW_SELF_REVIEW\"]" not in source
+    assert "os.environ['MERGE_GATE_ALLOW_SELF_REVIEW']" not in source
+    assert ".setdefault(\"MERGE_GATE_ALLOW_SELF_REVIEW\"" not in source
+
+    head = "e5ca9e7" + "0" * 33  # valid hex only (no "p" -- caught live in dev)
+    monkeypatch.setenv("MERGE_GATE_ALLOW_SELF_REVIEW", "true")
+    import importlib
+    importlib.reload(merge_gate)
+    try:
+        def fake_run_gh(args, timeout=60):
+            return _pr_view_json(
+                head, pr_author="FChecklist",
+                comments=[
+                    _comment(f"AUDIT: PASS\nHead SHA audited: `{head}`", "2026-08-14T11:00:00Z",
+                             author="FChecklist", association="OWNER"),
+                ],
+            )
+
+        monkeypatch.setattr(merge_gate, "_run_gh", fake_run_gh)
+        decision = merge_gate.evaluate_gate("ORG/REPO", 999)
+        assert decision["allowed"] is True, "explicit opt-in must actually disable the self-review check"
+    finally:
+        monkeypatch.delenv("MERGE_GATE_ALLOW_SELF_REVIEW", raising=False)
+        importlib.reload(merge_gate)
+
+
 def test_untrusted_pass_is_skipped_in_favor_of_older_trusted_pass(monkeypatch):
     """An untrusted, newer PASS must not shadow a real, older TRUSTED PASS --
     the scan should keep looking, not stop at the first (untrusted) verdict

@@ -22,13 +22,25 @@ current headRefOid) -- never from a caller's self-report of its own verdict.
 Four real, deterministic refusal conditions, checked in this order:
 
   0. UNTRUSTED VERDICT SOURCE -- a verdict-shaped comment/review exists, but
-     its author does not have a trusted repo association (real, live
-     `authorAssociation` from GitHub itself -- OWNER/MEMBER/COLLABORATOR by
-     default, see TRUSTED_AUTHOR_ASSOCIATIONS) or is not on the explicit
-     MERGE_GATE_AUDITOR_LOGINS allowlist when one is configured. Closes the
-     CRITICAL self-certification gap audited live on this PR itself
-     (2026-08-14T10:20Z): without this, ANY account with comment access
-     could post a fabricated "AUDIT: PASS" and force a merge through. An
+     its author is disqualified as a verdict source, for either of two real,
+     independent reasons:
+       (a) SELF-REVIEW -- its author is the exact same login that authored
+           the PR (see _is_self_review). Hard invariant, never overridable
+           by an association or an allowlist -- matches GitHub's own
+           required-review semantics (a PR author's own approval never
+           satisfies a required-review branch-protection rule either).
+       (b) UNTRUSTED ASSOCIATION -- its author does not have a trusted repo
+           association (real, live `authorAssociation` from GitHub itself --
+           OWNER/MEMBER/COLLABORATOR by default, see
+           TRUSTED_AUTHOR_ASSOCIATIONS) or is not on the explicit
+           MERGE_GATE_AUDITOR_LOGINS allowlist when one is configured.
+     Together these close the CRITICAL self-certification gap audited live
+     on this PR itself (2026-08-14T10:20Z, corrective re-audit confirmed the
+     first-pass fix of (b) alone was insufficient because this repo's own
+     real PR authors and real audit commenters are today the same OWNER
+     -associated login): without both checks, either ANY account with
+     comment access, or the PR's own author specifically, could post a
+     fabricated "AUDIT: PASS" and force a merge through. Either way the
      untrusted verdict is skipped entirely, not just downgraded -- the scan
      keeps looking for the newest TRUSTED verdict among older events.
   1. NO VERDICT -- no comment or review whose body's first non-blank line is
@@ -64,6 +76,25 @@ merge happened; the exit code alone is authoritative, same convention this
 repo's own supervisor_merge_detection_test.sh already established for
 merge-outcome detection (trust a fresh API check, never a shell exit code,
 for whether the merge itself succeeded -- see `merge_pr_via_gate` below).
+
+Environment variables (all optional; identity/trust config only):
+  MERGE_GATE_TRUSTED_ASSOCIATIONS  comma-separated GitHub authorAssociation
+                                    values to trust (default:
+                                    "OWNER,MEMBER,COLLABORATOR").
+  MERGE_GATE_AUDITOR_LOGINS        comma-separated login allowlist; when set,
+                                    ONLY these logins' verdicts are trusted
+                                    (association check is bypassed, self-
+                                    review check is NOT). Unset by default --
+                                    no distinct auditor account is
+                                    provisioned in this environment yet.
+  MERGE_GATE_ALLOW_SELF_REVIEW     "1"/"true"/"yes" to disable the PR-author
+                                    -cannot-audit-their-own-PR hard invariant.
+                                    Unset (disabled) by default -- this is a
+                                    real, deliberate loss of the gate's core
+                                    guarantee; only an owner who has
+                                    consciously accepted that risk should set
+                                    it, and nothing in this module ever sets
+                                    it itself.
 """
 import argparse
 import json
@@ -238,20 +269,59 @@ def extract_cited_sha(body):
     return None
 
 
-def _is_trusted_verdict_source(event):
+def _is_self_review(event, pr_author):
+    """Real, hard invariant closing the deeper half of the CRITICAL finding
+    audited live on PR #230 (2026-08-14T10:20Z, corrective re-audit
+    2026-08-14T~11:xxZ): the FIRST fix here only added an
+    authorAssociation check, which does NOT actually stop the PR's own
+    author from self-certifying in THIS repo, because a real, live check
+    (`gh api repos/FChecklist/claude-control/issues/230/comments --jq '.[]
+    | .user.login, .author_association'`) confirms every PR author AND
+    every audit commenter in this repo today is the exact same OWNER
+    -associated login. An authorAssociation allowlist alone cannot
+    distinguish "the account with real repo access" from "the account
+    that wrote this PR", because right now they are always the same
+    account -- so an association-only check leaves the literal attack the
+    audit named ("including the PR's own author... posting a fabricated
+    AUDIT: PASS") completely open in the one environment this gate
+    actually has to defend.
+
+    This is NOT overridable by MERGE_GATE_AUDITOR_LOGINS or
+    MERGE_GATE_TRUSTED_ASSOCIATIONS -- a PR's own author must never be
+    treated as its own auditor, full stop, matching GitHub's own required
+    -review semantics (a PR author's own approval never satisfies a
+    required-review branch-protection rule either). The one escape hatch
+    is MERGE_GATE_ALLOW_SELF_REVIEW=1 -- unset by default, loud and
+    explicit by name, for an owner who has consciously decided to accept
+    this risk (e.g. while no distinct auditor identity exists yet);
+    nothing in this module ever sets it itself."""
+    if os.environ.get("MERGE_GATE_ALLOW_SELF_REVIEW", "").strip().lower() in (
+        "1", "true", "yes",
+    ):
+        return False
+    login = (event.get("author") or "").strip().lower()
+    author_login = (pr_author or "").strip().lower()
+    return bool(login) and bool(author_login) and login == author_login
+
+
+def _is_trusted_verdict_source(event, pr_author):
     """Real identity check closing the CRITICAL finding audited live on PR
-    #230 (2026-08-14T10:20Z): an event only carries verdict authority if its
-    author has real, GitHub-reported write-level association with the repo
-    (or, once a distinct service account exists, is on the explicit
-    MERGE_GATE_AUDITOR_LOGINS allowlist). See the TRUSTED_AUTHOR_ASSOCIATIONS
-    docstring above for the full incident writeup."""
+    #230 (2026-08-14T10:20Z): an event only carries verdict authority if
+    (a) its author is not the PR's own author (see _is_self_review) AND
+    (b) its author has real, GitHub-reported write-level association with
+    the repo, or, once a distinct service account exists, is on the
+    explicit MERGE_GATE_AUDITOR_LOGINS allowlist. See the
+    TRUSTED_AUTHOR_ASSOCIATIONS docstring above for the full incident
+    writeup."""
+    if _is_self_review(event, pr_author):
+        return False
     if _AUDITOR_LOGIN_ALLOWLIST:
         login = (event.get("author") or "").strip().lower()
         return login in _AUDITOR_LOGIN_ALLOWLIST
     return event.get("author_association") in TRUSTED_AUTHOR_ASSOCIATIONS
 
 
-def find_latest_verdict(events):
+def find_latest_verdict(events, pr_author):
     """First (= newest, events are pre-sorted) event whose body opens with a
     structured AUDIT: PASS/FAIL line AND whose author is a trusted verdict
     source (see _is_trusted_verdict_source). An untrusted commenter's
@@ -271,12 +341,13 @@ def find_latest_verdict(events):
         m = VERDICT_LINE_RE.match(first_line)
         if not m:
             continue
-        if not _is_trusted_verdict_source(e):
+        if not _is_trusted_verdict_source(e, pr_author):
             untrusted.append(
                 {
                     "verdict": m.group(1).upper(),
                     "author": e["author"],
                     "author_association": e.get("author_association"),
+                    "self_review": _is_self_review(e, pr_author),
                     "ts": e["ts"],
                     "kind": e["kind"],
                 }
@@ -308,19 +379,27 @@ def evaluate_gate(repo, pr):
     failure IS re-raised as GhError (fail closed: callers must treat any
     inability to confirm ALLOW as REFUSE, never default to allowing)."""
     snapshot = get_pr_snapshot(repo, pr)
-    verdict, untrusted = find_latest_verdict(snapshot["events"])
+    verdict, untrusted = find_latest_verdict(snapshot["events"], snapshot["pr_author"])
     decision = {
         "pr_url": snapshot["url"],
         "pr_number": snapshot["number"],
         "pr_state": snapshot["state"],
         "head_sha": snapshot["head_sha"],
+        "pr_author": snapshot["pr_author"],
         "latest_verdict": verdict,
         "untrusted_verdicts_skipped": untrusted,
     }
 
     if verdict is None:
         decision["allowed"] = False
-        if untrusted:
+        if any(u["self_review"] for u in untrusted):
+            decision["reason"] = (
+                "no TRUSTED audit verdict found: the only verdict(s) posted "
+                f"were self-review -- authored by {snapshot['pr_author']!r}, "
+                "the same login that authored this PR -- which never carries "
+                "authority, regardless of its GitHub association"
+            )
+        elif untrusted:
             decision["reason"] = (
                 "no TRUSTED audit verdict found: "
                 f"{len(untrusted)} verdict-shaped comment(s)/review(s) exist "
