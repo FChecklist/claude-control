@@ -50,10 +50,20 @@ UMR-20260814-200113-bd55
       Repo-tracked `STATUS_REPORT.md` -- `test -f` exit 0, `wc -l` = 123
       lines.
 
+- [x] Called `agent_work_briefing.py record-completion` for
+      UMR-20260814-200113-bd55 (real summary, `--umr-status completed`,
+      `--umr-commit-sha a88e6e1`, `--umr-pr-number 241`). Real tool
+      response: `completion_verification.verified=false`,
+      `umr_tasks.status=unverified_self_report` -- reason: the tool's
+      independent PR-verification enum only covers `veridian-scripts`,
+      `compliance-tracker`, `projexa`; `claude-control` (this repo) is not
+      in that list, so it cannot independently check PR #241 the way it
+      would for those three repos. Not a defect in this task's work --
+      recorded honestly as `unverified_self_report` rather than claiming a
+      `verified` status the tool did not actually grant.
+
 ## Remaining
 
-- [ ] `record-completion` call to `agent_work_briefing.py` for
-      UMR-20260814-200113-bd55 once pushed.
 - [ ] Real remaining product work (not this task's scope, but named for the
       next tier): land `UMR-20260814-095554-a31b`'s blocked fix (security
       audit + UX audit fixes already exist as open PRs -- veridian-scripts#372,
