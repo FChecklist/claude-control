@@ -22,8 +22,13 @@ Documentation-only task. No code changes required or made.
       attempted).
 - [x] No code touched, no redispatch performed, no re-diagnosis performed —
       pure documentation update per SPEC.
-- [x] Committed and pushed the doc change.
+- [x] Committed (`ecf3a0c`) and pushed directly to `master` (fast-forward
+      from `d4ab44b`) — this file's own history (e.g. `4c751c6`) shows the
+      established convention for `STATUS_REPORT.md` is a direct commit to
+      `master`, not a PR, so no new PR was opened.
+- [x] Called `agent_work_briefing.py record-completion` for
+      `UMR-20260814-123626-6115` with the real summary of work done.
 
 ## Remaining
 
-- [ ] None — task complete pending final `record-completion` write-back.
+- [ ] None — task complete.
