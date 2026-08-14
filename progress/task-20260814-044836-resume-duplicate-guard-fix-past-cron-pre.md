@@ -70,16 +70,45 @@ Real code: `superboss-register.py` + `dispatch-owner-task.sh` +
       pushed to `fix/scope-aware-target-identifier-dedup` ->
       https://github.com/FChecklist/veridian-scripts/pull/350.
 
-## Remaining
+- [x] Independent Tier-1 re-audit #2 at head SHA
+      `f743f648c1b08dbed6ae7445dea9cd47b2065b5b`: two separate fresh
+      subagent audits, both **AUDIT: PASS**
+      (https://github.com/FChecklist/veridian-scripts/pull/350#issuecomment-5289799501,
+      https://github.com/FChecklist/veridian-scripts/pull/350#issuecomment-5289823692).
+      Both independently fresh-cloned, confirmed the exact head SHA, wrote
+      their own repro of the original bug (distinct from the shipped
+      tests) proving it's fixed, and re-ran the full suite (734
+      passed / 1 pre-existing unrelated failure). I separately ran my own
+      independent verification pass too (fresh clone, diff review, 4 extra
+      hand-written edge cases: no-blank-line-ever, two excluded labels in
+      sequence, excluded-section-then-real-header -- all correct).
+- [x] Verified immediately before merge: head SHA still
+      `f743f648c1b08dbed6ae7445dea9cd47b2065b5b`, `mergeable=MERGEABLE`,
+      `mergeStateStatus=CLEAN`. Squash-merged PR #350: commit
+      `82a258b13a2d8d126464462a60ff38def97f074f`, merged
+      2026-08-14T05:25:50Z, branch deleted.
+- [x] Ran `agent_work_briefing.py record-completion` for
+      `UMR-20260814-034424-ded4` (the governing task's own UMR):
+      `umr_tasks` row now `status=completed`, evidence
+      `pr_number=350`, `commit_sha=82a258b13a2d8d126464462a60ff38def97f074f`,
+      `repo=veridian-scripts`.
+- [x] Ran `agent_work_briefing.py record-completion` for this task's own
+      UMR `UMR-20260814-044829-80b3`: same evidence, `status=completed`.
+- [x] Committed and pushed this progress file's final state.
 
-- [ ] Independent Tier-1 re-audit #2 at head SHA
-      `f743f648c1b08dbed6ae7445dea9cd47b2065b5b` (in progress).
-- [ ] On a fresh `AUDIT: PASS` at the current head SHA: verify head SHA still
-      matches immediately before merging, `mergeStateStatus=CLEAN`, then
-      merge PR #350.
-- [ ] Run `agent_work_briefing.py record-completion` for
-      `UMR-20260814-034424-ded4` (the governing task's own UMR) citing the
-      real merged PR/commit.
-- [ ] Run `agent_work_briefing.py record-completion` for this task's own UMR
-      `UMR-20260814-044829-80b3`.
-- [ ] Commit this progress file + final summary, push.
+## Terminal status: DONE
+
+Resumed `task-20260814-034453-duplicate-guard-false-refuses-legitimate`
+from its real pushed branch/PR (`FChecklist/veridian-scripts#350`) after
+verifying the SPEC's citation (owner-approved
+`crontab-drift-approved-2026-08-14`) was real, rather than trusting the
+dispatch text at face value. Did not merge the PR as-is: an independent
+audit I commissioned before merging found a real correctness bug (a false
+negative that could let genuine duplicate dispatches through undetected --
+the exact opposite failure mode from the one this PR itself was fixing).
+Fixed that bug in the same PR, added regression tests, got two further
+independent fresh audits (AUDIT: PASS) at the corrected head SHA, verified
+merge-readiness, and merged. Both the governing task's UMR
+(`UMR-20260814-034424-ded4`) and this task's own UMR
+(`UMR-20260814-044829-80b3`) are recorded completed with real commit/PR
+evidence.
