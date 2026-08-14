@@ -114,8 +114,15 @@ scope creep into an unrelated worker type this task was never asked about.
       All scenarios passed.
       ```
 
+- [x] `agent_work_briefing.py record-completion` for UMR-20260814-054218-9475
+      -- `ai_agent_registry` entry written (`AGENT-20260814-054218-9475`)
+- [x] Opened real PR against `FChecklist/claude-control`: PR #209
+      (https://github.com/FChecklist/claude-control/pull/209)
+
 ## Remaining
 
-- [ ] None for this task's real scope. The live, operative fix already
-      exists and is running; this task's own real, additional contribution
-      (the claude-control mirror + tests) is complete and committed.
+- [ ] PR #209 awaiting review/merge -- nothing further for this task to do
+      until a reviewer merges it. The live, operative fix already exists
+      and is running (veridian-scripts PR #322, already merged); this
+      task's own real, additional contribution (the claude-control mirror
+      + tests) is complete, committed, and pushed.
