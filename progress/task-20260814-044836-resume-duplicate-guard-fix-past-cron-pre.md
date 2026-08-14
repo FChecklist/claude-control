@@ -94,7 +94,9 @@ Real code: `superboss-register.py` + `dispatch-owner-task.sh` +
       `repo=veridian-scripts`.
 - [x] Ran `agent_work_briefing.py record-completion` for this task's own
       UMR `UMR-20260814-044829-80b3`: same evidence, `status=completed`.
-- [x] Committed and pushed this progress file's final state.
+- [x] Committed and pushed this progress file's final state, opened
+      `FChecklist/claude-control#208` for this doc-only progress record
+      (real code already merged in `FChecklist/veridian-scripts#350`).
 
 ## Terminal status: DONE
 
