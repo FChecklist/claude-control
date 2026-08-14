@@ -142,6 +142,26 @@ register; no fabricated pass, no loosened threshold, no narrowed check.
       24h rate-limit window passes and redeploys, re-run
       `gtm_check_ux_audit.py` unmodified and confirm a genuine live pass
       before recording category 23 as passed.
-- [ ] `record-completion` write-back for this task's own UMR
-      (UMR-20260814-110928-0f34), honest status reflecting real,
-      unmerged-but-real progress (not a fabricated `completed`).
+- [x] `record-completion` write-back done: `ai_agent_registry` entry
+      recorded via `agent_work_briefing.py`; `umr_tasks` row
+      `UMR-20260814-110928-0f34` marked `status=completed_unmerged` (real
+      commit `1020178c9`, not yet an ancestor of `origin/main`, `pr_number
+      231`, `repo claude-control`) via `mark-umr-terminal` directly --
+      discovered along the way that `agent_work_briefing.py`'s own
+      `record-completion` CLI wrapper's `--umr-status`/`--umr-repo`
+      argparse `choices=` are narrower than the underlying
+      `mark-umr-terminal` CLI (missing `completed_unmerged` and
+      `claude-control`, even though `DEFAULT_OCID_RESOLVER_REPO_LOCAL_PATHS`
+      already has `claude-control` wired in) -- worked around by calling
+      `mark-umr-terminal` directly (still the same real, canonical writer);
+      the wrapper's own gap is real but lives in the `veridian-scripts`
+      repo, out of this task's `claude-control` scope -- flagged here for a
+      follow-up task, not fixed in this diff.
+- [x] PR #1145 (compliance-tracker) full CI re-checked after the terminology
+      fix + rebase: `Build` failed once transiently (Turbopack Google-Fonts
+      module resolution), confirmed NOT caused by this session's change (no
+      `package.json`/lockfile diff; `main` itself built successfully around
+      the same time) -- re-triggered the job and it passed on rerun
+      (2m23s), and `E2E Tests` passed too. Every real content check on PR
+      #1145 now genuinely passes; only `audit-check` (its own separate
+      dispatch) and `Vercel` (external 24h build-rate-limit) remain.
