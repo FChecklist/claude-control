@@ -38,13 +38,20 @@ UMR-20260814-200113-bd55
       `/opt/veridian/STATUS_REPORT.md` still does not exist (exit 1, as
       expected given the hook block); repo-tracked `STATUS_REPORT.md` exists
       with real line count. Full output in completion report.
-- [ ] Commit + push this change.
+- [x] Commit + push this change (commit `a88e6e1`, branch
+      `worker/task-20260814-200142-publish-real-part1-4-status-to-status-re`).
+- [x] Opened PR #241 against the repo's real default branch `master` (not
+      `main` -- checked live via `gh repo view --json defaultBranchRef`,
+      first PR attempt against `main` correctly failed with "No commits
+      between main and worker/...").
+- [x] Final `test -f`/`wc -l` proof captured: literal
+      `/opt/veridian/STATUS_REPORT.md` -- `test -f` exit 1, `wc -l` "No such
+      file or directory" (still correctly blocked, not bypassed).
+      Repo-tracked `STATUS_REPORT.md` -- `test -f` exit 0, `wc -l` = 123
+      lines.
 
 ## Remaining
 
-- [ ] Commit `STATUS_REPORT.md` + this progress file, push branch.
-- [ ] Open/confirm PR for merge to `main` (matching the established pattern
-      for this file -- prior merges: `ecf3a0c`, `4c751c6`, `c5cbe28`).
 - [ ] `record-completion` call to `agent_work_briefing.py` for
       UMR-20260814-200113-bd55 once pushed.
 - [ ] Real remaining product work (not this task's scope, but named for the
