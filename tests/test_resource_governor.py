@@ -415,6 +415,88 @@ def test_emergency_stop_blocks_all_dispatch_including_tier_0_until_cleared(tmp_p
 
 
 # ---------------------------------------------------------------------------
+# resource_threshold_block_reason() / --check-task-start-gate
+# (UMR-20260813-042708-e592): the real, shared stop-work gate exposed for a
+# caller OUTSIDE dispatch_one()'s own queue -- task-gateway.py's cmd_start.
+# ---------------------------------------------------------------------------
+
+def test_resource_threshold_block_reason_blocked_by_emergency_stop_sentinel(tmp_path, monkeypatch):
+    work, env = build_governor_fixture_tree(tmp_path)
+    rg = _load_resource_governor(work, env, monkeypatch)
+    rg._save_json(rg.EMERGENCY_STOP_PATH, {"ts": "test", "state": {}})
+
+    blocked, detail, metrics = rg.resource_threshold_block_reason()
+    assert blocked is True
+    assert "EMERGENCY_STOP" in detail
+    assert metrics is None, "sample_metrics() must never run once already blocked by the sentinel"
+
+
+def test_resource_threshold_block_reason_blocked_by_metric_over_threshold(tmp_path, monkeypatch):
+    work, env = build_governor_fixture_tree(tmp_path)
+    rg = _load_resource_governor(work, env, monkeypatch)
+    monkeypatch.setattr(rg, "sample_metrics", lambda now=None: {"cpu": 99.5, "ram": 1.0, "disk_io": 1.0, "network": 1.0})
+
+    blocked, detail, metrics = rg.resource_threshold_block_reason()
+    assert blocked is True
+    assert "cpu" in detail
+    assert metrics["cpu"] == 99.5
+
+
+def test_resource_threshold_block_reason_clear_when_nothing_over_and_no_sentinel(tmp_path, monkeypatch):
+    work, env = build_governor_fixture_tree(tmp_path)
+    rg = _load_resource_governor(work, env, monkeypatch)
+    monkeypatch.setattr(rg, "sample_metrics", lambda now=None: {"cpu": 1.0, "ram": 1.0, "disk_io": 1.0, "network": 1.0})
+
+    blocked, detail, metrics = rg.resource_threshold_block_reason()
+    assert blocked is False
+    assert detail is None
+    assert metrics == {"cpu": 1.0, "ram": 1.0, "disk_io": 1.0, "network": 1.0}
+
+
+def test_resource_threshold_block_reason_never_corrupts_emergency_tick_counters(tmp_path, monkeypatch):
+    """Deliberately does NOT call _record_emergency_tick() -- calling on-demand,
+    non-periodic cmd_start checks would corrupt dispatch_one()'s own
+    consecutive-ticks-over-threshold escalation counter (see the function's
+    own docstring)."""
+    work, env = build_governor_fixture_tree(tmp_path)
+    rg = _load_resource_governor(work, env, monkeypatch)
+    monkeypatch.setattr(rg, "sample_metrics", lambda now=None: {"cpu": 99.5, "ram": 1.0, "disk_io": 1.0, "network": 1.0})
+
+    for _ in range(10):
+        rg.resource_threshold_block_reason()
+
+    assert not os.path.exists(rg.EMERGENCY_STATE_PATH), (
+        "resource_threshold_block_reason() must never itself write emergency-tick state"
+    )
+    assert not os.path.exists(rg.EMERGENCY_STOP_PATH)
+
+
+def test_check_task_start_gate_cli_reports_blocked_true_with_detail(tmp_path, monkeypatch):
+    work, env = build_governor_fixture_tree(tmp_path)
+    rg = _load_resource_governor(work, env, monkeypatch)  # only to compute EMERGENCY_STOP_PATH under this env
+    rg._save_json(rg.EMERGENCY_STOP_PATH, {"ts": "test", "state": {}})
+
+    proc = run_script(work, env, "resource_governor.py",
+                       ["--check-task-start-gate", "--task-identity", "task-x", "--title", "some title"])
+    assert proc.returncode == 0, proc.stderr
+    result = json.loads(proc.stdout)
+    assert result["blocked"] is True
+    assert "EMERGENCY_STOP" in result["detail"]
+
+
+def test_check_task_start_gate_cli_reports_blocked_false_when_clear(tmp_path, monkeypatch):
+    work, env = build_governor_fixture_tree(tmp_path)
+    env["VERIDIAN_GOVERNOR_METRIC_THRESHOLD"] = "1000000"  # real host load must never fail this test
+
+    proc = run_script(work, env, "resource_governor.py",
+                       ["--check-task-start-gate", "--task-identity", "task-x", "--title", "some title"])
+    assert proc.returncode == 0, proc.stderr
+    result = json.loads(proc.stdout)
+    assert result["blocked"] is False
+    assert result["detail"] is None
+
+
+# ---------------------------------------------------------------------------
 # Concurrent dispatch -- the real TOCTOU race the round-2 audit reproduced:
 # dispatch_one() used to select the next queued row BEFORE acquiring
 # dispatch_core.acquire_dispatch_lock(), so two concurrent callers could both
