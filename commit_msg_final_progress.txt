@@ -1,0 +1,17 @@
+docs(progress): PR 342 and PR 203 closed as superseded by 1f16c11 -- unique delta carried to veridian-scripts PR 356
+
+Real diff of PR 342's resource_governor.py against `git diff 8d8a03d 1f16c11
+-- resource_governor.py` (the actual merged change behind #345) found both
+of PR 342's bug fixes functionally identical to what shipped, except one
+real piece of unique value: a `_title_pr_reference_is_citation_only()`
+helper excluding a parenthetical PR-number citation in a task's own title
+from Stage 6 matching. Carried that delta forward, alone, as
+veridian-scripts PR #356 rather than discarding it.
+
+Closed:
+- FChecklist/veridian-scripts#342 -- comment citing 1f16c11 + the diff
+  findings + a pointer to PR #356.
+- FChecklist/claude-control#203 -- comment citing 1f16c11 + the real posted
+  AUDIT FAIL verdict (2026-08-14T02:12:56Z).
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>

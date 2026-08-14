@@ -1,0 +1,36 @@
+fix(resource_governor): Stage 6 must ignore a parenthetical PR citation in this task's own title (UMR-20260814-060148)
+
+Follow-up to UMR-20260814-015201/PR #345 (the merged over-broad
+duplicate-guard fix). #345's hint_repo-scoping closes the specific reported
+incident (cross-repo collision) but leaves a narrower same-repo gap open: a
+task whose own title cites a PR number only as a parenthetical aside (e.g.
+"...(incl PR 322)...") rather than claiming it as its own target can still
+false-positive-block when that number happens to belong to a real PR in the
+SAME repo as hint_repo, with no _DISCLOSURE_CITATION_RE disclaimer language
+on the candidate side.
+
+New helper _title_pr_reference_is_citation_only(text, pr_num): the
+mirror-image check to the existing _DISCLOSURE_CITATION_RE (which inspects
+the CANDIDATE PR's title) -- this one inspects THIS task's OWN title,
+excluding a bare "PR NNN" reference from Stage 6 matching when it falls
+strictly inside a parenthetical span.
+
+Salvaged as the one piece of real unique value found in superseded
+veridian-scripts PR #342 before closing it as redundant with #345 -- see
+task-20260814-060148's progress doc for the diff that established this was
+not already covered by #345, and that everything else in PR #342 (the Stage
+6 cross-repo scoping, the reuse_verdict_engine task_kind scoping, and 6 of
+PR #342's 8 new tests) was functionally identical to what #345 already
+shipped.
+
+New tests in tests/test_dupguard_overbroad_scope_fix.py:
+- test_citation_only_pr_reference_helper_distinguishes_parenthetical_from_target
+- test_same_repo_parenthetical_citation_does_not_block
+Adjusted test_cross_repo_same_number_pr_does_not_block's title (no longer
+parenthesized) to keep it isolated to the cross-repo scoping behavior it
+was written to test, since its original title happened to also be a
+parenthetical citation and is now (correctly) short-circuited earlier.
+
+8/8 tests pass in tests/test_dupguard_overbroad_scope_fix.py.
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
