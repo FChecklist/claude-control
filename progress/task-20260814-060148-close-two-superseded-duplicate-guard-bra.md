@@ -98,8 +98,9 @@ real diff -- not by re-trusting the SPEC's own claim.
       (PR #345) and the real posted AUDIT FAIL verdict (2026-08-14T02:12:56Z).
       https://github.com/FChecklist/claude-control/pull/203#issuecomment-5290113472
 
+- [x] Recorded completion via `agent_work_briefing.py record-completion` for
+      UMR-20260814-060115-c8e1 (AGENT-20260814-060115-c8e1).
+
 ## Remaining
 
-- [ ] Record completion via `agent_work_briefing.py record-completion` for
-      UMR-20260814-060115-c8e1.
-- [ ] Commit and push this final progress update.
+- [ ] None -- task complete.
