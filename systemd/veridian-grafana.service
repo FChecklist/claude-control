@@ -1,0 +1,18 @@
+[Unit]
+Description=VERIDIAN Grafana -- localhost-only dashboard (task-20260814-131031, real gap: full monitoring stack confirmed not installed natively as of 2026-08-14, superseding the 2026-08-07 docker-compose-based veridian_grafana container). Admin user/password and port 3000 reused unchanged from the prior /opt/veridian/monitoring/docker-compose.yml convention.
+After=veridian-prometheus.service
+Wants=veridian-prometheus.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/veridian/monitoring/grafana/install
+ExecStart=/opt/veridian/monitoring/grafana/install/bin/grafana server \
+  --homepath=/opt/veridian/monitoring/grafana/install \
+  --config=/opt/veridian/monitoring/grafana/grafana.ini
+Restart=on-failure
+RestartSec=5
+StandardOutput=append:/opt/veridian/ai-os/logs/veridian-grafana.log
+StandardError=append:/opt/veridian/ai-os/logs/veridian-grafana.log
+
+[Install]
+WantedBy=default.target
