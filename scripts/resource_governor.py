@@ -247,14 +247,30 @@ def _save_json(path, data):
     os.replace(tmp, path)
 
 
-def sample_metrics(now=None):
+def sample_metrics(now=None, persist=True):
     """Real, delta-based sample of all 4 metrics against the PREVIOUSLY
     persisted raw sample (resource-governor-metric-state.json) -- delta-based
     so a single-shot tick invocation (cron, not just a long-lived loop) still
     computes a real rate, not just an instantaneous (and for disk/net,
     meaningless) counter value. First-ever call (no prior state) seeds state
     and reports 0% for the three delta-based metrics -- never freezes the
-    queue on cold-start noise."""
+    queue on cold-start noise.
+
+    persist=True (default, dispatch_one()'s own periodic --tick usage):
+    unchanged original behavior -- the freshly read raw sample is saved to
+    METRIC_STATE_PATH, becoming the baseline the NEXT call deltas against.
+
+    persist=False (UMR-20260814-085900, read-only mode for on-demand/
+    high-frequency callers like task-gateway.py cmd_start's stop-work gate
+    check, via resource_threshold_block_reason(persist=False)): the current
+    raw sample is still read and deltas are still computed against whatever
+    baseline is already on disk, but that baseline is left untouched. Without
+    this, every cmd_start call -- and cmd_start is now the primary,
+    high-frequency entrypoint for starting any task -- would overwrite the
+    single shared METRIC_STATE_PATH file dispatch_one()'s own periodic --tick
+    loop relies on for ITS interval (dt) math, corrupting the disk_io/network
+    rate calculations for the whole system's real periodic gate, not just
+    this on-demand check (AUDIT:FAIL on PR#219, 2026-08-14)."""
     now = now or _utcnow()
     curr_cpu = read_cpu_times()
     curr_disk = read_disk_sectors()
@@ -262,8 +278,9 @@ def sample_metrics(now=None):
     ram = read_mem_percent()
 
     prev = _load_json(METRIC_STATE_PATH)
-    state = {"ts": now.isoformat(), "cpu": curr_cpu, "disk_sectors": curr_disk, "net_bytes": curr_net}
-    _save_json(METRIC_STATE_PATH, state)
+    if persist:
+        state = {"ts": now.isoformat(), "cpu": curr_cpu, "disk_sectors": curr_disk, "net_bytes": curr_net}
+        _save_json(METRIC_STATE_PATH, state)
 
     if prev is None:
         return {"cpu": 0.0, "ram": ram, "disk_io": 0.0, "network": 0.0}
@@ -416,6 +433,50 @@ def _perform_spawn(row):
     return {"status": "failed", "unit_name": row.get("unit_name"), "outputs": {"error": f"unknown task_kind {task_kind!r}"}}
 
 
+def resource_threshold_block_reason(now=None, persist=True):
+    """UMR-20260813-042708-e592 (governing chain UMR-20260806-171945-5767):
+    real, shared stop-work gate -- the EMERGENCY_STOP sentinel-file check
+    and the live metric-threshold ("frozen") check dispatch_one() already
+    ran, unconditionally, before selecting or spawning any real work, are
+    extracted here -- pure extraction, same two checks, same order, same
+    real return values -- so task-gateway.py's cmd_start (a different,
+    synchronous, direct-spawn calling convention this extraction
+    deliberately leaves unchanged, rather than restructuring cmd_start into
+    dispatch_one()'s async submit-and-queue shape) gets the identical real
+    protection before IT spawns a real systemd unit too, instead of a
+    parallel, divergent reimplementation of these same two checks.
+
+    persist controls whether the underlying sample_metrics() call is allowed
+    to overwrite the shared METRIC_STATE_PATH baseline (see sample_metrics()'s
+    own docstring for why this matters, UMR-20260814-085900): dispatch_one()'s
+    own periodic --tick call keeps the default persist=True (unchanged
+    behavior -- it IS the owner of that baseline). task-gateway.py cmd_start's
+    on-demand --check-task-start-gate CLI call passes persist=False, so a
+    high-frequency, non-periodic gate check can never corrupt the periodic
+    tick dispatcher's own interval (dt) math.
+
+    Returns (blocked: bool, detail: str|None, metrics: dict|None). metrics
+    is None only for the emergency-stop case (sample_metrics() never runs
+    there -- unnecessary once already blocked, matching the original
+    inline code's own short-circuit).
+
+    Deliberately does NOT call _record_emergency_tick() -- that is
+    dispatch_one()'s own tick-cadence-specific escalation bookkeeping (a
+    consecutive-TICKS-over-threshold counter that can itself write the
+    EMERGENCY_STOP sentinel or shed load). Calling it from here would let
+    cmd_start's on-demand, non-periodic calls corrupt that real "consecutive
+    ticks" semantics. _record_emergency_tick() stays dispatch_one()-only,
+    called by it after this function returns, exactly as before this
+    extraction."""
+    if os.path.exists(EMERGENCY_STOP_PATH):
+        return True, "EMERGENCY_STOP sentinel present -- clear via --clear-emergency-stop", None
+    metrics = sample_metrics(now=now, persist=persist)
+    over = over_threshold_metrics(metrics)
+    if over:
+        return True, f"metric(s) at/over {METRIC_THRESHOLD_PERCENT}%: {over}", metrics
+    return False, None, metrics
+
+
 def dispatch_one(dry_run=False, now=None):
     """Checks all 4 real metrics, and only if NONE are at/over threshold,
     acquires dispatch_core's shared lock and does EVERYTHING else --
@@ -428,16 +489,20 @@ def dispatch_one(dry_run=False, now=None):
     ("callers must check this WHILE holding acquire_dispatch_lock(), never
     before/after"). Never raises for a normal 'nothing to do'/'frozen'
     outcome."""
-    if os.path.exists(EMERGENCY_STOP_PATH):
-        return {"action": "emergency_stopped",
-                "detail": "EMERGENCY_STOP sentinel present -- clear via --clear-emergency-stop"}
+    # UMR-20260813-042708-e592: these two checks are now
+    # resource_threshold_block_reason() (see its own docstring) -- behavior
+    # here is UNCHANGED, this is a pure extraction so task-gateway.py's
+    # cmd_start can share the identical real checks.
+    blocked, detail, metrics = resource_threshold_block_reason(now=now)
+    if metrics is None:
+        # EMERGENCY_STOP sentinel -- short-circuited before sample_metrics()
+        # ever ran, exactly as this function's own pre-extraction code did.
+        return {"action": "emergency_stopped", "detail": detail}
 
-    metrics = sample_metrics(now=now)
     over = over_threshold_metrics(metrics)
     _record_emergency_tick(over)
-    if over:
-        return {"action": "frozen", "detail": f"metric(s) at/over {METRIC_THRESHOLD_PERCENT}%: {over}",
-                "metrics": metrics}
+    if blocked:
+        return {"action": "frozen", "detail": detail, "metrics": metrics}
 
     dc = _dispatch_core()
     sbr = _superboss_register()
@@ -655,11 +720,31 @@ def main():
     ap.add_argument("--search", default=None, help="free-text FTS5 query over task_identity/source_trigger/logs_ref")
     ap.add_argument("--task-identity", dest="task_identity", default=None)
     ap.add_argument("--clear-emergency-stop", action="store_true")
+    ap.add_argument("--check-task-start-gate", dest="check_task_start_gate", action="store_true",
+                     help="UMR-20260813-042708-e592: real, shared stop-work-order + "
+                          "resource-threshold check for a caller OUTSIDE dispatch_one()'s own queue "
+                          "(currently: task-gateway.py's cmd_start, before it spawns a real systemd "
+                          "unit) -- same real gate dispatch_one() applies to every queued row, exposed "
+                          "as its own callable check rather than a parallel/divergent reimplementation. "
+                          "Prints {\"blocked\": bool, \"detail\": str|None} and exits 0 regardless of "
+                          "blocked (the caller decides what a block means; this command's own exit "
+                          "code is not the gate signal, exactly like --query-umr above).")
+    ap.add_argument("--title", default=None)
     args = ap.parse_args()
 
     if args.clear_emergency_stop:
         clear_emergency_stop()
         print(json.dumps({"ok": True, "cleared": True}))
+        return
+
+    if args.check_task_start_gate:
+        # persist=False (UMR-20260814-085900): this is an on-demand,
+        # high-frequency caller (task-gateway.py cmd_start), never the
+        # periodic --tick dispatcher -- it must never overwrite the shared
+        # METRIC_STATE_PATH baseline dispatch_one() deltas its own next tick
+        # against. See sample_metrics()'s docstring.
+        blocked, detail, metrics = resource_threshold_block_reason(persist=False)
+        print(json.dumps({"blocked": blocked, "detail": detail, "metrics": metrics}, default=str))
         return
 
     if args.query_umr:
