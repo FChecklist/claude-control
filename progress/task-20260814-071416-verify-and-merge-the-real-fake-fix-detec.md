@@ -106,7 +106,14 @@ UMR: UMR-20260814-065531-c155
 - `progress/task-20260814-071416-verify-and-merge-the-real-fake-fix-detec.md`
   (this file)
 
+- [x] Opened real PR against `FChecklist/claude-control` (PR #215,
+      https://github.com/FChecklist/claude-control/pull/215) carrying this
+      task's own test + progress diff. Confirmed `MERGEABLE`/`CLEAN`.
+- [x] `agent_work_briefing.py record-completion` for UMR-20260814-065531-c155
+      -- `ai_agent_registry` entry written (`AGENT-20260814-065531-c155`,
+      the real canonical write-back).
+
 ## Remaining
 
-- [ ] None. Merge executed, gate re-verified against both real prior
-      completions in both directions (reject doc-only / accept real).
+- [ ] PR #215 review/merge (workers don't merge their own task PR to
+      `master`).
