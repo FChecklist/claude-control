@@ -17,7 +17,7 @@
 - [x] Posted a real audit comment on PR #227 quoting the real file list and the real post-merge head SHA: https://github.com/FChecklist/claude-control/pull/227#issuecomment-5292004162
 
 ## Remaining
-- [ ] Call `agent_work_briefing.py record-completion --umr-id UMR-20260814-095451-5f83` with the real summary (next step).
+- [x] Called `agent_work_briefing.py record-completion --umr-id UMR-20260814-095451-5f83` with the real summary. Nothing further remaining -- task complete.
 
 ## Evidence
 - PR: https://github.com/FChecklist/claude-control/pull/227 (MERGED)
