@@ -44,10 +44,16 @@ Work done in a fresh worktree: `/opt/veridian/repos/veridian-scripts-load1-fix-w
       `has_free_slot`-scoped subset: `53 passed, 716 deselected`, no regression.
 - [x] Committed on `fix/dispatch-load1-cpu-idle-calibration-recal8102`.
 
+- [x] Full `pytest tests/` run (background, whole repo, 769 tests): `768 passed, 1 failed`. The 1
+      failure (`test_build_lock_liveness_guard_deployment.py::test_timer_is_really_enabled_and_active`)
+      confirmed pre-existing/environmental -- reproduced identically against unmodified `main`
+      (live `systemctl --user is-enabled` sandbox-state check, unrelated to this change).
+- [x] Pushed `fix/dispatch-load1-cpu-idle-calibration-recal8102` to `FChecklist/veridian-scripts`.
+- [x] Opened PR: https://github.com/FChecklist/veridian-scripts/pull/362
+
 ## Remaining
-- [ ] Full `pytest tests/` run (background, whole repo, ~769 tests) -- confirm exit 0 before final push.
-- [ ] Push branch + open PR against `FChecklist/veridian-scripts`.
-- [ ] Record `pr_url.txt` and `agent_work_briefing.py record-completion`.
+- [ ] `agent_work_briefing.py record-completion` for UMR-20260814-080456-3752.
+- [ ] Monitor PR #362 CI/review.
 
 ## Real test output (new suite, exit 0)
 ```
