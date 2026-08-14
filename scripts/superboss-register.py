@@ -2623,9 +2623,20 @@ def list_entities(args):
 #                                   task_identity -- logged, not silently
 #                                   dropped, per this table's own row)
 # ---------------------------------------------------------------------------
+#   queued -> rejected_duplicate -> retired_max_attempts (2026-08-14, real
+#                                   fix for the duplicate-resubmission-loop
+#                                   incident: resource_governor.submit()
+#                                   counts rejected_duplicate as a real
+#                                   consumed attempt against its
+#                                   task_identity -- once the count hits
+#                                   MAX_DUPLICATE_ATTEMPTS_PER_IDENTITY, the
+#                                   identity is retired PERMANENTLY with this
+#                                   terminal status instead of being
+#                                   resubmitted every tick; see
+#                                   _migrate_umr_status_check() below)
 UMR_STATUSES = (
     "queued", "dispatched", "running", "completed", "failed",
-    "rejected_duplicate", "sigterm_sent", "killed",
+    "rejected_duplicate", "sigterm_sent", "killed", "retired_max_attempts",
 )
 UMR_ACTIVE_STATUSES = ("queued", "dispatched", "running")
 
@@ -2658,11 +2669,12 @@ def _ensure_umr_table(conn):
     fully migrated (checked here via a plain read, no transaction), every
     subsequent call returns immediately with zero writes."""
     row = conn.execute(
-        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='umr_tasks'"
+        "SELECT sql FROM sqlite_master WHERE type='table' AND name='umr_tasks'"
     ).fetchone()
     if row is not None:
         cols = {r["name"] for r in conn.execute("PRAGMA table_info(umr_tasks)").fetchall()}
-        if {"last_heartbeat", "tenant_id", "utm_source"} <= cols:
+        status_check_current = all(f"'{s}'" in row["sql"] for s in UMR_STATUSES)
+        if {"last_heartbeat", "tenant_id", "utm_source"} <= cols and status_check_current:
             return
     status_sql = ",".join("'" + s + "'" for s in UMR_STATUSES)
     conn.execute(f"""CREATE TABLE IF NOT EXISTS umr_tasks (
@@ -2709,6 +2721,7 @@ def _ensure_umr_table(conn):
     _migrate_umr_last_heartbeat(conn)
     _migrate_umr_tenant_id(conn)
     _migrate_umr_utm(conn)
+    _migrate_umr_status_check(conn)
 
 
 def _migrate_umr_last_heartbeat(conn):
@@ -2966,6 +2979,102 @@ def _migrate_umr_utm(conn):
         END""")
         conn.execute("INSERT INTO umr_tasks_fts(umr_tasks_fts) VALUES ('rebuild')")
         conn.commit()
+
+
+def _migrate_umr_status_check(conn):
+    """2026-08-14 (real fix for the duplicate-resubmission-loop incident,
+    UMR-20260814-080315-d854 -- see UMR_STATUSES' own 'retired_max_attempts'
+    comment above): widens umr_tasks.status's CHECK constraint to allow the
+    new terminal status resource_governor.submit() now writes once a
+    task_identity's rejected_duplicate attempts hit
+    MAX_DUPLICATE_ATTEMPTS_PER_IDENTITY. SQLite has no ALTER TABLE for CHECK
+    constraints (same limitation _migrate_wiring_registry_entity_types
+    already documents for wiring_registry) -- a pre-existing umr_tasks table
+    needs a real rebuild. Rather than hand-copying a full column list here
+    (which would drift out of sync with _migrate_umr_last_heartbeat/
+    _migrate_umr_tenant_id/_migrate_umr_utm's own ALTER TABLE ADD COLUMNs the
+    moment any of them changes), this reads the table's OWN currently-stored
+    CREATE TABLE text from sqlite_master -- which SQLite keeps in sync with
+    every prior ADD COLUMN migration automatically -- and substitutes only
+    the status CHECK's value list inside that text, so every real column
+    this table has ever grown is preserved verbatim. Every row copies across
+    unchanged via a plain `INSERT ... SELECT *` (safe: source and destination
+    have identical column order, only the CHECK differs). Run strictly AFTER
+    _migrate_umr_last_heartbeat/_migrate_umr_tenant_id/_migrate_umr_utm above
+    (see _ensure_umr_table's call order) so every column those add already
+    exists by the time this reads the stored SQL -- and the FTS5 index this
+    function rebuilds can therefore safely assume the final, already-widened
+    6-column shape (task_identity, source_trigger, logs_ref, utm_source,
+    utm_campaign, utm_term) _migrate_umr_utm establishes, the same "drop the
+    3 triggers, drop the shadow table, recreate both, then fts5 'rebuild'"
+    mechanism that migration and _migrate_wiring_registry_entity_types both
+    already use. No-op (checked via whether the stored SQL already contains
+    every current UMR_STATUSES member) once already migrated.
+
+    Called from INSIDE _ensure_umr_table() itself, not only from
+    _migrate_schema(), for the same reason its 3 siblings above are:
+    resource_governor.py calls _ensure_umr_table() directly at several
+    read/write call sites, bypassing _migrate_schema(). _ensure_umr_table's
+    own fast-path early-return was widened (see its own body) to also check
+    the status CHECK is current, not just that the 3 sibling migrations'
+    columns exist -- otherwise a DB that already had last_heartbeat/
+    tenant_id/utm_source (i.e. every real production DB as of this fix)
+    would hit that fast path and this function would never even be called."""
+    row = conn.execute(
+        "SELECT sql FROM sqlite_master WHERE type='table' AND name='umr_tasks'"
+    ).fetchone()
+    if row is None or all(f"'{s}'" in row["sql"] for s in UMR_STATUSES):
+        return  # table doesn't exist yet (a later CREATE TABLE IF NOT EXISTS covers that) or already migrated
+
+    m = re.search(r"status TEXT NOT NULL DEFAULT 'queued' CHECK\(status IN \([^)]*\)\)", row["sql"])
+    if not m:
+        return  # defensive: unexpected schema shape, never touched by this migration
+    new_status_clause = (
+        "status TEXT NOT NULL DEFAULT 'queued' CHECK(status IN ("
+        + ",".join("'" + s + "'" for s in UMR_STATUSES) + "))"
+    )
+    new_create_sql = row["sql"][:m.start()] + new_status_clause + row["sql"][m.end():]
+    new_create_sql = new_create_sql.replace("CREATE TABLE umr_tasks", "CREATE TABLE umr_tasks__migrate", 1)
+
+    conn.execute("DROP TRIGGER IF EXISTS umr_tasks_ai")
+    conn.execute("DROP TRIGGER IF EXISTS umr_tasks_au")
+    conn.execute("DROP TRIGGER IF EXISTS umr_tasks_ad")
+    conn.execute("DROP TABLE IF EXISTS umr_tasks_fts")
+
+    conn.execute(new_create_sql)
+    conn.execute("INSERT INTO umr_tasks__migrate SELECT * FROM umr_tasks")
+    conn.execute("DROP TABLE umr_tasks")
+    conn.execute("ALTER TABLE umr_tasks__migrate RENAME TO umr_tasks")
+
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_umr_tasks_identity ON umr_tasks(task_identity)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_umr_tasks_status ON umr_tasks(status)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_umr_tasks_tier ON umr_tasks(tier)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_umr_tasks_last_heartbeat ON umr_tasks(last_heartbeat)")
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_umr_tasks_tenant_id ON umr_tasks(tenant_id) WHERE tenant_id IS NOT NULL"
+    )
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_umr_tasks_utm_campaign ON umr_tasks(utm_campaign)")
+
+    conn.execute("""CREATE VIRTUAL TABLE IF NOT EXISTS umr_tasks_fts USING fts5(
+        task_identity, source_trigger, logs_ref, utm_source, utm_campaign, utm_term,
+        content='umr_tasks', content_rowid='rowid'
+    )""")
+    conn.execute("""CREATE TRIGGER IF NOT EXISTS umr_tasks_ai AFTER INSERT ON umr_tasks BEGIN
+        INSERT INTO umr_tasks_fts(rowid, task_identity, source_trigger, logs_ref, utm_source, utm_campaign, utm_term)
+        VALUES (new.rowid, new.task_identity, new.source_trigger, new.logs_ref, new.utm_source, new.utm_campaign, new.utm_term);
+    END""")
+    conn.execute("""CREATE TRIGGER IF NOT EXISTS umr_tasks_au AFTER UPDATE ON umr_tasks BEGIN
+        INSERT INTO umr_tasks_fts(umr_tasks_fts, rowid, task_identity, source_trigger, logs_ref, utm_source, utm_campaign, utm_term)
+        VALUES ('delete', old.rowid, old.task_identity, old.source_trigger, old.logs_ref, old.utm_source, old.utm_campaign, old.utm_term);
+        INSERT INTO umr_tasks_fts(rowid, task_identity, source_trigger, logs_ref, utm_source, utm_campaign, utm_term)
+        VALUES (new.rowid, new.task_identity, new.source_trigger, new.logs_ref, new.utm_source, new.utm_campaign, new.utm_term);
+    END""")
+    conn.execute("""CREATE TRIGGER IF NOT EXISTS umr_tasks_ad AFTER DELETE ON umr_tasks BEGIN
+        INSERT INTO umr_tasks_fts(umr_tasks_fts, rowid, task_identity, source_trigger, logs_ref, utm_source, utm_campaign, utm_term)
+        VALUES ('delete', old.rowid, old.task_identity, old.source_trigger, old.logs_ref, old.utm_source, old.utm_campaign, old.utm_term);
+    END""")
+    conn.execute("INSERT INTO umr_tasks_fts(umr_tasks_fts) VALUES ('rebuild')")
+    conn.commit()
 
 
 def find_active_umr_by_identity(conn, task_identity):
