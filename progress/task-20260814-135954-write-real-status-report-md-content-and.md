@@ -28,12 +28,19 @@
 - [x] Verified the written file for real: `test -f` + `wc -l` -- see completion
       report for actual command output.
 - [x] Committed and pushed on this task's own assigned branch
-      (`worker/task-20260814-135954-write-real-status-report-md-content-and`).
-
-## Remaining
-- [ ] Open a PR from this branch to `master` so the content lands on `main` and
-      (per the established pattern of prior "docs(status): publish ... to
+      (`worker/task-20260814-135954-write-real-status-report-md-content-and`,
+      commit `c5cbe28`).
+- [x] Opened `claude-control` PR #239
+      (https://github.com/FChecklist/claude-control/pull/239) from this
+      branch to `master`, so the content lands on `main` and (per the
+      established pattern of prior "docs(status): publish ... to
       STATUS_REPORT.md" merges) eventually reaches the live checkout at
       `/opt/veridian/repos/claude-control/STATUS_REPORT.md` -- the closest
       real, mechanically-reachable equivalent to the literal
       `/opt/veridian/STATUS_REPORT.md` path named in the spec.
+
+## Remaining
+- [ ] PR #239 needs a real audit (`AUDIT:PASS`) and merge -- this task does
+      not merge/audit its own PR (separate dispatch, per this repo's own
+      standing self-certification rule). Do not redispatch this work; verify
+      PR #239's real merge/audit state before doing anything else.
