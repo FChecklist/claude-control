@@ -133,8 +133,10 @@ In `FChecklist/claude-control` (this repo, this PR):
       objective-named file and real, runnable code are present in this
       repo's own diff too; ran them here, 3/3 pass
 
+- [x] Opened real PR against `FChecklist/claude-control` (PR #207,
+      https://github.com/FChecklist/claude-control/pull/207)
+- [x] Posted AUDIT: PASS on PR #207 at head `00aeee8e`
+
 ## Remaining
 
-- [ ] Open real PR against `FChecklist/claude-control` (this repo)
-- [ ] Post AUDIT: PASS block on the claude-control PR at its head SHA
 - [ ] `agent_work_briefing.py record-completion` for UMR-20260814-045305-e6d3
