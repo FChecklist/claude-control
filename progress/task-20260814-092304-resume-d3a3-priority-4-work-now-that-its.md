@@ -71,10 +71,19 @@ merge conflict -- not on any remaining implementation work.
       session (`validate-audit-verdict.ts` re-validates the most recent existing comment on every
       `synchronize` event, so those don't need a fresh one).
 
+## Completed (cont.)
+- [x] **#884 (OCID-065) MERGED** -- 2026-08-14T09:34:05Z.
+- [x] Independent audit subagent posted `AUDIT: PASS` on #908 (real, 8-field, verified from a
+      fresh clone -- https://github.com/FChecklist/compliance-tracker/pull/908#issuecomment-5291796484).
+- [x] `main` is moving fast (many other concurrent agent sessions merging into it), so #799/#801/#908
+      kept falling BEHIND/re-conflicting between my update and GitHub's merge check. Re-resolved
+      #801's 2nd real conflict (small, `ai-os/boss/ACTIVE-CLAIMS.yaml` only, both sides had
+      prepended a distinct new `active:` entry at the same spot -- kept both, dropped nothing,
+      verified via `python3 -c "import yaml..."` parse + entry-count check) and re-updated
+      #799/#908's branches. Confirmed OS.yaml on `main` already indexes OCID-022 through OCID-068
+      (the original 10-item scope is fully covered, no genuine gap left to dispatch fresh work for).
+
 ## Remaining
-- [ ] Wait for CI to go green on #884 (UNSTABLE), #799 (UNSTABLE), #801 (BLOCKED on audit-check
-      re-run), #908 (BLOCKED on audit-check, subagent posting it now) and merge all 4 once green
-- [ ] Re-check OS.yaml/MASTER-TRACKER.yaml on main for any OCID-022..066 items still
-      genuinely untouched (none of the original 10 were left un-dispatched, but this
-      task's title covers the full 022-066 range -- confirm no gap) after the 4 land
+- [ ] Merge #799, #801, #908 once their required checks finish re-running post-update (in progress,
+      being watched via a background Monitor rather than polled manually)
 - [ ] Call agent_work_briefing.py record-completion with real summary + PR numbers
