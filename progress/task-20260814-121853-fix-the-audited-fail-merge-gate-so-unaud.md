@@ -213,9 +213,17 @@ decide on, not silently routed around:
   -conscious, explicitly-logged decision to accept the self-review risk via
   the documented escape hatch. None of these were performed here.
 
+- [x] Posted a real, non-verdict STATUS comment on PR #230 summarizing this
+      whole real chain for future ticks (deliberately does NOT open with
+      `AUDIT:`, confirmed via a live `check` re-run right after posting that
+      it is not mis-parsed as a verdict by `merge_gate.py` itself):
+      https://github.com/FChecklist/claude-control/pull/230#issuecomment-5293378124
+- [x] `record-completion` write-back to UMR-20260814-110906-0cbe --
+      `--umr-status completed`, real evidence
+      (`--umr-file-path scripts/merge_gate.py`, `--umr-pr-number 230`).
+
 ## Remaining
 
 - [ ] Owner decision needed on the real path forward above before PR #230
       (or any PR in this repo, under the now-correct gate) can merge via a
-      genuinely trusted PASS.
-- [ ] `record-completion` write-back to UMR-20260814-110906-0cbe.
+      genuinely trusted PASS. Not this task's scope to force through.
