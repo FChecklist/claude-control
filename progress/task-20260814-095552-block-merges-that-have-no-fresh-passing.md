@@ -168,6 +168,22 @@ content on current master.
 
 ## Remaining
 
+- [ ] **Known, expected, self-referential final state of PR #230**: this
+      progress file's own last edit (this paragraph) necessarily moves PR
+      #230's head again, after the `536050a`-citing PASS above -- so the
+      gate correctly reports PR #230 as a stale pass one more time at this
+      task's real end state (confirmed live:
+      `python3 scripts/merge_gate.py check --repo FChecklist/claude-control
+      --pr 230` -> `allowed: false, reason: "stale pass..."` against the
+      final head). Deliberately NOT re-audited a third time -- doing so
+      would just move the head again via this same file and loop forever.
+      Per this platform's own established convention ("independent audits
+      are their own separately-dispatched worker tasks, not something the
+      fixing worker can force/self-issue" -- see sibling task
+      task-20260814-085900's progress file), a real independent audit of
+      PR #230's actual code head (not this task's own self-certification)
+      is the correct next real step before it merges, same as any other
+      PR in this codebase -- not something to force through here.
 - [ ] Not in this task's scope, flagged only: true bypass-prevention against
       an assistant session calling `gh pr merge`/`gh api .../merge` directly
       via Bash (as opposed to going through either of this codebase's two
