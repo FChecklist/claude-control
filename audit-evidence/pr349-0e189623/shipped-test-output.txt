@@ -1,0 +1,84 @@
+=== tests/test_reap_stale_test_scratch.py ===
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.6.0 -- /usr/bin/python3
+cachedir: .pytest_cache
+rootdir: /tmp/veridian-scripts-audit
+plugins: anyio-4.12.1
+collecting ... collected 3 items
+
+tests/test_reap_stale_test_scratch.py::ReapStaleTestScratchTest::test_dry_run_deletes_nothing PASSED [ 33%]
+tests/test_reap_stale_test_scratch.py::ReapStaleTestScratchTest::test_min_age_hours_override_respected PASSED [ 66%]
+tests/test_reap_stale_test_scratch.py::ReapStaleTestScratchTest::test_removes_stale_matching_prefix_dirs_and_leaves_young_and_unmatched_alone PASSED [100%]
+
+============================== 3 passed in 3.06s ===============================
+
+=== test_pm_sentinel_tick.py ===
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.6.0 -- /usr/bin/python3
+cachedir: .pytest_cache
+rootdir: /tmp/veridian-scripts-audit
+plugins: anyio-4.12.1
+collecting ... collected 11 items
+
+test_pm_sentinel_tick.py::PmSentinelTickKilledRowTest::test_first_tick_dispatches_real_rca_for_seeded_killed_row PASSED [  9%]
+test_pm_sentinel_tick.py::PmSentinelTickKilledRowTest::test_second_tick_does_not_duplicate_already_in_flight_dispatch PASSED [ 18%]
+test_pm_sentinel_tick.py::PmSentinelTickFinancialEscalationTest::test_financial_gap_escalates_to_owner_instead_of_dispatching PASSED [ 27%]
+test_pm_sentinel_tick.py::PmSentinelTickDispatchFailurePropagatesTest::test_real_dispatch_failure_makes_tick_exit_nonzero PASSED [ 36%]
+test_pm_sentinel_tick.py::PmSentinelTickQueryOncePerTickTest::test_same_row_queried_at_most_once_per_tick PASSED [ 45%]
+test_pm_sentinel_tick.py::PmSentinelTickDecideAndFixTest::test_every_finding_gets_a_same_tick_dispatch PASSED [ 54%]
+test_pm_sentinel_tick.py::PmSentinelTickRunningRowOrderIndependentParseTest::test_active_unit_never_classified_dead_regardless_of_property_order PASSED [ 63%]
+test_pm_sentinel_tick.py::PmSentinelTickImpossibleActiveStateGuardTest::test_impossible_active_state_is_rejected_not_acted_on PASSED [ 72%]
+test_pm_sentinel_tick.py::PmSentinelTickDuplicateContentRefusalDoesNotFailTickTest::test_duplicate_content_refusal_alone_exits_zero PASSED [ 81%]
+test_pm_sentinel_tick.py::PmSentinelTickLiveDeployDriftFoundTest::test_real_drift_dispatches_real_reconcile_fix PASSED [ 90%]
+test_pm_sentinel_tick.py::PmSentinelTickLiveDeployDriftInSyncTest::test_in_sync_live_checkout_is_not_a_finding PASSED [100%]
+
+============================= 11 passed in 34.00s ==============================
+
+=== test_resource_governor_queue_management.py ===
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.6.0 -- /usr/bin/python3
+cachedir: .pytest_cache
+rootdir: /tmp/veridian-scripts-audit
+plugins: anyio-4.12.1
+collecting ... collected 13 items
+
+test_resource_governor_queue_management.py::QueueManagementTest::test_delete_task_refuses_non_queued_row PASSED [  7%]
+test_resource_governor_queue_management.py::QueueManagementTest::test_delete_task_removes_queued_row PASSED [ 15%]
+test_resource_governor_queue_management.py::QueueManagementTest::test_list_queue_real_dispatch_order PASSED [ 23%]
+test_resource_governor_queue_management.py::QueueManagementTest::test_move_down_never_crosses_a_tier_boundary PASSED [ 30%]
+test_resource_governor_queue_management.py::QueueManagementTest::test_move_up_at_top_of_tier_is_a_no_op PASSED [ 38%]
+test_resource_governor_queue_management.py::QueueManagementTest::test_move_up_swaps_with_higher_ranked_same_tier_neighbor PASSED [ 46%]
+test_resource_governor_queue_management.py::QueueManagementTest::test_resume_task_idempotent_when_not_paused PASSED [ 53%]
+test_resource_governor_queue_management.py::QueueManagementTest::test_set_priority_refuses_non_queued_row PASSED [ 61%]
+test_resource_governor_queue_management.py::QueueManagementTest::test_set_priority_rejects_out_of_range PASSED [ 69%]
+test_resource_governor_queue_management.py::QueueManagementTest::test_set_priority_updates_tier PASSED [ 76%]
+test_resource_governor_queue_management.py::QueueManagementTest::test_stop_task_missing_row PASSED [ 84%]
+test_resource_governor_queue_management.py::QueueManagementTest::test_stop_task_pauses_and_resume_clears PASSED [ 92%]
+test_resource_governor_queue_management.py::QueueManagementTest::test_stop_task_refuses_non_queued_row PASSED [100%]
+
+============================== 13 passed in 7.82s ==============================
+
+=== tests/test_rule7_completion_evidence.py ===
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.6.0 -- /usr/bin/python3
+cachedir: .pytest_cache
+rootdir: /tmp/veridian-scripts-audit
+plugins: anyio-4.12.1
+collecting ... collected 14 items
+
+tests/test_rule7_completion_evidence.py::test_valid_evidence_passes PASSED [  7%]
+tests/test_rule7_completion_evidence.py::test_missing_required_field_rejected PASSED [ 14%]
+tests/test_rule7_completion_evidence.py::test_narration_placeholders_rejected PASSED [ 21%]
+tests/test_rule7_completion_evidence.py::test_malformed_pr_url_rejected PASSED [ 28%]
+tests/test_rule7_completion_evidence.py::test_malformed_commit_sha_rejected PASSED [ 35%]
+tests/test_rule7_completion_evidence.py::test_malformed_umr_id_rejected PASSED [ 42%]
+tests/test_rule7_completion_evidence.py::test_open_items_and_blockers_must_be_real_lists PASSED [ 50%]
+tests/test_rule7_completion_evidence.py::test_empty_open_items_and_blockers_lists_are_valid PASSED [ 57%]
+tests/test_rule7_completion_evidence.py::test_db_changes_optional_but_narration_rejected_if_present PASSED [ 64%]
+tests/test_rule7_completion_evidence.py::test_non_dict_evidence_rejected PASSED [ 71%]
+tests/test_rule7_completion_evidence.py::test_cmd_checkpoint_rejects_bad_evidence_json_before_any_write PASSED [ 78%]
+tests/test_rule7_completion_evidence.py::test_cmd_checkpoint_ignores_evidence_json_for_non_completed_status PASSED [ 85%]
+tests/test_rule7_completion_evidence.py::test_cmd_checkpoint_never_persists_evidence_for_non_completed_status_real_task PASSED [ 92%]
+tests/test_rule7_completion_evidence.py::test_db_changes_none_case_insensitive PASSED [100%]
+
+============================== 14 passed in 0.72s ==============================

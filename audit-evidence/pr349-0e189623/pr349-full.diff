@@ -1,0 +1,745 @@
+diff --git a/config/host/README.md b/config/host/README.md
+new file mode 100644
+index 0000000..4d4f157
+--- /dev/null
++++ b/config/host/README.md
+@@ -0,0 +1,29 @@
++# Tracked host config (not deployed live by this PR)
++
++Version-controlled reference copies of real host `/etc` config, same "no
++automated deploy step for this directory" convention as `../../systemd/`
++(see `systemd/README.md`) -- a change here must still be copied to its real
++`/etc` path by hand and the relevant service restarted, and this repo's own
++CI/deploy has no `sudo` access to do that automatically.
++
++Added 2026-08-14 (UMR-20260814-033442-c885, P0 disk exhaustion RCA) for the
++task spec's own item 5 ("cap the second unbounded grower found on the same
++volume"). NOT applied live as of this PR -- confirmed at the time this PR
++was authored that the authoring session had no passwordless `sudo` on this
++host, so it could not apply these itself; a human (or a session with real
++sudo) must deploy them.
++
++## journald.conf.d/veridian-disk-cap.conf
++
++Deploy: `sudo cp config/host/journald.conf.d/veridian-disk-cap.conf /etc/systemd/journald.conf.d/veridian-disk-cap.conf && sudo systemctl restart systemd-journald`
++
++Real measured before-state: `journalctl --disk-usage` reported 3.6G with no
++`SystemMaxUse` set at all in the live `/etc/systemd/journald.conf` (the
++line was present but commented out).
++
++## logrotate.d/rsyslog
++
++Deploy: `sudo cp config/host/logrotate.d/rsyslog /etc/logrotate.d/rsyslog` (overwrites the live file in place -- see the file's own header for why this can't instead be a same-named sibling file, and for the real live-content diff).
++
++Real measured before-state: `/var/log/syslog` 7510MB, `/var/log/syslog.1`
++1552MB, live config `weekly, rotate 4`, no size cap of any kind.
+diff --git a/config/host/journald.conf.d/veridian-disk-cap.conf b/config/host/journald.conf.d/veridian-disk-cap.conf
+new file mode 100644
+index 0000000..979ea74
+--- /dev/null
++++ b/config/host/journald.conf.d/veridian-disk-cap.conf
+@@ -0,0 +1,23 @@
++# Real host config drop-in, deploy step is MANUAL (see config/host/README.md
++# -- same "no automated deploy step" convention as systemd/README.md) --
++# copy to /etc/systemd/journald.conf.d/veridian-disk-cap.conf then
++# `systemctl restart systemd-journald`.
++#
++# Root cause this caps (UMR-20260814-033442-c885, P0 disk exhaustion RCA):
++# `journalctl --disk-usage` reported 3.6G on the same volume that hit 100%
++# full (/dev/sda1, 301G total) with NO SystemMaxUse set at all (the live
++# /etc/systemd/journald.conf's own SystemMaxUse= line was commented out,
++# i.e. journald's real default cap, which is a FRACTION of the actual
++# filesystem's free space at journald-start time -- not a fixed, safe,
++# reasoned bound someone chose). journald was the SECOND unbounded grower
++# found on this volume alongside the leaked test-harness scratch (the
++# primary root cause, fixed in the test files themselves) and syslog (see
++# config/host/logrotate.d/rsyslog-veridian-cap in this same directory).
++#
++# 1G is a real, deliberate cap: generous enough for real incident forensics
++# (the growth that mattered here was ~3.6G total across the whole journal,
++# not any single day), small enough that journald can never again be a
++# meaningful contributor to a 301G volume filling up.
++[Journal]
++SystemMaxUse=1G
++SystemKeepFree=2G
+diff --git a/config/host/logrotate.d/rsyslog b/config/host/logrotate.d/rsyslog
+new file mode 100644
+index 0000000..f029fed
+--- /dev/null
++++ b/config/host/logrotate.d/rsyslog
+@@ -0,0 +1,47 @@
++# Real host config, deploy step is MANUAL (see config/host/README.md) --
++# this REPLACES the live /etc/logrotate.d/rsyslog (same filename,
++# deliberately -- logrotate errors with "duplicate log entry for
++# /var/log/syslog" if the same path is declared in two separate files
++# under /etc/logrotate.d/, so this cannot be a same-named-target sibling
++# file the way the journald.conf.d/ drop-in above is). A future
++# `apt upgrade rsyslog` may overwrite this back to the package default
++# (no maxsize cap) -- that is a real, known tradeoff of editing a
++# distro-owned package config file in place; re-apply this copy after any
++# rsyslog package upgrade.
++#
++# Root cause this caps (UMR-20260814-033442-c885, P0 disk exhaustion RCA):
++# real, measured on this host at incident time -- /var/log/syslog 7510MB,
++# /var/log/syslog.1 1552MB -- while the LIVE /etc/logrotate.d/rsyslog
++# config was `weekly, rotate 4` with NO size cap at all, so nothing bounded
++# growth between one weekly rotation and the next. Everything below is
++# BYTE-IDENTICAL to the live package default (confirmed via `cat
++# /etc/logrotate.d/rsyslog` -- one shared stanza covering all 6 of these
++# paths, not one stanza per file) EXCEPT the added `maxsize 500M` line.
++# `size` (logrotate's absolute-size trigger) is mutually exclusive with
++# time-interval options per `man logrotate`, so this uses `maxsize`
++# instead -- rotates EARLY, before the next scheduled weekly boundary, the
++# moment a file exceeds the cap, while still keeping the existing weekly
++# cadence as the normal case for the other 5 (much smaller-volume) paths.
++# logrotate itself only runs when its own cron/systemd timer fires
++# (typically once/day via cron.daily on this distro), so real growth is
++# bounded to roughly one cap's worth plus at most one day's growth, not an
++# unbounded week's worth.
++/var/log/syslog
++/var/log/mail.log
++/var/log/kern.log
++/var/log/auth.log
++/var/log/user.log
++/var/log/cron.log
++{
++	rotate 4
++	weekly
++	maxsize 500M
++	missingok
++	notifempty
++	compress
++	delaycompress
++	sharedscripts
++	postrotate
++		/usr/lib/rsyslog/rsyslog-rotate
++	endscript
++}
+diff --git a/reap_stale_test_scratch.py b/reap_stale_test_scratch.py
+new file mode 100755
+index 0000000..21b825b
+--- /dev/null
++++ b/reap_stale_test_scratch.py
+@@ -0,0 +1,167 @@
++#!/usr/bin/env python3
++"""reap_stale_test_scratch.py -- periodic backstop that removes stale test
++harness scratch under /tmp, so a leak like the one that caused
++UMR-20260814-033442-c885 (P0: /dev/sda1 100% full, all 17 veridian-worker
++units failed at preflight, resource_governor.py --query-umr returned
++count=0 for every real status -- the whole AI OS halted) can never again
++silently refill the disk between the individual test-file fixes and a human
++noticing.
++
++ROOT CAUSE this backstops (see the real fixes in test_pm_sentinel_tick.py,
++test_resource_governor_queue_management.py, tests/test_rule7_completion_evidence.py
++for the actual per-test-file leak fixes -- this script is the SECOND layer,
++not a substitute for those): every real test harness that seeds an isolated
++copy of superboss-register.sqlite drops it under a real, recognizable /tmp
++prefix. Even with every current leak fixed at the source, a future test
++added without the same discipline (or a test process genuinely killed by
++something outside its own control -- OOM-kill, SIGKILL, a host reboot mid-run)
++can still leave scratch behind. This reaper is the guard that keeps that
++from ever again silently growing to 122GB unnoticed.
++
++POLICY:
++  - Only ever touches /tmp (never /opt/veridian or any real data path).
++  - Only entries whose basename matches one of the real, confirmed literal
++    leak prefixes from the RCA (see PREFIXES/EXACT_NAMES below) -- never a
++    bare wildcard sweep of /tmp, which could delete something unrelated.
++  - Only entries older than --min-age-hours (default 2h, per the task
++    spec's own "startup/periodic reaper that removes stale (>2h) test
++    scratch" requirement) by mtime -- a real, currently-running test's own
++    scratch dir is always younger than that (these test suites run in
++    seconds to low tens of seconds; the pm-sentinel-tick suite, the
++    slowest of the three, is ~31s end to end).
++  - Best-effort open-handle check via `lsof` before deleting each
++    candidate (same safety discipline the PM-Desktop Sentinel's own manual
++    mitigation used) -- skips (does not delete, logs why) anything lsof
++    reports as still open. Never fatal if lsof itself is unavailable/fails
++    (fails open on the CHECK, not on the deletion decision -- an unwritable
++    lsof binary must not silently disable this whole reaper).
++
++Usage:
++    reap_stale_test_scratch.py [--dry-run] [--min-age-hours 2] [--tmp-dir /tmp]
++
++Exit codes: 0 always (a reaper that fails open must never itself become a
++new source of unit failures) -- real errors are printed to stderr and
++counted in the summary line, not raised.
++"""
++import argparse
++import os
++import shutil
++import subprocess
++import sys
++import time
++
++# Real, literal leak-signature prefixes from the RCA (UMR-20260814-033442-c885).
++# Directory prefixes (matched via basename.startswith()):
++DIR_PREFIXES = (
++    "pm_sentinel_tick_",
++    "rule7-real-persist-test-",
++    "rule7-non-completed-test-",
++    "rg_queue_mgmt_test_",
++)
++# Standalone files found by the real du -sx -m sweep (not from a mkdtemp
++# prefix -- fixed filenames some ad-hoc/manual debugging session left
++# behind; no committed call site produces these, see progress notes).
++EXACT_FILE_NAMES = (
++    "sbr-test-copy.sqlite",
++    "dedup_test.sqlite",
++)
++
++
++def _has_open_handle(path):
++    """Best-effort: True only if lsof explicitly confirms an open handle.
++    Any failure to run lsof at all (not installed, permission, timeout)
++    fails OPEN (returns False -- does not block deletion) so a missing
++    lsof binary can never silently turn this reaper into a no-op."""
++    try:
++        result = subprocess.run(
++            ["lsof", "-t", path], capture_output=True, text=True, timeout=5,
++        )
++        return bool(result.stdout.strip())
++    except Exception:
++        return False
++
++
++def _candidates(tmp_dir):
++    try:
++        entries = os.listdir(tmp_dir)
++    except OSError as e:
++        print(f"reap_stale_test_scratch: cannot list {tmp_dir}: {e}", file=sys.stderr)
++        return
++    for name in entries:
++        if name.startswith(DIR_PREFIXES) or name in EXACT_FILE_NAMES:
++            yield os.path.join(tmp_dir, name)
++
++
++def main():
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument("--dry-run", action="store_true",
++                         help="print what would be removed, delete nothing")
++    parser.add_argument("--min-age-hours", type=float, default=2.0,
++                         help="only remove entries older than this (default 2h)")
++    parser.add_argument("--tmp-dir", default="/tmp",
++                         help="scan root (default /tmp; override for testing)")
++    args = parser.parse_args()
++
++    cutoff = time.time() - (args.min_age_hours * 3600)
++    removed, skipped_young, skipped_open, errors = 0, 0, 0, 0
++    reclaimed_bytes = 0
++
++    for path in _candidates(args.tmp_dir):
++        try:
++            mtime = os.lstat(path).st_mtime
++        except OSError as e:
++            print(f"reap_stale_test_scratch: stat failed for {path}: {e}", file=sys.stderr)
++            errors += 1
++            continue
++        if mtime >= cutoff:
++            skipped_young += 1
++            continue
++        if _has_open_handle(path):
++            print(f"reap_stale_test_scratch: SKIP (open handle) {path}", file=sys.stderr)
++            skipped_open += 1
++            continue
++
++        size = 0
++        try:
++            if os.path.isdir(path) and not os.path.islink(path):
++                for root, _dirs, files in os.walk(path):
++                    for f in files:
++                        try:
++                            size += os.lstat(os.path.join(root, f)).st_size
++                        except OSError:
++                            pass
++            else:
++                size = os.lstat(path).st_size
++        except OSError:
++            pass
++
++        if args.dry_run:
++            print(f"reap_stale_test_scratch: WOULD REMOVE {path} (~{size / 1e6:.1f}MB)")
++            removed += 1
++            reclaimed_bytes += size
++            continue
++
++        try:
++            if os.path.isdir(path) and not os.path.islink(path):
++                shutil.rmtree(path)
++            else:
++                os.remove(path)
++            print(f"reap_stale_test_scratch: removed {path} (~{size / 1e6:.1f}MB)")
++            removed += 1
++            reclaimed_bytes += size
++        except OSError as e:
++            print(f"reap_stale_test_scratch: FAILED to remove {path}: {e}", file=sys.stderr)
++            errors += 1
++
++    print(
++        f"reap_stale_test_scratch: {removed} removed (~{reclaimed_bytes / 1e6:.1f}MB), "
++        f"{skipped_young} too young, {skipped_open} open-handle skips, {errors} errors"
++        f"{' [DRY RUN]' if args.dry_run else ''}"
++    )
++    # Real errors are surfaced above but never make this reaper itself a
++    # unit failure -- see module docstring.
++    sys.exit(0)
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/systemd/README.md b/systemd/README.md
+index 99fa292..c2a3861 100644
+--- a/systemd/README.md
++++ b/systemd/README.md
+@@ -31,6 +31,25 @@ real, pre-existing content, confirmed via `systemctl --user cat`. Same manual-co
+ STANDING RULE above) -- not yet deployed live as of this PR (deploy happens after merge,
+ same convention `test_build_lock_liveness_guard_deployment.py` documents for unit #20).
+ 
++## veridian-cron-reap-stale-test-scratch.{service,timer}
++
++Tracked here for the first time 2026-08-14 (UMR-20260814-033442-c885, P0 disk
++exhaustion: /dev/sda1 hit 288G used / 96MB free (100%), all 17 veridian-worker
++units failed at preflight, resource_governor.py --query-umr returned count=0
++for every real status -- the whole AI OS halted). Root cause: leaked test-
++harness scratch under /tmp (pm_sentinel_tick_*, rule7-*-test-*,
++rg_queue_mgmt_test_*, plus standalone superboss-register.sqlite copies),
++~122GB across ~150 entries at the time of the incident, each a full,
++never-cleaned-up copy of the ~3-4GB live register. The real fixes are in the
++test files themselves (test_pm_sentinel_tick.py, tests/
++test_rule7_completion_evidence.py, test_resource_governor_queue_management.py)
++plus reap_stale_test_scratch.py (schema-only copies instead of full binary
++backups, and real cleanup on every exit path including test failure). This
++unit is the periodic backstop the task's own spec explicitly required in
++addition to those fixes -- see the .service file's own header for the full
++closed-set-authorization disclosure. NOT yet deployed live as of this PR
++(same "deploy happens after merge" convention as every other entry above).
++
+ ## veridian-cron-prune-memory-backups.{service,timer,path}
+ 
+ Tracked here for the first time 2026-08-06 (UMR-20260806-134738-eec3,
+diff --git a/systemd/veridian-cron-reap-stale-test-scratch.service b/systemd/veridian-cron-reap-stale-test-scratch.service
+new file mode 100644
+index 0000000..8da8510
+--- /dev/null
++++ b/systemd/veridian-cron-reap-stale-test-scratch.service
+@@ -0,0 +1,54 @@
++# =============================================================================
++# Version-controlled reference copy of a unit NOT YET installed under
++# ~/.config/systemd/user/ as of this PR -- same "no automated deploy step
++# for this directory" convention as every other file here (see
++# systemd/README.md): a human still has to copy this + the paired .timer to
++# ~/.config/systemd/user/ and run `systemctl --user daemon-reload &&
++# systemctl --user enable --now veridian-cron-reap-stale-test-scratch.timer`
++# after this merges.
++#
++# Root cause this fixes (UMR-20260814-033442-c885, P0 disk exhaustion): at
++# 03:16 UTC 2026-08-14, /dev/sda1 was 288G used / 96MB free (100% full) --
++# /tmp held 2996 entries totalling ~122GB, almost entirely leaked test-
++# harness scratch (pm_sentinel_tick_*, rule7-*-test-*, rg_queue_mgmt_test_*,
++# plus standalone superboss-register.sqlite copies), each one a full copy of
++# the ~3-4GB live register a test harness never cleaned up. EVERY
++# veridian-worker unit died at preflight (disk_low), all 17 running units
++# failed, resource_governor.py --query-umr returned count=0 for every real
++# status -- the whole AI OS halted. This PR fixes the actual leak at its
++# three real call sites (test_pm_sentinel_tick.py, tests/
++# test_rule7_completion_evidence.py, test_resource_governor_queue_management.py
++# -- see their own real diffs) AND stops the ~4GB-per-test-run root cause
++# (full sqlite3 binary backups replaced with schema-only clones). This unit
++# is the SECOND layer per the task spec's own explicit requirement ("a
++# startup/periodic reaper... so this can never silently halt the fleet
++# again"): a real backstop so a future test added without the same
++# discipline (or a process genuinely SIGKILLed mid-run, e.g. by an OOM-kill)
++# still cannot silently refill the disk unnoticed between individual fixes.
++#
++# Checked against the ~/.config/systemd/user/README.md closed-set STANDING
++# RULE first: this purpose (reaping stale /tmp TEST SCRATCH by literal
++# leak-signature prefix) does not genuinely fit any of the existing 19 units
++# -- the nearest analog, veridian-cron-prune-memory-backups, prunes a
++# different class of file (verified DB *backups* under ai-os/memory) for a
++# different reason (backup retention, not test-harness-leak cleanup) at a
++# different path (/opt/veridian/ai-os/memory, never /tmp). This is a new
++# addition to that closed set, authorized by this real P0 task's own
++# explicit spec item 4 ("Add a real guard so this can never silently halt
++# the fleet again: a startup/periodic reaper"). NOTE: the live
++# ~/.config/systemd/user/README.md count was last updated 2026-08-06
++# (claims 19); `systemctl --user list-timers 'veridian-*'` shows units not
++# reflected in that count (e.g. veridian-pm-sentinel-tick.timer,
++# veridian-cron-zoekt-reindex.timer) -- whoever deploys this unit should
++# also true up that README's real count, not just add another silent
++# addition on top of an already-stale one.
++# =============================================================================
++[Unit]
++Description=VERIDIAN cron-replacement: reap stale (>2h) leaked test-harness scratch under /tmp (UMR-20260814-033442-c885 P0 disk-exhaustion backstop)
++ConditionPathExists=!/opt/veridian/ai-os/locks/resource-governor-EMERGENCY_STOP
++
++[Service]
++Type=oneshot
++ExecStart=/opt/veridian/scripts/run-logged.sh "reap-stale-test-scratch" /usr/bin/python3 /opt/veridian/scripts/reap_stale_test_scratch.py
++StandardOutput=append:/opt/veridian/ai-os/logs/reap-stale-test-scratch-cron.log
++StandardError=append:/opt/veridian/ai-os/logs/reap-stale-test-scratch-cron.log
+diff --git a/systemd/veridian-cron-reap-stale-test-scratch.timer b/systemd/veridian-cron-reap-stale-test-scratch.timer
+new file mode 100644
+index 0000000..b7a88bb
+--- /dev/null
++++ b/systemd/veridian-cron-reap-stale-test-scratch.timer
+@@ -0,0 +1,17 @@
++# See veridian-cron-reap-stale-test-scratch.service in this same directory
++# for the full root-cause writeup and closed-set-authorization disclosure.
++# 30-minute cadence (well under the 2h min-age the reaper itself enforces,
++# so a leak is caught within one real 30-min window of crossing that
++# threshold, not up to a further 2h late) -- jittered, offset from every
++# existing 10/15-minute-cadence unit's own minute so this does not cluster.
++[Unit]
++Description=Run veridian-cron-reap-stale-test-scratch on a 30-minute backstop cadence (UMR-20260814-033442-c885)
++
++[Timer]
++OnCalendar=*:8/30
++RandomizedDelaySec=60
++AccuracySec=10s
++Persistent=true
++
++[Install]
++WantedBy=timers.target
+diff --git a/test_pm_sentinel_tick.py b/test_pm_sentinel_tick.py
+index da46c21..161ad43 100644
+--- a/test_pm_sentinel_tick.py
++++ b/test_pm_sentinel_tick.py
+@@ -75,9 +75,61 @@
+ REAL_DISPATCH_OWNER_TASK_SH = "/opt/veridian/scripts/dispatch-owner-task.sh"
+ 
+ 
++def _schema_only_copy(dest_conn, src_conn):
++    """Real root-cause fix (UMR-20260814-033442-c885, P0 disk exhaustion):
++    this used to be `src.backup(dst)`, a full sqlite3 binary backup of the
++    ENTIRE live ~3-4GB superboss-register.sqlite, for every single test
++    invocation. This test (like every caller of _seeded_copy below) only
++    ever reads back rows it seeded itself -- it never depends on the live
++    DB's actual row data -- so the fix is to clone the schema (every real
++    table/index/trigger/view definition from sqlite_master) with ZERO row
++    data copied, not to just clean up the 4GB copy after the fact.
++
++    Three passes, deliberately NOT just "tables then indexes/triggers" by
++    raw sqlite_master rowid order -- a real, confirmed-live bug: on this
++    DB's actual sqlite_master, FTS5 shadow-table rows (umr_tasks_fts_data/
++    _idx/_docsize/_config) have LOWER rowids than their own owning virtual
++    table's row (umr_tasks_fts) -- i.e. rowid is not reliable creation
++    order across schema migrations/rebuilds. Executing the shadow tables'
++    plain CREATE TABLE statements before the virtual table's own
++    CREATE VIRTUAL TABLE ran left real, empty, non-fts5-linked tables
++    sitting under those names; the virtual table's own subsequent create
++    then found them "already exists" (swallowed, matching the FTS5-normal
++    case) and silently never actually created -- leaving a real
++    'no such table: main.umr_tasks_fts' failure the first time any insert
++    trigger tried to use it. Fix: create every CREATE VIRTUAL TABLE first
++    (pass 1, which then auto-creates ITS OWN correct shadow tables), then
++    every other ordinary table (pass 2 -- any shadow-table row here is now
++    the expected, benign "already exists"), then indexes/triggers/views
++    last (pass 3, once every table definitely exists)."""
++    rows = src_conn.execute(
++        "SELECT type, name, sql FROM sqlite_master "
++        "WHERE sql IS NOT NULL AND name NOT LIKE 'sqlite_%'"
++    ).fetchall()
++    is_virtual_table = lambda t, sql: t == "table" and sql.strip().upper().startswith("CREATE VIRTUAL TABLE")
++    for _type, _name, sql in rows:
++        if is_virtual_table(_type, sql):
++            dest_conn.execute(sql)
++    for _type, _name, sql in rows:
++        if _type == "table" and not is_virtual_table(_type, sql):
++            try:
++                dest_conn.execute(sql)
++            except sqlite3.OperationalError as e:
++                if "already exists" not in str(e):
++                    raise
++    for _type, _name, sql in rows:
++        if _type != "table":
++            try:
++                dest_conn.execute(sql)
++            except sqlite3.OperationalError as e:
++                if "already exists" not in str(e):
++                    raise
++
++
+ def _seeded_copy(tmpdir, rows):
+-    """Real, isolated sqlite3 COPY of the live DB (backup API), with
+-    umr_tasks/umr_tasks_fts/owner_priority_sequence wiped and replaced with
++    """Real, isolated, SCHEMA-ONLY clone of the live DB (see
++    _schema_only_copy above -- never a full binary copy of the live data),
++    with umr_tasks/umr_tasks_fts/owner_priority_sequence seeded with
+     exactly `rows` (a list of (umr_id, task_identity, status, reason)
+     tuples) -- deterministic, no real live rows leaking in and triggering
+     unrelated real dispatches or `gh` network calls."""
+@@ -85,7 +137,7 @@ def _seeded_copy(tmpdir, rows):
+     src = sqlite3.connect(f"file:{LIVE_DB}?mode=ro", uri=True)
+     dst = sqlite3.connect(copy_path)
+     with dst:
+-        src.backup(dst)
++        _schema_only_copy(dst, src)
+     src.close()
+     dst.close()
+ 
+@@ -176,6 +228,7 @@ def setUp(self):
+         # above for why a fixed id would collide with a prior real test run.
+         self.TEST_UMR_ID = f"UMR-TESTFIX-20260101-000000-{uuid.uuid4().hex[:8]}"
+         self.tmpdir = tempfile.mkdtemp(prefix="pm_sentinel_tick_test_")
++        self.addCleanup(shutil.rmtree, self.tmpdir, ignore_errors=True)  # UMR-20260814-033442-c885: runs even if setUp raises after this line (e.g. disk-full mid-copy) -- tearDown alone does not
+         self.copy_path = _seeded_copy(self.tmpdir, [
+             (self.TEST_UMR_ID, "test-seed-killed-task-0001", "killed",
+              "test-seeded: stuck-task SIGKILL, no exit after grace period"),
+@@ -270,6 +323,7 @@ class PmSentinelTickFinancialEscalationTest(unittest.TestCase):
+     def setUp(self):
+         self.FINANCIAL_UMR_ID = f"UMR-TESTFIX-20260101-000000-{uuid.uuid4().hex[:8]}"
+         self.tmpdir = tempfile.mkdtemp(prefix="pm_sentinel_tick_fin_test_")
++        self.addCleanup(shutil.rmtree, self.tmpdir, ignore_errors=True)  # UMR-20260814-033442-c885: runs even if setUp raises after this line (e.g. disk-full mid-copy) -- tearDown alone does not
+         # Real recorded reason is a genuine financial matter (payment/
+         # invoice/billing language) -- this is what dispatch_gap()'s
+         # is_financial_decision() check must catch.
+@@ -344,6 +398,7 @@ class PmSentinelTickDispatchFailurePropagatesTest(unittest.TestCase):
+     def setUp(self):
+         self.TEST_UMR_ID = f"UMR-TESTFIX-20260101-000000-{uuid.uuid4().hex[:8]}"
+         self.tmpdir = tempfile.mkdtemp(prefix="pm_sentinel_tick_failure_test_")
++        self.addCleanup(shutil.rmtree, self.tmpdir, ignore_errors=True)  # UMR-20260814-033442-c885: runs even if setUp raises after this line (e.g. disk-full mid-copy) -- tearDown alone does not
+         self.copy_path = _seeded_copy(self.tmpdir, [
+             (self.TEST_UMR_ID, "test-seed-killed-task-failx1", "killed",
+              "test-seeded: real failure-propagation regression case"),
+@@ -432,6 +487,7 @@ class PmSentinelTickQueryOncePerTickTest(unittest.TestCase):
+     def setUp(self):
+         self.TEST_UMR_ID = f"UMR-TESTFIX-20260101-000000-{uuid.uuid4().hex[:8]}"
+         self.tmpdir = tempfile.mkdtemp(prefix="pm_sentinel_tick_queryonce_test_")
++        self.addCleanup(shutil.rmtree, self.tmpdir, ignore_errors=True)  # UMR-20260814-033442-c885: runs even if setUp raises after this line (e.g. disk-full mid-copy) -- tearDown alone does not
+         self.copy_path = _seeded_copy(self.tmpdir, [
+             (self.TEST_UMR_ID, "test-seed-queryonce-task-0001", "killed",
+              "test-seeded: query-once-per-tick overlap case (chain head + killed)"),
+@@ -545,6 +601,7 @@ def setUp(self):
+         self.UMR_A = f"UMR-TESTFIX-20260101-000000-{uuid.uuid4().hex[:8]}"
+         self.UMR_B = f"UMR-TESTFIX-20260101-000000-{uuid.uuid4().hex[:8]}"
+         self.tmpdir = tempfile.mkdtemp(prefix="pm_sentinel_tick_decidefix_test_")
++        self.addCleanup(shutil.rmtree, self.tmpdir, ignore_errors=True)  # UMR-20260814-033442-c885: runs even if setUp raises after this line (e.g. disk-full mid-copy) -- tearDown alone does not
+         self.copy_path = _seeded_copy(self.tmpdir, [
+             (self.UMR_A, "test-seed-decidefix-task-a", "killed",
+              "test-seeded: real independent gap A, needs real RCA"),
+@@ -672,6 +729,7 @@ def setUp(self):
+         self.UMR_SWAPPED_ACTIVE = f"UMR-TESTFIX-20260101-000000-{uuid.uuid4().hex[:8]}"
+         self.UMR_SWAPPED_DEAD = f"UMR-TESTFIX-20260101-000000-{uuid.uuid4().hex[:8]}"
+         self.tmpdir = tempfile.mkdtemp(prefix="pm_sentinel_tick_orderparse_test_")
++        self.addCleanup(shutil.rmtree, self.tmpdir, ignore_errors=True)  # UMR-20260814-033442-c885: runs even if setUp raises after this line (e.g. disk-full mid-copy) -- tearDown alone does not
+ 
+         self.copy_path = _seeded_copy(self.tmpdir, [
+             (self.UMR_NORMAL_ACTIVE, "test-seed-orderparse-normal-active", "running", ""),
+@@ -778,6 +836,7 @@ class PmSentinelTickImpossibleActiveStateGuardTest(unittest.TestCase):
+     def setUp(self):
+         self.UMR_IMPOSSIBLE = f"UMR-TESTFIX-20260101-000000-{uuid.uuid4().hex[:8]}"
+         self.tmpdir = tempfile.mkdtemp(prefix="pm_sentinel_tick_impossible_test_")
++        self.addCleanup(shutil.rmtree, self.tmpdir, ignore_errors=True)  # UMR-20260814-033442-c885: runs even if setUp raises after this line (e.g. disk-full mid-copy) -- tearDown alone does not
+ 
+         self.copy_path = _seeded_copy(self.tmpdir, [
+             (self.UMR_IMPOSSIBLE, "test-seed-impossible-activestate", "running", ""),
+@@ -863,6 +922,7 @@ class PmSentinelTickDuplicateContentRefusalDoesNotFailTickTest(unittest.TestCase
+     def setUp(self):
+         self.TEST_UMR_ID = f"UMR-TESTFIX-20260101-000000-{uuid.uuid4().hex[:8]}"
+         self.tmpdir = tempfile.mkdtemp(prefix="pm_sentinel_tick_duprefusal_test_")
++        self.addCleanup(shutil.rmtree, self.tmpdir, ignore_errors=True)  # UMR-20260814-033442-c885: runs even if setUp raises after this line (e.g. disk-full mid-copy) -- tearDown alone does not
+         self.copy_path = _seeded_copy(self.tmpdir, [
+             (self.TEST_UMR_ID, "test-seed-duprefusal-task-0001", "killed",
+              "test-seeded: duplicate-content-refusal-does-not-fail-tick regression case"),
+@@ -1009,6 +1069,7 @@ class PmSentinelTickLiveDeployDriftFoundTest(unittest.TestCase):
+ 
+     def setUp(self):
+         self.tmpdir = tempfile.mkdtemp(prefix="pm_sentinel_tick_drift_found_test_")
++        self.addCleanup(shutil.rmtree, self.tmpdir, ignore_errors=True)  # UMR-20260814-033442-c885: runs even if setUp raises after this line (e.g. disk-full mid-copy) -- tearDown alone does not
+         # Empty umr_tasks (no seeded rows) -- isolates this test to Check 0
+         # only; Checks 1/2a/2b/3 all no-op on a real empty table.
+         self.copy_path = _seeded_copy(self.tmpdir, [])
+@@ -1075,6 +1136,7 @@ class PmSentinelTickLiveDeployDriftInSyncTest(unittest.TestCase):
+ 
+     def setUp(self):
+         self.tmpdir = tempfile.mkdtemp(prefix="pm_sentinel_tick_drift_insync_test_")
++        self.addCleanup(shutil.rmtree, self.tmpdir, ignore_errors=True)  # UMR-20260814-033442-c885: runs even if setUp raises after this line (e.g. disk-full mid-copy) -- tearDown alone does not
+         self.copy_path = _seeded_copy(self.tmpdir, [])
+         self.live_dir = _local_drift_fixture(self.tmpdir, extra_origin_commit=False)
+ 
+diff --git a/test_resource_governor_queue_management.py b/test_resource_governor_queue_management.py
+index a2d83f4..69ba180 100644
+--- a/test_resource_governor_queue_management.py
++++ b/test_resource_governor_queue_management.py
+@@ -34,14 +34,61 @@
+ _rg_spec.loader.exec_module(rg)
+ 
+ 
++def _schema_only_copy(dest_conn, src_conn):
++    """Real root-cause fix (UMR-20260814-033442-c885, P0 disk exhaustion):
++    this used to be `src.backup(dst)`, a full sqlite3 binary backup of the
++    ENTIRE live ~3-4GB superboss-register.sqlite, for every single test
++    invocation. Every real test in this file only ever reads back rows it
++    seeded itself via _seed() -- it never depends on the live DB's actual
++    row data -- so the fix is to clone the schema (every real
++    table/index/trigger/view definition from sqlite_master) with ZERO row
++    data copied, not to just clean up the 4GB copy after the fact.
++
++    Three passes -- virtual tables (which auto-create their OWN correct
++    shadow tables) first, then every other ordinary table, then
++    indexes/triggers/views last. See the identical helper in
++    test_pm_sentinel_tick.py's own _schema_only_copy for the full,
++    real, confirmed-live rationale: raw sqlite_master rowid order is NOT
++    reliable creation order for FTS5 shadow tables vs. their owning
++    virtual table on this DB, and a naive single-pass rowid-ordered copy
++    silently left `umr_tasks_fts` never actually created."""
++    rows = src_conn.execute(
++        "SELECT type, name, sql FROM sqlite_master "
++        "WHERE sql IS NOT NULL AND name NOT LIKE 'sqlite_%'"
++    ).fetchall()
++    is_virtual_table = lambda t, sql: t == "table" and sql.strip().upper().startswith("CREATE VIRTUAL TABLE")
++    for _type, _name, sql in rows:
++        if is_virtual_table(_type, sql):
++            dest_conn.execute(sql)
++    for _type, _name, sql in rows:
++        if _type == "table" and not is_virtual_table(_type, sql):
++            try:
++                dest_conn.execute(sql)
++            except sqlite3.OperationalError as e:
++                if "already exists" not in str(e):
++                    raise
++    for _type, _name, sql in rows:
++        if _type != "table":
++            try:
++                dest_conn.execute(sql)
++            except sqlite3.OperationalError as e:
++                if "already exists" not in str(e):
++                    raise
++
++
+ class QueueManagementTest(unittest.TestCase):
+     def setUp(self):
+         self.tmpdir = tempfile.mkdtemp(prefix="rg_queue_mgmt_test_")
++        # UMR-20260814-033442-c885: registered BEFORE the schema copy below
++        # so this real scratch dir is still reclaimed even if that copy
++        # itself raises (e.g. disk full mid-copy) -- addCleanup runs even
++        # when setUp raises after this point; tearDown alone does not.
++        self.addCleanup(shutil.rmtree, self.tmpdir, ignore_errors=True)
+         self.copy_path = os.path.join(self.tmpdir, "superboss-register.sqlite")
+         src = sqlite3.connect(f"file:{LIVE_DB}?mode=ro", uri=True)
+         dst = sqlite3.connect(self.copy_path)
+         with dst:
+-            src.backup(dst)
++            _schema_only_copy(dst, src)
+         src.close()
+         dst.close()
+ 
+diff --git a/tests/test_reap_stale_test_scratch.py b/tests/test_reap_stale_test_scratch.py
+new file mode 100644
+index 0000000..8278632
+--- /dev/null
++++ b/tests/test_reap_stale_test_scratch.py
+@@ -0,0 +1,76 @@
++#!/usr/bin/env python3
++"""Real test for reap_stale_test_scratch.py (UMR-20260814-033442-c885, P0
++disk exhaustion RCA's own periodic-reaper backstop). Runs against a real,
++isolated scratch tmp-root (never the real live /tmp) via --tmp-dir."""
++import os
++import subprocess
++import sys
++import tempfile
++import time
++import unittest
++
++HERE = os.path.dirname(os.path.abspath(__file__))
++SCRIPTS_DIR = os.path.dirname(HERE)
++REAPER = os.path.join(SCRIPTS_DIR, "reap_stale_test_scratch.py")
++
++
++class ReapStaleTestScratchTest(unittest.TestCase):
++    def setUp(self):
++        self.scratch_root = tempfile.mkdtemp(prefix="reaper_test_root_")
++        self.addCleanup(__import__("shutil").rmtree, self.scratch_root, ignore_errors=True)
++
++    def _make(self, name, age_hours, is_dir=True, size_bytes=0):
++        path = os.path.join(self.scratch_root, name)
++        if is_dir:
++            os.makedirs(path)
++            with open(os.path.join(path, "payload.bin"), "wb") as f:
++                f.write(b"x" * size_bytes)
++        else:
++            with open(path, "wb") as f:
++                f.write(b"x" * size_bytes)
++        old_time = time.time() - age_hours * 3600
++        os.utime(path, (old_time, old_time))
++        return path
++
++    def _run(self, *extra_args):
++        return subprocess.run(
++            [sys.executable, REAPER, "--tmp-dir", self.scratch_root, *extra_args],
++            capture_output=True, text=True, timeout=30,
++        )
++
++    def test_removes_stale_matching_prefix_dirs_and_leaves_young_and_unmatched_alone(self):
++        stale_pm = self._make("pm_sentinel_tick_test_abc123", age_hours=3, size_bytes=1024)
++        stale_rule7 = self._make("rule7-real-persist-test-xyz", age_hours=5)
++        young_pm = self._make("pm_sentinel_tick_test_fresh", age_hours=0.1)
++        stale_sqlite = self._make("sbr-test-copy.sqlite", age_hours=10, is_dir=False, size_bytes=2048)
++        unrelated = self._make("totally-unrelated-dir", age_hours=100)
++
++        result = self._run()
++        self.assertEqual(result.returncode, 0, msg=result.stdout + result.stderr)
++
++        self.assertFalse(os.path.exists(stale_pm), "stale pm_sentinel_tick_ dir must be reaped")
++        self.assertFalse(os.path.exists(stale_rule7), "stale rule7- dir must be reaped")
++        self.assertFalse(os.path.exists(stale_sqlite), "stale standalone sqlite file must be reaped")
++        self.assertTrue(os.path.exists(young_pm), "young (<2h) dir must NOT be reaped")
++        self.assertTrue(os.path.exists(unrelated), "non-matching name must NEVER be touched")
++        self.assertIn("3 removed", result.stdout)
++        print("PASS: test_removes_stale_matching_prefix_dirs_and_leaves_young_and_unmatched_alone")
++
++    def test_dry_run_deletes_nothing(self):
++        stale_pm = self._make("pm_sentinel_tick_test_dryrun", age_hours=5)
++        result = self._run("--dry-run")
++        self.assertEqual(result.returncode, 0, msg=result.stdout + result.stderr)
++        self.assertTrue(os.path.exists(stale_pm), "dry-run must not delete anything")
++        self.assertIn("DRY RUN", result.stdout)
++        print("PASS: test_dry_run_deletes_nothing")
++
++    def test_min_age_hours_override_respected(self):
++        borderline = self._make("rg_queue_mgmt_test_borderline", age_hours=1.5)
++        result = self._run("--min-age-hours", "1")
++        self.assertEqual(result.returncode, 0, msg=result.stdout + result.stderr)
++        self.assertFalse(os.path.exists(borderline), "1.5h-old entry must be reaped with --min-age-hours 1")
++        print("PASS: test_min_age_hours_override_respected")
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/tests/test_rule7_completion_evidence.py b/tests/test_rule7_completion_evidence.py
+index c7d282c..563ff23 100644
+--- a/tests/test_rule7_completion_evidence.py
++++ b/tests/test_rule7_completion_evidence.py
+@@ -21,6 +21,7 @@
+ import importlib.util
+ import json as json_module
+ import os
++import shutil
+ import sys
+ import tempfile
+ 
+@@ -213,6 +214,12 @@ def test_cmd_checkpoint_ignores_evidence_json_for_non_completed_status():
+                   "(reached real task lookup, not rejected by evidence validation)")
+     finally:
+         vt.AI_OS = real_ai_os
++        # UMR-20260814-033442-c885 (P0 disk exhaustion RCA): this scratch_dir
++        # was never removed at all before this fix -- a 100%-leak-rate bug
++        # (every single run of this test, pass or fail), not just a
++        # failure-path gap. finally, not just end-of-function, so it still
++        # runs on the assert/SystemExit paths above.
++        shutil.rmtree(scratch_dir, ignore_errors=True)
+ 
+ 
+ def test_cmd_checkpoint_never_persists_evidence_for_non_completed_status_real_task():
+@@ -278,6 +285,10 @@ def test_cmd_checkpoint_never_persists_evidence_for_non_completed_status_real_ta
+     finally:
+         vt.AI_OS = real_ai_os
+         vt.sync_controller_entry = real_sync_controller_entry
++        # UMR-20260814-033442-c885 (P0 disk exhaustion RCA): same 100%-leak-
++        # rate bug as test_cmd_checkpoint_ignores_evidence_json_for_non_completed_status
++        # above -- scratch_dir was never removed at all before this fix.
++        shutil.rmtree(scratch_dir, ignore_errors=True)
+     print("PASS: test_cmd_checkpoint_never_persists_evidence_for_non_completed_status_real_task")
+ 
+ 
