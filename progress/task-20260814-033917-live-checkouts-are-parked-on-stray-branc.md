@@ -145,12 +145,54 @@ stated plainly below, not glossed over.
   from this same checkout, tag still present) and open a PR, or explicitly decide it's stale
   and should be dropped.
 
+- [x] Step 5 + Step 6: Recurring drift guard, wired into the real live service, real
+      functional proof.
+  - **veridian-scripts (`/opt/veridian/repos/veridian-scripts`)**: nothing to restart --
+    reconfirmed above, no systemd unit's `ExecStart=` references this path at all
+    (`grep -rl "repos/veridian-scripts" ~/.config/systemd/user/*.service /opt/veridian/scripts/*.py`
+    -> only the pre-existing zoekt-reindex comment documenting its removal). Stated
+    plainly rather than faking a restart for a path nothing reads.
+  - **New code**: `scripts/veridian_self_check.py` -- added `check("deploy.live_checkout_drift", ...)`,
+    which shells out to the existing, already-tested `/opt/veridian/scripts/check_live_scripts_drift.py
+    --live-dir <dir>` (same subprocess idiom as this file's pre-existing `guard_self_test()`) against
+    both real live checkouts (`/opt/veridian/scripts`, `/opt/veridian/ai-os`), FAILing if either reports
+    `on_main_branch == False` or `commits_behind > 0` -- exactly the SPEC's own definition of drift.
+    Wired into the **existing** `veridian-cron-veridian-self-check.timer` (already enabled+active, fires
+    every 15 min) instead of creating unit #21 -- the closed-set policy in
+    `~/.config/systemd/user/README.md` and every unit file forbids a new unit without explicit Owner
+    sign-off, and this check's own existing FAIL path already auto-escalates to `logs/ATTENTION.md`, so
+    no new alerting had to be built either.
+    Committed on branch `worker/task-20260814-033917-live-checkout-drift-guard`, pushed, PR opened:
+    **https://github.com/FChecklist/veridian-ai-os/pull/14** (not yet merged -- the live checkout
+    correctly stays on `main`'s actual committed content until this is reviewed/merged, not force-installed).
+  - **Real functional proof, not an assertion**: ran the new check twice --
+    1. `python3 scripts/veridian_self_check.py` directly (while the branch carrying the new code was
+       briefly checked out to test it) -> `[PASS] deploy.live_checkout_drift -> /opt/veridian/scripts:
+       branch=main on_main=True behind=0 ahead=0 head=badf5a4... | /opt/veridian/ai-os: branch=main
+       on_main=True behind=0 ahead=0 head=8019941...`, logged to
+       `directive_compliance_runs` (verified via direct sqlite3 query, `run_id=RUN-20260814-035322`).
+    2. **Via the real live service itself**, not a manual script call: `systemctl --user start
+       veridian-cron-veridian-self-check.service` (exit 0) -> `logs/veridian-self-check-cron.log` shows
+       a fresh `RUN-20260814-035346` with the same PASS result, proving the actual systemd --user oneshot
+       unit this box's 15-minute timer fires picks up and runs the new code from disk.
+    - After this test, the checkout was switched back to `main` (`git checkout main`) so the live tree
+      matches `main`'s actual merged/committed content, not my unmerged PR branch -- confirmed
+      `git rev-parse HEAD` -> `8019941...` == `origin/main` again, and re-ran
+      `check_live_scripts_drift.py --live-dir` against both checkouts one more time as the final state:
+      both report `in_sync: true, on_main_branch: true, commits_behind: 0, commits_ahead: 0`.
+    - Also triggered the other two ai-os-executing units for additional real evidence:
+      `systemctl --user start veridian-cron-audit-pipeline-security.service` completed for real
+      (`audit-pipeline-security-cron.log`: `"status": "ok", "duration_s": 34.64, "total_findings": 29`),
+      confirming `/opt/veridian/ai-os/scripts/audit_pipeline_security.py` runs live off the now-`main`
+      tree. `veridian-cron-file-inventory.service` was deferred by the system's own concurrency governor
+      (`"SKIP file_inventory (cap reached): system at concurrency cap, deferring to next scheduled run"`)
+      -- a real, self-imposed load-shedding decision, not a failure of this task's change; it will run on
+      its own next 20-minute tick.
+
 ## Remaining
-- [ ] Step 5: Restart/reload real services reading these trees; prove with a real
-      functional check (ai-os only -- veridian-scripts/repos has no reader, see above)
-- [ ] Step 6: Add a recurring drift guard (reuse `check_live_scripts_drift.py`,
-      wire into the existing `veridian-cron-veridian-self-check` unit rather than
-      creating a new systemd unit -- the closed-set-of-18/20 policy documented in
-      `~/.config/systemd/user/README.md` and every unit file forbids adding a new
-      unit without explicit Owner sign-off)
+- [ ] Human/Owner: resolve PR #4 (veridian-ai-os) conflicts and merge the 10 real docs/owner-decision
+      commits, or explicitly decide otherwise
+- [ ] Human/Owner or an operator with `workflow` OAuth scope: push commit `22919e2` (tagged
+      `preserve-22919e2-ci-workflow-commit` in the live ai-os checkout) and open a PR, or decide to drop it
+- [ ] Review/merge PR #14 (veridian-ai-os) -- the new drift guard
 - [ ] record-completion write-back to UMR-20260814-033856-9db0
