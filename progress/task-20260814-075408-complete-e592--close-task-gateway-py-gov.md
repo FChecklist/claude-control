@@ -63,14 +63,27 @@ resource_governor.py's stop-work gate. Repo: FChecklist/claude-control.
       (EMERGENCY_STOP_PATH + metric threshold, currently only enforced inside
       dispatch_one())
 
+- [x] Extracted `resource_threshold_block_reason()` in resource_governor.py
+      (pure extraction from dispatch_one()'s inline EMERGENCY_STOP + metric
+      checks) + added `--check-task-start-gate` CLI flag
+- [x] Wired task-gateway.py's `cmd_start` through the gate via
+      `run_task_start_gate()`, right after the duplicate-task-key claim and
+      before `veridian-task.py create`
+- [x] Added 6 new tests to tests/test_resource_governor.py + new
+      tests/test_task_gateway_stop_work_gate.py (7 tests: load-bearing
+      real-subprocess block test, symmetry clear-proceeds test, source
+      regression guard, 4 run_task_start_gate() unit tests)
+- [x] Ran full test suite locally: 182 passed; 2 pre-existing failures
+      confirmed unrelated (reproduced identically on pre-change commit --
+      same 2 PR#126 itself documented); 1 test
+      (test_concurrent_dispatch_never_double_dispatches_the_same_queued_row)
+      confirmed pre-existing flaky (reproduces on both pre- and post-change
+      commit, real `_save_json` tmp-file race under concurrent subprocesses)
+- [x] Committed (124cc5e) + pushed to
+      worker/task-20260814-075408-complete-e592--close-task-gateway-py-gov
+
 ## Remaining
-- [ ] Extract `resource_threshold_block_reason()` in resource_governor.py +
-      add `--check-task-start-gate` CLI flag
-- [ ] Wire task-gateway.py's `cmd_start` through the gate via
-      `run_task_start_gate()`
-- [ ] Add/extend real tests
-- [ ] Run full test suite locally
-- [ ] Commit + push, open PR against FChecklist/claude-control
+- [ ] Open PR against FChecklist/claude-control
 - [ ] Get a real audit
 - [ ] Record UMR completion via agent_work_briefing.py record-completion
 - [ ] Report PR number in final checkpoint
