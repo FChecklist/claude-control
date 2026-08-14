@@ -1,3 +1,41 @@
+# CURRENT FOCUS (2026-08-14)
+
+**VERIFY-AND-CLOSE ONLY — do not redo.** 7 real completion dispatches already
+cover the entire P1/P2-3/P4/parallel-mandate backlog:
+
+| UMR | Real target |
+|---|---|
+| `UMR-20260814-073155-2972` | recovers orphaned commit `6a78798`, fixes FAKE PR#141 |
+| `UMR-20260814-074711-080e` | `e592`/`task-gateway.py` bypass |
+| `UMR-20260814-074832-bffd` | `326b`/real `REPO_LOCAL_PATHS` fix |
+| `UMR-20260814-074850-b740` | `e9a7`/query-once rules |
+| `UMR-20260814-075505-35a7` | `cebd`/orphaned-branch PR |
+| `UMR-20260814-075527-c4b3` | `ba01`/verify+land |
+| `UMR-20260814-073220-e363` | PR#356 audit-trigger |
+
+For every one of these: confirm a real PR number + fresh `AUDIT:PASS`
+matching the current head, merge if clean, and mark `CLOSED` with the real
+PR. Do not redispatch these gaps.
+
+The duplicate-guard false-positive bug and the credit-accountant
+approval-gate bug are **both confirmed genuinely fixed** as of 2026-08-14
+~07:30Z — do not re-fix either.
+
+**New lesson:** an `AUDIT:PASS` comment can go stale via a *later* commit
+**dropping** the audited content, not just via a newer commit landing —
+always diff the comment's own cited file list against a live
+`gh pr view --json files` on the current head before trusting it as still
+valid.
+
+**Once the 7 items above are independently verified closed**, all new
+dispatch capacity should pivot to the real go-to-market blocker: the
+51-category certification gate (currently `FAIL`) and the VCEL engine
+registry (41 of 247 built). This entire P1–P4/parallel-mandate chain has
+been PM-dispatch-infrastructure work, not real product functionality, and
+should not be repeated once closed.
+
+---
+
 # Status report — reconcile stale queued rows whose target PR is already resolved (UMR-20260813-120205-1f32)
 
 Governing chain: addendum to Priority-1 UMR-20260806-171945-5767, sibling of
