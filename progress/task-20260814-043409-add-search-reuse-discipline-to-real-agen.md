@@ -36,13 +36,26 @@ veridian-scripts.
 ## Completed
 - [x] Confirmed real repo/AGENTS.md/index inventory above
 - [x] Progress file created
+- [x] veda-advisors: added Search-Reuse Discipline (Operating Rule 6) to AGENTS.md, PR
+      opened against `main` (not a worktree): https://github.com/FChecklist/veda-advisors/pull/18
+- [x] compliance-tracker: added Search-Reuse Discipline (Operating Rule 12) to AGENTS.md,
+      PR opened against `main` (fresh scratch clone, not the dirty local worktree at
+      /opt/veridian/repos/compliance-tracker which had unrelated in-flight changes):
+      https://github.com/FChecklist/compliance-tracker/pull/1127
+- [x] projexa: added Search-Reuse Discipline (Operating Rule 7) to AGENTS.md, PR opened
+      against `main` (fresh scratch clone, not the dirty local worktree):
+      https://github.com/FChecklist/projexa/pull/71
+- [x] claude-control: created AGENTS.md (none existed) with Search-Reuse Discipline as
+      Operating Rule 5, PR opened against `master` from this task's own worker branch:
+      https://github.com/FChecklist/claude-control/pull/205
+- [x] veridian-scripts: created AGENTS.md (none existed) with Search-Reuse Discipline as
+      Operating Rule 5 + added `RetryConnection` (busy-timeout already existed at 30s;
+      added real retry-with-backoff on top, 20-min total-wait ceiling, verified live
+      against an actually-locked SQLite file + existing test suite) to the CANONICAL
+      `superboss-register.py`, PR opened against `main`:
+      https://github.com/FChecklist/veridian-scripts/pull/351
 
 ## Remaining
-- [ ] compliance-tracker: add Search-Reuse Discipline section to AGENTS.md on `main`, commit+push, PR
-- [ ] projexa: add Search-Reuse Discipline section to AGENTS.md on `main`, commit+push, PR
-- [ ] veda-advisors: add Search-Reuse Discipline section to AGENTS.md on `main`, commit+push, PR
-- [ ] claude-control: create AGENTS.md with Search-Reuse Discipline section (this workspace repo)
-- [ ] veridian-scripts: create AGENTS.md with Search-Reuse Discipline section + add busy-timeout/retry-with-backoff wrapper around SQLite writes in superboss-register.py
-- [ ] Confirm every change targets each repo's real default branch, not a worktree
-- [ ] Report real diffs for each repo
+- [ ] Check CI on all 5 PRs; merge each once green (autonomous-merge precedent: compliance-tracker/veda-advisors AGENTS.md Rule 10/Owner 2026-07-31 "Full autonomy, no exceptions")
+- [ ] Report real diffs for each repo to the user
 - [ ] record-completion write-back to UMR-20260814-043403-112d
