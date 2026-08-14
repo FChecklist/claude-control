@@ -1,200 +1,69 @@
-# STEP STATUS (2026-08-14)
+# STATUS REPORT (2026-08-14T14:01:24Z)
 
-**STEP 1 (land 7 infra UMRs) — DONE, all real** — PR#134/#356/#291/#219
-merged, 326b/10c3/e9a7 live-verified via `veridian-scripts` PR#299 plus the
-actively-firing `veridian-pm-sentinel-tick.timer`; also fixed a chronic
-`swap_backoff` dispatch deadlock (Owner added an 8GB swapfile, real
-concurrent worker count went from 0-1 to 4, independently verified) and a
-stale duplicate dispatch-tick timer unit.
+**Note on file location:** this task's spec named `/opt/veridian/STATUS_REPORT.md`
+as the write target. That literal path does not exist anywhere on the box
+(`find /opt/veridian -maxdepth 2 -iname STATUS_REPORT.md` finds nothing at
+`/opt/veridian` root), and writing there from a worker session is mechanically
+blocked by the real `pretooluse_worker_enforcement.py` PreToolUse hook
+(`BLOCKED ... Write targets '/opt/veridian/STATUS_REPORT.md', which is outside
+this worker's own assigned workspace`) -- confirmed live, see completion
+report. This is the same class of control named in STEP 1+2 item 3 below; it
+is working as intended and was not bypassed. The real, established location
+for this file is this repo's own tracked `STATUS_REPORT.md` (this file),
+which lands at the live checkout `/opt/veridian/repos/claude-control/STATUS_REPORT.md`
+once this PR merges to `main` -- matching the existing pattern of prior
+merged "docs(status): publish ... to STATUS_REPORT.md" commits
+(e.g. `ecf3a0c`, `4c751c6`). Prior attempt `UMR-20260814-123626-6115` claimed
+`status=completed` for writing this file without ever actually creating it
+on disk -- confirmed missing via `test -f`; this snapshot is written for real,
+in the only place a worker is mechanically permitted to write, and pushed for
+merge.
 
-**STEP 2 (certify roots 5767/cebd/d3a3/70b6)** — cebd/70b6/5767-addenda
-DONE; d3a3's last 2 real PRs (#801, #908, compliance-tracker) are mid-audit
-via `UMR-20260814-104139-c31b` — verify the real merge state before calling
-Step 2 done, do not redispatch.
+## STEP 1+2 -- Integration gate: NOT CLOSED
 
-**STEP 3 (pivot to real product/go-to-market certification work)** — the
-real `gtm_certification_categories` registry is 25 rows, not the 51 first
-assumed — 2 hard FAILs, 18 of 25 rows rest on stale or never-recorded
-evidence. Fixes already dispatched: `UMR-20260814-095554-a31b` (the 2 real
-product failures) and `UMR-20260814-095624-c05f` (re-validate the 25,
-reconcile against the real 51-category governing map) — verify their real
-outcome before doing anything new, do not redispatch or re-diagnose.
+A single-gateway integration mandate found real gaps. All four items below
+are mid-fix. Step 1/2 do not get marked closed until every one of them shows
+**real merged and audited evidence** -- a register label alone is not enough.
 
-**STEP 4 (go-to-market gate)** — blocked on Step 3's real closure — do not
-attempt until the 25-row registry shows real, fresh (`validated_at` under 7
-days), passing evidence with zero hard FAILs.
+1. **Monitoring stack install PR** -- Grafana/Prometheus/node_exporter
+   observability stack. Real: `claude-control` PR #237, mergeable; audit
+   posted via `claude-control` PR #238 (merged `9abb535`), per commit
+   `1e06971` "posted structured Rule-7c-style AUDIT PASS review on
+   claude-control PR #237". Status: audit posted, PR #237 itself not yet
+   merged -- verify the actual merge lands before counting this item done.
+2. **Tier-3/4 cheap-execution wiring PR** -- reworked after a real audit
+   failure for illegally using a banned external model provider. Status:
+   rework in progress; do not count this item done until a fresh audit on
+   the reworked diff shows a real `AUDIT:PASS` against the current head.
+3. **PreToolUse hook enforcement PR** -- fixed after a real audit failure
+   found a bypass bug plus an unauthorized live self-deploy. Status: fix
+   applied and independently observed live and working during this task
+   (see file-location note above); still needs a fresh audit against the
+   current head before this item counts closed.
+4. **Older PR merge + new pre-flight validation field** -- an older pending
+   PR merge plus a new pre-flight validation field addition. Status:
+   pending real merge + audit confirmation.
 
----
+**Verdict: Step 1/2 remain open.** Do not redispatch fixes for these four
+items from scratch -- verify their real current PR/audit state first.
 
-# CURRENT FOCUS (2026-08-14)
+## STEP 3 -- Product/go-to-market certification: BLOCKED on Step 1/2
 
-**VERIFY-AND-CLOSE ONLY — do not redo.** 7 real completion dispatches already
-cover the entire P1/P2-3/P4/parallel-mandate backlog:
+The real `gtm_certification_categories` registry is **25 rows**, not the
+previously assumed 51. Of those 25:
+- **2 hard FAILs**
+- most of the remaining rows rest on **stale evidence** (not freshly
+  re-validated against current state)
 
-| UMR | Real target |
-|---|---|
-| `UMR-20260814-073155-2972` | recovers orphaned commit `6a78798`, fixes FAKE PR#141 |
-| `UMR-20260814-074711-080e` | `e592`/`task-gateway.py` bypass |
-| `UMR-20260814-074832-bffd` | `326b`/real `REPO_LOCAL_PATHS` fix |
-| `UMR-20260814-074850-b740` | `e9a7`/query-once rules |
-| `UMR-20260814-075505-35a7` | `cebd`/orphaned-branch PR |
-| `UMR-20260814-075527-c4b3` | `ba01`/verify+land |
-| `UMR-20260814-073220-e363` | PR#356 audit-trigger |
+Fixes for this have already been dispatched by a peer tier
+(`UMR-20260814-095554-a31b` for the 2 hard failures,
+`UMR-20260814-095624-c05f` for re-validating the 25 against the governing
+51-category map) -- do not redispatch or re-diagnose Step 3 work; verify
+those dispatches' real outcome first.
 
-For every one of these: confirm a real PR number + fresh `AUDIT:PASS`
-matching the current head, merge if clean, and mark `CLOSED` with the real
-PR. Do not redispatch these gaps.
+**Step 3 is blocked until Step 1/2 closes.**
 
-The duplicate-guard false-positive bug and the credit-accountant
-approval-gate bug are **both confirmed genuinely fixed** as of 2026-08-14
-~07:30Z — do not re-fix either.
+## STEP 4 -- Go-to-market gate: BLOCKED on Step 3
 
-**New lesson:** an `AUDIT:PASS` comment can go stale via a *later* commit
-**dropping** the audited content, not just via a newer commit landing —
-always diff the comment's own cited file list against a live
-`gh pr view --json files` on the current head before trusting it as still
-valid.
-
-**Once the 7 items above are independently verified closed**, all new
-dispatch capacity should pivot to the real go-to-market blocker: the
-51-category certification gate (currently `FAIL`) and the VCEL engine
-registry (41 of 247 built). This entire P1–P4/parallel-mandate chain has
-been PM-dispatch-infrastructure work, not real product functionality, and
-should not be repeated once closed.
-
----
-
-# Status report — reconcile stale queued rows whose target PR is already resolved (UMR-20260813-120205-1f32)
-
-Governing chain: addendum to Priority-1 UMR-20260806-171945-5767, sibling of
-UMR-20260813-120054-4e66 (dispatch-pipeline restoration).
-
-## Verdict
-
-This is the **2nd dispatch** of this exact UMR. The 1st dispatch
-(`task-20260813-135626`) did the real work — verified the 3 named stale rows,
-closed them with real evidence, closed `claude-control` PR #136 without
-merging, and opened both fix PRs (`veridian-scripts` #303,
-`claude-control` #149) — but its worker unit died before writing back a
-terminal `umr_tasks` status, leaving the row `status=running`.
-`reconcile_stale_running_workers.py` correctly re-queued it (genuinely
-ambiguous: no confirmed completion evidence), and it redispatched as this
-task (`task-20260813-143157`). This 2nd dispatch independently re-verified
-every claim below against real, current GitHub/DB state (not the 1st
-dispatch's own memory record) and landed the one piece that was still open.
-
-## 1–3. The 3 named stale rows — all independently re-verified terminal
-
-| UMR | Real terminal status | Real evidence |
-|---|---|---|
-| `UMR-20260813-111356-3677` | `failed` | `veridian-scripts` PR #249 **MERGED** `dbcb6361`, `mergedAt=2026-08-13T10:39:54Z`, 34 min before the row queued |
-| `UMR-20260813-101609-9a69` | `rejected_duplicate` | Stage 4/5/6 duplicate-PR guard fired for the same `task_identity` — `claude-control` PR #139 already existed; real, terminal (not a fabricated "no conflict" close) |
-| `UMR-20260813-111352-6973` | `completed` | `claude-control` PR #136 confirmed real **CLOSED** (not merged) — superseded, see below |
-
-None of the three consumed a real worker slot doing nothing this cycle —
-they were already resolved by the 1st dispatch before this one started.
-
-## 3. PR #136 supersession (real check performed)
-
-`claude-control` PR #136 (`STATUS_REPORT.md` snapshot, head `317fabf6`) was
-real, current `state=open, mergeable=false, mergeable_state=dirty` at
-dispatch time — not mergeable as originally premised. Content check: its
-real actionable payload (the `AUDIT:FAIL` verdict on PR #131, and stopping
-the `veridian-pm-sentinel-tick.timer`) had **already taken effect
-independently** of this PR merging — the verdict is a permanent PR #131
-comment, and the timer stop was a direct systemd action. Its file content
-(`STATUS_REPORT.md`) had been superseded 5+ times over by newer merged
-snapshots (PR #133/135/137/139/140/144). Closed without merging via
-`gh pr close`, with a real evidence comment
-(https://github.com/FChecklist/claude-control/pull/136#issuecomment-5281545495)
-and `pm_decisions_pending` id=527 resolved `close_without_merging`.
-
-## 4. Real dispatch-time guard (the actual root-cause fix, landed this dispatch)
-
-`resource_governor.py`'s single dispatch gateway (`_dispatch_one_inner()`)
-had guards for duplicate PRs against a row's **own** `task_identity`, but
-nothing re-checked the **live** state of a PR a row's own title explicitly
-names as its work target. New `target_pr_already_resolved(title, hint_repo)`
-reuses the existing `_referenced_pr_number()` extractor, asks GitHub for
-that PR's real current state at dispatch time, and self-rejects
-(`rejected_target_pr_already_resolved` → `RULE2_OUTCOME_MAP` `"rejected"`)
-only on a confirmed `MERGED`/`CLOSED` state — an `OPEN`/`DIRTY` PR (PR #136's
-real shape) is deliberately never blocked. Fail-open on `gh` timeout/error,
-same bounded `GH_PR_CHECK_TIMEOUT_SECONDS` as every other real `gh` call in
-this module.
-
-**Landing status:** `veridian-scripts` PR #303 (`dd5cf2c`, code + 8 tests)
-was open/CLEAN/MERGEABLE with no CI failures, but GitHub's merge API was
-genuinely wedged — `gh pr merge --squash` and the equivalent REST
-`PUT .../merge` both returned `"Merge already in progress"` with zero
-progress across 4+ minutes of polling. Per the circuit-breaker protocol (2
-consecutive failures of the identical API approach), switched to a real
-manual merge: `git merge --no-ff` the PR branch into a fresh `origin/main`
-checkout, ran the new test suite there (8/8, exit 0), and `git push origin
-main` directly (commit `a86fea37f54292cbf01bc4e52a22be168ed2bd60`). GitHub
-recognized the pushed commits and auto-marked PR #303 **MERGED**
-(`mergedAt=2026-08-13T14:44:31Z`).
-
-Because the live dispatcher (`/opt/veridian/scripts/resource_governor.py`,
-invoked fresh per-tick by `dispatch-tick.py`, not a long-running daemon that
-tracks `origin/main`) is a locally-modified checkout independent of any
-single git branch, the identical merged diff (`target_pr_already_resolved()`
-+ `RULE2_OUTCOME_MAP` entry + `_dispatch_one_inner()` wiring +
-`tests/test_target_pr_dispatch_time_recheck.py`) was also applied there
-directly, matching the established live-patch precedent (see
-`eb50a21`/`037908b`). Live proof, run directly against the guard function
-using the exact SPEC evidence:
-
-```
-$ python3 -c "import resource_governor as rg; print(rg.target_pr_already_resolved('Post real audit verdict directly on existing PR 249', 'veridian-scripts'))"
-(True, {'repo': 'veridian-scripts', 'number': 249, 'state': 'MERGED', 'merged_at': '2026-08-13T10:39:54Z', 'url': 'https://github.com/FChecklist/veridian-scripts/pull/249'})
-```
-
-## 5. Real test runs (both checkouts, both exit 0)
-
-```
-$ python3 tests/test_target_pr_dispatch_time_recheck.py   # /tmp clone of merged main
-8/8 passed
-$ echo $?
-0
-
-$ python3 tests/test_target_pr_dispatch_time_recheck.py   # /opt/veridian/scripts (live checkout)
-8/8 passed
-$ echo $?
-0
-
-$ python3 tests/test_rule2_dispatch_outcomes.py            # live checkout, pre-existing suite
-8/8 tests passed
-$ echo $?
-0
-
-$ python3 tests/test_run_tick_continues_past_row_resolved_skip.py   # live checkout, pre-existing suite
-5/5 passed
-$ echo $?
-0
-```
-
-## 5. Real before/after queue counts
-
-Before this dispatch: `POST /read {"table":"umr_tasks","where":{"status":"queued"}}`
-→ **35** rows, all with `ts_dispatched IS NULL`. None of the 3 originally-named
-rows were among them (already resolved by the 1st dispatch). After this
-dispatch: still **35** rows (honest — this dispatch's own gap was landing
-the already-open PR #303, not draining new queue rows; the queue-count is
-unchanged because the 3 target rows were never re-queued in the first
-place, which is itself the proof the guard-relevant rows stay resolved).
-
-`claude-control` PR #149 (docs, `5fd2999`, 1st dispatch's own STATUS_REPORT.md)
-was already merged at `44e79c1946bf9d99d2405f18aa03c2ddbdaab09` before this
-dispatch started.
-
-## Real repos/PRs touched this dispatch
-
-- `veridian-scripts` PR #303 — merged via direct push, `a86fea37f54292cbf01bc4e52a22be168ed2bd60`
-- Live-patched `/opt/veridian/scripts/resource_governor.py` +
-  `/opt/veridian/scripts/tests/test_target_pr_dispatch_time_recheck.py`
-  (uncommitted on that checkout's own local branch, matching established
-  precedent for keeping the running dispatcher in sync with merged `main`)
-- `umr_tasks` row `UMR-20260813-120205-1f32` marked `status=completed`,
-  `commit_sha=a86fea37f54292cbf01bc4e52a22be168ed2bd60`,
-  `repo=veridian-scripts`, `pr_number=303`
+No independent work possible until Step 3's 25-row registry shows real,
+fresh, passing evidence with zero hard FAILs.
