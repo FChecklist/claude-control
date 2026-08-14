@@ -20,19 +20,30 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(
 import merge_gate  # noqa: E402
 
 
-def _pr_view_json(head_sha, comments=None, reviews=None, state="OPEN"):
+def _pr_view_json(head_sha, comments=None, reviews=None, state="OPEN", pr_author="worker"):
     return json.dumps({
         "number": 999,
         "url": "https://github.com/ORG/REPO/pull/999",
         "state": state,
         "headRefOid": head_sha,
+        "author": {"login": pr_author},
         "comments": comments or [],
         "reviews": reviews or [],
     })
 
 
-def _comment(body, ts):
-    return {"author": {"login": "bot"}, "body": body, "createdAt": ts}
+def _comment(body, ts, author="bot", association="OWNER"):
+    # Trusted (OWNER) by default -- these existing scenarios exercise the
+    # verdict/staleness logic, not the identity-trust gate, so they must keep
+    # passing through the new trust check unaffected. See test_merge_gate.py's
+    # own dedicated `test_untrusted_*`/`test_auditor_login_allowlist_*` cases
+    # below for the identity-check behavior itself.
+    return {
+        "author": {"login": author},
+        "authorAssociation": association,
+        "body": body,
+        "createdAt": ts,
+    }
 
 
 def test_refuses_when_no_verdict_posted_at_all(monkeypatch):
@@ -129,7 +140,8 @@ def test_review_body_with_verdict_is_considered(monkeypatch):
 
     def fake_run_gh(args, timeout=60):
         return _pr_view_json(head, reviews=[
-            {"author": {"login": "auditor"}, "body": f"AUDIT: PASS\nHead SHA audited: `{head}`",
+            {"author": {"login": "auditor"}, "authorAssociation": "MEMBER",
+             "body": f"AUDIT: PASS\nHead SHA audited: `{head}`",
              "state": "APPROVED", "submittedAt": "2026-08-14T09:00:00Z"},
         ])
 
@@ -211,6 +223,127 @@ def test_gh_error_is_never_silently_treated_as_allow(monkeypatch):
     monkeypatch.setattr(merge_gate, "_run_gh", fake_run_gh)
     with pytest.raises(merge_gate.GhError):
         merge_gate.evaluate_gate("ORG/REPO", 999)
+
+
+def test_untrusted_association_pass_is_ignored_not_trusted(monkeypatch):
+    """The exact CRITICAL gap named in PR #230's real AUDIT: FAIL
+    (2026-08-14T10:20Z): find_latest_verdict() must NOT trust a PASS from an
+    account with no real (OWNER/MEMBER/COLLABORATOR) association with the
+    repo -- e.g. a random outside/first-time-contributor login -- even
+    though it cites the correct current head SHA. An untrusted PASS must
+    behave as if it doesn't exist, not as if it were a legitimate verdict."""
+    head = "f00d000" + "0" * 33
+
+    def fake_run_gh(args, timeout=60):
+        return _pr_view_json(head, comments=[
+            _comment(f"AUDIT: PASS\nHead SHA audited: `{head}`", "2026-08-14T09:00:00Z",
+                     author="random-outsider", association="FIRST_TIME_CONTRIBUTOR"),
+        ])
+
+    monkeypatch.setattr(merge_gate, "_run_gh", fake_run_gh)
+    decision = merge_gate.evaluate_gate("ORG/REPO", 999)
+    assert decision["allowed"] is False
+    assert "no TRUSTED audit verdict" in decision["reason"]
+    assert decision["latest_verdict"] is None
+    assert len(decision["untrusted_verdicts_skipped"]) == 1
+    assert decision["untrusted_verdicts_skipped"][0]["author"] == "random-outsider"
+
+
+def test_untrusted_pr_authors_own_self_posted_pass_is_ignored(monkeypatch):
+    """Directly reproduces the audit's named attack: 'the PR's own author...
+    posting a fabricated AUDIT: PASS comment citing the correct head SHA.'
+    Even when the commenter IS the PR author, an untrusted association still
+    must not grant a merge."""
+    head = "5e1f000" + "0" * 33
+
+    def fake_run_gh(args, timeout=60):
+        return _pr_view_json(
+            head, pr_author="pr-author-with-no-real-access",
+            comments=[
+                _comment(f"AUDIT: PASS\nHead SHA audited: `{head}`", "2026-08-14T09:00:00Z",
+                         author="pr-author-with-no-real-access", association="NONE"),
+            ],
+        )
+
+    monkeypatch.setattr(merge_gate, "_run_gh", fake_run_gh)
+    decision = merge_gate.evaluate_gate("ORG/REPO", 999)
+    assert decision["allowed"] is False
+
+
+def test_untrusted_pass_is_skipped_in_favor_of_older_trusted_pass(monkeypatch):
+    """An untrusted, newer PASS must not shadow a real, older TRUSTED PASS --
+    the scan should keep looking, not stop at the first (untrusted) verdict
+    line it sees. (The older trusted PASS here is intentionally stale-SHA'd
+    -- this only proves the SKIP-not-STOP behavior, not that staleness is
+    ignored; staleness is covered by the dedicated stale-pass test.)"""
+    old_head = "aaaaaaa" + "0" * 33
+
+    def fake_run_gh(args, timeout=60):
+        return _pr_view_json(old_head, comments=[
+            _comment(f"AUDIT: PASS\nHead SHA audited: `{old_head}`", "2026-08-14T08:00:00Z",
+                     author="real-owner", association="OWNER"),
+            _comment(f"AUDIT: PASS\nHead SHA audited: `{old_head}`", "2026-08-14T09:00:00Z",
+                     author="drive-by-commenter", association="NONE"),
+        ])
+
+    monkeypatch.setattr(merge_gate, "_run_gh", fake_run_gh)
+    decision = merge_gate.evaluate_gate("ORG/REPO", 999)
+    assert decision["allowed"] is True
+    assert decision["latest_verdict"]["author"] == "real-owner"
+    assert len(decision["untrusted_verdicts_skipped"]) == 1
+
+
+def test_untrusted_fail_does_not_block_a_trusted_older_pass(monkeypatch):
+    """Symmetric case: an untrusted FAIL carries no authority either -- it
+    must not be able to sabotage/deny a real, trusted, fresh PASS."""
+    head = "b105f00" + "0" * 33
+
+    def fake_run_gh(args, timeout=60):
+        return _pr_view_json(head, comments=[
+            _comment(f"AUDIT: PASS\nHead SHA audited: `{head}`", "2026-08-14T08:00:00Z",
+                     author="real-owner", association="OWNER"),
+            _comment("AUDIT: FAIL\nfabricated sabotage attempt.", "2026-08-14T09:00:00Z",
+                     author="drive-by-commenter", association="NONE"),
+        ])
+
+    monkeypatch.setattr(merge_gate, "_run_gh", fake_run_gh)
+    decision = merge_gate.evaluate_gate("ORG/REPO", 999)
+    assert decision["allowed"] is True
+
+
+def test_auditor_login_allowlist_overrides_association_check(monkeypatch):
+    """MERGE_GATE_AUDITOR_LOGINS, when set, narrows trust to an explicit
+    login set -- even an OWNER-associated account is refused if not on the
+    allowlist, and a non-owner login IS trusted if explicitly allowlisted
+    (the future-hardening lever for a dedicated service/bot account)."""
+    head = "c0ffee7" + "0" * 33
+    monkeypatch.setenv("MERGE_GATE_AUDITOR_LOGINS", "audit-bot, Another-Bot")
+    import importlib
+    importlib.reload(merge_gate)
+
+    def fake_run_gh(args, timeout=60):
+        return _pr_view_json(head, comments=[
+            _comment(f"AUDIT: PASS\nHead SHA audited: `{head}`", "2026-08-14T08:00:00Z",
+                     author="FChecklist", association="OWNER"),
+        ])
+
+    try:
+        monkeypatch.setattr(merge_gate, "_run_gh", fake_run_gh)
+        decision = merge_gate.evaluate_gate("ORG/REPO", 999)
+        assert decision["allowed"] is False, "OWNER association alone must not suffice once an allowlist is set"
+
+        def fake_run_gh_allowlisted(args, timeout=60):
+            return _pr_view_json(head, comments=[
+                _comment(f"AUDIT: PASS\nHead SHA audited: `{head}`", "2026-08-14T08:00:00Z",
+                         author="audit-bot", association="NONE"),
+            ])
+
+        monkeypatch.setattr(merge_gate, "_run_gh", fake_run_gh_allowlisted)
+        decision2 = merge_gate.evaluate_gate("ORG/REPO", 999)
+        assert decision2["allowed"] is True, "explicitly allowlisted login must be trusted even with no real association"
+    finally:
+        monkeypatch.delenv("MERGE_GATE_AUDITOR_LOGINS", raising=False)
+        importlib.reload(merge_gate)
 
 
 if __name__ == "__main__":

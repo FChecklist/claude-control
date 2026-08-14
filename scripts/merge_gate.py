@@ -19,19 +19,31 @@ policy text only, enforced by convention" (governing SPEC, verbatim).
 THIS module is that reusable gate. Given a repo + PR, it decides ALLOW/REFUSE
 from the PR's live GitHub state alone (comments + reviews + the PR's real
 current headRefOid) -- never from a caller's self-report of its own verdict.
-Three real, deterministic refusal conditions, checked in this order:
+Four real, deterministic refusal conditions, checked in this order:
 
+  0. UNTRUSTED VERDICT SOURCE -- a verdict-shaped comment/review exists, but
+     its author does not have a trusted repo association (real, live
+     `authorAssociation` from GitHub itself -- OWNER/MEMBER/COLLABORATOR by
+     default, see TRUSTED_AUTHOR_ASSOCIATIONS) or is not on the explicit
+     MERGE_GATE_AUDITOR_LOGINS allowlist when one is configured. Closes the
+     CRITICAL self-certification gap audited live on this PR itself
+     (2026-08-14T10:20Z): without this, ANY account with comment access
+     could post a fabricated "AUDIT: PASS" and force a merge through. An
+     untrusted verdict is skipped entirely, not just downgraded -- the scan
+     keeps looking for the newest TRUSTED verdict among older events.
   1. NO VERDICT -- no comment or review whose body's first non-blank line is
      a structured "AUDIT: PASS" / "AUDIT: FAIL" line (case-insensitive,
-     optional leading markdown `#`/`##`) exists anywhere on the PR.
-  2. FAILING VERDICT -- the NEWEST such verdict (comments and reviews merged
-     into one timeline, sorted by their real timestamps) is FAIL.
-  3. STALE PASS -- the newest verdict is PASS, but it either cites no head
-     SHA at all, or the SHA it cites does not match the PR's live, current
-     headRefOid (accepting a short-SHA prefix match either direction). This
-     is the real "a later commit dropped previously audited content"
-     failure mode the governing SPEC names explicitly -- a PASS is only
-     evidence about the commit it was actually run against.
+     optional leading markdown `#`/`##`) exists anywhere on the PR from a
+     trusted source.
+  2. FAILING VERDICT -- the NEWEST such trusted verdict (comments and
+     reviews merged into one timeline, sorted by their real timestamps) is
+     FAIL.
+  3. STALE PASS -- the newest trusted verdict is PASS, but it either cites
+     no head SHA at all, or the SHA it cites does not match the PR's live,
+     current headRefOid (accepting a short-SHA prefix match either
+     direction). This is the real "a later commit dropped previously
+     audited content" failure mode the governing SPEC names explicitly -- a
+     PASS is only evidence about the commit it was actually run against.
 
 Only when the newest verdict is PASS *and* its cited SHA matches the PR's
 live current head does `merge` go on to actually call `gh pr merge`. `check`
@@ -55,6 +67,7 @@ for whether the merge itself succeeded -- see `merge_pr_via_gate` below).
 """
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -87,6 +100,52 @@ SHA_LABELED_RE = re.compile(
 # Fallback: a bare full-length (40 hex char) SHA anywhere in the body -- real
 # audit prose commonly just states the full commit hash without a label.
 SHA_BARE_RE = re.compile(r"\b([0-9a-f]{40})\b")
+
+# --- Identity/trust gap closed here (real, audited CRITICAL finding posted
+# 2026-08-14T10:20Z on claude-control PR #230, the PR that introduced this
+# module) --------------------------------------------------------------------
+# find_latest_verdict() used to accept an "AUDIT: PASS"/"AUDIT: FAIL" verdict
+# from ANY PR comment or review author at all -- no authorAssociation check,
+# no bot/service-account allowlist. Because neither claude-control nor
+# veridian-scripts has GitHub branch protection configured (confirmed live:
+# 404/403 on both repos' branch-protection API, 2026-08-14), this module is
+# the SOLE enforcement mechanism for the audit-before-merge control, so
+# anyone with repo comment access -- in principle including the PR's own
+# author -- could self-approve a merge just by posting a fabricated
+# "AUDIT: PASS\nHead SHA audited: <current head>" comment, reproducing the
+# exact self-certification failure this gate exists to close.
+#
+# Real, closable fix, matching the audit's own suggested remedy verbatim
+# ("require OWNER/MEMBER or a specific service-account login"): only trust a
+# verdict from an account GitHub itself reports (via the real, live
+# `authorAssociation` field already present on every `gh pr view --json
+# comments,reviews` entry -- no extra API call needed) as having real
+# write-level association with the repo. `MERGE_GATE_AUDITOR_LOGINS`, if set,
+# narrows this further to an explicit login allowlist -- for the day a
+# distinct service/bot account is provisioned to post audits separately from
+# PR authors. As of this writing no such separate account exists in this
+# environment (every real `gh api user` call in this repo resolves to the
+# same single OWNER-association login that also authors every PR) -- same
+# honesty as AGENTS.md's own "NOT APPLICABLE YET" notes: a login-based
+# self-vs-auditor distinction is not achievable here yet, so the
+# authorAssociation check is the real, available layer of defense, and is
+# applied uniformly (skips untrusted PASS *and* FAIL alike -- an untrusted
+# commenter carries no authority in either direction, so the gate keeps
+# scanning older events for the newest TRUSTED verdict instead of trusting
+# or being denial-of-serviced by unauthenticated noise).
+TRUSTED_AUTHOR_ASSOCIATIONS = frozenset(
+    a.strip().upper()
+    for a in os.environ.get(
+        "MERGE_GATE_TRUSTED_ASSOCIATIONS", "OWNER,MEMBER,COLLABORATOR"
+    ).split(",")
+    if a.strip()
+)
+
+_AUDITOR_LOGIN_ALLOWLIST = frozenset(
+    login.strip().lower()
+    for login in os.environ.get("MERGE_GATE_AUDITOR_LOGINS", "").split(",")
+    if login.strip()
+)
 
 
 class GhError(RuntimeError):
@@ -122,13 +181,15 @@ def _pr_target(repo, pr):
 
 
 def get_pr_snapshot(repo, pr):
-    """Real, live GitHub state for one PR: current head SHA, state, and every
-    comment + review body with its real timestamp. Raises GhError on any
+    """Real, live GitHub state for one PR: current head SHA, state, PR
+    author, and every comment + review body with its real timestamp AND
+    real `authorAssociation` (both fields `gh pr view --json` already
+    returns natively -- no extra API call needed). Raises GhError on any
     real `gh` failure -- callers must treat that as REFUSE, never ALLOW."""
     out = _run_gh(
         ["pr", "view"]
         + _pr_target(repo, pr)
-        + ["--json", "number,url,state,headRefOid,comments,reviews"]
+        + ["--json", "number,url,state,headRefOid,author,comments,reviews"]
     )
     data = json.loads(out)
     events = []
@@ -137,6 +198,7 @@ def get_pr_snapshot(repo, pr):
             {
                 "kind": "comment",
                 "author": (c.get("author") or {}).get("login"),
+                "author_association": (c.get("authorAssociation") or "").upper(),
                 "body": c.get("body") or "",
                 "ts": c.get("createdAt") or "",
             }
@@ -149,6 +211,7 @@ def get_pr_snapshot(repo, pr):
             {
                 "kind": "review",
                 "author": (r.get("author") or {}).get("login"),
+                "author_association": (r.get("authorAssociation") or "").upper(),
                 "body": body,
                 "ts": r.get("submittedAt") or "",
             }
@@ -160,6 +223,7 @@ def get_pr_snapshot(repo, pr):
         "url": data.get("url"),
         "state": data.get("state"),
         "head_sha": data.get("headRefOid"),
+        "pr_author": (data.get("author") or {}).get("login"),
         "events": events,
     }
 
@@ -174,10 +238,32 @@ def extract_cited_sha(body):
     return None
 
 
+def _is_trusted_verdict_source(event):
+    """Real identity check closing the CRITICAL finding audited live on PR
+    #230 (2026-08-14T10:20Z): an event only carries verdict authority if its
+    author has real, GitHub-reported write-level association with the repo
+    (or, once a distinct service account exists, is on the explicit
+    MERGE_GATE_AUDITOR_LOGINS allowlist). See the TRUSTED_AUTHOR_ASSOCIATIONS
+    docstring above for the full incident writeup."""
+    if _AUDITOR_LOGIN_ALLOWLIST:
+        login = (event.get("author") or "").strip().lower()
+        return login in _AUDITOR_LOGIN_ALLOWLIST
+    return event.get("author_association") in TRUSTED_AUTHOR_ASSOCIATIONS
+
+
 def find_latest_verdict(events):
     """First (= newest, events are pre-sorted) event whose body opens with a
-    structured AUDIT: PASS/FAIL line. Returns None if no PR event anywhere
-    carries a real structured verdict at all."""
+    structured AUDIT: PASS/FAIL line AND whose author is a trusted verdict
+    source (see _is_trusted_verdict_source). An untrusted commenter's
+    "verdict" carries no authority at all -- it is skipped, not treated as
+    the newest, so the scan keeps looking for the newest genuinely-trusted
+    verdict among older events (never falls back to trusting it just because
+    nothing else was found).
+
+    Returns (verdict_or_None, untrusted_events) -- the second element records
+    every untrusted verdict-shaped event that was skipped, purely for
+    auditability in the decision object; it never affects allow/refuse."""
+    untrusted = []
     for e in events:
         first_line = next(
             (line for line in e["body"].splitlines() if line.strip()), ""
@@ -185,14 +271,26 @@ def find_latest_verdict(events):
         m = VERDICT_LINE_RE.match(first_line)
         if not m:
             continue
+        if not _is_trusted_verdict_source(e):
+            untrusted.append(
+                {
+                    "verdict": m.group(1).upper(),
+                    "author": e["author"],
+                    "author_association": e.get("author_association"),
+                    "ts": e["ts"],
+                    "kind": e["kind"],
+                }
+            )
+            continue
         return {
             "verdict": m.group(1).upper(),
             "cited_sha": extract_cited_sha(e["body"]),
             "author": e["author"],
+            "author_association": e.get("author_association"),
             "ts": e["ts"],
             "kind": e["kind"],
-        }
-    return None
+        }, untrusted
+    return None, untrusted
 
 
 def _sha_matches(cited_sha, head_sha):
@@ -210,21 +308,31 @@ def evaluate_gate(repo, pr):
     failure IS re-raised as GhError (fail closed: callers must treat any
     inability to confirm ALLOW as REFUSE, never default to allowing)."""
     snapshot = get_pr_snapshot(repo, pr)
-    verdict = find_latest_verdict(snapshot["events"])
+    verdict, untrusted = find_latest_verdict(snapshot["events"])
     decision = {
         "pr_url": snapshot["url"],
         "pr_number": snapshot["number"],
         "pr_state": snapshot["state"],
         "head_sha": snapshot["head_sha"],
         "latest_verdict": verdict,
+        "untrusted_verdicts_skipped": untrusted,
     }
 
     if verdict is None:
         decision["allowed"] = False
-        decision["reason"] = (
-            "no audit verdict found: no PR comment or review body opens with "
-            "a structured 'AUDIT: PASS'/'AUDIT: FAIL' line"
-        )
+        if untrusted:
+            decision["reason"] = (
+                "no TRUSTED audit verdict found: "
+                f"{len(untrusted)} verdict-shaped comment(s)/review(s) exist "
+                "but none of their authors has a trusted repo association "
+                f"({sorted(TRUSTED_AUTHOR_ASSOCIATIONS)}) -- an untrusted "
+                "verdict carries no authority and cannot allow a merge"
+            )
+        else:
+            decision["reason"] = (
+                "no audit verdict found: no PR comment or review body opens with "
+                "a structured 'AUDIT: PASS'/'AUDIT: FAIL' line"
+            )
         return decision
 
     if verdict["verdict"] == "FAIL":
