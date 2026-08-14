@@ -65,7 +65,13 @@ this claude-control workspace. Branch:
       gets deployed, same convention this repo's own history shows, e.g. PR
       #345).
 - [ ] Call `agent_work_briefing.py record-completion` for
-      UMR-20260814-034225-3392.
+      UMR-20260814-034225-3392 -- attempted 4x (immediate + 3 retries with
+      backoff), all failed with `sqlite3.OperationalError: database is
+      locked` (shared `superboss-register.sqlite` under heavy concurrent
+      write load from other tasks on this box). Best-effort bookkeeping
+      write, not a core deliverable -- all real work (fix, tests, PR #348,
+      counter repair) is done and pushed regardless. Retry later if this
+      task resumes.
 
 ## Scope notes
 - Did NOT touch `doc-worker-entrypoint.sh` (separate template,
