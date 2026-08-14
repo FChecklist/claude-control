@@ -105,14 +105,40 @@ Real code: `superboss-register.py` (repo `FChecklist/veridian-scripts`) --
       ```
       8 passed in 1.94s
       ```
-- [x] Full `tests/` regression suite re-run after the fix (background,
-      long-running) -- see next entry for the pasted result once it
-      completes.
+- [x] Also updated `dispatch-owner-task.sh`'s step-1b comment/refusal
+      message to document the new scope-aware behavior and the
+      `[EVIDENCE-ONLY: ...]`/`[NOT-A-TARGET: ...]` escape hatch for
+      dispatchers hitting a refusal (doc-only, no behavior change beyond
+      the message text).
+- [x] Caught and corrected a real mistake: the shared repo checkout at
+      `/opt/veridian/repos/veridian-scripts` had a DIFFERENT, unrelated,
+      in-progress branch checked out (`fix/lifetime-invocation-counter-
+      preflight-rejection`, one commit ahead of `origin/main` --
+      explicitly another task's work, invocation accounting, one of this
+      task's own SCOPE LIMITS). First full-suite run (729 passed, 4
+      failed) was accidentally run against that foreign branch. Moved my
+      changes (via `git stash`) onto a fresh branch created from
+      `origin/main` (`badf5a4`, confirmed the real current main tip) --
+      `fix/scope-aware-target-identifier-dedup` -- and re-ran the
+      target-identifier test files clean there (22/22 passed). Full
+      regression suite re-running now on the correct base.
+- [x] Confirmed, on the pre-fix code (`git stash`), that the same 4
+      failures occur identically -- proving they are pre-existing and
+      unrelated to this change, not a regression it introduces:
+      `test_timer_is_really_enabled_and_active` (env-dependent systemd
+      timer check, already documented pre-existing in PR #345's own
+      notes), `test_supervisor_refuses_gitlink_only_branch_exact_
+      pr146_170_191_repro`, and both
+      `test_supervisor_no_op_branch_guard.py` tests (real unrelated
+      `KeyError: 'service'` in `veridian-task.py`'s
+      `sync_controller_entry`, nothing to do with duplicate-guard code).
 
 ## Remaining
 
-- [ ] Paste full-suite regression result (in progress).
-- [ ] Commit, push branch, open PR against `FChecklist/veridian-scripts`
-      with real pasted test output in the body.
+- [ ] Full-suite regression result on the correct `origin/main`-based
+      branch (background, in progress).
+- [ ] Commit, push `fix/scope-aware-target-identifier-dedup`, open PR
+      against `FChecklist/veridian-scripts` with real pasted test output
+      in the body.
 - [ ] Run `agent_work_briefing.py record-completion` for
       `UMR-20260814-034424-ded4`.
