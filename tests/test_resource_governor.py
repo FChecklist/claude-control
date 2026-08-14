@@ -190,6 +190,114 @@ def test_submit_allows_resubmission_once_prior_entry_reaches_a_terminal_state(tm
 
 
 # ---------------------------------------------------------------------------
+# Duplicate-resubmission loop hard cap -- the real fix for the 49%-of-fleet-
+# capacity incident (PM sentinel evidence, resource_governor.py --query-umr,
+# 2026-08-14T01:51-07:47Z: 59/120 rows rejected_duplicate against a handful
+# of long-dead, already-RCA'd task identities).
+# ---------------------------------------------------------------------------
+
+def test_duplication_blocked_identity_is_retired_and_never_resubmitted_again(tmp_path, monkeypatch):
+    """Reproduces the real incident shape: a resume/requeue caller (e.g.
+    veridian-task-watchdog.py's step_2/step_3 fix/escalate paths) keeps
+    calling submit() for the SAME task_identity every tick. Proves (1)
+    rejected_duplicate attempts are counted against the identity and, once
+    the hard cap is hit, the identity is retired with a real terminal status
+    instead of rejected_duplicate, and (2) critically, even after the
+    ORIGINAL blocking row itself later reaches a terminal state too (the
+    literal "already-terminal task identity" resubmission bug), the very
+    next submit() call for that identity -- simulating the next dispatch
+    tick's resume attempt -- is refused immediately with NO new umr_tasks
+    row written, so the identity can never again be resubmitted."""
+    work, env = build_governor_fixture_tree(tmp_path)
+    env["VERIDIAN_GOVERNOR_MAX_DUPLICATE_ATTEMPTS"] = "3"
+    rg = _load_resource_governor(work, env, monkeypatch)
+    sbr = rg._superboss_register()
+
+    task_spec = {
+        "task_identity": "task-20260807-052027",
+        "task_kind": "systemctl_action",
+        "unit_name": "veridian-worker@task-20260807-052027.service",
+        "inputs": {"action": "restart"},
+    }
+
+    r1 = rg.submit(task_spec, tier=2, source_trigger="veridian-task-watchdog:restart_unit")
+    assert r1["accepted"]
+
+    r2 = rg.submit(task_spec, tier=2, source_trigger="veridian-task-watchdog:restart_unit")
+    assert not r2["accepted"]
+    assert "duplicate submission rejected" in r2["reason"]
+
+    # 3rd submission is the 2nd rejected_duplicate attempt -- still under cap=3.
+    r3 = rg.submit(task_spec, tier=2, source_trigger="veridian-task-watchdog:restart_unit")
+    assert not r3["accepted"]
+    assert "duplicate submission rejected" in r3["reason"]
+
+    # 4th submission is the 3rd rejected_duplicate attempt -- hits cap=3, gets retired.
+    r4 = rg.submit(task_spec, tier=2, source_trigger="veridian-task-watchdog:restart_unit")
+    assert not r4["accepted"]
+    assert "retired permanently" in r4["reason"]
+
+    statuses_after_retirement = _umr_statuses(env["SUPERBOSS_REGISTER_DB"], "task-20260807-052027")
+    assert statuses_after_retirement.count("queued") == 1
+    assert statuses_after_retirement.count("rejected_duplicate") == 2
+    assert statuses_after_retirement.count(rg.RETIRED_STATUS) == 1
+
+    # The underlying task is now confirmed long-dead (RCA concluded
+    # correctly-killed) -- the ORIGINAL row that used to block de-dup also
+    # reaches a terminal state. Before this fix, this is exactly the moment
+    # a fresh submit() would see NO active row and create a brand new
+    # "queued" entry, resetting the loop forever.
+    conn = sbr._connect()
+    with sbr._write_lock():
+        sbr.update_umr_task(conn, r1["umr_id"], status="killed")
+        conn.commit()
+    conn.close()
+
+    rows_before_next_tick = len(sbr.query_umr_tasks(
+        sbr._connect(), status=None, task_identity="task-20260807-052027", limit=1000))
+
+    # "Next tick": the resume/requeue caller fires again for the exact same
+    # already-terminal task_identity.
+    r5 = rg.submit(task_spec, tier=2, source_trigger="veridian-task-watchdog:restart_unit")
+    assert not r5["accepted"], "a permanently retired identity must never be resubmitted again"
+    assert "permanently retired" in r5["reason"]
+    assert r5["umr_id"] == r4["umr_id"], "retirement short-circuit must return the SAME retired row, not write a new one"
+
+    conn = sbr._connect()
+    rows_after_next_tick = len(sbr.query_umr_tasks(conn, status=None, task_identity="task-20260807-052027", limit=1000))
+    conn.close()
+    assert rows_after_next_tick == rows_before_next_tick, (
+        "a retired identity's next-tick resubmission attempt must write NO new umr_tasks row -- "
+        f"had {rows_before_next_tick} rows, now {rows_after_next_tick}"
+    )
+
+    statuses_final = _umr_statuses(env["SUPERBOSS_REGISTER_DB"], "task-20260807-052027")
+    assert statuses_final.count("queued") == 0, "no brand-new queued row must ever be created for a retired identity"
+    assert statuses_final.count("killed") == 1, "the original row's own terminal transition must be untouched"
+    assert statuses_final.count(rg.RETIRED_STATUS) == 1
+
+
+def test_rapid_fire_duplicate_burst_stays_under_the_retirement_cap(tmp_path, monkeypatch):
+    """The existing rapid-fire dedup scenario (10 submissions in one tight
+    loop) must NOT accidentally retire the identity -- the default
+    MAX_DUPLICATE_ATTEMPTS_PER_IDENTITY is comfortably above a normal single
+    burst, only a sustained real loop across many ticks should ever retire
+    one."""
+    work, env = build_governor_fixture_tree(tmp_path)
+    rg = _load_resource_governor(work, env, monkeypatch)
+    assert rg.MAX_DUPLICATE_ATTEMPTS_PER_IDENTITY > 10
+
+    task_spec = {"task_identity": "task-burst", "task_kind": "systemctl_action",
+                 "unit_name": "u-burst", "inputs": {"action": "restart"}}
+    results = [rg.submit(task_spec, tier=2, source_trigger="test") for _ in range(10)]
+    assert sum(1 for r in results if r["accepted"]) == 1
+    assert all(r["accepted"] or r["reason"].startswith("duplicate submission rejected") for r in results)
+
+    statuses = _umr_statuses(env["SUPERBOSS_REGISTER_DB"], "task-burst")
+    assert rg.RETIRED_STATUS not in statuses
+
+
+# ---------------------------------------------------------------------------
 # Real per-metric 99% hard cap -- any ONE metric freezes the queue
 # ---------------------------------------------------------------------------
 
