@@ -48,22 +48,66 @@ change). This claude-control repo needed no code changes for this fix.
         precedent set by `veridian-cron-prune-memory-backups.timer`.
       - `systemd/README.md`: documents the new tracked entry.
 - [x] Opened real PR: https://github.com/FChecklist/veridian-scripts/pull/367
+- [x] Merged PR #367 into veridian-scripts main (mergeCommit `8d88919`,
+      2026-08-14T10:04:37Z).
+- [x] Deployed live: pulled `origin/main` into `/opt/veridian/scripts`
+      (fast-forward, `2eee24b` -> `8d88919`, 0 behind), copied the two new
+      unit files into `~/.config/systemd/user/`, `systemctl --user
+      daemon-reload`, `systemctl --user restart
+      veridian-cron-sync-repos.timer`. Confirmed `enabled`+`active` with the
+      new 5-min cadence live (timer fired within seconds of the restart).
+- [x] Ran the updated job for real and hit (then fixed) a genuine live
+      finding: the first real run (10:04:52Z) correctly detected and
+      LOUDLY REPORTED (did not silently skip, did not auto-clobber) that
+      `/opt/veridian/repos/claude-control` was sitting on a stale,
+      already-superseded local branch (`land-6a78798-pm-sentinel`, one
+      abandoned commit `dda3deb` left over from a different, already-
+      complete task) instead of `master` -- exactly the wrong-branch
+      hazard the new `sync_critical_checkout()` logic exists to catch.
+      Investigated before touching anything: confirmed via `gh pr view 227`
+      that the same content was already merged to `origin/master` as
+      `0cb827d` through a normal PR, and confirmed via `lsof`/`ps` that no
+      process was using the directory -- i.e. genuinely abandoned, not
+      in-flight work. Manually ran `git checkout master` (a deliberate,
+      evidence-based human/Owner-level call, not an automatic script
+      action -- consistent with the code's own documented policy of never
+      auto-switching branches itself), then re-ran the job.
+- [x] Verified both live checkouts are now at their remote head (real
+      command output):
+      ```
+      === claude-control ===
+      branch: master
+      HEAD: 90874049419d8e354a95fc2a59272062768c8631
+      behind origin/master: 0
 
-## Remaining
-- [ ] Merge PR #367 into veridian-scripts main.
-- [ ] Deploy live: pull `origin/main` into `/opt/veridian/scripts`
-      (fast-forward), copy the two new unit files into
-      `~/.config/systemd/user/`, `systemctl --user daemon-reload`,
-      confirm the retimed `.timer` is `enabled`+`active`.
-- [ ] Run the updated job for real (`systemctl --user start
-      veridian-cron-sync-repos.service`, wait for it to finish) and
-      capture real command output.
-- [ ] Verify both live checkouts are now at their remote head:
-      `git rev-list --count HEAD..origin/master` == 0 for claude-control;
-      `git rev-list --count HEAD..origin/main` == 0 for
-      `/opt/veridian/scripts`.
-- [ ] Call `agent_work_briefing.py record-completion` for
+      === veridian-scripts (/opt/veridian/scripts) ===
+      branch: main
+      HEAD: 8d88919cc8caf8a8b3c4558c0f4be53993dcef23
+      behind origin/main: 0
+
+      === timer state ===
+      enabled
+      active
+      ```
+- [x] Verified idempotency: ran the service twice more after the fix
+      (`systemctl --user start veridian-cron-sync-repos.service`), both
+      times `status=0/SUCCESS`, both times "already up to date ...
+      idempotent no-op" for the two critical checkouts -- no errors, no
+      side effects on a clean re-run.
+- [x] Verified register logging is real and working (query against
+      `superboss-register.sqlite` `actions` table via
+      `superboss-register.py search`), showing the exact before/after
+      exit-code signal this fix adds:
+      ```
+      2026-08-14T08:26:42Z job_end:sync-repos ... status=completed exit_code=0   (old script, pre-fix; masked the veridian-scripts dirty-skip as "completed")
+      2026-08-14T10:04:59Z job_end:sync-repos ... status=failed    exit_code=1   (new script; correctly caught claude-control on wrong branch)
+      2026-08-14T10:05:13Z job_end:sync-repos ... status=failed    exit_code=1   (same, next tick, branch not yet fixed)
+      2026-08-14T10:05:54Z job_end:sync-repos ... status=completed exit_code=0   (after manual `git checkout master`, real fast-forward pull)
+      2026-08-14T10:06:20Z job_end:sync-repos ... status=completed exit_code=0   (idempotent re-run, no-op)
+      ```
+- [x] Called `agent_work_briefing.py record-completion` for
       UMR-20260814-095405-2b53.
 
-## Verification (real command output)
-_(filled in as each step actually runs, not written in advance)_
+## Remaining
+- [ ] None. All verification criteria from the SPEC are met with real
+      command output above.
