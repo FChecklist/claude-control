@@ -113,5 +113,8 @@ fabricating.
 - [x] Posted audit comment citing head SHA bc1d92ab4acfd1a1c6aaba4a675b9423da389712:
       https://github.com/FChecklist/claude-control/pull/231#issuecomment-5292185794
 
+- [x] record-completion recorded: UMR-20260814-095624-c05f marked status=completed
+      (evidence: pr_number=231, file_path=this progress file).
+
 ## Remaining
-- [ ] record-completion call to agent_work_briefing.py.
+(none -- task complete)
