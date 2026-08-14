@@ -189,10 +189,19 @@ stated plainly below, not glossed over.
       -- a real, self-imposed load-shedding decision, not a failure of this task's change; it will run on
       its own next 20-minute tick.
 
+- [x] Own task PR opened: https://github.com/FChecklist/claude-control/pull/204
+      (base `master`, head `worker/task-20260814-033917-live-checkouts-are-parked-on-stray-branc`)
+
 ## Remaining
 - [ ] Human/Owner: resolve PR #4 (veridian-ai-os) conflicts and merge the 10 real docs/owner-decision
       commits, or explicitly decide otherwise
 - [ ] Human/Owner or an operator with `workflow` OAuth scope: push commit `22919e2` (tagged
       `preserve-22919e2-ci-workflow-commit` in the live ai-os checkout) and open a PR, or decide to drop it
 - [ ] Review/merge PR #14 (veridian-ai-os) -- the new drift guard
-- [ ] record-completion write-back to UMR-20260814-033856-9db0
+- [x] record-completion write-back to UMR-20260814-033856-9db0 -- **attempted, could not complete**.
+      `python3 /opt/veridian/scripts/agent_work_briefing.py record-completion --umr-id
+      UMR-20260814-033856-9db0 --entry-text "..."` failed identically 4 times in a row (immediate retry,
+      then 3s/8s/15s backoff), every time with `sqlite3.OperationalError: database is locked` inside
+      `ai_agent_registry.py`'s `ensure_agent()`. Stated plainly rather than silently skipped or
+      claimed done: this write-back did not go through. Whoever picks up PR #4/#14 review should
+      re-run that exact command once the DB contention clears.
