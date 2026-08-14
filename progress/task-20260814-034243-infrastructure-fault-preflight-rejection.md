@@ -39,14 +39,21 @@ this claude-control workspace. Branch:
       `FChecklist/veridian-scripts#fix/lifetime-invocation-counter-preflight-rejection`
       (commit 820ed66).
 
+- [x] Task 3: repaired all 11 damaged `.invocation_count` values. Real
+      script: `scripts/repair_invocation_counters.py` (dry-run by default,
+      `--apply` to write). Corrected value derived purely from each task's own
+      `task.yaml` checkpoint history (never from the disputed live counter
+      value), discounting only checkpoints whose note contains the literal
+      "no model call made, no cost incurred" text. Full before/after table +
+      methodology + a flagged discrepancy (one task's live counter didn't
+      match its own checkpoint-derived total, and the SPEC's cited "18/20"
+      for that task wasn't reproducible against its actual on-disk state) in
+      `INVOCATION_COUNTER_REPAIR_20260814.md`. Verified all 11 writes
+      post-hoc by re-reading the files.
+
 ## Remaining
 - [ ] Open the real PR on `FChecklist/veridian-scripts` with the pasted real
       test output in the body.
-- [ ] Task 3: repair the 11 damaged `.invocation_count` values (disk_low
-      rejection on 2026-08-14) by discounting checkpoints whose note contains
-      "no model call made, no cost incurred", derived from each task's own
-      task.yaml checkpoint history. Write corrected values back. Produce a real
-      before/after table.
 - [ ] Deploy the fixed `worker-entrypoint.sh` to the live
       `/opt/veridian/scripts/worker-entrypoint.sh` path (currently only fixed in
       the repo checkout + this branch -- the live file is still the old,
