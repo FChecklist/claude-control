@@ -82,8 +82,16 @@ resource_governor.py's stop-work gate. Repo: FChecklist/claude-control.
 - [x] Committed (124cc5e) + pushed to
       worker/task-20260814-075408-complete-e592--close-task-gateway-py-gov
 
+- [x] Opened PR #219 against FChecklist/claude-control (master <-
+      worker/task-20260814-075408-complete-e592--close-task-gateway-py-gov):
+      https://github.com/FChecklist/claude-control/pull/219 -- confirmed
+      `scripts/task-gateway.py` is present in the PR's real diff (completion
+      gate satisfied)
+- [x] Recorded UMR completion via agent_work_briefing.py record-completion
+      (UMR-20260814-074711-080e, --umr-pr-number 219)
+
 ## Remaining
-- [ ] Open PR against FChecklist/claude-control
-- [ ] Get a real audit
-- [ ] Record UMR completion via agent_work_briefing.py record-completion
-- [ ] Report PR number in final checkpoint
+- [ ] Real independent audit (standing async review process -- same
+      mechanism that reviewed PR#126/PR#349 -- not self-triggerable from
+      within this task; PR is open and awaiting it)
+- [ ] Merge once audit passes
