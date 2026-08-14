@@ -99,6 +99,20 @@ scope creep into an unrelated worker type this task was never asked about.
 - [x] Confirmed no regression: `tests/worker_noop_pending_review_test.sh`
       still passes against the rewired script (3/3 scenarios), `bash -n
       scripts/worker-entrypoint.sh` syntax-clean.
+- [x] Hardened `worker_completion_gate_wiring_test.sh` against the LIVE
+      `/opt/veridian/scripts/worker-entrypoint.sh` too (its own default
+      target, not just this repo's local mirror) -- found and fixed 2 real
+      test-harness gaps in the process (`safe_stage_all()` fallback, real
+      branch checkout for the push step). Verified 3/3 pass against both:
+      ```
+      $ bash tests/worker_completion_gate_wiring_test.sh
+      PASS: doc-only diff against named source file -- must be rejected (status=blocked)
+      PASS: real code diff against named source file -- must pass (status=NONE)
+      PASS: no code file named in objective -- gate does not apply (status=NONE)
+      All scenarios passed.
+      $ bash tests/worker_completion_gate_wiring_test.sh "$(pwd)/scripts/worker-entrypoint.sh" "$(pwd)/scripts/progress_completion_gate.py"
+      All scenarios passed.
+      ```
 
 ## Remaining
 
