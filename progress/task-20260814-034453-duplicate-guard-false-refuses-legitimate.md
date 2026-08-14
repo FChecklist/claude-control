@@ -133,12 +133,33 @@ Real code: `superboss-register.py` (repo `FChecklist/veridian-scripts`) --
       `KeyError: 'service'` in `veridian-task.py`'s
       `sync_controller_entry`, nothing to do with duplicate-guard code).
 
+- [x] Full-suite regression result on the correct `origin/main`-based
+      branch: `4 failed, 729 passed in 199.47s` -- the same 4
+      pre-existing/unrelated failures as the (mistaken foreign-branch)
+      first run, confirmed identical.
+- [x] Committed, pushed `fix/scope-aware-target-identifier-dedup`
+      (based on real `origin/main` tip `badf5a4`), opened
+      https://github.com/FChecklist/veridian-scripts/pull/350 with real
+      pasted test output in the body. Confirmed
+      `mergeable=true`/`mergeable_state=clean`.
+
 ## Remaining
 
-- [ ] Full-suite regression result on the correct `origin/main`-based
-      branch (background, in progress).
-- [ ] Commit, push `fix/scope-aware-target-identifier-dedup`, open PR
-      against `FChecklist/veridian-scripts` with real pasted test output
-      in the body.
+- [ ] Get a real independent Tier-1 audit at the PR's head SHA, merge
+      only on a fresh `AUDIT: PASS`, per this repo's standing merge
+      convention (not this task's own job to self-merge without one).
 - [ ] Run `agent_work_briefing.py record-completion` for
-      `UMR-20260814-034424-ded4`.
+      `UMR-20260814-034424-ded4` once merged.
+
+## Terminal status: PR OPEN, awaiting independent audit + merge
+
+Real code fix landed in `superboss-register.py` (`extract_target_
+identifiers()`/`find_target_identifier_duplicate()`) +
+`dispatch-owner-task.sh` (doc), real new test file (8/8 passing,
+reconstructing all 3 real false-positive scenarios as now-ALLOWED and a
+true-duplicate control as still-REFUSED), pre-existing 14/14 tests
+unaffected, full suite 729 passed / 4 pre-existing-unrelated failures
+(verified via `git stash` on the same branch). PR #350 open, clean,
+mergeable. Checked for and correctly distinguished from PR #342 (a
+different, already-superseded bug fix) -- no conflicting open PR existed
+for this fix, so a new PR was the right call, not a competing one.
