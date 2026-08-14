@@ -36,4 +36,7 @@
       change committed to claude-control; none was correct to make).
 
 ## Remaining
-- [ ] None. Task closed as "no action -- premise did not hold, verified."
+- [x] None. Task closed as "no action -- premise did not hold, verified."
+      record-completion called with umr-status=completed,
+      evidence=this progress file (real, on disk, committed+pushed to
+      worker/task-20260814-075354-recover-real-audited-server-native-pm-co).
