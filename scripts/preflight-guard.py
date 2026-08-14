@@ -32,6 +32,24 @@ from datetime import datetime, timezone
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from policy_decision import emit_allow, emit_deny  # noqa: E402
 
+NOTIFY_SCRIPT = "/opt/veridian/scripts/notify-owner.py"
+
+
+def notify_owner(subject, body, dedupe_key):
+    """Best-effort call to notify-owner.py -- same fail-open convention
+    health-check-15min.py's own notify_owner() already established. A
+    notification problem must never block a real preflight decision.
+    notify-owner.py itself rate-limits to at most one email per distinct
+    dedupe_key per hour, so this is safe to call on every single disk_low
+    rejection without spamming the Owner across a whole restart-storm."""
+    try:
+        subprocess.run(
+            [sys.executable, NOTIFY_SCRIPT, "--subject", subject, "--body", body, "--dedupe-key", dedupe_key],
+            capture_output=True, text=True, timeout=20,
+        )
+    except Exception:
+        pass
+
 
 def fail(reason, detail=""):
     # Phase 2 (ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml,
@@ -81,6 +99,28 @@ def check_disk(workspace, min_free_mb=500):
         return  # workspace not created yet -- not this guard's concern
     free_mb = usage.free / (1024 * 1024)
     if free_mb < min_free_mb:
+        # UMR-20260814-033442-c885 (P0 disk exhaustion RCA): this used to be
+        # a SILENT rejection -- 17 real veridian-worker units died at this
+        # exact check on 2026-08-14 (/dev/sda1 288G used/96MB free), each
+        # one just checkpointed "PRE-FLIGHT REJECTED (disk_low, transient)"
+        # to its own task.yaml and burned its 3 systemd restarts, with no
+        # real alert anywhere a human would see until the PM-Desktop
+        # Sentinel found it by hand. A real Owner email now fires on every
+        # occurrence (rate-limited to 1/hour per host by notify-owner.py's
+        # own dedupe_key, so a whole restart-storm across many units still
+        # sends exactly one email, not one per failed unit).
+        notify_owner(
+            subject="VERIDIAN: disk_low preflight rejection -- worker(s) cannot start",
+            body=(
+                f"A veridian worker was refused before it started because the disk is "
+                f"almost full: only {free_mb:.0f}MB free at {workspace} (need at least "
+                f"{min_free_mb}MB). If this keeps happening, every worker on this host "
+                f"will fail to start until disk space is freed. See "
+                f"/opt/veridian/scripts/reap_stale_test_scratch.py for the automated "
+                f"cleanup, or check /tmp and /var/log for large files by hand."
+            ),
+            dedupe_key="preflight_disk_low",
+        )
         fail("disk_low", f"{free_mb:.0f}MB free at {workspace}, need >={min_free_mb}MB")
 
 

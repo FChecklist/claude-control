@@ -1,0 +1,22 @@
+# P0 disk exhaustion root cause: test harness scratch-dir leak (UMR-20260814-033442-c885)
+
+Victim task cited for context only (not cause): UMR-20260814-010802-b566.
+
+Real PR: https://github.com/FChecklist/veridian-scripts/pull/349
+
+## Completed
+- [x] Located call sites for all confirmed prefixes: `pm_sentinel_tick_` (test_pm_sentinel_tick.py), `rule7-real-persist-test-`/`rule7-non-completed-test-` (tests/test_rule7_completion_evidence.py), `rg_queue_mgmt_test_` (test_resource_governor_queue_management.py). `sbr-test-copy.sqlite`/`dedup_test.sqlite` have NO committed call site found in either repo (grep across veridian-scripts + claude-control) -- likely ad-hoc manual copies, not from harness code; the periodic reaper (item below) matches their filenames anyway.
+- [x] Fixed the root defect: `src.backup(dst)` (full ~3-4GB sqlite3 binary backup per test) replaced with a schema-only clone (zero row data) in test_pm_sentinel_tick.py and test_resource_governor_queue_management.py. Measured 3044MB -> 0.95MB per copy (~3200x). Three-pass copy ordering (virtual tables -> ordinary tables -> indexes/triggers/views) after a real bug found and fixed: naive rowid-order copy silently skipped creating `umr_tasks_fts` (FTS5 shadow tables can have lower rowids than their owning virtual table on this DB).
+- [x] Fixed 100%-leak-rate bug in tests/test_rule7_completion_evidence.py: two `mkdtemp()` scratch dirs were never removed at all (no cleanup existed, pass or fail). Fixed via `finally: shutil.rmtree(...)`.
+- [x] Fixed setUp-failure-skips-tearDown gap in test_pm_sentinel_tick.py / test_resource_governor_queue_management.py via `self.addCleanup(shutil.rmtree, ...)` registered immediately after mkdtemp (runs even if setUp raises afterward -- e.g. disk-full mid-copy, the exact incident failure mode).
+- [x] Real proof on a FAILING test (not just passing): sabotaged one assertion in each of the 3 files, ran it, confirmed real AssertionError + zero leaked /tmp dirs afterward, reverted sabotage. Final clean runs: test_pm_sentinel_tick.py 11/11, tests/test_rule7_completion_evidence.py 14/14, test_resource_governor_queue_management.py 13/13.
+- [x] New periodic reaper: reap_stale_test_scratch.py (>2h stale /tmp scratch matching the real leak prefixes/filenames, lsof open-handle safety check, /tmp-only scope). 3/3 new tests pass (tests/test_reap_stale_test_scratch.py). Wired to systemd/veridian-cron-reap-stale-test-scratch.{service,timer} (tracked reference copy, NOT deployed live -- same convention as rest of systemd/).
+- [x] Loud disk_low alert: preflight-guard.py's check_disk() now calls notify-owner.py (1/hr rate-limited via dedupe_key) before rejecting -- this lives in the claude-control repo (this task's own workspace), not veridian-scripts. Verified via a monkeypatched smoke test.
+- [x] journald + logrotate caps: config/host/journald.conf.d/veridian-disk-cap.conf (SystemMaxUse=1G) + config/host/logrotate.d/rsyslog (adds maxsize 500M to the real live stanza). Tracked reference copies only -- NOT deployed live (no passwordless sudo in this session; documented in config/host/README.md with exact deploy commands for a human/sudo session).
+- [x] Real PR opened: https://github.com/FChecklist/veridian-scripts/pull/349 (commit 0e18962), with before/after df + per-copy-size evidence in the PR body.
+- [x] Documented (not fixed, out of scope): test_resource_governor_queue_management.py's _write_lock() resolves to the LIVE writelock file (resource_governor.py's _WRITE_LOCK_PATH fixed at module-import time, not redirected by the test's DB_PATH override) -- confirmed via `fuser` showing 7-9 real live PIDs contending, causing genuine multi-minute hangs under live load. Pre-existing, unrelated to the disk-leak fix; flagged in PR body for a follow-up.
+
+## Remaining
+- [ ] Live deploy of the systemd reaper timer + journald/logrotate config drop-ins (needs a human or a session with real sudo -- see config/host/README.md and systemd/README.md for exact commands). Not part of this PR's scope per "no automated deploy step" convention already established for both directories.
+- [ ] Optional follow-up (not this task's mandate): fix resource_governor.py's _WRITE_LOCK_PATH to resolve DB_PATH-relative at call time instead of import time, so test suites that override DB_PATH don't contend with the live gateway's own lock file.
+- [ ] record-completion call to agent_work_briefing.py (final step, after this checkpoint).
