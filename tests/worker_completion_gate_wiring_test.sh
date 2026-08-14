@@ -47,6 +47,7 @@ setup_fixture() {
     git commit --quiet -m "initial"
     git push --quiet origin HEAD:master
     git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/master
+    git checkout --quiet -b worker/fake-task
   )
   case "$mode" in
     doc-only)
@@ -85,6 +86,18 @@ run_scenario() {
     export SYSTEMCTL_LOG="$systemctl_log"
     export REAL_PYTHON3 GATE_SCRIPT
 
+    # Real staging helper, matching the live script's own safe_stage_all()
+    # (gitlink-guarded `git add -A`) -- defined here as a fallback so this
+    # test works whether it is extracting the block from this repo's own
+    # copy (plain `git add -A`) or the live veridian-scripts copy (calls
+    # safe_stage_all, defined elsewhere in that file, outside the extracted
+    # block). Real `git add -A` behavior either way -- no gitlink scenario
+    # is exercised by these fixtures, so the guard itself is a no-op here.
+    safe_stage_all() {
+      git -C "$WORKSPACE" add -A
+    }
+    export -f safe_stage_all
+
     python3() {
       if echo "$*" | grep -q "progress_completion_gate.py"; then
         # Real gate script, real git, real logic -- only the CLI path name
@@ -92,6 +105,9 @@ run_scenario() {
         # writable/live.
         "$REAL_PYTHON3" "$GATE_SCRIPT" "${@:2}"
         return $?
+      fi
+      if echo "$*" | grep -q "gitlink_guard.py"; then
+        return 0
       fi
       if echo "$*" | grep -q "veridian-task.py checkpoint"; then
         echo "$*" >> "$CHECKPOINT_LOG"
@@ -135,11 +151,12 @@ run_scenario() {
     if [ "$status" != "blocked" ]; then
       ok=0
     fi
-    if ! grep -q "COMPLETION GATE REJECTED" "$task_dir/worker.log"; then
+    # The rejection reason lands in the checkpoint --note argument (both
+    # this repo's local copy and the live veridian-scripts copy do this;
+    # only the local copy additionally echoes to worker.log, so assert
+    # against checkpoint_log -- the one contract both scripts share).
+    if ! grep -q "COMPLETION GATE REJECTED" "$checkpoint_log"; then
       ok=0
-    fi
-    if ! grep -q "start veridian-worker@" "$systemctl_log" 2>/dev/null; then
-      : # disabling uses "disable", not "start" -- checked below instead
     fi
     if ! grep -q "disable veridian-worker@" "$systemctl_log"; then
       ok=0
@@ -152,6 +169,10 @@ run_scenario() {
     echo "FAIL: $label (expect_pass=$expect_pass got status=$status)"
     echo "--- worker.log ---"
     cat "$task_dir/worker.log"
+    echo "--- checkpoint_log ---"
+    cat "$checkpoint_log"
+    echo "--- systemctl_log ---"
+    cat "$systemctl_log"
     FAILURES=$((FAILURES + 1))
   fi
   rm -f "$checkpoint_log" "$systemctl_log"
