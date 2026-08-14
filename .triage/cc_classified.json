@@ -1,0 +1,347 @@
+[
+  {
+    "number": 72,
+    "title": "Amend phase_2/phase_5 scope for Owner-clarified two-stage SOFTWARE FIRST UX requirement",
+    "updated_at": "2026-07-25T18:07:09Z",
+    "head_ref": "worker/task-20260725-175525-veridian-architecture-v2-ux-two-stage-am",
+    "url": "https://github.com/FChecklist/claude-control/pull/72",
+    "merge_base": "5bc908cb7f28e62fb11a4849916c7fc850dccf0f",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "ai-os/VERIDIAN_ARCHITECTURE_V2_PHASE_PLAN_2026-07-25.yaml",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "4aedd09806b8e74b1643d2e89abd365fcc26e1c9"
+      }
+    ]
+  },
+  {
+    "number": 75,
+    "title": "phase_2: mark compiler pipeline/intelligence engines done",
+    "updated_at": "2026-07-25T23:38:37Z",
+    "head_ref": "task-20260725-231836-phase2-status-update",
+    "url": "https://github.com/FChecklist/claude-control/pull/75",
+    "merge_base": "fab4ff468b5bef57ad60ee86475026e6acdd7fb7",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "ai-os/VERIDIAN_ARCHITECTURE_V2_PHASE_PLAN_2026-07-25.yaml",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "4aedd09806b8e74b1643d2e89abd365fcc26e1c9"
+      }
+    ]
+  },
+  {
+    "number": 83,
+    "title": "Re-verify 20-engine inventory (2 days stale) + report Auditor Engine status",
+    "updated_at": "2026-07-27T03:56:46Z",
+    "head_ref": "worker/task-20260726-094625-re-verify-20-engine-inventory---confirm",
+    "url": "https://github.com/FChecklist/claude-control/pull/83",
+    "merge_base": "8fec38b0ef5dafa3494eda003e6bb7e25c8383f2",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "ai-os-scripts/generate_engines_gateways_inventory.py",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "06a7e4620d6466276e25f7060779c22081b967d7"
+      },
+      {
+        "path": "ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "35bda4f248da5b7141fb75c749c7779ac3e105c6"
+      }
+    ]
+  },
+  {
+    "number": 91,
+    "title": "Resolve PR89 merge conflict (Phase 2 policy unification)",
+    "updated_at": "2026-07-26T16:27:47Z",
+    "head_ref": "worker/task-20260726-162246-resolve-pr89-merge-conflict--phase-2-pol",
+    "url": "https://github.com/FChecklist/claude-control/pull/91",
+    "merge_base": "ce3df3feb4b539ece1f82109ebb4f94b30efa0cb",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "pr89-work",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      }
+    ]
+  },
+  {
+    "number": 98,
+    "title": "Round 5: close native git/gh command-alias bypass of the interactive-session write gate",
+    "updated_at": "2026-07-27T03:58:19Z",
+    "head_ref": "worker/task-20260726-083833-build-interactive-session-write-gate--re",
+    "url": "https://github.com/FChecklist/claude-control/pull/98",
+    "merge_base": "f6d305318dc0d6cc58b7f3490b9a76489ec9569a",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "ai-os/OWNER_DIRECTIVES/interactive-session-guard.bashrc-snippet",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "353fa09469047129063577f1a78da966a6efb781"
+      },
+      {
+        "path": "tests/interactive_session_guard_test.sh",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "353fa09469047129063577f1a78da966a6efb781"
+      }
+    ]
+  },
+  {
+    "number": 102,
+    "title": "Add plan_backlog_completion.py: real backlog dedup+PR-state planner",
+    "updated_at": "2026-07-27T06:16:29Z",
+    "head_ref": "chore/backlog-completion-plan-script",
+    "url": "https://github.com/FChecklist/claude-control/pull/102",
+    "merge_base": "79571488c22f518afda0fe54b1ea61c95b6963a4",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "ai-os/DEDUP_MISMATCH_MANUAL_REVIEW_2026-07-27.yaml",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "scripts/execute_backlog_plan.py",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "scripts/plan_backlog_completion.py",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "tests/execute_backlog_plan_test.py",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "tests/fixtures/dedup_083946_incident/task-20260726-083946-fix-task-lifecycle--real-branch-resoluti/prompt.txt",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "tests/fixtures/dedup_083946_incident/task-20260726-083946-fix-task-lifecycle--real-branch-resoluti/task.yaml",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "tests/fixtures/dedup_083946_incident/task-20260726-195236-rca-task-20260726-083946-fix-task-lifecy/task.yaml",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "tests/fixtures/dedup_083946_incident/task-20260727-034446-rca-task-20260726-083946-fix-task-lifecy/task.yaml",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "tests/fixtures/dedup_prose_only_criteria/task-20260101-000000-example-prose-only-crit/prompt.txt",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "tests/fixtures/dedup_prose_only_criteria/task-20260101-000000-example-prose-only-crit/task.yaml",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "tests/plan_backlog_completion_dedup_test.py",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      }
+    ]
+  },
+  {
+    "number": 111,
+    "title": "phase_5_browser_execution_tiers: register litert-spike in MASTER_INDEX.yaml",
+    "updated_at": "2026-07-27T07:17:00Z",
+    "head_ref": "worker/task-20260727-065831-phase5-litert-spike-registration",
+    "url": "https://github.com/FChecklist/claude-control/pull/111",
+    "merge_base": "eb0d3f383eb07aee7c4190b83ab0bbd18ead6c6f",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "ai-os/MASTER_INDEX.yaml",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "937d7c12dfc91311fe2741eb8217a115072e5e8d"
+      },
+      {
+        "path": "ai-os/PHASE5_BROWSER_EXECUTION_INCREMENT1_2026-07-27.md",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      }
+    ]
+  },
+  {
+    "number": 113,
+    "title": "phase_8 increment 1: DSPy decision + engine-ai-learning evidence + 5-engine scoping",
+    "updated_at": "2026-07-27T10:01:36Z",
+    "head_ref": "worker/task-20260727-094843-phase8-dspy-scoping",
+    "url": "https://github.com/FChecklist/claude-control/pull/113",
+    "merge_base": "08d0bdd040e47c1871cd371c5929d97897417bbe",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "ai-os/MASTER_INDEX.yaml",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "937d7c12dfc91311fe2741eb8217a115072e5e8d"
+      },
+      {
+        "path": "ai-os/VERIDIAN_V2_PROMPT_LIFECYCLE_ENGINES_SCOPING_2026-07-27.md",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      }
+    ]
+  },
+  {
+    "number": 114,
+    "title": "rca-task-20260726-171926-remove-anthropic-api-key-dead-code-path",
+    "updated_at": "2026-07-27T14:46:48Z",
+    "head_ref": "worker/task-20260726-181517-rca-task-20260726-171926-remove-anthropi",
+    "url": "https://github.com/FChecklist/claude-control/pull/114",
+    "merge_base": "0d0bafd53c0e76826d32d17da5710a30cf6dda65",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "scripts/veridian-task-watchdog.py",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "4b151ce6ad8b7eb43106b67c138dd34b62281ac3"
+      },
+      {
+        "path": "tests/veridian_task_watchdog_dedup_test.py",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      }
+    ]
+  },
+  {
+    "number": 116,
+    "title": "Fix watchdog step_2 known_fixes gating + wire skip_escalation_when_activating",
+    "updated_at": "2026-07-28T11:08:41Z",
+    "head_ref": "fix/watchdog-known-fix-step2-gating-2026-07-28",
+    "url": "https://github.com/FChecklist/claude-control/pull/116",
+    "merge_base": "08d0bdd040e47c1871cd371c5929d97897417bbe",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "ai-os/MASTER_INDEX.yaml",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "937d7c12dfc91311fe2741eb8217a115072e5e8d"
+      },
+      {
+        "path": "ai-os/VERIDIAN_V2_PROMPT_LIFECYCLE_ENGINES_SCOPING_2026-07-27.md",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "scripts/veridian-task-watchdog.py",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "4b151ce6ad8b7eb43106b67c138dd34b62281ac3"
+      }
+    ]
+  },
+  {
+    "number": 125,
+    "title": "docs(MASTER_INDEX): live 2026-08-06 GitHub/Vercel census refresh (UMR-20260806-140841-46d1)",
+    "updated_at": "2026-08-06T19:37:41Z",
+    "head_ref": "worker/task-20260806-192056-vercel-github-census-refresh",
+    "url": "https://github.com/FChecklist/claude-control/pull/125",
+    "merge_base": "067eafe2052187a8fed09db33cc3c9b9bbea782c",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "ai-os/MASTER_INDEX.yaml",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "937d7c12dfc91311fe2741eb8217a115072e5e8d"
+      }
+    ]
+  }
+]
