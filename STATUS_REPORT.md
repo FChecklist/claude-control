@@ -1,3 +1,31 @@
+# STEP STATUS (2026-08-14)
+
+**STEP 1 (land 7 infra UMRs) — DONE, all real** — PR#134/#356/#291/#219
+merged, 326b/10c3/e9a7 live-verified via `veridian-scripts` PR#299 plus the
+actively-firing `veridian-pm-sentinel-tick.timer`; also fixed a chronic
+`swap_backoff` dispatch deadlock (Owner added an 8GB swapfile, real
+concurrent worker count went from 0-1 to 4, independently verified) and a
+stale duplicate dispatch-tick timer unit.
+
+**STEP 2 (certify roots 5767/cebd/d3a3/70b6)** — cebd/70b6/5767-addenda
+DONE; d3a3's last 2 real PRs (#801, #908, compliance-tracker) are mid-audit
+via `UMR-20260814-104139-c31b` — verify the real merge state before calling
+Step 2 done, do not redispatch.
+
+**STEP 3 (pivot to real product/go-to-market certification work)** — the
+real `gtm_certification_categories` registry is 25 rows, not the 51 first
+assumed — 2 hard FAILs, 18 of 25 rows rest on stale or never-recorded
+evidence. Fixes already dispatched: `UMR-20260814-095554-a31b` (the 2 real
+product failures) and `UMR-20260814-095624-c05f` (re-validate the 25,
+reconcile against the real 51-category governing map) — verify their real
+outcome before doing anything new, do not redispatch or re-diagnose.
+
+**STEP 4 (go-to-market gate)** — blocked on Step 3's real closure — do not
+attempt until the 25-row registry shows real, fresh (`validated_at` under 7
+days), passing evidence with zero hard FAILs.
+
+---
+
 # CURRENT FOCUS (2026-08-14)
 
 **VERIFY-AND-CLOSE ONLY — do not redo.** 7 real completion dispatches already
