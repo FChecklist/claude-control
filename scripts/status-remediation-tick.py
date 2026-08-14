@@ -598,19 +598,35 @@ def action_rerun_ci(finding, apply_):
     return {"applied": code == 0, "run_id": target_run["databaseId"], "stdout": out, "stderr": err}
 
 
+MERGE_GATE_PATH = "/opt/veridian/scripts/merge_gate.py"
+
+
 def action_retry_merge(pr_url, repo, apply_):
+    """task-20260814-095552-block-merges-that-have-no-fresh-passing: retries
+    through scripts/merge_gate.py, not a bare `gh pr merge`. This finding
+    class already requires the task to have been tier1 Superboss-approved
+    once (classify_transient_merge), but the state that made it eligible for
+    retry (mergeStateStatus back to CLEAN) can genuinely be minutes to hours
+    stale by the time --apply actually runs this action -- routing through
+    the shared gate re-confirms a real, currently-fresh PASS audit citing
+    the PR's live current head still exists right before the real retry,
+    the same real-time check every other merge call site in this codebase
+    must now pass, rather than trusting this finding's own earlier snapshot."""
     if not apply_:
         return {"applied": False, "dry_run": True,
-                "would_run": ["gh", "pr", "merge", pr_url, "--merge"]}
+                "would_run": ["python3", MERGE_GATE_PATH, "merge", "--pr-url", pr_url]}
 
     state, err = run_json(["gh", "pr", "view", pr_url, "--json", "mergeStateStatus"])
     if state is None or state.get("mergeStateStatus") in ("BLOCKED", "BEHIND"):
         return {"applied": False, "error": f"not ready to retry: {state or err}"}
 
-    code, out, err = run(["gh", "pr", "merge", pr_url, "--merge"])
-    final, ferr = run_json(["gh", "pr", "view", pr_url, "--json", "state,mergedAt"])
-    merged = bool(final and final.get("state") == "MERGED" and final.get("mergedAt"))
-    return {"applied": merged, "gh_merge_stdout": out, "gh_merge_stderr": err, "final_state": final}
+    code, out, err = run(["python3", MERGE_GATE_PATH, "merge", "--pr-url", pr_url])
+    try:
+        gate_decision = json.loads(out)
+    except json.JSONDecodeError:
+        gate_decision = {"allowed": False, "reason": f"merge_gate.py produced no parseable output: {out!r} {err!r}"}
+    merged = bool(gate_decision.get("merged"))
+    return {"applied": merged, "gate_decision": gate_decision, "gh_merge_stdout": out, "gh_merge_stderr": err}
 
 
 # ---------------------------------------------------------------------------

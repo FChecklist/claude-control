@@ -228,7 +228,18 @@ else
   AUDIT_CORRECTIVE="Worker to address the findings listed above and resubmit."
   AUDIT_REAUDIT="Required after corrective changes are pushed."
 fi
+# --- HEAD-SHA-CITATION (task-20260814-095552-block-merges-that-have-no-fresh-passing) ---
+# scripts/merge_gate.py refuses ANY "PASS" verdict that does not cite the
+# PR's real current head SHA (a real incident already burned this exact
+# system: claude-control PR #219's own final AUDIT: PASS comment -- posted
+# by this very AUDIT_BODY, pre-this-fix -- cited no SHA at all). Computed
+# here, unconditionally, so the merge-gate call below this script's own
+# `gh pr merge` used to make always has a citation to check against; also
+# reused by the AUDIT-CHECK-RERUN-BLOCK below instead of that block
+# re-fetching the same value a second time.
+AUDIT_HEAD_SHA=$(gh pr view "$PR_URL" --json headRefOid -q .headRefOid 2>>"$TASK_DIR/supervisor.log")
 AUDIT_BODY="$AUDIT_VERDICT_LINE
+Head SHA audited: \`$AUDIT_HEAD_SHA\`
 Objective Understood: Reviewed worker task '$TITLE' (risk tier: $TIER) by reading the actual diff, not a self-report.
 Standards Reviewed: AGENTS.md Operating Rule 7c structured audit protocol; risk-tier.py's deterministic tier classification.
 Scope Confirmed: $DIFF_STAT
@@ -260,6 +271,11 @@ gh pr comment "$PR_URL" --body "$AUDIT_BODY" >> "$TASK_DIR/supervisor.log" 2>&1
 # don't use it -- no blind retry-poll loop on every tier1 merge everywhere.
 if gh workflow list --repo "FChecklist/$REPO" --json name 2>>"$TASK_DIR/supervisor.log" \
      | grep -q '"Mandatory Audit Check"'; then
+  # Re-fetched here (also computed above, before AUDIT_BODY was built) --
+  # kept as its own real `gh pr view` call, not a reused shell variable, so
+  # this block (extracted and eval'd standalone by
+  # tests/supervisor_audit_rerun_test.sh) keeps working when tested in
+  # isolation from the rest of this script.
   AUDIT_HEAD_SHA=$(gh pr view "$PR_URL" --json headRefOid -q .headRefOid 2>>"$TASK_DIR/supervisor.log")
   AUDIT_RUN_ID=""
   AUDIT_RUN_JSON="[]"
@@ -354,6 +370,39 @@ if [ "$VERDICT" = "approve" ] && [ "$SCOPE_OK" = "1" ]; then
     [ "$STATE" = "BLOCKED" ] || [ "$STATE" = "BEHIND" ] || break
     sleep 15
   done
+  # --- MERGE-GATE-BLOCK-START (task-20260814-095552-block-merges-that-have-no-fresh-passing,
+  # see tests/supervisor_merge_gate_test.sh) ---
+  # Real, deterministic, independently-callable gate -- refuses to let this
+  # script go on to attempt a merge at all unless a PASSING audit verdict
+  # exists on the PR that cites its CURRENT head SHA (never missing, never a
+  # leftover FAIL, never a stale PASS left over from a since-superseded
+  # commit). Read-only: `check` never itself calls `gh pr merge`, so a
+  # REFUSE here costs nothing to undo. Real incidents this closes: eight PRs
+  # merged 2026-08-14 with ZERO audit verdict anywhere (claude-control
+  # #216/#217/#220/#221/#226, veridian-scripts #356/#366) and one
+  # (claude-control #219) merged with an outstanding AUDIT: FAIL still
+  # posted. This is the SAME gate (scripts/merge_gate.py) every other real
+  # merge call site in this codebase must also go through -- see that
+  # module's own docstring. In the ordinary case this check passes
+  # trivially: the AUDIT_BODY posted just above already carries a fresh
+  # "Head SHA audited" citation matching $PR_URL's current head whenever
+  # VERDICT=approve, so this is real defense-in-depth (a genuinely
+  # independent, re-derivable check from live GitHub state, not a second
+  # trust of this same script's own in-memory $VERDICT variable) rather than
+  # a redundant no-op.
+  GATE_OUT=$(python3 /opt/veridian/scripts/merge_gate.py check --pr-url "$PR_URL" 2>>"$TASK_DIR/supervisor.log")
+  GATE_EXIT=$?
+  echo "Merge gate decision: $GATE_OUT" >> "$TASK_DIR/supervisor.log"
+  if [ "$GATE_EXIT" -ne 0 ]; then
+    GATE_REASON=$(echo "$GATE_OUT" | python3 -c "import json,sys
+try:
+    print(json.load(sys.stdin).get('reason','unknown'))
+except Exception:
+    print('gate check produced no parseable decision')" 2>/dev/null || echo "gate check failed")
+    python3 /opt/veridian/scripts/veridian-task.py checkpoint "$TASK_ID" --status blocked --note "MERGE GATE REFUSED ($PR_URL): $GATE_REASON"
+    exit 1
+  fi
+  # --- MERGE-GATE-BLOCK-END ---
   # --- MERGE-DETECTION-BLOCK-START (see tests/supervisor_merge_detection_test.sh) ---
   # Merge and branch-deletion are two independent calls, not one (real
   # incidents: PR #10, #13, #14, 2026-07-24 -- `gh pr merge --delete-branch`
