@@ -137,6 +137,18 @@ In `FChecklist/claude-control` (this repo, this PR):
       https://github.com/FChecklist/claude-control/pull/207)
 - [x] Posted AUDIT: PASS on PR #207 at head `00aeee8e`
 
+- [x] `agent_work_briefing.py record-completion` for UMR-20260814-045305-e6d3
+      -- `ai_agent_registry` entry written (`AGENT-20260814-045305-e6d3`, the
+      real canonical write-back). Also attempted `--umr-status completed
+      --umr-repo veridian-scripts --umr-commit-sha 599aeec1... --umr-pr-number
+      352`: correctly **refused** ("commit-sha is a real commit but is NOT
+      (yet) a real ancestor of origin/main (real open/unmerged PR)") -- PR
+      #352 is genuinely still open, not merged, so this is the real, honest
+      evidence-gate state, not a bug or something to force past.
+
 ## Remaining
 
-- [ ] `agent_work_briefing.py record-completion` for UMR-20260814-045305-e6d3
+- [ ] Neither PR is merged yet -- both are open (#352 veridian-scripts,
+      #207 claude-control) with AUDIT: PASS posted. Nothing further for
+      this task to do until a reviewer merges them; do not fabricate a
+      merged/completed status ahead of that.
