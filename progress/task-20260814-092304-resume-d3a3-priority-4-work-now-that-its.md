@@ -83,7 +83,26 @@ merge conflict -- not on any remaining implementation work.
       #799/#908's branches. Confirmed OS.yaml on `main` already indexes OCID-022 through OCID-068
       (the original 10-item scope is fully covered, no genuine gap left to dispatch fresh work for).
 
+## Completed (cont. 2)
+- [x] **#799 (OCID-041) MERGED** -- 2026-08-14T09:39:18Z.
+- [x] #801 and #908: fixed a `Severity Classified` enum-format rejection on #908's audit comment
+      (reposted a corrected version -- comment
+      https://github.com/FChecklist/compliance-tracker/pull/908#issuecomment-5291812344), re-updated
+      both branches after #799's merge pushed `main` forward again. Both now show every required
+      check green (`audit-check` PASS on both, Lint/Type Check/Unit Tests/Build/etc. all passing) but
+      `gh pr merge` is still returning "base branch policy prohibits the merge" -- this is a real,
+      observed GitHub-side propagation lag between individual check-runs finishing and the PR's
+      overall merge-readiness state recomputing, not a real blocker (this repo's `main` is being
+      pushed to by many other concurrent agent sessions roughly every 1-2 minutes this whole session,
+      so both PRs have needed 2-3 rounds of `update-branch` already for exactly this reason).
+
 ## Remaining
-- [ ] Merge #799, #801, #908 once their required checks finish re-running post-update (in progress,
-      being watched via a background Monitor rather than polled manually)
+- [ ] Merge #801 (OCID-046) and #908 (OCID-059 duplicate-dispatch finding) -- both are CI-green
+      (audit-check PASS, all required checks pass), `mergeable=MERGEABLE`, just waiting on GitHub's
+      merge-readiness state to catch up to the already-green checks (or one more `update-branch` if
+      `main` moves again first). A follow-up invocation should just run:
+      `gh pr merge 801 --merge --delete-branch=false && gh pr merge 908 --merge --delete-branch=false`
+      (retry `gh api -X PUT repos/FChecklist/compliance-tracker/pulls/<N>/update-branch` first if
+      either shows `BEHIND`/`DIRTY` again) -- no further conflict-resolution work should be needed,
+      only landing what's already resolved and audited.
 - [ ] Call agent_work_briefing.py record-completion with real summary + PR numbers
