@@ -39,13 +39,42 @@ merge conflict -- not on any remaining implementation work.
 - [x] Located original task dir, RCA task dir, and confirmed veridian-scripts PR#291 status (merged)
 - [x] Verified live merge state of all PRs from the original task's final report
 - [x] Requested branch updates for #884 and #799 (`update-branch` API)
+- [x] **Resolved #908's real merge conflict** (fresh isolated clone in `/tmp/ct-work`, not the
+      shared `/opt/veridian/repos/compliance-tracker` checkout, to avoid mixing in other
+      concurrent sessions' uncommitted work). Root cause of the conflict: PR #908's branch had
+      *destructively* overwritten `PROGRESS.md`'s accumulated history down to just its own
+      83-line entry (confirmed via `git diff <merge-base> pr908 -- PROGRESS.md`: -543/+83), same
+      systemic class of bug as `RCA_20260813_UMR-20260813-195922-f548_shared_progress_md.md`
+      (not re-diagnosed here, just worked around the same way prior sessions on this exact repo
+      already did per `git log`, e.g. commit `13df222b docs: restore PROGRESS.md's truncated
+      465-line history, re-append task section`). Resolution: kept origin/main's full history
+      intact, prepended PR #908's own real 83-line entry on top (matching this file's established
+      newest-on-top convention). `ai-os/boss/ACTIVE-CLAIMS.yaml`'s conflict was a clean pure
+      insertion (0 deletions per `git diff`), just inserted PR #908's real 40-line
+      `recently_completed` entry at the correct position in main's current file. Verified zero
+      leftover conflict markers, YAML still parses with exactly one `recently_completed:`/`active:`
+      key each, pushed as a real merge commit (`caf24e2f`) -- not a force-overwrite.
+      **Hazard hit and worked around while doing this:** `git show <ref>:<path> > file` /
+      `git show <ref>:<path> | wc -l` silently truncates large blobs in this sandbox (returned 31
+      lines for both a 1246-line and a 10600-line real file, with a bogus injected
+      "... more files changed" trailer) -- switched to `git rev-parse <ref>:<path>` +
+      `git cat-file -p <blob>` (cross-checked against `git cat-file -s` byte counts) for every
+      real file-content read after discovering this. Anyone continuing this work should do the same.
+- [x] Updated #799 and #801's branches onto current `origin/main` -- both were clean
+      auto-merges (no real conflicts), #799 via the GitHub `update-branch` API, #801 via a manual
+      fetch+merge+push after `update-branch` kept 422'ing with a stale-head-sha race (worked
+      around by merging locally in the same scratch clone instead of fighting the API).
+- [x] Dispatched an independent subagent (per this repo's own AGENTS.md Rule 7c -- the agent that
+      resolves a conflict is not allowed to self-audit it) to post the required structured
+      `AUDIT: PASS`/`FAIL` 8-field comment on #908 so its `audit-check` required status check can
+      pass -- #884/#799/#801 already carry valid pre-existing audit comments from before this
+      session (`validate-audit-verdict.ts` re-validates the most recent existing comment on every
+      `synchronize` event, so those don't need a fresh one).
 
 ## Remaining
-- [ ] Resolve #908 real conflict, push, verify CI green, merge
-- [ ] Confirm #801 mergeable state, update branch if needed, merge
-- [ ] Merge #884 once checks re-run green post-update
-- [ ] Merge #799 once checks re-run green post-update
+- [ ] Wait for CI to go green on #884 (UNSTABLE), #799 (UNSTABLE), #801 (BLOCKED on audit-check
+      re-run), #908 (BLOCKED on audit-check, subagent posting it now) and merge all 4 once green
 - [ ] Re-check OS.yaml/MASTER-TRACKER.yaml on main for any OCID-022..066 items still
       genuinely untouched (none of the original 10 were left un-dispatched, but this
-      task's title covers the full 022-066 range -- confirm no gap)
+      task's title covers the full 022-066 range -- confirm no gap) after the 4 land
 - [ ] Call agent_work_briefing.py record-completion with real summary + PR numbers
