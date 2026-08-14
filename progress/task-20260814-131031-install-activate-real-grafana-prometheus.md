@@ -40,7 +40,9 @@ scraped as a bonus Prometheus target).
 - [x] Did not touch pm-sentinel-tick.sh or any dispatch-decision logic -- verified: only read-only `systemctl --user list-units` shell-outs and a `mode=ro` sqlite connection
 - [x] Committed real unit files (systemd/) + real config/dashboard/script (monitoring/) to this task's branch
 
+- [x] Pushed branch + opened PR https://github.com/FChecklist/claude-control/pull/237
+- [x] Called agent_work_briefing.py record-completion for UMR-20260814-130922-557f (AGENT-20260814-130922-557f)
+
 ## Remaining
 
-- [ ] Push branch + open PR
-- [ ] Call agent_work_briefing.py record-completion for UMR-20260814-130922-557f
+(none -- all done criteria met and verified)
