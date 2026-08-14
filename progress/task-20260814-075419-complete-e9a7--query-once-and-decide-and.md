@@ -47,9 +47,11 @@ sentinel.
       dispatch call reconciles cleanly (exit 0).
 - [x] Ran the new test locally: all scenarios pass.
 - [x] Committed + pushed; opened PR.
+- [x] Opened claude-control PR **#216**:
+      https://github.com/FChecklist/claude-control/pull/216
 
 ## Remaining
 - [ ] None — real code + real test landed in this repo per the addendum's
       own fallback instruction; the production enforcement itself already
       lives merged on `veridian-scripts` main (PR #299, hardened by #323,
-      #341). Report the real PR number in the final checkpoint.
+      #341). Real PR number for this task: **claude-control #216**.
