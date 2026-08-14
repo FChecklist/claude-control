@@ -44,7 +44,10 @@ is free to create a brand new "queued" row -- resetting the loop forever.
       unmodified (cap default kept comfortably above that test's 10-submission
       burst).
 - [x] Ran the full resource_governor + dispatch_tick test suites -- real exit 0.
-- [x] Committed and pushed; opened PR.
+- [x] Committed and pushed; opened PR: https://github.com/FChecklist/claude-control/pull/223
+      (verified branch head diff contains scripts/resource_governor.py,
+      scripts/superboss-register.py, tests/test_resource_governor.py --
+      not progress/doc-only).
 
 ## Remaining
 - [ ] (none)
