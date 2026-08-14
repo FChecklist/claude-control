@@ -172,12 +172,23 @@ trap 'kill $CHECKPOINT_PID 2>/dev/null' EXIT
 
 cd "$WORKSPACE"
 
-PROGRESS_INSTRUCTION="PROTOCOL: maintain PROGRESS.md (## Completed / ## Remaining, markdown checkboxes), update after each step. commit+push after each meaningful unit, not only at the end. on a 2nd consecutive failure of the identical approach: STOP, do not attempt a 3rd time -- this is enforced by a circuit breaker on the next invocation regardless, so stopping yourself first saves a wasted restart."
+# 2026-08-14 (task-20260814-054242, real fix for the exact bug
+# UMR-20260813-195922-f548 already diagnosed once but never actually fixed
+# IN THIS REPO -- see progress_completion_gate.py's own module docstring):
+# every worker used to be told to maintain the ONE shared PROGRESS.md, no
+# per-task namespacing, so 2+ concurrent branches collided on merge and
+# nothing ever mechanically verified the diff touched real code. Every
+# worker now gets its own progress/<task_id>.md -- a real path, never
+# shared, so two branches merging back never conflict on it -- and, below,
+# a real mechanical gate (not a prompt instruction) checks the actual diff
+# before this task is ever allowed to reach pending_review.
+PROGRESS_FILE="progress/${TASK_ID}.md"
+PROGRESS_INSTRUCTION="PROTOCOL: maintain $PROGRESS_FILE (## Completed / ## Remaining, markdown checkboxes), update after each step. This is YOUR OWN per-task file, not a shared PROGRESS.md -- do not edit any other task's progress/*.md, and do not recreate a shared PROGRESS.md. commit+push after each meaningful unit, not only at the end. COMPLETION GATE: if your task's objective names a specific source file or script, that file MUST be present in your real committed diff -- a diff containing only progress/doc artifacts for a code-named objective will be rejected as a real failure (not marked complete), see progress_completion_gate.py check-completion. on a 2nd consecutive failure of the identical approach: STOP, do not attempt a 3rd time -- this is enforced by a circuit breaker on the next invocation regardless, so stopping yourself first saves a wasted restart."
 
 if [ "$IS_RESUME" -eq 1 ]; then
   RESUME_CONTEXT=$(python3 /opt/veridian/scripts/veridian-task.py resume-context "$TASK_ID")
   PROMPT="RESUME task=$TASK_ID invocation=$NEW_COUNT/$MAX_LIFETIME_INVOCATIONS
-DO_NOT restart from scratch. run: git status && git log --oneline -10 && read PROGRESS.md.
+DO_NOT restart from scratch. run: git status && git log --oneline -10 && read $PROGRESS_FILE.
 LAST_CHECKPOINT:
 $RESUME_CONTEXT
 SPEC: full task spec is prompt.txt in cwd (provided once already, not restated here -- read it only if you need it).
@@ -452,6 +463,33 @@ fi
 # still start the supervisor -- cheap defense in depth, and it is the
 # component with the actual authority to decide a status this task never
 # self-reports directly.
+# --- COMPLETION-GATE-BLOCK-START (2026-08-14, task-20260814-054242; see
+# tests/test_progress_completion_gate.py and
+# tests/worker_completion_gate_wiring_test.sh) ---
+# Real, mechanical fake-fix detection: if this task's own prompt.txt names a
+# specific source/script file as its objective, that file must really
+# appear in this branch's diff (committed-since-merge-base + staged +
+# unstaged -- runs BEFORE the final `git add -A && git commit` below, so it
+# sees in-progress work too). A diff that only touches progress/doc
+# artifacts for a code-named objective is a REAL rejection -- checkpointed
+# blocked with the actual reason, whatever real progress exists is still
+# pushed for human review, and the task never silently reaches
+# pending_review/completed the way PRs #317/#321 (PROGRESS.md-only diffs
+# for a named-code-file objective) did before this gate existed.
+GATE_REASON=$(python3 /opt/veridian/scripts/progress_completion_gate.py check-completion --task-dir "$TASK_DIR" --workspace "$WORKSPACE" --default-branch "$DEFAULT_BRANCH" 2>&1)
+GATE_CHECK_EXIT=$?
+if [ "$GATE_CHECK_EXIT" -ne 0 ]; then
+  python3 /opt/veridian/scripts/veridian-task.py checkpoint "$TASK_ID" --status blocked --note "COMPLETION GATE REJECTED (fake-fix detection): $GATE_REASON"
+  git -C "$WORKSPACE" add -A
+  git -C "$WORKSPACE" commit -m "Worker $TASK_ID: automated checkpoint commit (completion gate rejected -- diff does not touch the objective's named file)" >> "$TASK_DIR/worker.log" 2>&1 || true
+  git -C "$WORKSPACE" push -u origin "$BRANCH" >> "$TASK_DIR/worker.log" 2>&1 || true
+  systemctl --user disable "veridian-worker@${TASK_ID}.service" >> "$TASK_DIR/worker.log" 2>&1 || true
+  echo "COMPLETION GATE REJECTED: $GATE_REASON" >> "$TASK_DIR/worker.log"
+  exit 0
+fi
+echo "completion gate: $GATE_REASON" >> "$TASK_DIR/worker.log"
+# --- COMPLETION-GATE-BLOCK-END ---
+
 # --- NOOP-COMPLETION-BLOCK-START (see tests/worker_noop_pending_review_test.sh) ---
 if git -C "$WORKSPACE" diff --quiet && git -C "$WORKSPACE" diff --cached --quiet && [ -z "$(git -C "$WORKSPACE" status --porcelain)" ]; then
   AHEAD_COUNT=$(git -C "$WORKSPACE" rev-list --count "origin/${DEFAULT_BRANCH}..HEAD" 2>/dev/null || echo 0)
