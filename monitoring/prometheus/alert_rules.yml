@@ -1,0 +1,20 @@
+groups:
+  - name: veridian_basic_resource_alerts
+    rules:
+      - alert: DiskSpaceCritical
+        expr: 100 * (1 - node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) > 90
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Root filesystem usage above 90% for 5+ minutes"
+          description: "{{ $value | printf \"%.1f\" }}% used on / -- UMR171945-0023/BLK02 (governing chain UMR-20260806-171945-5767): this is the same real threshold class that previously triggered a real disk-space emergency hold on 2026-08-06/2026-08-08."
+
+      - alert: HighCPUSustained
+        expr: 100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CPU usage above 80% sustained for 10+ minutes"
+          description: "{{ $value | printf \"%.1f\" }}% average CPU utilization -- UMR171945-0023 (governing chain UMR-20260806-171945-5767)."

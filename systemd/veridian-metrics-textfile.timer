@@ -1,0 +1,10 @@
+[Unit]
+Description=Run veridian-metrics-textfile every 30s (task-20260814-131031 observability sidecar)
+
+[Timer]
+OnUnitActiveSec=30
+OnBootSec=30
+AccuracySec=5
+
+[Install]
+WantedBy=timers.target
