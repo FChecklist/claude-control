@@ -13,7 +13,7 @@ Repo: FChecklist/claude-control (origin)
 - [x] Merged PR #237 via `gh pr merge 237 --merge` — merge commit `d9c22822af8d066ceb948c636394204433df8683`, mergedAt 2026-08-14T17:22:51Z, state MERGED (verified via `gh pr view`)
 - [x] All other 22 PRs left open (failing audit, missing audit, stale audit not matching current head, and/or real CONFLICTING/DIRTY mergeable state) — see final report
 - [x] Commit + push progress updates
-- [ ] Call record-completion for UMR-20260814-171700-2255
+- [x] Call record-completion for UMR-20260814-171700-2255 (agent_id AGENT-20260814-171700-2255)
 
 ## Final classification (all 23 open PRs)
 
