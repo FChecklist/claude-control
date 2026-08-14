@@ -51,17 +51,21 @@ this claude-control workspace. Branch:
       `INVOCATION_COUNTER_REPAIR_20260814.md`. Verified all 11 writes
       post-hoc by re-reading the files.
 
+- [x] Opened the real PR:
+      https://github.com/FChecklist/veridian-scripts/pull/348 -- diff is
+      exactly `worker-entrypoint.sh` + `tests/preflight_guard_hardstop_test.sh`
+      (verified via `gh pr view 348 --json files`), body has the real, pasted
+      34/34-pass test output.
+
 ## Remaining
-- [ ] Open the real PR on `FChecklist/veridian-scripts` with the pasted real
-      test output in the body.
 - [ ] Deploy the fixed `worker-entrypoint.sh` to the live
-      `/opt/veridian/scripts/worker-entrypoint.sh` path (currently only fixed in
-      the repo checkout + this branch -- the live file is still the old,
-      buggy version until this PR merges and gets deployed, same as the
-      existing deploy convention this repo's own history shows, e.g. PR #345).
+      `/opt/veridian/scripts/worker-entrypoint.sh` path once PR #348 is
+      reviewed/merged (currently only fixed in the repo checkout + PR branch
+      -- the live file is still the old, buggy version until this merges and
+      gets deployed, same convention this repo's own history shows, e.g. PR
+      #345).
 - [ ] Call `agent_work_briefing.py record-completion` for
-      UMR-20260814-034225-3392 once the PR is open (and merged/deployed if
-      that happens within this task's own lifetime).
+      UMR-20260814-034225-3392.
 
 ## Scope notes
 - Did NOT touch `doc-worker-entrypoint.sh` (separate template,
