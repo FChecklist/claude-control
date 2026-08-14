@@ -109,6 +109,9 @@ fabricating.
       unwired to any check script or DB row) -- I am not reporting a false
       "16/51" as if that were one coherent scale.
 
+- [x] Opened PR #231 (FChecklist/claude-control): https://github.com/FChecklist/claude-control/pull/231
+- [x] Posted audit comment citing head SHA bc1d92ab4acfd1a1c6aaba4a675b9423da389712:
+      https://github.com/FChecklist/claude-control/pull/231#issuecomment-5292185794
+
 ## Remaining
-- [ ] Open PR, post audit citing head SHA.
 - [ ] record-completion call to agent_work_briefing.py.
