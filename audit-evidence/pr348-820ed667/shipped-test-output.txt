@@ -1,0 +1,48 @@
+=== Test 1: a single transient (infra) preflight rejection must NOT charge the lifetime invocation counter ===
+PASS: transient rejection exits 1 (systemd retries) (got '1')
+PASS: lifetime invocation counter file was never created
+PASS: infra rejection counter is now 1 (got '1')
+PASS: checkpoint note says lifetime counter NOT charged
+PASS: checkpoint status is failed, not blocked
+PASS: backoff sleep was invoked (5s for 1st infra rejection)
+
+=== Test 2: repeated infra rejections increment their OWN counter, back off, and eventually stop retrying -- all while the lifetime counter stays untouched ===
+PASS: attempt 1: still under cap, exits 1 (retryable) (got '1')
+PASS: attempt 1: infra counter is 1 (got '1')
+PASS: attempt 1: lifetime counter still never created
+PASS: attempt 2: still under cap, exits 1 (retryable) (got '1')
+PASS: attempt 2: infra counter is 2 (got '2')
+PASS: attempt 2: lifetime counter still never created
+PASS: attempt 3: still under cap, exits 1 (retryable) (got '1')
+PASS: attempt 3: infra counter is 3 (got '3')
+PASS: attempt 3: lifetime counter still never created
+PASS: infra cap exceeded (4 > 3): exits 0, systemd will NOT retry (got '0')
+PASS: infra counter is now 4 (past its own cap) (got '4')
+PASS: lifetime counter STILL never created after infra cap hit
+PASS: unit was disabled once infra cap hit (stops retrying)
+PASS: checkpoint records INFRASTRUCTURE-REJECTION CAP HIT
+PASS: backoff grew across attempts (5s, 10s, 15s)
+PASS: backoff grew across attempts (5s, 10s, 15s)
+PASS: backoff grew across attempts (5s, 10s, 15s)
+
+=== Test 3: a hard-stop preflight reason (deterministic, e.g. circuit_breaker_tripped) also never charges the lifetime counter ===
+PASS: hard stop exits 0 (systemd will not retry, unit disabled) (got '0')
+PASS: hard stop never charges the lifetime invocation counter
+PASS: hard stop never touches the infra-rejection counter either
+PASS: checkpoint records PRE-FLIGHT HARD STOP
+PASS: unit was disabled
+
+=== Test 4: once preflight PASSES, the lifetime invocation counter IS charged (a real model call is imminent) ===
+PASS: preflight pass falls through the block with exit 0 (script continues below) (got '0')
+PASS: lifetime invocation counter is now 1 (charged exactly once preflight passed) (got '1')
+PASS: infra rejection counter untouched on a clean pass
+
+=== Test 5: MAX_LIFETIME_INVOCATIONS cap check (unrelated to this fix, must still work) is unaffected -- PRIOR_COUNT>=MAX still hard-stops without incrementing further ===
+PASS: at 20/20 prior invocations, cap check exits 0 before doing anything else (got '0')
+PASS: cap check correctly stopped script execution (exit, not fall-through)
+PASS: invocation count file is untouched at exactly 20 (no further charge) (got '20')
+
+================================================================
+RESULTS: 34 passed, 0 failed
+================================================================
+shipped test exit=0
