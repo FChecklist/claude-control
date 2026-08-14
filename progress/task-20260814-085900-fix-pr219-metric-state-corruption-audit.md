@@ -60,9 +60,22 @@ touched here.
       (`worker/task-20260814-075408-complete-e592--close-task-gateway-py-gov`),
       no new PR opened.
 
+- [x] `record-completion` write-back to `UMR-20260814-085830-b190`'s
+      ai_agent_registry row (`AGENT-20260814-085830-b190`, real entry text
+      describing the actual fix, commit `4d8f307`).
+
 ## Remaining
 
-- [ ] Request/trigger a fresh audit against the new head and report the
-      outcome back on this task.
-- [ ] `record-completion` write-back to `UMR-20260814-085830-b190`'s
-      ai_agent_registry row once the audit result is in hand.
+- [ ] Fresh audit against the new head (commit `4d8f307`). Per this
+      repo's established convention (e.g. PR#348/#349's own audit history),
+      independent audits are their own separately-dispatched worker tasks,
+      not something the fixing worker can force/self-issue -- an
+      auditor auditing its own same-session fix would not be independent.
+      No `--check-task-start-gate`-style "trigger re-audit now" capability
+      exists in the capability registry (checked: `lookup-capability
+      --intent-text "request re-audit of a pull request..."` -> no match).
+      Confirmed as of this write-up: no new comment posted on PR#219 since
+      the original 2026-08-14T08:14:35Z AUDIT:FAIL. This task's own real,
+      committed scope (the fix + tests + push) is complete; the re-audit
+      itself is outside this task's control and will land as its own
+      dispatch against the new head.
