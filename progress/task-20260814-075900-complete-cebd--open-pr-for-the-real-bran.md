@@ -56,16 +56,36 @@ get it audited, report the real PR number.
       convention for this exact conflict (precedent commit `0a7351970`,
       cited inside the old branch's own content).
 
+- [x] Built the non-destructive `PROGRESS.md` prepend commit on branch
+      `docs/close-cebd-ocid020021-checkpoint-record` off current
+      `origin/main` (in scratch clone `workspace/.scratch/ct`), verified
+      byte-for-byte that all 1230 prior lines are preserved unchanged below
+      the new section (`diff <(git show origin/main:PROGRESS.md | tail
+      -1230) <(tail -1230 PROGRESS.md)` -> empty). Also confirmed
+      `check-terminology-guardrail.mjs` only scans `.ts`/`.tsx`
+      (`SCANNABLE_EXT_RE`) -- the bare ISO dates in this new prose are not
+      a CI risk.
+- [x] Committed (`2f3a9de4`), pushed, opened the real PR via `gh pr create
+      --fill`: **https://github.com/FChecklist/compliance-tracker/pull/1137**
+      ("docs: close out worker/task-20260808-175102 (OCID-020/021)
+      checkpoint record -- no PR ever opened for it").
+- [x] Checked CI (`gh pr checks 1137`): Doc Cross-Reference, Documentation
+      Sentinel, Guardrail Presence, Metadata Index Coverage, Migration
+      Number Collision, Security Pattern, Secret Scanning all real `pass`;
+      Unit Tests/audit-check/Type Check/Lint/Analyze/Asset Registry/Doc
+      Quarantine/Terminology Guardrail/Vercel still `pending` at last
+      check.
+
 ## Remaining
-- [ ] Build the non-destructive `PROGRESS.md` prepend commit on a new
-      branch off current `origin/main` in a scratch clone
-      (`workspace/.scratch/ct`), cross-referencing that the real code work
-      already shipped via PR #1070/#1076/#987/#732/#1051/#988 and citing
-      this branch's dead SHA `4c791467` for traceability.
-- [ ] Commit, push, open the real PR via `gh pr create` against
-      `FChecklist/compliance-tracker`.
-- [ ] Wait for CI / trigger the audit-check flow, get it independently
-      reviewed (same tier-2 doc-heavy path PR #1130 went through).
-- [ ] Report the real PR number in the final checkpoint.
+- [ ] Wait for the rest of CI to settle; if audit-check needs a posted
+      `AUDIT: PASS`/`FAIL` comment, confirm whether this doc-only PR needs
+      one (prior precedent: #1100/#1118 for this same UMR were doc-only
+      and merged without a manual audit comment -- verify current
+      `.github/workflows/mandatory-audit-check.yml` scope before assuming
+      that still holds).
+- [ ] Get it independently reviewed/merged per this repo's real process
+      (Rule 6 -- PR/CI gate, no direct push to `main`).
+- [ ] Report the real, final PR state (merged or still open, with number)
+      in the final checkpoint.
 - [ ] Call `agent_work_briefing.py record-completion` for
       `UMR-20260814-075505-35a7` with the real summary.
