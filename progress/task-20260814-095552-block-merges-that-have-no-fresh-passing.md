@@ -146,6 +146,16 @@ content on current master.
         a05492f..., matching the PR's current head a05492f..."`, exit
         code **0**. Real refuse-then-allow, on one real PR, driven purely
         by real GitHub state -- not a mocked demonstration.
+      - **Unplanned bonus real proof**: the progress-file commit right
+        after posting that first PASS comment moved PR #230's own head to
+        `536050a`, making the just-posted PASS (citing `a05492f`) stale --
+        `check` immediately and correctly returned `allowed: false,
+        reason: "stale pass: ... cites SHA a05492f... but the PR's
+        current head is 536050a..."`. The gate refused its own author's
+        PR for real staleness, unprompted, exactly as designed. Confirmed
+        the diff between those two heads was progress-doc-only
+        (`git diff a05492f 536050a --stat`), posted a fresh PASS citing
+        `536050a`, and re-ran `check` -> `allowed: true` again.
 - [x] Posted real evidence (not a new fix PR, since none is needed) on
       **PR #219**
       (`https://github.com/FChecklist/claude-control/pull/219#issuecomment-5292138322`):
