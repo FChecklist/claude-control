@@ -62,8 +62,53 @@ narrative-to-registry migration) that this task's evidence does not support
 starting silently — flagging for explicit owner clarification rather than
 fabricating.
 
+## Completed (cont'd)
+- [x] Step 2: re-ran all 24 gtm_check_*.py scripts in /opt/veridian/scripts (25
+      categories -- #10/#11 share gtm_check_load_stress_testing.py) against
+      real live targets (projexa-ai.com, a fresh compliance-tracker clone,
+      the live superboss-register.sqlite, systemctl --user, vercel ls). Every
+      script called the shared writer gtm_write_category_result.py itself
+      (never raw SQL from this task) with real check output. `bun` was
+      confirmed genuinely installed at ~/.bun/bin/bun but absent from this
+      shell's default PATH -- exported PATH to include it (a real, existing
+      tool, not fabricated) so categories 2/3/7/22 could run for real instead
+      of reporting a false "tool absent" blocked.
+      Re-ran category_index=25 (production readiness audit) a second time
+      after category 23 (UX audit, the slowest script, ran backgrounded)
+      finished, so its synthesis reflects fully fresh evidence for all 24
+      inputs, not a partially-stale snapshot.
+- [x] Step 3: real fresh tally as of 2026-08-14T10:16Z (all commands' full
+      stdout/evidence_json shown in this session's transcript):
+        16/25 PASS: 1,4,5,6,7,8,9,12,13,14,15,16,18,21,22,24
+        7/25 FAIL:  2 (tsc OOM), 3 (1 gitleaks + 1 trivy HIGH finding),
+                    17 (webkit browser deps missing), 19 (both monitored
+                    DB backups >7 days stale), 20 (2/3 monitoring units
+                    inactive/disabled), 23 (3 UX heuristics at severity 3 --
+                    inconsistent VERIDIAN/PROJEXA branding across pre-auth
+                    pages, /help hard-gated behind login), 25 (synthesis:
+                    correctly reports FAIL, citing the real P0/P1 fails above)
+        2/25 BLOCKED (real, not fabricated): 10, 11 (load/stress testing) --
+                    hard safety gate refused to start: real SwapFree 419.3
+                    MiB < the script's own fixed 500 MiB minimum. No load
+                    was generated. validated_at correctly left NULL by the
+                    writer for blocked results (passed=NULL never gets a
+                    validated_at, by gtm_write_category_result.py's own
+                    design) -- these 2 are not "stale", they are genuinely
+                    not yet validated.
+      Every one of the 25 rows now has this run's own timestamp (or a
+      deliberately-NULL one for the 2 blocked rows) -- zero rows left on
+      the old stale evidence.
+
+      Against the SPEC's literal "51": this program's own registry
+      (`gtm_certification_categories`) has no row, no check script, and no
+      concept of the other 26 -- because, per Step 1's finding, no 51-item
+      map governs *this* program. Read honestly: 16/25 real GTM categories
+      genuinely pass on fresh evidence right now; 0/26 of the *other*,
+      differently-scoped AI-OS-certification categories exist in this
+      registry at all (that taxonomy lives only in AI_OS_CERTIFICATION.md,
+      unwired to any check script or DB row) -- I am not reporting a false
+      "16/51" as if that were one coherent scale.
+
 ## Remaining
-- [ ] Step 2: re-run gtm_check_*.py scripts for all 25 categories, write fresh validated_at.
-- [ ] Step 3: report honest count of genuinely-certified categories out of the real universe.
 - [ ] Open PR, post audit citing head SHA.
 - [ ] record-completion call to agent_work_briefing.py.
