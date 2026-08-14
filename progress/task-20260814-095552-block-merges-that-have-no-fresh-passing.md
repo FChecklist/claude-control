@@ -124,17 +124,40 @@ content on current master.
         essentially nothing in the current open-PR population has a fresh
         passing audit today.
 
+- [x] Opened the real PR: **claude-control PR #230**
+      (`https://github.com/FChecklist/claude-control/pull/230`,
+      `worker/task-20260814-095552-block-merges-that-have-no-fresh-passing`
+      -> `master`, head `a05492fea88d29e9b33db13896a384938afe2833`).
+      **Full real, live gate demonstration on this exact PR**:
+      - Before any audit comment existed: `python3 scripts/merge_gate.py
+        check --repo FChecklist/claude-control --pr 230` -> `allowed:
+        false, reason: "no audit verdict found..."`, exit code **1**.
+      - Posted a real, structured `AUDIT: PASS` comment
+        (`https://github.com/FChecklist/claude-control/pull/230#issuecomment-5292134763`)
+        citing `Head SHA audited: a05492fea88d29e9b33db13896a384938afe2833`
+        -- this PR's real, exact current head -- with real re-run evidence
+        (every test named in the PR body re-executed fresh at this exact
+        head immediately before posting: `test_merge_gate.py` 10/10,
+        `supervisor_merge_gate_test.sh` 4/4, `supervisor_merge_detection_test.sh`
+        1/3 with the 2 pre-existing unrelated failures reproduced, `supervisor_audit_rerun_test.sh`
+        + `supervisor_pr_url_guard_test.sh` all-pass).
+      - After that comment existed: re-ran the identical `check` command ->
+        `allowed: true, reason: "fresh PASS verdict ... cites head SHA
+        a05492f..., matching the PR's current head a05492f..."`, exit
+        code **0**. Real refuse-then-allow, on one real PR, driven purely
+        by real GitHub state -- not a mocked demonstration.
+- [x] Posted real evidence (not a new fix PR, since none is needed) on
+      **PR #219**
+      (`https://github.com/FChecklist/claude-control/pull/219#issuecomment-5292138322`):
+      the metric-state-corruption bug it flagged was already fixed by
+      commit `4d8f307` before PR #219 itself merged, confirmed still live
+      on current master via `grep`/`pytest` re-run at review time (26/26
+      `test_resource_governor.py` passing).
+- [x] `record-completion` write-back to this task's own UMR
+      (UMR-20260814-095518-ec65) via `agent_work_briefing.py`.
+
 ## Remaining
 
-- [ ] Open the real PR for this fix (claude-control), post a real
-      structured `AUDIT: PASS` comment on it citing its real current head
-      SHA (dogfooding the exact citation format this fix requires), per
-      this task's own SPEC instruction.
-- [ ] Post real evidence (not a new fix PR, since none is needed -- see
-      "Completed" above) on PR #219 that the metric-state corruption it
-      flagged is genuinely fixed on current master.
-- [ ] `record-completion` write-back to this task's own UMR
-      (UMR-20260814-095518-ec65) via `agent_work_briefing.py`.
 - [ ] Not in this task's scope, flagged only: true bypass-prevention against
       an assistant session calling `gh pr merge`/`gh api .../merge` directly
       via Bash (as opposed to going through either of this codebase's two
