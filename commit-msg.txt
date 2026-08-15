@@ -1,0 +1,26 @@
+fix(worker-exit-status-bridge): propagate real preflight denial reason into register row
+
+Previously, when a self-reported-negative task.yaml checkpoint (status=blocked)
+carried a real, specific note from worker-entrypoint.sh's PREFLIGHT-GUARD-BLOCK
+(e.g. "PRE-FLIGHT HARD STOP (tight_task_schema_violation): Complexity tier
+moderate is not recognized..."), this bridge discarded it entirely and wrote
+only its own generic "worker-exit-status-bridge (ExecStopPost, STEP 2 fix...)"
+boilerplate as the register row's reason field -- naming the component that
+REPORTED the exit, not the cause. Every operator/PM tier reading a failed
+register row had to SSH in and read task.yaml by hand to learn why.
+
+Now: when the last checkpoint is status=blocked and carries a note, that note
+becomes the register reason (suffixed with "[via worker-exit-status-bridge]"
+so the reporter stays identifiable, without leading with it). Every other
+self-reported-negative status (no note, or non-blocked e.g. plain
+failed/cancelled/etc.) is unchanged -- exit codes, which rows are marked
+terminal, and the ExecStopPost fail-open contract are all untouched.
+
+Adds a regression test asserting the real reason_code (tight_task_schema_violation)
+and full note text propagate into the register reason, and that the
+no-note/non-blocked path still leads with the bridge's own name unchanged.
+
+task-20260815-230158-propagate-the-real-preflight-denial-reas
+UMR-20260815-135449-28ed
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
