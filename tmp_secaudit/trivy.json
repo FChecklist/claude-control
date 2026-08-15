@@ -1,0 +1,589 @@
+{
+  "SchemaVersion": 2,
+  "Trivy": {
+    "Version": "0.72.0"
+  },
+  "ReportID": "01a00776-8d61-7499-b3ad-2e2ff56d0cdd",
+  "CreatedAt": "2026-08-15T22:06:45.089302619Z",
+  "ArtifactID": "sha256:9094cfa6aef4f39f87152f55e6d4b56094e5f387e155e86235c7c80a811bddab",
+  "ArtifactName": ".",
+  "ArtifactType": "repository",
+  "Metadata": {
+    "RepoURL": "https://github.com/FChecklist/compliance-tracker.git",
+    "Branch": "main",
+    "Commit": "78c94f0b5225927cd148804dee74543e8a427cfa",
+    "CommitMsg": "Merge pull request #1279 from FChecklist/worker/task-20260815-155803-rca--umr-20260806-160621-a383-killed\n\nRCA: UMR-20260806-160621-a383 killed row - confirmed correctly killed, no fix needed",
+    "Author": "RAJAT AGARWAL \u003c49814285+FChecklist@users.noreply.github.com\u003e",
+    "Committer": "GitHub \u003cnoreply@github.com\u003e"
+  },
+  "Results": [
+    {
+      "Target": "node_modules/@fchecklist/veridian-ui-kit/bun.lock",
+      "Class": "lang-pkgs",
+      "Type": "bun",
+      "Packages": [
+        {
+          "ID": "lucide-react@1.25.0",
+          "Name": "lucide-react",
+          "Identifier": {
+            "PURL": "pkg:npm/lucide-react@1.25.0",
+            "UID": "79b1e9798eb9cb7f"
+          },
+          "Version": "1.25.0",
+          "Relationship": "direct",
+          "Locations": [
+            {
+              "StartLine": 116,
+              "EndLine": 116
+            }
+          ],
+          "AnalyzedBy": "bun"
+        },
+        {
+          "ID": "next@16.2.12",
+          "Name": "next",
+          "Identifier": {
+            "PURL": "pkg:npm/next@16.2.12",
+            "UID": "8f65edc75641169e"
+          },
+          "Version": "16.2.12",
+          "Relationship": "direct",
+          "DependsOn": [
+            "@next/env@16.2.12",
+            "@swc/helpers@0.5.15",
+            "baseline-browser-mapping@2.10.43",
+            "caniuse-lite@1.0.30001806",
+            "postcss@8.5.26",
+            "styled-jsx@5.1.6"
+          ],
+          "Locations": [
+            {
+              "StartLine": 120,
+              "EndLine": 120
+            }
+          ],
+          "AnalyzedBy": "bun"
+        },
+        {
+          "ID": "react@19.2.7",
+          "Name": "react",
+          "Identifier": {
+            "PURL": "pkg:npm/react@19.2.7",
+            "UID": "5611a5729fc79c31"
+          },
+          "Version": "19.2.7",
+          "Relationship": "direct",
+          "Locations": [
+            {
+              "StartLine": 126,
+              "EndLine": 126
+            }
+          ],
+          "AnalyzedBy": "bun"
+        },
+        {
+          "ID": "react-dom@19.2.7",
+          "Name": "react-dom",
+          "Identifier": {
+            "PURL": "pkg:npm/react-dom@19.2.7",
+            "UID": "b50e63e150346646"
+          },
+          "Version": "19.2.7",
+          "Relationship": "direct",
+          "DependsOn": [
+            "scheduler@0.27.0"
+          ],
+          "Locations": [
+            {
+              "StartLine": 128,
+              "EndLine": 128
+            }
+          ],
+          "AnalyzedBy": "bun"
+        },
+        {
+          "ID": "react-resizable-panels@4.12.2",
+          "Name": "react-resizable-panels",
+          "Identifier": {
+            "PURL": "pkg:npm/react-resizable-panels@4.12.2",
+            "UID": "1acc10235899c6d6"
+          },
+          "Version": "4.12.2",
+          "Relationship": "direct",
+          "Locations": [
+            {
+              "StartLine": 130,
+              "EndLine": 130
+            }
+          ],
+          "AnalyzedBy": "bun"
+        },
+        {
+          "ID": "sonner@2.0.7",
+          "Name": "sonner",
+          "Identifier": {
+            "PURL": "pkg:npm/sonner@2.0.7",
+            "UID": "cd5a79c0411c4240"
+          },
+          "Version": "2.0.7",
+          "Relationship": "direct",
+          "Locations": [
+            {
+              "StartLine": 138,
+              "EndLine": 138
+            }
+          ],
+          "AnalyzedBy": "bun"
+        },
+        {
+          "ID": "tailwindcss@4.3.3",
+          "Name": "tailwindcss",
+          "Identifier": {
+            "PURL": "pkg:npm/tailwindcss@4.3.3",
+            "UID": "d0bedebbc489fa09"
+          },
+          "Version": "4.3.3",
+          "Relationship": "direct",
+          "Locations": [
+            {
+              "StartLine": 144,
+              "EndLine": 144
+            }
+          ],
+          "AnalyzedBy": "bun"
+        },
+        {
+          "ID": "@next/env@16.2.12",
+          "Name": "@next/env",
+          "Identifier": {
+            "PURL": "pkg:npm/%40next/env@16.2.12",
+            "UID": "7874abd09522ac65"
+          },
+          "Version": "16.2.12",
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 82,
+              "EndLine": 82
+            }
+          ],
+          "AnalyzedBy": "bun"
+        },
+        {
+          "ID": "@swc/helpers@0.5.15",
+          "Name": "@swc/helpers",
+          "Identifier": {
+            "PURL": "pkg:npm/%40swc/helpers@0.5.15",
+            "UID": "c3b66fdfef2a5c48"
+          },
+          "Version": "0.5.15",
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "tslib@2.8.1"
+          ],
+          "Locations": [
+            {
+              "StartLine": 100,
+              "EndLine": 100
+            }
+          ],
+          "AnalyzedBy": "bun"
+        },
+        {
+          "ID": "baseline-browser-mapping@2.10.43",
+          "Name": "baseline-browser-mapping",
+          "Identifier": {
+            "PURL": "pkg:npm/baseline-browser-mapping@2.10.43",
+            "UID": "1ccb1003a6bd0534"
+          },
+          "Version": "2.10.43",
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 106,
+              "EndLine": 106
+            }
+          ],
+          "AnalyzedBy": "bun"
+        },
+        {
+          "ID": "caniuse-lite@1.0.30001806",
+          "Name": "caniuse-lite",
+          "Identifier": {
+            "PURL": "pkg:npm/caniuse-lite@1.0.30001806",
+            "UID": "bea53cdd6456431a"
+          },
+          "Version": "1.0.30001806",
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 108,
+              "EndLine": 108
+            }
+          ],
+          "AnalyzedBy": "bun"
+        },
+        {
+          "ID": "client-only@0.0.1",
+          "Name": "client-only",
+          "Identifier": {
+            "PURL": "pkg:npm/client-only@0.0.1",
+            "UID": "80206fd4ddc1547d"
+          },
+          "Version": "0.0.1",
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 110,
+              "EndLine": 110
+            }
+          ],
+          "AnalyzedBy": "bun"
+        },
+        {
+          "ID": "nanoid@3.3.17",
+          "Name": "nanoid",
+          "Identifier": {
+            "PURL": "pkg:npm/nanoid@3.3.17",
+            "UID": "16578ad288afa927"
+          },
+          "Version": "3.3.17",
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 118,
+              "EndLine": 118
+            }
+          ],
+          "AnalyzedBy": "bun"
+        },
+        {
+          "ID": "picocolors@1.1.1",
+          "Name": "picocolors",
+          "Identifier": {
+            "PURL": "pkg:npm/picocolors@1.1.1",
+            "UID": "bed6e676e755e77a"
+          },
+          "Version": "1.1.1",
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 122,
+              "EndLine": 122
+            }
+          ],
+          "AnalyzedBy": "bun"
+        },
+        {
+          "ID": "postcss@8.5.26",
+          "Name": "postcss",
+          "Identifier": {
+            "PURL": "pkg:npm/postcss@8.5.26",
+            "UID": "aecb8d5faaa38389"
+          },
+          "Version": "8.5.26",
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "nanoid@3.3.17",
+            "picocolors@1.1.1",
+            "source-map-js@1.2.1"
+          ],
+          "Locations": [
+            {
+              "StartLine": 124,
+              "EndLine": 124
+            }
+          ],
+          "AnalyzedBy": "bun"
+        },
+        {
+          "ID": "scheduler@0.27.0",
+          "Name": "scheduler",
+          "Identifier": {
+            "PURL": "pkg:npm/scheduler@0.27.0",
+            "UID": "132a830b73ddb00f"
+          },
+          "Version": "0.27.0",
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 132,
+              "EndLine": 132
+            }
+          ],
+          "AnalyzedBy": "bun"
+        },
+        {
+          "ID": "source-map-js@1.2.1",
+          "Name": "source-map-js",
+          "Identifier": {
+            "PURL": "pkg:npm/source-map-js@1.2.1",
+            "UID": "f64c7c6245040557"
+          },
+          "Version": "1.2.1",
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 140,
+              "EndLine": 140
+            }
+          ],
+          "AnalyzedBy": "bun"
+        },
+        {
+          "ID": "styled-jsx@5.1.6",
+          "Name": "styled-jsx",
+          "Identifier": {
+            "PURL": "pkg:npm/styled-jsx@5.1.6",
+            "UID": "6281f884f14734b0"
+          },
+          "Version": "5.1.6",
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "client-only@0.0.1"
+          ],
+          "Locations": [
+            {
+              "StartLine": 142,
+              "EndLine": 142
+            }
+          ],
+          "AnalyzedBy": "bun"
+        },
+        {
+          "ID": "tslib@2.8.1",
+          "Name": "tslib",
+          "Identifier": {
+            "PURL": "pkg:npm/tslib@2.8.1",
+            "UID": "691e5904438d1cc2"
+          },
+          "Version": "2.8.1",
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 146,
+              "EndLine": 146
+            }
+          ],
+          "AnalyzedBy": "bun"
+        }
+      ],
+      "Vulnerabilities": [
+        {
+          "VulnerabilityID": "CVE-2026-67213",
+          "VendorIDs": [
+            "GHSA-2v37-7h3g-55p8"
+          ],
+          "PkgID": "nanoid@3.3.17",
+          "PkgName": "nanoid",
+          "PkgIdentifier": {
+            "PURL": "pkg:npm/nanoid@3.3.17",
+            "UID": "16578ad288afa927"
+          },
+          "InstalledVersion": "3.3.17",
+          "FixedVersion": "3.3.18, 5.1.6",
+          "Status": "fixed",
+          "SeveritySource": "ghsa",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-67213",
+          "DataSource": {
+            "ID": "ghsa",
+            "Name": "GitHub Security Advisory npm",
+            "URL": "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Anpm"
+          },
+          "Fingerprint": "sha256:f4d8ce4ea7cc8b9b5313b86e4d4c7bf7fd159dfd5c3a6526c19c81b841124a98",
+          "Title": "nanoid: nanoid: Denial of Service via infinite loop in random ID generation",
+          "Description": "nanoid (Nano ID) before 5.1.6 contains an infinite loop in the customAlphabet and customRandom functions. When these functions are configured with a size of 0, the internal generation loop never satisfies its exit condition and spins indefinitely, hanging the calling thread. An application that passes an unvalidated, attacker-controlled size of 0 to these functions is exposed to a denial-of-service condition.",
+          "Severity": "HIGH",
+          "CweIDs": [
+            "CWE-835"
+          ],
+          "VendorSeverity": {
+            "ghsa": 3,
+            "redhat": 3
+          },
+          "CVSS": {
+            "ghsa": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "V40Vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+              "V3Score": 5.9,
+              "V40Score": 8.2
+            },
+            "redhat": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "V3Score": 7.5
+            }
+          },
+          "References": [
+            "https://access.redhat.com/security/cve/CVE-2026-67213",
+            "https://github.com/ai/nanoid",
+            "https://github.com/ai/nanoid/commit/cb3626d0f3342fdf179cd425fd9c4fbb92c7d0e7",
+            "https://github.com/ai/nanoid/commit/e10f8d40ce9d1ab47f66d65a16b48086432730d0",
+            "https://github.com/ai/nanoid/commit/f9d13f150847d117877adee3460a46eceb0cf49b",
+            "https://github.com/ai/nanoid/releases/tag/3.3.17",
+            "https://github.com/ai/nanoid/releases/tag/3.3.18",
+            "https://github.com/ai/nanoid/releases/tag/5.1.6",
+            "https://nvd.nist.gov/vuln/detail/CVE-2026-67213",
+            "https://www.cve.org/CVERecord?id=CVE-2026-67213",
+            "https://www.vulncheck.com/advisories/nanoid-before-infinite-loop-via-zero-size-in-customalphabet-and-customrandom"
+          ],
+          "PublishedDate": "2026-07-29T14:16:34.89Z",
+          "LastModifiedDate": "2026-08-10T16:19:48.757Z"
+        }
+      ]
+    },
+    {
+      "Target": "services/doc-processing/requirements.txt",
+      "Class": "lang-pkgs",
+      "Type": "pip",
+      "Packages": [
+        {
+          "Name": "Pillow",
+          "Identifier": {
+            "PURL": "pkg:pypi/pillow@12.3.0",
+            "UID": "3fa6bc03a00e94ab"
+          },
+          "Version": "12.3.0",
+          "Locations": [
+            {
+              "StartLine": 18,
+              "EndLine": 18
+            }
+          ],
+          "AnalyzedBy": "pip"
+        },
+        {
+          "Name": "PyMuPDF",
+          "Identifier": {
+            "PURL": "pkg:pypi/pymupdf@1.20.2",
+            "UID": "929d9d447cb101fa"
+          },
+          "Version": "1.20.2",
+          "Locations": [
+            {
+              "StartLine": 10,
+              "EndLine": 10
+            }
+          ],
+          "AnalyzedBy": "pip"
+        },
+        {
+          "Name": "docling",
+          "Identifier": {
+            "PURL": "pkg:pypi/docling@2.94.0",
+            "UID": "ad62b61763e7d014"
+          },
+          "Version": "2.94.0",
+          "Locations": [
+            {
+              "StartLine": 11,
+              "EndLine": 11
+            }
+          ],
+          "AnalyzedBy": "pip"
+        },
+        {
+          "Name": "fastapi",
+          "Identifier": {
+            "PURL": "pkg:pypi/fastapi@0.110.0",
+            "UID": "a75979659f652ede"
+          },
+          "Version": "0.110.0",
+          "Locations": [
+            {
+              "StartLine": 1,
+              "EndLine": 1
+            }
+          ],
+          "AnalyzedBy": "pip"
+        },
+        {
+          "Name": "numpy",
+          "Identifier": {
+            "PURL": "pkg:pypi/numpy@1.26.4",
+            "UID": "8f8eab3771ce3ace"
+          },
+          "Version": "1.26.4",
+          "Locations": [
+            {
+              "StartLine": 13,
+              "EndLine": 13
+            }
+          ],
+          "AnalyzedBy": "pip"
+        },
+        {
+          "Name": "paddleocr",
+          "Identifier": {
+            "PURL": "pkg:pypi/paddleocr@2.7.0.2",
+            "UID": "fafccad4730fa105"
+          },
+          "Version": "2.7.0.2",
+          "Locations": [
+            {
+              "StartLine": 4,
+              "EndLine": 4
+            }
+          ],
+          "AnalyzedBy": "pip"
+        },
+        {
+          "Name": "paddlepaddle",
+          "Identifier": {
+            "PURL": "pkg:pypi/paddlepaddle@2.6.2",
+            "UID": "d97d07b91da59d69"
+          },
+          "Version": "2.6.2",
+          "Locations": [
+            {
+              "StartLine": 3,
+              "EndLine": 3
+            }
+          ],
+          "AnalyzedBy": "pip"
+        },
+        {
+          "Name": "uvicorn",
+          "Identifier": {
+            "PURL": "pkg:pypi/uvicorn@0.27.0",
+            "UID": "9acf11b6eebc13ff"
+          },
+          "Version": "0.27.0",
+          "Locations": [
+            {
+              "StartLine": 2,
+              "EndLine": 2
+            }
+          ],
+          "AnalyzedBy": "pip"
+        },
+        {
+          "Name": "whisper-cpp-python",
+          "Identifier": {
+            "PURL": "pkg:pypi/whisper-cpp-python@0.2.0",
+            "UID": "6a0e559d92a25297"
+          },
+          "Version": "0.2.0",
+          "Locations": [
+            {
+              "StartLine": 12,
+              "EndLine": 12
+            }
+          ],
+          "AnalyzedBy": "pip"
+        }
+      ]
+    }
+  ]
+}
