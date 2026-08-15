@@ -1,0 +1,214 @@
+=== tests/test_build_lock_contended_requeue.py ===
+{"ok": true, "db": "/tmp/tmpruimt3ui/scratch.sqlite"}
+PASS: test_requeue_cli_resets_same_row_no_duplicate
+{"ok": true, "db": "/tmp/tmppphwnyrr/scratch.sqlite"}
+PASS: test_requeue_then_real_dispatcher_picks_it_up_bounded_no_duplicates -> real dispatch_one() picked the row up in 0.018s, started_units=['veridian-worker@build-lock-test-task-2.service'], final row_count=1
+
+2/2 tests passed
+exit=0
+=== tests/test_credit_accountant_report_approval.py ===
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.6.0 -- /usr/bin/python3
+cachedir: .pytest_cache
+rootdir: /opt/veridian/ai-os/tasks/task-20260815-134246-unstarve-dispatch-queue--07-18-retry-res/workspace/veridian-scripts-clone
+plugins: anyio-4.12.1
+collecting ... collected 3 items
+
+tests/test_credit_accountant_report_approval.py::test_report_approved_for_a_legitimately_proposed_task PASSED [ 33%]
+tests/test_credit_accountant_report_approval.py::test_report_rejected_for_a_task_never_proposed PASSED [ 66%]
+tests/test_credit_accountant_report_approval.py::test_report_rejected_when_prior_propose_was_denied PASSED [100%]
+
+============================== 3 passed in 0.12s ===============================
+exit=0
+=== tests/test_directive_engine_retry_gate.py ===
+[test-first-failure-task]: submitted, umr_id=UMR-20260815-135506-5eb4
+PASS: test_first_terminal_failure_is_allowed_to_retry_and_marks_state
+[test-exhausted-retry-task]: queued for Owner review: ended killed after a real resubmission retry also ended kill
+PASS: test_second_terminal_failure_after_resubmission_is_held_not_reretried
+[test-reason-overwritten-task]: queued for Owner review: ended rejected_duplicate after a real resubmission retry als
+PASS: test_retry_marker_survives_reason_being_overwritten_by_dispatch_one
+[test-reload-exhausted-task]: queued for Owner review: ended failed after a real resubmission retry also ended fail
+PASS: test_exhausted_retry_reprocessed_across_a_fresh_module_reload_still_holds
+[test-idempotent-task]: queued for Owner review: first real reason
+PASS: test_note_needs_review_is_idempotent
+[test-corrupt-state-task]: submitted, umr_id=UMR-20260815-135506-6f17
+PASS: test_retry_state_file_is_corruption_tolerant
+PASS: test_completed_and_active_statuses_unaffected
+
+7/7 passed
+exit=0
+=== tests/test_dispatch_decision_journal_logging.py ===
+exit=0
+=== tests/test_dispatch_tick_stale_swap_override.py ===
+PASS: test_delegates_to_dispatch_core_and_returns_override_verdict_true
+PASS: test_delegates_to_dispatch_core_and_returns_override_verdict_true
+PASS: test_delegates_to_dispatch_core_and_returns_override_verdict_false
+PASS: test_delegates_to_dispatch_core_and_returns_override_verdict_false
+PASS: test_passes_cap_through_to_has_free_slot_detail
+PASS: test_passes_cap_through_to_has_free_slot_detail
+PASS: test_real_override_reopens_dispatch_when_swap_quiet_and_memory_healthy
+PASS: test_real_override_reopens_dispatch_when_swap_quiet_and_memory_healthy
+PASS: test_real_override_still_blocks_when_swap_actually_active
+PASS: test_real_override_still_blocks_when_swap_actually_active
+PASS: test_real_override_never_touches_non_swap_backoff_gates
+PASS: test_real_override_never_touches_non_swap_backoff_gates
+
+6/6 passed
+exit=0
+=== tests/test_external_agent_dispatch.py ===
+PASS: test_eligibility_valid_isolated_bugfix
+PASS: test_eligibility_valid_doc_update_up_to_three_md_files
+PASS: test_eligibility_bad_task_type_rejected
+PASS: test_eligibility_single_file_refactor_rejects_two_files
+PASS: test_eligibility_doc_update_rejects_fourth_file
+PASS: test_eligibility_doc_update_rejects_non_markdown_file
+PASS: test_eligibility_zero_files_rejected
+PASS: test_eligibility_forbidden_path_patterns
+PASS: test_eligibility_rejects_absolute_and_traversal_paths
+PASS: test_get_next_raises_on_unsafe_files_touched_invariant_violation
+PASS: test_eligibility_empty_acceptance_criteria_rejected
+PASS: test_eligibility_isolated_bugfix_requires_repro_steps
+PASS: test_eligibility_requires_multi_file_context_rejected
+PASS: test_eligibility_blast_radius_must_be_isolated
+PASS: test_eligibility_two_most_critical_tiers_excluded
+PASS: test_eligibility_multiple_reasons_all_reported
+PASS: test_mark_external_agent_eligible_round_trip
+PASS: test_mark_external_agent_eligible_refuses_ineligible_row
+PASS: test_prompt_render_parse_round_trip
+PASS: test_parse_reply_rejects_missing_dispatch_id_line
+PASS: test_parse_reply_rejects_two_diff_blocks
+PASS: test_parse_reply_rejects_prose_outside_diff_block
+PASS: test_parse_reply_rejects_wrong_fence_tag
+PASS: test_parse_reply_rejects_no_diff_block_at_all
+PASS: test_extract_diff_paths_rejects_traversal_and_absolute
+PASS: test_get_next_selects_only_eligible_available_rows
+PASS: test_get_next_respects_tier_ordering
+PASS: test_two_strike_first_failure_requeues_second_falls_back
+PASS: test_reject_for_out_of_scope_diff_path
+PASS: test_expiry_is_a_real_two_strike_event_and_is_idempotent
+PASS: test_diff_applies_only_to_fresh_worktree_never_main
+PASS: test_diff_that_fails_to_apply_is_rejected_and_never_touches_main
+
+32/32 tests passed
+exit=0
+=== tests/test_load1_backoff_cpu_idle_override.py ===
+PASS: test_read_loadavg_runnable_parses_real_shape
+PASS: test_overrides_real_spec_evidence_shape
+PASS: test_does_not_override_when_real_cpu_utilization_is_high
+PASS: test_does_not_override_when_metrics_cpu_missing
+PASS: test_does_not_override_when_runnable_queue_exceeds_cpu_count
+PASS: test_never_overrides_load1_unreadable
+PASS: test_never_overrides_other_real_gates
+PASS: test_passthrough_when_slot_already_ok
+PASS: test_never_overrides_when_proc_loadavg_unreadable
+PASS: test_dispatch_one_end_to_end_proceeds_when_cpu_idle_but_load1_inflated
+PASS: test_dispatch_one_end_to_end_still_defers_when_cpu_actually_saturated
+PASS: test_dispatch_one_end_to_end_still_defers_when_runnable_queue_contended
+
+12/12 passed
+exit=0
+=== tests/test_ocid_artifact_links.py ===
+PASS: test_call_site_1_resource_governor_submit -> {'id': 1, 'ocid_number': 'OCID-999', 'umr_id': 'UMR-20260815-135516-d1c7', 'repo': 'compliance-tracker', 'pr_number': None, 'commit_sha': None, 'file_path': None, 'link_kind': 'registration', 'created_at': '2026-08-15T13:55:16.190038+00:00'}
+PASS: test_call_site_2_supervisor_merge_wiring -> {'id': 1, 'ocid_number': 'OCID-042', 'umr_id': 'UMR-20260815-135517-5ea9', 'repo': 'compliance-tracker', 'pr_number': 12345, 'commit_sha': 'abc123def456', 'file_path': None, 'link_kind': 'merge', 'created_at': '2026-08-15T13:55:17.283149+00:00'}
+PASS: test_insert_is_idempotent_on_repeat_call -> id=1
+PASS: test_submit_gracefully_handles_broken_db_path -> superboss_register_unavailable (submit): Superboss Register DB path verification FAILED at check 'contains umr_tasks table' (real SQLite file, wrong/incomplete database): path_checked='/tmp/tmpuvyf__2o/wrong-schema.sqlite' size_found=8192
+PASS: test_dispatch_one_gracefully_handles_broken_db_path -> superboss_unavailable
+PASS: test_scan_stuck_tasks_gracefully_handles_broken_db_path -> []
+
+6/6 tests passed
+exit=0
+=== tests/test_ocid_evidence_supersession.py ===
+PASS: test_reproduces_the_real_incident_queued_task_superseded_by_newer_evidence -> superseded: OCID-068 (extracted from this task's own title 'OCID-068 guardrails addendum real status') already has real,...
+PASS: test_queued_task_with_ocid_but_no_newer_evidence_still_spawns_normally -> action=dispatched
+PASS: test_older_evidence_before_submission_does_not_supersede -> action=dispatched
+PASS: test_no_ocid_in_title_never_matches -> action=dispatched
+PASS: test_systemctl_action_rows_never_checked -> action=dispatched
+
+5/5 tests passed
+exit=0
+=== tests/test_rule2_dispatch_outcomes.py ===
+PASS: test_idle_and_would_dispatch_are_not_real_dispatch_attempts
+PASS: test_dispatched_running_is_success_with_no_failure_fields
+PASS: test_dispatched_failed_is_failed_with_all_four_required_fields -> DISPATCH-FAILED-UMR-TEST-2
+PASS: test_every_blocked_action_maps_correctly_with_required_fields
+PASS: test_rejected_duplicate_pr_maps_to_rejected
+PASS: test_unrecognized_action_never_silently_empty -> DISPATCH-UNCLASSIFIED-ACTION-some_future_action_not_yet_mapped
+PASS: test_dispatch_one_end_to_end_idle_queue_carries_none_outcome -> action=idle, outcome=None
+PASS: test_dispatch_one_end_to_end_real_submitted_task_carries_full_classification -> action=deferred, outcome=blocked
+
+8/8 tests passed
+exit=0
+=== tests/test_run_tick_continues_past_row_resolved_skip.py ===
+PASS: test_has_free_slot_detail_reports_cap_exhausted_when_slots_full
+PASS: test_has_free_slot_detail_reports_real_resource_veto_when_slots_are_free
+PASS: test_has_free_slot_bool_wrapper_unchanged_contract
+PASS: test_run_tick_continues_after_duplicate_pr_skip
+FAIL: test_run_tick_still_stops_on_row_independent_block: ['dispatched', 'dispatched', 'dispatched', 'idle']
+
+4/5 passed
+exit=1
+=== tests/test_stale_swap_ratchet_override.py ===
+PASS: test_read_swap_page_counters_parses_real_vmstat_shape
+PASS: test_swap_activity_cold_start_never_quiet
+PASS: test_swap_activity_interval_too_short_never_quiet
+PASS: test_swap_activity_zero_delta_over_real_window_is_quiet
+PASS: test_swap_activity_real_pswpout_growth_is_sustained_not_quiet
+PASS: test_real_mem_headroom_bytes_matches_backoff_math
+PASS: test_real_mem_headroom_bytes_none_when_memtotal_unreadable
+PASS: test_overrides_real_spec_evidence_shape
+PASS: test_does_not_override_when_swap_out_is_actively_sustained
+PASS: test_does_not_override_when_real_memory_headroom_is_low
+PASS: test_never_overrides_swap_hard_ceiling
+PASS: test_never_overrides_other_real_gates
+PASS: test_passthrough_when_slot_already_ok
+PASS: test_dispatch_one_end_to_end_overrides_and_dispatches_real_spec_shape
+PASS: test_dispatch_one_end_to_end_still_defers_when_swap_actually_active
+
+15/15 passed
+exit=0
+=== tests/test_stop_work_order_gate.py ===
+PASS: test_veridian_task_create_blocked_when_order_open_no_exemption
+PASS: test_systemctl_action_not_blocked
+PASS: test_uncommitted_exemption_entry_still_blocks
+PASS: test_committed_matching_exemption_allows
+PASS: test_committed_exemption_wrong_scope_still_blocks
+PASS: test_committed_lifted_entry_allows_everything
+PASS: test_committed_lifted_entry_is_scoped_per_order_id
+PASS: test_git_committed_file_text_requires_real_trunk_ref_when_configured
+PASS: test_committed_exemption_wrong_status_still_blocks
+FAIL: test_dispatch_one_defense_in_depth_blocks_preexisting_queued_row: {'action': 'deferred', 'detail': "no free dispatch slot -- real gate: {'check': 'cap_exhausted', 'running_worker_count': 5, 'cap': 5}", 'slot_detail': {'check': 'cap_exhausted', 'running_worker_count': 5, 'cap': 5}, 'umr_id': 'UMR-20260815-135535-ded1', 'metrics': {'cpu': 29.279628195197528, 'ram': 51.86185049086161, 'disk_io': 0.0006151691768127174, 'network': 1.5996125387491508e-05, 'raw': {'disk_io_prev_ticks_ms': 85856946, 'disk_io_curr_ticks_ms': 85857963, 'disk_io_ticks_delta_ms': 1017, 'disk_io_dt_seconds': 165320.376627}}, 'outcome': 'blocked', 'error_id': 'DISPATCH-BLOCKED-DEFERRED', 'root_cause': "no free dispatch slot -- real gate: {'check': 'cap_exhausted', 'running_worker_count': 5, 'cap': 5}", 'evidence': '{"action": "deferred", "detail": "no free dispatch slot -- real gate: {\'check\': \'cap_exhausted\', \'running_worker_count\': 5, \'cap\': 5}", "slot_detail": {"check": "cap_exhausted", "running_worker_count": 5, "cap": 5}, "umr_id": "UMR-20260815-135535-ded1"}', 'next_action': 're-run dispatch_one() on the next tick; this is a real, expected transient block (metric threshold, concurrency cap, EMERGENCY_STOP, or Superboss Register unavailability), not a task-specific failure'}
+PASS: test_git_committed_file_text_ignores_working_tree_only_edit
+
+10/11 passed
+exit=1
+=== tests/test_target_pr_dispatch_time_recheck.py ===
+PASS: test_no_pr_number_in_title_never_blocks
+PASS: test_merged_target_pr_blocks_with_real_evidence
+PASS: test_closed_unmerged_target_pr_with_no_known_successor_does_not_block
+PASS: test_closed_pr_with_real_merged_successor_still_blocks
+PASS: test_closed_pr_superseded_claim_citing_unmerged_pr_does_not_block
+PASS: test_closed_pr_with_unrelated_mid_sentence_superseded_mention_does_not_block
+PASS: test_open_dirty_target_pr_never_blocks
+PASS: test_gh_timeout_fails_open
+PASS: test_gh_error_fails_open_not_found_in_hint_repo
+PASS: test_dispatch_one_end_to_end_rejects_row_whose_target_pr_already_merged
+PASS: test_dispatch_one_end_to_end_dirty_open_pr_is_not_rejected_by_this_guard
+PASS: test_dispatch_one_end_to_end_closed_unmerged_pr_is_not_rejected_by_this_guard
+PASS: test_dispatch_one_end_to_end_closed_pr_with_merged_successor_still_rejects
+PASS: test_bare_pr_number_no_repo_no_hint_fails_open_without_any_gh_call
+PASS: test_bare_pr_number_with_hint_repo_checks_only_the_hinted_repo_not_a_collision
+PASS: test_repo_qualified_hash_form_merged_blocks_ignoring_collision
+PASS: test_repo_qualified_title_convention_merged_blocks_overriding_wrong_hint_repo
+PASS: test_word_before_pr_that_is_not_a_known_repo_is_not_treated_as_repo_qualified
+PASS: test_default_gh_pr_check_repos_includes_veridian_scripts_and_claude_control
+
+19/19 passed
+exit=0
+=== tests/test_task_start_gate.py ===
+exit=0
+=== tests/test_veridian_task_create_stderr_and_reason.py ===
+PASS: test_perform_spawn_captures_stdout_when_stderr_is_empty
+PASS: test_perform_spawn_bounds_captured_tails
+PASS: test_dispatch_one_end_to_end_failed_task_create_gets_real_reason_and_stderr
+ALL 3 PASSED
+exit=0
