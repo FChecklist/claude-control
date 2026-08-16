@@ -50,9 +50,14 @@ commit is real, has two real parents, and is visible in the PR's own commit hist
       diff was the branch's own progress/audit-log `.md` (no code delta). Closed with a
       comment citing PR #223 / `d4ab44b`, not merged (redundant diff).
 
-## Remaining
+- [x] 158 — **superseded-and-closed**. RCA content (root `RCA.md`, for
+      `UMR-20260813-085817-41b9`) duplicates work already independently landed on `master`
+      twice: `RCA_20260813_UMR-20260813-085817-41b9.md` (PR #177, `cdd18e4`) and its
+      `_second_pass.md` (PR #183, `d7e3a30`), both reaching the same "status=killed is
+      correct" conclusion. Only conflict was the shared scratch `RCA.md` filename. Closed
+      with a comment citing PR #177/#183, not merged (redundant diff).
 
-- [ ] 158 — merge master, resolve conflicts, push, audit, merge/block/close
+## Remaining
 - [ ] 158 — merge master, resolve conflicts, push, audit, merge/block/close
 - [ ] 153 — merge master, resolve conflicts, push, audit, merge/block/close
 - [ ] 150 — merge master, resolve conflicts, push, audit, merge/block/close
