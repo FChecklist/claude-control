@@ -74,9 +74,14 @@ commit is real, has two real parents, and is visible in the PR's own commit hist
       complete-326b--land-real-repo-local-path.md` (PR #217, `7b36261`). Only conflict was
       shared scratch `STATUS_REPORT.md`. Closed with a comment citing PR #217, not merged
       (redundant diff).
+- [x] 142 — **superseded-and-closed**. Docs-only `STATUS_REPORT.md` finding
+      `UMR-20260813-092654-326b` already covered by `veridian-scripts` PR #141. Explicitly
+      re-confirmed inside the same later 4th RCA that also superseded #153:
+      `RCA_20260813_UMR-20260813-092654-326b_p4_live_deploy_drift.md` (PR #178, `0801a96`).
+      Only conflict was shared scratch `STATUS_REPORT.md`. Closed with a comment citing
+      PR #178, not merged (redundant diff).
 
 ## Remaining
-- [ ] 142 — merge master, resolve conflicts, push, audit, merge/block/close
 - [ ] 114 — merge master, resolve conflicts, push, audit, merge/block/close
 - [ ] 111 — merge master, resolve conflicts, push, audit, merge/block/close
 - [ ] 72 — merge master, resolve conflicts, push, audit, merge/block/close
