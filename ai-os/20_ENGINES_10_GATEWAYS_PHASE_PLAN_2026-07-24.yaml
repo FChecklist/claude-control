@@ -33,6 +33,63 @@ meta:
     scripts/knowledge_registry_multisource.py''s own 6h cron and generate_software_catalog.py''s daily cron
     for precedent). No phase in this plan needs a fresh chat confirmation beyond citing that standing
     approval.'
+  reverification_log:
+    # No pre-existing changelog/versioning convention was found in this file or its close family
+    # (AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml, KNOWLEDGE_ENGINE_INVENTORY_2026-07-23.yaml) before this
+    # entry -- this is a minimal, additive log in this file's own existing prose-block style, not a new
+    # invented mechanism.
+    - produced_by_task: task-20260726-094625-re-verify-20-engine-inventory---confirm
+      date: '2026-07-26'
+      what_changed: 'Re-ran ai-os-scripts/generate_engines_gateways_inventory.py against live disk (2 days
+        stale as of this pass) -- 18/20 engine_inventory rows unchanged (re-verified true, zero drift).
+        Engine 5 (Policy) and Engine 8 (Workflow) exists_as/gap_description updated: Engine 8 gained 2 real,
+        live exists_as paths (scripts/veridian-task.py, scripts/supervisor-entrypoint.sh); Engine 5''s new
+        candidate files (scripts/ddl_authorization_check.py, ai-os/OWNER_DIRECTIVES/interactive-session-
+        guard.bashrc-snippet) were deliberately NOT added to exists_as (real code, but not yet live-verifiable
+        -- both still in open, unmerged PRs #79/#80 as of this pass) and documented in gap_description
+        instead, so as not to falsely flip verified_on_disk to false for the row''s other, still-genuinely-live
+        paths. No 21st engine added -- every new file this session touched was matched to one of the 20
+        existing roles. One genuine duplication risk found and reported, not fixed, per this task''s own
+        CONSTRAINTS: preflight-guard.py and (open PR #82) task-gateway.py''s cmd_start both independently
+        call credit-accountant.py propose for the same task_id -- see Engine 8''s gap_description.
+        gateway_inventory (all 10 rows) re-verified unchanged, zero drift.'
+    - produced_by_task: task-20260727-034439-re-verify-20-engine-inventory---confirm
+      date: '2026-07-27'
+      what_changed: 'Re-ran ai-os-scripts/generate_engines_gateways_inventory.py against live disk again (1
+        day stale as of this pass, and PR #83 -- worker/task-20260726-094625-re-verify-20-engine-inventory---
+        confirm, this same file''s own prior reverification PR -- was still OPEN/unmerged, so this pass
+        continues that same branch rather than opening a competing duplicate PR, per
+        ai-os/boss/ACTIVE-CLAIMS.yaml''s no-duplicate-work protocol). 18/20 rows unchanged (re-verified true,
+        zero drift). Engine 5 (Policy): scripts/ddl_authorization_check.py (PR #79, MERGED
+        2026-07-26T11:59:10Z) and scripts/credit-accountant.py (pre-existing, live since 2026-07-23, never
+        previously listed under any engine) added to exists_as for real -- both live-verified on disk.
+        ai-os/OWNER_DIRECTIVES/interactive-session-guard.bashrc-snippet (PR #80, also now MERGED
+        2026-07-26T17:18:34Z) remains deliberately NOT in exists_as: its real deployed artifact lives at
+        ~/.claude-interactive-session-guard.bashrc-snippet (a home-directory bashrc hook by design, outside
+        this script''s VERIDIAN_ROOT-relative verification scope), confirmed still live via a direct grep of
+        ~/.bashrc. Engine 8 (Workflow): exists_as unchanged from the prior pass (scripts/veridian-task.py,
+        scripts/supervisor-entrypoint.sh already added and re-confirmed live); gap_description corrected --
+        PR #79/#80/#82 are now all MERGED and PR #81 remains CLOSED/superseded by e6c7049+PR #84 (all 4 of
+        this session''s KNOWN_CONTEXT PRs are now resolved). No 21st engine added -- every new file this
+        session touched was matched to one of the 20 existing roles (Policy Engine for
+        ddl_authorization_check.py/credit-accountant.py/the interactive-session guard; Workflow Engine for
+        veridian-task.py/supervisor-entrypoint.sh and the task-gateway.py<->credit-accountant.py wiring fix).
+        The credit-accountant.py propose duplication risk (preflight-guard.py''s check_credit_accountant_
+        approval vs. task-gateway.py cmd_start, both PR #82 content now confirmed live in master) was
+        re-confirmed still real and unreconciled by direct source read (not fixed, per this task''s own
+        CONSTRAINTS) -- refined this pass with the exact condition under which it fires: both call sites
+        collide only for metered/OpenRouter-billed (non---no-proxy) tasks; subscription-billed tasks only hit
+        task-gateway.py''s own call. No other genuine duplication found on a fresh grep sweep of the new
+        files'' call sites against the other 18 engines'' exists_as roles. AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml
+        (separately tracked, Engine 19/20) independently re-verified this same pass: all 9 phases (0-8)
+        confirmed status: done with real, MERGED PRs (#24/34/37/44/50/52/55/64, all confirmed ancestors of
+        origin/master via git merge-base --is-ancestor) except Phase 0 itself, whose own PR #12 is CLOSED/
+        unmerged -- Phase 0''s real content reached master instead via a direct recovery commit (6797aae,
+        "Session audit: recover Auditor Engine phase-0 files missing from master (PR #12 gap)"), confirmed
+        an ancestor of origin/master and confirmed present on disk (domains/phases blocks, tool-smoketest
+        evidence file, etc. all real). No regression since Phase 8 merged (2026-07-25) -- zero commits
+        touching this plan''s own core scripts since. gateway_inventory (all 10 rows) re-verified unchanged,
+        zero drift.'
 
 # ============================================================================
 # ENGINE INVENTORY -- verbatim output of
@@ -89,9 +146,11 @@ engine_inventory:
       - scripts/preflight-guard.py
       - ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml
       - repos/compliance-tracker/src/lib/policy-enforcement-engine.ts
+      - scripts/ddl_authorization_check.py
+      - scripts/credit-accountant.py
     verified_on_disk: true
     coverage: partial
-    gap_description: "preflight-guard.py gates server-side task dispatch (resource/crontab/scope checks); policy-enforcement-engine.ts is a deterministic pre-LLM-call gate (personal-use/prompt-injection/out-of-domain categories) in compliance-tracker. Both are real, enforced gates -- but two separate policy engines with no shared schema or single point of truth, and neither covers the other's domain (server ops vs in-app LLM calls)."
+    gap_description: "preflight-guard.py gates server-side task dispatch (resource/crontab/scope checks); policy-enforcement-engine.ts is a deterministic pre-LLM-call gate (personal-use/prompt-injection/out-of-domain categories) in compliance-tracker. Both are real, enforced gates -- but two separate policy engines with no shared schema or single point of truth, and neither covers the other's domain (server ops vs in-app LLM calls). Re-verified 2026-07-27 (supersedes the 2026-07-26 pass, which correctly withheld 2 paths pending merge): scripts/ddl_authorization_check.py (dispatch-time pre-flight gate blocking unauthorized DDL/DCL statements, 3 real audit rounds, PR #79) is now MERGED (2026-07-26T11:59:10Z) and confirmed live on disk -- added to exists_as above. The interactive-session write-gate (PR #80, also now MERGED 2026-07-26T17:18:34Z, git-tracked at ai-os/OWNER_DIRECTIVES/interactive-session-guard.bashrc-snippet) is real and merged too, but its actual DEPLOYED copy lives outside this script's VERIDIAN_ROOT-relative verification scope -- at ~/.claude-interactive-session-guard.bashrc-snippet (+ ~/.claude-interactive-session-guard.d), sourced from ~/.bashrc by design (a home-directory hook, not a repo-deployed file) -- confirmed still live via a direct grep of ~/.bashrc. Deliberately NOT added to exists_as: the git-tracked repo path does not itself exist under /opt/veridian, and adding it would falsely flip verified_on_disk to false for this row's other, genuinely live paths. Hardening continues: PR #98 ('Round 5: close native git/gh command-alias bypass of the interactive-session write gate') is open as of this pass. Also added this pass: scripts/credit-accountant.py -- a real, live, FAILS-CLOSED $1-increment approval gate on metered AI credit spend (predates this session, live since 2026-07-23) that was never previously listed under any engine despite being unmistakably Policy-Engine-shaped. It is also independently invoked from Engine 8's task-gateway.py cmd_start -- see that row's gap_description for the genuine, still-unreconciled call-site duplication this creates for metered (non---no-proxy) tasks, re-confirmed by direct source read this pass, not assumed from the prior claim. PR #89 (MERGED 2026-07-26T16:30:57Z, 'unify DDL gate onto policy schema, build real policy gate registry') shipped ai-os/POLICY_GATE_REGISTRY_2026-07-26.yaml -- real first progress on this row's own 'no shared schema/single point of truth' gap, registering preflight-guard.py/policy-enforcement-engine.ts/ddl_authorization_check.py/the interactive-session guard under one queryable registry. credit-accountant.py is NOT yet in that registry either -- a real remaining gap, not silently assumed covered."
   - engine_no: 6
     engine_name: "Rule Engine"
     purpose: "Evaluate named business rules against inputs/outputs deterministically."
@@ -117,9 +176,11 @@ engine_inventory:
     exists_as:
       - scripts/task-gateway.py
       - repos/compliance-tracker/src/lib/task-execution-engine.ts
+      - scripts/veridian-task.py
+      - scripts/supervisor-entrypoint.sh
     verified_on_disk: true
     coverage: partial
-    gap_description: "task-gateway.py's submit/start/log/close lifecycle is real, enforced process orchestration for server-side AI tasks. task-execution-engine.ts dispatches VCEL engine calculations through named chains. Neither is BPMN-modeled (confirmed zero bpmn-js/camunda dependency in any of the 3 repos' package.json, per AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml's own workflow-domain finding) -- VERIDIAN's 'workflows' today are status-enum transitions and task-gateway phases, not a modeled process definition a workflow engine would normally execute against."
+    gap_description: "task-gateway.py's submit/start/log/close lifecycle is real, enforced process orchestration for server-side AI tasks. task-execution-engine.ts dispatches VCEL engine calculations through named chains. Neither is BPMN-modeled (confirmed zero bpmn-js/camunda dependency in any of the 3 repos' package.json, per AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml's own workflow-domain finding) -- VERIDIAN's 'workflows' today are status-enum transitions and task-gateway phases, not a modeled process definition a workflow engine would normally execute against. Re-verified 2026-07-26: scripts/veridian-task.py (task create/checkpoint CLI) and scripts/supervisor-entrypoint.sh (the real review -> merge/hold decision process) are two more real, live pieces of this same lifecycle -- both deliberately excluded from git historically (same 'live-deployed but not git-tracked' class as scripts/credit-accountant.py) but genuinely present on the live filesystem today, so added above. This session found and fixed a real gap in this lifecycle: HOLD_FOR_OWNER_SIGNOFF was previously prose-only -- the PR563 incident auto-merged a task explicitly instructed 'must be held for Owner sign-off, do not merge under any circumstance' because nothing in supervisor-entrypoint.sh's pipeline read prompt-level prose, only risk-tier.py's tier plus the AI reviewer's verdict. The fix (a real hold_for_owner_signoff field threaded task-gateway.py's cmd_start -> veridian-task.py's cmd_create -> task.yaml -> supervisor-entrypoint.sh's merge-decision block, which now unconditionally skips auto-merge when set) shipped via commit e6c7049 -- PR #81, a stale redispatch of the same diff, was CLOSED without merging; e6c7049 was briefly, mistakenly deleted from master and recovered via PR #84 (MERGED). Also found and fixed (PR #82, MERGED 2026-07-26T11:02:41Z, via commits 615ee53/581e734): task-gateway.py's cmd_start never called credit-accountant.py propose, so worker-entrypoint.sh's later `report --increment 1` always failed with 'no matching approved plan' -- cmd_start now proposes right after veridian-task.py create succeeds; confirmed live in current master (CREDIT_ACCOUNTANT constant + the real propose subprocess call, both present at scripts/task-gateway.py's cmd_start). GENUINE DUPLICATION RISK found and NOT fixed (report-only per this task's own CONSTRAINTS): preflight-guard.py's check_credit_accountant_approval (invoked by worker-entrypoint.sh at a later pipeline stage) ALREADY calls `credit-accountant.py propose --task-id <task_id> ...` for the same task_id -- cmd_start's own call proposes for that same task_id earlier. Re-confirmed by direct source read 2026-07-27 that this is still unreconciled: preflight-guard.py's own gate structure only runs check_credit_accountant_approval for metered (non---no-proxy) tasks -- subscription-billed (--no-proxy) tasks skip it entirely and log_subscription_usage() instead -- so the overlap is real specifically for metered/OpenRouter-billed tasks (both call sites fire) and absent for subscription tasks (only cmd_start's call fires). Two independent, uncoordinated propose call sites for what credit-accountant.py's own docstring describes as a single per-task $1-increment gate is a real overlap neither PR's own scope reconciled; still needs its own follow-up task. Fresh PR-state re-check 2026-07-27 (task-20260727-034439-re-verify-20-engine-inventory---confirm, via `gh pr view --json state,mergedAt`): PR #79 (DDL gate, see Engine 5) MERGED 2026-07-26T11:59:10Z; PR #80 (interactive-session write-gate, see Engine 5) MERGED 2026-07-26T17:18:34Z (was still open as of the prior 2026-07-26 correction pass); PR #81 CLOSED/unmerged (superseded by e6c7049/PR #84, unchanged); PR #82 MERGED 2026-07-26T11:02:41Z (unchanged). All 4 PRs from this session's KNOWN_CONTEXT are now resolved (3 merged, 1 correctly superseded) -- only the credit-accountant.py duplication risk remains genuinely open."
   - engine_no: 9
     engine_name: "Automation Engine"
     purpose: "Execute a rule-triggered action without human intervention once conditions are met."
