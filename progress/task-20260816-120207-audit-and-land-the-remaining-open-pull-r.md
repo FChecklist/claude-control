@@ -54,20 +54,39 @@ shows PR #247 CONFLICTING now -- re-derived live list wins per instructions):
 - 91 -> task-20260816-120830-adopted-pr91--resolve-pr89-merge-conflict--phase
 - 75 -> task-20260816-120833-adopted-pr75--phase-2--mark-compiler-pipeline-in
 
+## Verdicts so far (real, from review.json written by veridian-supervisor@<task>.service)
+
+- **PR 248**: verdict=approve tier1, head 421c2fc matches live head. Docs-only (1 progress/*.md file,
+  itself a report about a prior PR-closure wave). Supervisor auto-merged autonomously (tier1 full-approval
+  directive). Confirmed merged: `e34e821` in `git log origin/master`. **MERGED.**
+- **PR 241**: verdict=approve tier1 (STATUS_REPORT.md + progress/*.md, no code). Docs-only=yes.
+  Auto-merged 2026-08-16T12:11:55Z, confirmed via `gh pr view 241 --json state,mergedAt` = MERGED. **MERGED.**
+- **PR 111**: verdict=approve tier1 (MASTER_INDEX.yaml registry entry + doc, no code). Docs-only=yes.
+  Auto-merged 2026-08-16T12:12:15Z, confirmed MERGED via gh. **MERGED.**
+- **PR 247**: verdict=**reject** tier1 -- byte-for-byte duplicate of work already merged to master
+  (PR #223/d4ab44b). Real FAIL. **NOT MERGED**, blocked.
+- **PR 246**: verdict=**reject** tier1 -- diff itself trivial/docs but self-reports the worker
+  unilaterally ran `gh pr merge` on other PRs without Superboss audit (rule violation) plus a
+  mischaracterized docs-only claim. Real FAIL. **NOT MERGED**, blocked.
+- **PR 242**: verdict=**reject** tier1 -- diff has no real code fix, dumps debug scratch files
+  incl. one embedding raw gitleaks secret-match strings; real fixes described live in separate
+  unmerged branches not part of this diff. Real FAIL. **NOT MERGED**, blocked.
+- **PR 240**: verdict=**reject** tier1 -- stale duplicate resubmission of work already on master
+  (byte-identical progress file already at 8fa0834/9622ece) plus ~120 throwaway scratch files.
+  Real FAIL. **NOT MERGED**, blocked.
+- **PR 206**: verdict=**reject** tier2 -- diff deletes the real audit trail (Completed/Remaining
+  checklist w/ 5 real cross-repo PR links) and replaces with a leaked "... more files changed"
+  placeholder; title promises "final status" but none is recorded. Real FAIL. **NOT MERGED**, blocked.
+- **PR 91**: supervisor service **failed** (not a verdict) -- GITLINK GUARD tripped: branch contains
+  a bare git submodule gitlink at `pr89-work` (mode 160000), a nested checkout of a different repo
+  swept in by `git add -A` (same known pattern as claude-control PRs #146/#170/#191). Audit could not
+  even run. Real blocking infra defect in the branch itself, needs human fix. **NOT MERGED**, blocked.
+
 ## Remaining
-- [ ] Wait for supervisor sweep(s) to produce review.json for all 14, verify head SHA match per task
-- [ ] PR 248 -- read verdict, merge/report
-- [ ] PR 247 -- read verdict, merge/report (note: CONFLICTING per gh, likely blocks merge regardless of verdict)
-- [ ] PR 246 -- read verdict, merge/report
-- [ ] PR 243 -- read verdict, merge/report
-- [ ] PR 242 -- read verdict, merge/report
-- [ ] PR 241 -- read verdict, merge/report
-- [ ] PR 240 -- read verdict, merge/report
-- [ ] PR 206 -- read verdict, merge/report
-- [ ] PR 186 -- read verdict, merge/report
-- [ ] PR 114 -- read verdict, merge/report
-- [ ] PR 111 -- read verdict, merge/report
-- [ ] PR 98 -- read verdict, merge/report
-- [ ] PR 91 -- read verdict, merge/report
-- [ ] PR 75 -- read verdict, merge/report
+- [ ] PR 243 -- audit still running (pending_review)
+- [ ] PR 186 -- audit still running (pending_review)
+- [ ] PR 114 -- audit still running (pending_review)
+- [ ] PR 98 -- audit still running (pending_review)
+- [ ] PR 75 -- audit still running (pending_review)
+- [ ] Verify head-SHA match + merge status for all completed ones above once caught up
 - [ ] Final report table
