@@ -103,7 +103,53 @@ commit is real, has two real parents, and is visible in the PR's own commit hist
       was this exact rejected-vs-corrected pair. Closed with a comment citing PR #74, not
       merged (redundant/rejected diff).
 
+## Audit check for 114 / 111 (real, not self-certified)
+
+Both had a pre-existing `AUDIT: PASS` comment (posted 09:39-09:40Z) -- but both were posted
+**before** this dispatch's own merge commit existed (114's merge commit `8334889` landed
+09:50:38Z; 111's `8735ce5` landed 09:52:24Z) and cite no SHA at all, so neither can be a
+genuine PASS "citing that exact [new] SHA" per SPEC -- treated as stale/inapplicable, same
+as the sibling dispatch's PR #206 finding. Posted a real `@claude please audit` comment on
+each at the exact new head. Both triggers errored identically
+(`gh run view <id>`: "Claude result reported subtype success with is_error:true", "Action
+failed: Claude execution failed: result is_error:true") -- no verdict was ever posted for
+either new head SHA. This is the same structural GH Action audit-trigger failure the
+sibling dispatch already documented for PR #206 (`total_cost_usd:0, is_error:true`), not
+something a retry fixes. Per SPEC ("never self-certify"): **neither merged.** Both are
+real, clean (`mergeable=true`), conflict-resolved, pushed, and UNAUDITED-at-head --
+blocked pending a working audit trigger, not a code problem.
+
+## Completed (final)
+- [x] All 9 PRs in this dispatch's scope processed for real
+- [x] Confirmed neither 114 nor 111 has a genuine PASS at its current head; not merged
+- [x] Final report table (below)
+- [x] `record-completion` call
+
 ## Remaining
-- [ ] Poll 114/111 for real audit verdicts; merge on genuine PASS, else report blocked
-- [ ] Final report table
-- [ ] `record-completion` call
+(none for this dispatch's own scope -- 0/9 merged: 4 superseded-and-closed [234, 158, 153,
+150 -- correction, see table below for the real 5], 1 superseded-and-closed [72], 2 real
+conflicts resolved+pushed but blocked on a broken audit trigger [114, 111]. 114/111 need
+either a working `@claude please audit` GH Action, or a manually-posted independent PASS
+at their exact current heads, before a future dispatch can merge them.)
+
+## Final report table
+
+SPEC said "origin/main"; this repo's real base branch is `master` (see note at top).
+`origin/master` SHA cited below is `04b0e73b5ea5f133207ad0813562c77d935a9676` (current at
+report time; unchanged since PRs 114/111's merge commits were built on it).
+
+| PR | Outcome | Real mergedAt / real blocking reason | origin/master SHA used |
+|----|---------|----------------------------------------|--------------------------|
+| 234 | superseded-and-closed | Real fix (`scripts/resource_governor.py`, commit `dd76539`) byte-identical to already-merged PR #223 (`d4ab44b`, 2026-08-14T13:05:15Z). Closed, comment citing PR #223. | 04b0e73b |
+| 158 | superseded-and-closed | RCA content duplicates already-merged PR #177 (`cdd18e4`) + PR #183 (`d7e3a30`), same UMR, same conclusion. Closed, comment citing PR #177/#183. | 04b0e73b |
+| 153 | superseded-and-closed | RCA content explicitly named as "3rd real RCA" inside already-merged PR #178 (`0801a96`), same UMR, same conclusion. Closed, comment citing PR #178. | 04b0e73b |
+| 150 | superseded-and-closed | Docs-only status report; real implementation already shipped via PR #216 (`443d7a0`) + `395e4c3`. Closed, comment citing PR #216. | 04b0e73b |
+| 147 | superseded-and-closed | Docs-only re-verification of a fix already confirmed+merged via PR #217 (`7b36261`). Closed, comment citing PR #217. | 04b0e73b |
+| 142 | superseded-and-closed | Docs-only finding, re-confirmed inside the same already-merged PR #178 (`0801a96`) that superseded #153. Closed, comment citing PR #178. | 04b0e73b |
+| 114 | blocked | Real merge conflict resolved for real (combined branch's `rca_already_in_flight` dedup guard + master's `escalate()` governor-routing/repo-fix rewrite), pushed to new head `8334889` (parents `58f4975`+`04b0e73`), `mergeable=true`/clean. Pre-existing `AUDIT: PASS` predates this new head (stale, no SHA cited) -- not valid. Fresh `@claude please audit` trigger errored (`is_error:true`, no verdict posted) -- UNAUDITED-at-head, not merged (never self-certified). | 04b0e73b |
+| 111 | blocked | Real merge conflict resolved for real (`ai-os/MASTER_INDEX.yaml` concatenation, both sides' entries preserved), pushed to new head `8735ce5` (parents `549988b`+`04b0e73`), `mergeable=true`/clean. Pre-existing `AUDIT: PASS` predates this new head (stale, no SHA cited) -- not valid. Fresh `@claude please audit` trigger errored (`is_error:true`, no verdict posted) -- UNAUDITED-at-head, not merged (never self-certified). | 04b0e73b |
+| 72 | superseded-and-closed | Own amendment previously got a real `AUDIT:FAIL` (2 real defects); re-derived and replaced by already-merged PR #74 (`5d40d2d`, commit `1bd5b91`) which explicitly names and replaces PR #72. Closed, comment citing PR #74. | 04b0e73b |
+
+**0/9 merged** -- 7 superseded-and-closed (real redundant/rejected diffs, not merged per
+SPEC), 2 real-conflict-resolved-and-pushed but blocked on a broken audit trigger (never
+self-certified).
