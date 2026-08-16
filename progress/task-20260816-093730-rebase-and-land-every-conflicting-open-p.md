@@ -95,8 +95,15 @@ commit is real, has two real parents, and is visible in the PR's own commit hist
       `litert_spike` entry + all 9 of master's entries), no id collisions. New head
       `8735ce5` (parents `549988b` + `04b0e73`), now `mergeable=true`/`clean`. Posted
       `@claude please audit` -- not merged yet.
+- [x] 72 — **superseded-and-closed**. Own amendment previously got a real `AUDIT:FAIL`
+      (2 defects: misquoted Owner-decision entry + unreconciled mandatory-2nd-AI-pass
+      credit-governance conflict). Both fixed in a re-derivation already merged to
+      master: commit `1bd5b91`, PR #74 (`5d40d2d`) -- explicitly names and replaces this
+      PR. Every conflict hunk in `ai-os/VERIDIAN_ARCHITECTURE_V2_PHASE_PLAN_2026-07-25.yaml`
+      was this exact rejected-vs-corrected pair. Closed with a comment citing PR #74, not
+      merged (redundant/rejected diff).
 
 ## Remaining
-- [ ] 72 — merge master, resolve conflicts, push, audit, merge/block/close
+- [ ] Poll 114/111 for real audit verdicts; merge on genuine PASS, else report blocked
 - [ ] Final report table
 - [ ] `record-completion` call
