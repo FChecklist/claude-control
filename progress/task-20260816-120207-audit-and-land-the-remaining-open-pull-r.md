@@ -82,11 +82,18 @@ shows PR #247 CONFLICTING now -- re-derived live list wins per instructions):
   swept in by `git add -A` (same known pattern as claude-control PRs #146/#170/#191). Audit could not
   even run. Real blocking infra defect in the branch itself, needs human fix. **NOT MERGED**, blocked.
 
+- **PR 243**: verdict=**reject** tier1 -- diff itself docs-only, but tracing to the real underlying
+  PR (FChecklist/veridian-scripts#423, task title misidentifies it as #243) it is mergeable:CONFLICTING
+  against main; main already fixed the same root cause differently (commit 89b30ab, None sentinel),
+  and #423's guard would crash real call paths relying on that sentinel. Real FAIL. **NOT MERGED**, blocked.
+- **PR 75**: verdict=**reject** tier1 -- underlying claim (compliance-tracker PR #560 merged) is real,
+  but this diff's phase-plan YAML edit is mechanically broken: new keys inserted mid-sequence break
+  `yaml.safe_load` (ParserError), which would break `scripts/auto_phase_continuation.py`'s phase-detection
+  for the whole file -- opposite of the change's stated purpose. Real FAIL. **NOT MERGED**, blocked.
+
 ## Remaining
-- [ ] PR 243 -- audit still running (pending_review)
 - [ ] PR 186 -- audit still running (pending_review)
 - [ ] PR 114 -- audit still running (pending_review)
 - [ ] PR 98 -- audit still running (pending_review)
-- [ ] PR 75 -- audit still running (pending_review)
 - [ ] Verify head-SHA match + merge status for all completed ones above once caught up
 - [ ] Final report table
