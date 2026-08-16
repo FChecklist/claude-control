@@ -100,7 +100,19 @@ shows PR #247 CONFLICTING now -- re-derived live list wins per instructions):
   (gh api + git merge-base) shows #305 was fixed at a new head and actually merged ~1.5h after this
   RCA's own commit timestamp. Real FAIL (factually incorrect docs). **NOT MERGED**, blocked.
 
+- **PR 114**: verdict=**reject** tier1 -- diff mechanically clean but stale/superseded: origin/master
+  already has a more robust fix for the same duplicate-RCA-escalation problem
+  (resource_governor.submit()'s task_identity dedup w/ hard-cap+retirement, added 2026-07-27 after a
+  real 9h18m runaway-firing incident); this diff's independent file-glob check has no TTL/cap and
+  reintroduces a silent starvation failure mode. Real FAIL. **NOT MERGED**, blocked.
+
+## All 14 PRs audited. Final live state confirmed via `gh pr view --json state,mergedAt`
+## and merge commits confirmed present in `git log origin/master`:
+## 248, 241, 111, 98 = MERGED (real commits: e34e821, 3e6cf47, 2225b40, 0b2fec5)
+## 247, 246, 243, 242, 240, 206, 186, 114, 91, 75 = NOT MERGED (real reject verdict or, for 91,
+## a real infra guard blocking the audit itself -- see verdicts above)
+
 ## Remaining
-- [ ] PR 114 -- audit still running (pending_review)
-- [ ] Verify head-SHA match + merge status for all completed ones above once caught up
-- [ ] Final report table
+- [x] All 14 PRs adopted, swept, and given real verdicts
+- [x] 4 merges confirmed present in git log origin/master
+- [ ] Write final report table to user
