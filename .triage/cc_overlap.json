@@ -1,0 +1,354 @@
+[
+  {
+    "number": 72,
+    "title": "Amend phase_2/phase_5 scope for Owner-clarified two-stage SOFTWARE FIRST UX requirement",
+    "url": "https://github.com/FChecklist/claude-control/pull/72",
+    "updated_at": "2026-07-25T18:07:09Z",
+    "head_ref": "worker/task-20260725-175525-veridian-architecture-v2-ux-two-stage-am",
+    "total_added": 69,
+    "total_matched": 2,
+    "overlap_ratio": 0.028985507246376812,
+    "files": [
+      {
+        "path": "ai-os/VERIDIAN_ARCHITECTURE_V2_PHASE_PLAN_2026-07-25.yaml",
+        "status": "differs",
+        "added_lines": 69,
+        "matched_in_main": 2,
+        "unmatched_sample": [
+          "stored and versioned. AMENDED 2026-07-25 per Owner-clarified two-stage \"SOFTWARE FIRST\"",
+          "UX requirement (see scope below): this phase''s Stage 4 Machine Prompt Builder / Prompt",
+          "Compiler Engine deepening work is also the machine-language-output contract that both",
+          "of phase_5''s end-user input surfaces (structured mode-pill/option-chain, free-text chat)",
+          "must compile into before handoff to server-side SOFTWARE execution.'"
+        ]
+      }
+    ]
+  },
+  {
+    "number": 75,
+    "title": "phase_2: mark compiler pipeline/intelligence engines done",
+    "url": "https://github.com/FChecklist/claude-control/pull/75",
+    "updated_at": "2026-07-25T23:38:37Z",
+    "head_ref": "task-20260725-231836-phase2-status-update",
+    "total_added": 16,
+    "total_matched": 2,
+    "overlap_ratio": 0.125,
+    "files": [
+      {
+        "path": "ai-os/VERIDIAN_ARCHITECTURE_V2_PHASE_PLAN_2026-07-25.yaml",
+        "status": "differs",
+        "added_lines": 16,
+        "matched_in_main": 2,
+        "unmatched_sample": [
+          "evidence: 'compliance-tracker src/lib/prompt-compiler/ (Layer 2-5 pipeline + 13",
+          "engine modules deepening/closing engine-prompt-compiler/optimizer/expansion/",
+          "testing/benchmark/portability/ab/ranking/recommendation/similarity, engine-intent/",
+          "entity/variable/context/confidence, pipeline-lightweight-analysis/context-assembly/",
+          "prompt-construction/verification), extends scripts/prompt_gateway/engine/"
+        ]
+      }
+    ]
+  },
+  {
+    "number": 83,
+    "title": "Re-verify 20-engine inventory (2 days stale) + report Auditor Engine status",
+    "url": "https://github.com/FChecklist/claude-control/pull/83",
+    "updated_at": "2026-07-27T03:56:46Z",
+    "head_ref": "worker/task-20260726-094625-re-verify-20-engine-inventory---confirm",
+    "total_added": 130,
+    "total_matched": 2,
+    "overlap_ratio": 0.015384615384615385,
+    "files": [
+      {
+        "path": "ai-os-scripts/generate_engines_gateways_inventory.py",
+        "status": "differs",
+        "added_lines": 67,
+        "matched_in_main": 1,
+        "unmatched_sample": [
+          "\"scripts/ddl_authorization_check.py\",",
+          "\"scripts/credit-accountant.py\",",
+          "\"(server ops vs in-app LLM calls). \"",
+          "\"Re-verified 2026-07-27 (supersedes the 2026-07-26 pass, which correctly withheld 2 paths pending \"",
+          "\"merge): scripts/ddl_authorization_check.py (dispatch-time pre-flight gate blocking unauthorized \""
+        ]
+      },
+      {
+        "path": "ai-os/20_ENGINES_10_GATEWAYS_PHASE_PLAN_2026-07-24.yaml",
+        "status": "differs",
+        "added_lines": 63,
+        "matched_in_main": 1,
+        "unmatched_sample": [
+          "reverification_log:",
+          "# No pre-existing changelog/versioning convention was found in this file or its close family",
+          "# (AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml, KNOWLEDGE_ENGINE_INVENTORY_2026-07-23.yaml) before this",
+          "# entry -- this is a minimal, additive log in this file's own existing prose-block style, not a new",
+          "# invented mechanism."
+        ]
+      }
+    ]
+  },
+  {
+    "number": 91,
+    "title": "Resolve PR89 merge conflict (Phase 2 policy unification)",
+    "url": "https://github.com/FChecklist/claude-control/pull/91",
+    "updated_at": "2026-07-26T16:27:47Z",
+    "head_ref": "worker/task-20260726-162246-resolve-pr89-merge-conflict--phase-2-pol",
+    "total_added": 0,
+    "total_matched": 0,
+    "overlap_ratio": null,
+    "files": [
+      {
+        "path": "pr89-work",
+        "status": "missing_on_main"
+      }
+    ]
+  },
+  {
+    "number": 98,
+    "title": "Round 5: close native git/gh command-alias bypass of the interactive-session write gate",
+    "url": "https://github.com/FChecklist/claude-control/pull/98",
+    "updated_at": "2026-07-27T03:58:19Z",
+    "head_ref": "worker/task-20260726-083833-build-interactive-session-write-gate--re",
+    "total_added": 376,
+    "total_matched": 10,
+    "overlap_ratio": 0.026595744680851064,
+    "files": [
+      {
+        "path": "ai-os/OWNER_DIRECTIVES/interactive-session-guard.bashrc-snippet",
+        "status": "differs",
+        "added_lines": 275,
+        "matched_in_main": 8,
+        "unmatched_sample": [
+          "# ROUND 5 (this version): a fresh audit of round 4, verified by direct live",
+          "# reproduction, found that native git/gh command ALIASING was a total,",
+          "# undetected bypass of everything above:",
+          "#   (a) `git -c alias.<name>=push <name> <remote> <branch>` (a one-shot",
+          "#       alias defined on the command line itself, for that invocation only)"
+        ]
+      },
+      {
+        "path": "tests/interactive_session_guard_test.sh",
+        "status": "differs",
+        "added_lines": 101,
+        "matched_in_main": 2,
+        "unmatched_sample": [
+          "# [ROUND 5] `gh alias list` is the guard's own real-alias-resolution lookup",
+          "# (see _interactive_guard_gh_resolve_persistent_alias() in _lib.sh) -- an",
+          "# informational query, not itself a merge, so like the git fake's",
+          "# symbolic-ref handling below it must NOT be logged to CALL_LOG (which means",
+          "# \"the actual guarded action reached the real binary\"), or every BLOCKED"
+        ]
+      }
+    ]
+  },
+  {
+    "number": 102,
+    "title": "Add plan_backlog_completion.py: real backlog dedup+PR-state planner",
+    "url": "https://github.com/FChecklist/claude-control/pull/102",
+    "updated_at": "2026-07-27T06:16:29Z",
+    "head_ref": "chore/backlog-completion-plan-script",
+    "total_added": 0,
+    "total_matched": 0,
+    "overlap_ratio": null,
+    "files": [
+      {
+        "path": "ai-os/DEDUP_MISMATCH_MANUAL_REVIEW_2026-07-27.yaml",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "scripts/execute_backlog_plan.py",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "scripts/plan_backlog_completion.py",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "tests/execute_backlog_plan_test.py",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "tests/fixtures/dedup_083946_incident/task-20260726-083946-fix-task-lifecycle--real-branch-resoluti/prompt.txt",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "tests/fixtures/dedup_083946_incident/task-20260726-083946-fix-task-lifecycle--real-branch-resoluti/task.yaml",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "tests/fixtures/dedup_083946_incident/task-20260726-195236-rca-task-20260726-083946-fix-task-lifecy/task.yaml",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "tests/fixtures/dedup_083946_incident/task-20260727-034446-rca-task-20260726-083946-fix-task-lifecy/task.yaml",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "tests/fixtures/dedup_prose_only_criteria/task-20260101-000000-example-prose-only-crit/prompt.txt",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "tests/fixtures/dedup_prose_only_criteria/task-20260101-000000-example-prose-only-crit/task.yaml",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "tests/plan_backlog_completion_dedup_test.py",
+        "status": "missing_on_main"
+      }
+    ]
+  },
+  {
+    "number": 111,
+    "title": "phase_5_browser_execution_tiers: register litert-spike in MASTER_INDEX.yaml",
+    "url": "https://github.com/FChecklist/claude-control/pull/111",
+    "updated_at": "2026-07-27T07:17:00Z",
+    "head_ref": "worker/task-20260727-065831-phase5-litert-spike-registration",
+    "total_added": 33,
+    "total_matched": 0,
+    "overlap_ratio": 0.0,
+    "files": [
+      {
+        "path": "ai-os/MASTER_INDEX.yaml",
+        "status": "differs",
+        "added_lines": 33,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "- id: litert_spike",
+          "type: browser_native_inference_prototype",
+          "path: 'repos/compliance-tracker/src/app/litert-spike/ (page.tsx, worker-src/inference-worker.ts,",
+          "types.ts) + repos/compliance-tracker/src/app/litert-spike-embeddings/ (page.tsx,",
+          "worker-src/inference-worker.ts, worker-src/wordpiece-tokenizer.ts, types.ts)'"
+        ]
+      },
+      {
+        "path": "ai-os/PHASE5_BROWSER_EXECUTION_INCREMENT1_2026-07-27.md",
+        "status": "missing_on_main"
+      }
+    ]
+  },
+  {
+    "number": 113,
+    "title": "phase_8 increment 1: DSPy decision + engine-ai-learning evidence + 5-engine scoping",
+    "url": "https://github.com/FChecklist/claude-control/pull/113",
+    "updated_at": "2026-07-27T10:01:36Z",
+    "head_ref": "worker/task-20260727-094843-phase8-dspy-scoping",
+    "total_added": 52,
+    "total_matched": 0,
+    "overlap_ratio": 0.0,
+    "files": [
+      {
+        "path": "ai-os/MASTER_INDEX.yaml",
+        "status": "differs",
+        "added_lines": 52,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "- id: veridian_v2_dspy_learning_distribution_engines",
+          "type: phase_plan_increment_evidence",
+          "path: repos/compliance-tracker/ai-os/VERIDIAN_V2_DSPY_TECH_DECISION_2026-07-27.md",
+          "+ ai-os/VERIDIAN_V2_PROMPT_LIFECYCLE_ENGINES_SCOPING_2026-07-27.md (this repo)",
+          "phase_8_dspy_learning_distribution_engines increment 1 of"
+        ]
+      },
+      {
+        "path": "ai-os/VERIDIAN_V2_PROMPT_LIFECYCLE_ENGINES_SCOPING_2026-07-27.md",
+        "status": "missing_on_main"
+      }
+    ]
+  },
+  {
+    "number": 114,
+    "title": "rca-task-20260726-171926-remove-anthropic-api-key-dead-code-path",
+    "url": "https://github.com/FChecklist/claude-control/pull/114",
+    "updated_at": "2026-07-27T14:46:48Z",
+    "head_ref": "worker/task-20260726-181517-rca-task-20260726-171926-remove-anthropi",
+    "total_added": 47,
+    "total_matched": 4,
+    "overlap_ratio": 0.0851063829787234,
+    "files": [
+      {
+        "path": "scripts/veridian-task-watchdog.py",
+        "status": "differs",
+        "added_lines": 47,
+        "matched_in_main": 4,
+        "unmatched_sample": [
+          "4. step_3 in-flight dedup (added by RCA task-20260726-181517, root-causing",
+          "task-20260726-171926's own watchdog escalation): a single stall/loop",
+          "window can span many STALL_MINUTES-plus polls (this timer runs every",
+          "60s), and step_1/step_2 have no way to see a fix an already-dispatched",
+          "RCA task hasn't finished registering yet -- known_fixes/ATTENTION.md/"
+        ]
+      },
+      {
+        "path": "tests/veridian_task_watchdog_dedup_test.py",
+        "status": "missing_on_main"
+      }
+    ]
+  },
+  {
+    "number": 116,
+    "title": "Fix watchdog step_2 known_fixes gating + wire skip_escalation_when_activating",
+    "url": "https://github.com/FChecklist/claude-control/pull/116",
+    "updated_at": "2026-07-28T11:08:41Z",
+    "head_ref": "fix/watchdog-known-fix-step2-gating-2026-07-28",
+    "total_added": 88,
+    "total_matched": 3,
+    "overlap_ratio": 0.03409090909090909,
+    "files": [
+      {
+        "path": "ai-os/MASTER_INDEX.yaml",
+        "status": "differs",
+        "added_lines": 52,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "- id: veridian_v2_dspy_learning_distribution_engines",
+          "type: phase_plan_increment_evidence",
+          "path: repos/compliance-tracker/ai-os/VERIDIAN_V2_DSPY_TECH_DECISION_2026-07-27.md",
+          "+ ai-os/VERIDIAN_V2_PROMPT_LIFECYCLE_ENGINES_SCOPING_2026-07-27.md (this repo)",
+          "phase_8_dspy_learning_distribution_engines increment 1 of"
+        ]
+      },
+      {
+        "path": "ai-os/VERIDIAN_V2_PROMPT_LIFECYCLE_ENGINES_SCOPING_2026-07-27.md",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "scripts/veridian-task-watchdog.py",
+        "status": "differs",
+        "added_lines": 36,
+        "matched_in_main": 3,
+        "unmatched_sample": [
+          "def _fix_skip_escalation_when_activating(task_id):",
+          "\"no automated system action taken -- 'skip_escalation_when_activating' is the \"",
+          "\"intentional no-op fix action for a signature that is already understood and \"",
+          "\"already fixed at its real root cause elsewhere (e.g. the benign 'periodic \"",
+          "\"checkpoint' heartbeat during a legitimately long quality-gate phase, whose \""
+        ]
+      }
+    ]
+  },
+  {
+    "number": 125,
+    "title": "docs(MASTER_INDEX): live 2026-08-06 GitHub/Vercel census refresh (UMR-20260806-140841-46d1)",
+    "url": "https://github.com/FChecklist/claude-control/pull/125",
+    "updated_at": "2026-08-06T19:37:41Z",
+    "head_ref": "worker/task-20260806-192056-vercel-github-census-refresh",
+    "total_added": 107,
+    "total_matched": 35,
+    "overlap_ratio": 0.32710280373831774,
+    "files": [
+      {
+        "path": "ai-os/MASTER_INDEX.yaml",
+        "status": "differs",
+        "added_lines": 107,
+        "matched_in_main": 35,
+        "unmatched_sample": [
+          "- id: vercel_github_state_census_2026_08_06_refresh",
+          "path: ai-os/MASTER_INDEX.yaml (this entry -- companion refresh to registries.vercel_github_state_census_2026_07_26,",
+          "not a replacement of it; that entry's own narrative/discrepancy history is left as the historical",
+          "record it documents itself to be)",
+          "scope: 'Real, fresh (not from memory) live re-enumeration of GitHub repos under FChecklist (via `gh"
+        ]
+      }
+    ]
+  }
+]

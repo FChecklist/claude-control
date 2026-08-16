@@ -1,0 +1,2006 @@
+[
+  {
+    "number": 8,
+    "title": "feat: add entity/relation coordination graph to superboss-register.py",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/8",
+    "updated_at": "2026-08-06T13:47:40Z",
+    "head_ref": "feat/coordination-graph-entity-relation",
+    "total_added": 240,
+    "total_matched": 32,
+    "overlap_ratio": 0.13333333333333333,
+    "files": [
+      {
+        "path": "backfill_active_claims.py",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "check-conflict-before-pr.sh",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "dispatch-owner-task.sh",
+        "status": "differs",
+        "added_lines": 38,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "# 0. Coordination-graph conflict check (UMR-20260801-142246-8d51) -- surfaces,",
+          "#    but never blocks, an existing 'claims' relation on an overlapping",
+          "#    file_area/topic before this new task is even registered. TITLE is the",
+          "#    best real scope signal available at this call site (these titles are",
+          "#    already topic/file-scoped slugs, e.g. \"crm--announcements\","
+        ]
+      },
+      {
+        "path": "superboss-register.py",
+        "status": "differs",
+        "added_lines": 202,
+        "matched_in_main": 32,
+        "unmatched_sample": [
+          "-- Coordination graph (2026-08-01, Owner directive UMR-20260801-142246-8d51,",
+          "-- closing the real duplicate-work-incident gap ACTIVE-CLAIMS.yaml only",
+          "-- partially closes today: nothing makes \"what already exists / who's",
+          "-- touching what / what depends on what\" queryable, only manually",
+          "-- readable). Deliberately distinct from knowledge_engine above (that"
+        ]
+      }
+    ]
+  },
+  {
+    "number": 24,
+    "title": "Deterministic canonical database path resolution for superboss-register",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/24",
+    "updated_at": "2026-08-04T19:46:02Z",
+    "head_ref": "worker/task-20260804-193850-deterministic-canonical-database-path-re",
+    "total_added": 56,
+    "total_matched": 0,
+    "overlap_ratio": 0.0,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 56,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260804-193850-deterministic-canonical-database-path-re",
+          "- [x] Read UMR-20260804-180142-676d (this task's own dispatch record) directly from the",
+          "live `/opt/veridian/ai-os/memory/superboss-register.sqlite` `umr_tasks` table, plus",
+          "the full linked instruction chain (`INS-20260804-172009-0002` through",
+          "`INS-20260804-191835-bd64`) rather than relying on the shortened SPEC summary, per"
+        ]
+      }
+    ]
+  },
+  {
+    "number": 28,
+    "title": "PM decision, merge PR 21 real recovered hotfixes",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/28",
+    "updated_at": "2026-08-04T20:24:19Z",
+    "head_ref": "worker/task-20260804-201659-pm-decision--merge-pr-21-real-recovered",
+    "total_added": 38,
+    "total_matched": 0,
+    "overlap_ratio": 0.0,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 38,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260804-201659-pm-decision--merge-pr-21-real-recovered",
+          "- [x] Fetched PR #21 (FChecklist/veridian-scripts) fresh via `gh api` \u2014 found the",
+          "SPEC's premise false: PR #21 is **already merged and closed**",
+          "(`merged: true`, `merged_at: 2026-08-04T19:29:07Z`, `state: closed`,",
+          "`merge_commit_sha: 199e73c77ed614dfbf3e8af2365d24a99d508b71`, merged by"
+        ]
+      }
+    ]
+  },
+  {
+    "number": 60,
+    "title": "docs(OCID-069): independent re-verification -- methodology extension already correct",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/60",
+    "updated_at": "2026-08-06T08:18:09Z",
+    "head_ref": "worker/task-20260805-131404-extend-ocid-canonical-mapping-methodolog",
+    "total_added": 24,
+    "total_matched": 0,
+    "overlap_ratio": 0.0,
+    "files": [
+      {
+        "path": "OCID_069_METHODOLOGY_EXTENSION_REVERIFICATION_2026-08-05.md",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 24,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260805-131404-extend-ocid-canonical-mapping-methodolog",
+          "- [x] Read the real live target document",
+          "(`OCID_001_069_CANONICAL_UMR_MAPPING_METHODOLOGY_2026-08-05.md`) and confirmed it already",
+          "exists in the fully-extended, correct form this SPEC requires (renamed, title/result say",
+          "OCID-001..069 / 69 of 69, dedicated OCID-069 section citing `UMR-20260805-051109-77a9`,"
+        ]
+      }
+    ]
+  },
+  {
+    "number": 61,
+    "title": "feat(OCID Master Standard v6 Phase 2): lifecycle state machine + registry integrity checks",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/61",
+    "updated_at": "2026-08-06T08:19:33Z",
+    "head_ref": "feat/ocid-master-standard-v6-phase2-lifecycle-registry-integrity",
+    "total_added": 470,
+    "total_matched": 47,
+    "overlap_ratio": 0.1,
+    "files": [
+      {
+        "path": "OCID_MASTER_STANDARD_V6_PHASE2_2026-08-05.md",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 35,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260805-131351-merge-veridian-deterministic-ocid-master",
+          "- [x] Verified real prior state: Phase 1 of \"OCID Master Standard v6\" already merged (PR #54,",
+          "commit 5d33dd8), Phase 2 of the OCID-068-specific registry/compliance work already merged",
+          "(PR #57, commit 768fd6e). Confirmed `c46da9b7` and both cited UMRs",
+          "(`UMR-20260804-170055-a069`, `UMR-20260805-032731-b412`) are real via `git log`/`git show`."
+        ]
+      },
+      {
+        "path": "superboss-register.py",
+        "status": "differs",
+        "added_lines": 435,
+        "matched_in_main": 47,
+        "unmatched_sample": [
+          "_ensure_ocid_master_standard_phase2_tables(conn)",
+          "def cmd_transition_ocid_lifecycle(args):",
+          "\"\"\"OCID Master Standard v6 Phase 2 CLI entry point over",
+          "transition_ocid_lifecycle_state(). Always a real write (there is no",
+          "read-only/--apply split here -- unlike resolve/reconcile above, there is"
+        ]
+      },
+      {
+        "path": "tests/test_ocid_master_standard_phase2.py",
+        "status": "missing_on_main"
+      }
+    ]
+  },
+  {
+    "number": 62,
+    "title": "feat: gtm_certification_categories schema, 25 real rows under OCID-020",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/62",
+    "updated_at": "2026-08-05T15:26:53Z",
+    "head_ref": "feat/gtm-certification-categories-schema-umr20260805145042",
+    "total_added": 0,
+    "total_matched": 0,
+    "overlap_ratio": null,
+    "files": [
+      {
+        "path": "migrate_2026-08-05_gtm_certification_categories.py",
+        "status": "missing_on_main"
+      }
+    ]
+  },
+  {
+    "number": 65,
+    "title": "feat: real deterministic GTM check scripts -- database, API, governance testing",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/65",
+    "updated_at": "2026-08-05T15:44:56Z",
+    "head_ref": "feat/gtm-checks-db-api-governance-umr20260805153813",
+    "total_added": 270,
+    "total_matched": 70,
+    "overlap_ratio": 0.25925925925925924,
+    "files": [
+      {
+        "path": "gtm_check_api_testing.py",
+        "status": "differs",
+        "added_lines": 64,
+        "matched_in_main": 27,
+        "unmatched_sample": [
+          "Real, deterministic check for GTM category 4, \"API testing\".",
+          "Scope, documented here explicitly: calls the real, live, PUBLIC (no",
+          "authentication) pages/endpoints on https://projexa-ai.com only -- the exact",
+          "set already independently confirmed this session to be real, existing,",
+          "unauthenticated routes (root, login, signup, pricing, contact, terms,"
+        ]
+      },
+      {
+        "path": "gtm_check_database_testing.py",
+        "status": "differs",
+        "added_lines": 111,
+        "matched_in_main": 21,
+        "unmatched_sample": [
+          "Real, deterministic check for GTM category 12, \"database testing\".",
+          "Reads DATABASE_URL from compliance-tracker's own .env.local at RUNTIME",
+          "(never hardcoded in this script -- this file is committed to a repo and must",
+          "never contain a live credential). Queries the real, live production",
+          "Supabase Postgres schema via `psql` (read-only SELECT against"
+        ]
+      },
+      {
+        "path": "gtm_check_governance_testing.py",
+        "status": "differs",
+        "added_lines": 95,
+        "matched_in_main": 22,
+        "unmatched_sample": [
+          "Real, deterministic check for GTM category 14, \"governance testing\".",
+          "Per explicit PM instruction (UMR-20260805-153813-767f): checks the real",
+          "specific mechanical facts already used as evidence this session -- zero",
+          "duplication check passes, canonical database resolver present -- as actual",
+          "code/behavior checks, never narration. A prior version of this category's"
+        ]
+      }
+    ]
+  },
+  {
+    "number": 71,
+    "title": "docs(OCID-068): independent re-verification -- UTR/UMR taxonomy already recorded at DB source + addendum, bookkeeping corrected",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/71",
+    "updated_at": "2026-08-05T16:28:29Z",
+    "head_ref": "worker/task-20260805-161241-document-the-real-utr--umr--and-single-s",
+    "total_added": 28,
+    "total_matched": 0,
+    "overlap_ratio": 0.0,
+    "files": [
+      {
+        "path": "OCID_068_UTR_UMR_TAXONOMY_INDEPENDENT_VERIFICATION_2026-08-05.md",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 28,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260805-161241-document-the-real-utr--umr--and-single-s",
+          "- [x] Located the real DB (`/opt/veridian/ai-os/memory/superboss-register.sqlite`) and confirmed",
+          "this task's own UMR (`UMR-20260805-093630-29d1`, `owner-task-20260805-093629-1256404`) is the",
+          "live `umr_tasks` row for this exact SPEC.",
+          "- [x] Independently re-verified the real, permanent explanatory taxonomy row already exists at the"
+        ]
+      }
+    ]
+  },
+  {
+    "number": 72,
+    "title": "Close a real fabrication loophole, not_applicable_confirmed must come from a real re-runnable audit script, never an AI narrative",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/72",
+    "updated_at": "2026-08-06T08:20:02Z",
+    "head_ref": "worker/task-20260805-161157-close-a-real-fabrication-loophole--not-a",
+    "total_added": 412,
+    "total_matched": 30,
+    "overlap_ratio": 0.07281553398058252,
+    "files": [
+      {
+        "path": "OCID_068_PHASE_2_LIVE_REAUDIT_EXECUTION_AND_MERGE_SAFETY_CORRECTION_2026-08-05.md",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 69,
+        "matched_in_main": 1,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260805-161157-close-a-real-fabrication-loophole--not-a",
+          "## Duplicate-check finding (real, disclosed up front)",
+          "This task's directive is, in substance, a near-verbatim restatement of",
+          "Owner directives already dispatched and already fully implemented/merged",
+          "earlier the same day: `UMR-20260805-092408-4f97` (extending"
+        ]
+      },
+      {
+        "path": "audit_ocid_canonical_registry.py",
+        "status": "differs",
+        "added_lines": 222,
+        "matched_in_main": 4,
+        "unmatched_sample": [
+          "Real citation honesty note (this module's own real safety-rule revision",
+          "below, task-20260805-161157-close-a-real-fabrication-loophole--not-a): a",
+          "real, direct query of the live `umr_tasks` table found no row whose",
+          "`task_identity` matches this exact task -- no real UMR ID with a hash",
+          "suffix could be independently verified for it as of this writing. Rather"
+        ]
+      },
+      {
+        "path": "tests/test_audit_ocid_canonical_registry.py",
+        "status": "differs",
+        "added_lines": 121,
+        "matched_in_main": 25,
+        "unmatched_sample": [
+          "def test_plan_preserves_existing_record_and_flags_review_when_fresh_evidence_disagrees():",
+          "\"\"\"Real regression proof (this task -- no matching umr_tasks row was found for this exact task_identity, so it is cited by its real task-directory identifier task-20260805-161157-close-a-real-fabrication-loophole--not-a rather than an unverified UMR ID):",
+          "this script's own FIRST real run against real live production data",
+          "found that a fully mechanical full-text search over a corpus that",
+          "increasingly contains real meta-discussion ABOUT OCIDs (not just"
+        ]
+      }
+    ]
+  },
+  {
+    "number": 74,
+    "title": "Clarification, real precise search key for UMR-20260805-115044-b481",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/74",
+    "updated_at": "2026-08-06T08:18:02Z",
+    "head_ref": "worker/task-20260805-165226-clarification--real-precise-search-key-f",
+    "total_added": 45,
+    "total_matched": 0,
+    "overlap_ratio": 0.0,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 45,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260805-165226-clarification--real-precise-search-key-f",
+          "- [x] Searched `umr_tasks` in the live DB (`/opt/veridian/ai-os/memory/superboss-register.sqlite`)",
+          "by exact `task_identity = 'owner-task-20260805-115043-1829823'` (not a `umr_id` text",
+          "search) per the PM's precise-key instruction.",
+          "- [x] Result: **found, exactly 1 row** -- not a zero-row anomaly. No registration/persistence"
+        ]
+      }
+    ]
+  },
+  {
+    "number": 75,
+    "title": "docs: PROGRESS.md checkpoint -- OCID-020 GTM certification session state",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/75",
+    "updated_at": "2026-08-05T16:57:47Z",
+    "head_ref": "docs/progress-checkpoint-umr20260805165254",
+    "total_added": 76,
+    "total_matched": 2,
+    "overlap_ratio": 0.02631578947368421,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 76,
+        "matched_in_main": 2,
+        "unmatched_sample": [
+          "# PROGRESS -- OCID-020 GTM certification, session checkpoint (UMR-20260805-165254-a525)",
+          "Owner Claude Code weekly usage at 98%, resets tomorrow 07:31 IST -- this section exists so a",
+          "fresh session or the mechanical `veridian-cron-dispatch-tick.timer` can pick up exactly where",
+          "this one left off if the session stops mid-task with no warning. Parent: `UMR-20260802-165606-4413`",
+          "(OCID-020). All PRs below are real, pushed, independently GitHub-verified, and already adopted"
+        ]
+      }
+    ]
+  },
+  {
+    "number": 78,
+    "title": "feat(OCID-020 cat19): sqlite_daily_backup.py + systemd unit (built+tested against synthetic data, disabled)",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/78",
+    "updated_at": "2026-08-05T17:31:40Z",
+    "head_ref": "feat/ocid020-sqlite-daily-backup-generator-umr20260805165909-4d8b",
+    "total_added": 17,
+    "total_matched": 2,
+    "overlap_ratio": 0.11764705882352941,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 17,
+        "matched_in_main": 2,
+        "unmatched_sample": [
+          "# PROGRESS -- UMR-20260805-165909-4d8b (child-umr-ocid020-permanent-sqlite-backup-generator-fix)",
+          "OCID-020 GTM certification category_index=19 (\"backup and recovery testing\"), parent UMR-20260802-165606-4413. Resumed per explicit PM instruction UMR-20260805-171657-01de.",
+          "- [x] Fetched the full, exact original task instructions via direct read-only sqlite query against `umr_tasks.inputs_json.prompt` (never `git show`/truncation-prone tooling for this) -- confirmed complete (4089 chars, ends cleanly, no truncation marker).",
+          "- [x] Verified the corruption precondition's current state BEFORE writing any code: queried `gtm_certification_categories` (category_index=19, currently `passed=0`, failing on `superboss-register.sqlite` backup staleness -- last real backup 2026-08-03, 64.3h+ old vs the 48h bar) and searched `umr_tasks` for any corruption-resolution UMR under the parent -- none found. Confirmed the precondition (no live full-database backup until `file_inventory` corruption resolves, Hard Rule 8) remains in force exactly as written, unweakened.",
+          "- [x] Built `sqlite_daily_backup.py`: real, idempotent backup generator using SQLite's online backup API (`sqlite3.Connection.backup()`, never a raw file copy), with an independent `PRAGMA integrity_check` against the resulting backup file itself, loud failure (non-zero exit, quarantined artifact) on any corrupt/zero-byte result."
+        ]
+      },
+      {
+        "path": "sqlite_daily_backup.py",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "systemd/veridian-cron-sqlite-daily-backup.service",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "systemd/veridian-cron-sqlite-daily-backup.timer",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "tests/test_sqlite_daily_backup.py",
+        "status": "missing_on_main"
+      }
+    ]
+  },
+  {
+    "number": 79,
+    "title": "feat(OCID-020 GTM): category 5 (UI testing) + category 6 (E2E testing) real check scripts",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/79",
+    "updated_at": "2026-08-05T17:32:37Z",
+    "head_ref": "feat/gtm-checks-ui-e2e-testing",
+    "total_added": 345,
+    "total_matched": 160,
+    "overlap_ratio": 0.463768115942029,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 35,
+        "matched_in_main": 1,
+        "unmatched_sample": [
+          "# PROGRESS -- UMR-20260805-165906-0923 (child-umr-ocid020-gtm-remaining-8-category-scripts, OCID-020 GTM certification)",
+          "Executes the 8-category continuation task queued at UMR-20260805-165906-0923 (parent",
+          "UMR-20260802-165606-4413 / OCID-020), per PM instruction UMR-20260805-171657-01de. Categories",
+          "5, 6, 7, 9, 15, 16, 24, 25 -- 25 total categories, 13 already had real scripts before this task",
+          "(see the OCID-020 GTM certification checkpoint section above). Before any DB write this session,"
+        ]
+      },
+      {
+        "path": "gtm_check_e2e_testing.py",
+        "status": "differs",
+        "added_lines": 131,
+        "matched_in_main": 60,
+        "unmatched_sample": [
+          "Distinct from category_index=5 (UI testing, a new minimal probe this",
+          "session wrote because no dedicated UI spec existed): compliance-tracker's",
+          "e2e/ directory DOES already hold a real, runnable Playwright spec",
+          "(e2e/browser-execution-tiers.spec.ts) -- per the dispatching task's own",
+          "rule (\"reuse the existing e2e/ tests if any exist and are runnable"
+        ]
+      },
+      {
+        "path": "gtm_check_ui_testing.py",
+        "status": "differs",
+        "added_lines": 179,
+        "matched_in_main": 99,
+        "unmatched_sample": [
+          "Distinct from category_index=6 (end to end testing, which runs this repo's",
+          "real e2e/ Playwright suite): no dedicated \"UI testing\" spec exists in",
+          "compliance-tracker's e2e/ directory (it currently holds exactly one spec,",
+          "browser-execution-tiers.spec.ts, which is scoped to E2E/browser-capability",
+          "detection, not UI rendering) -- so per the dispatching task's own fallback"
+        ]
+      }
+    ]
+  },
+  {
+    "number": 80,
+    "title": "Urgent, real database lock contention blocking all queries, investigate and clear it",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/80",
+    "updated_at": "2026-08-06T08:18:34Z",
+    "head_ref": "worker/task-20260805-172722-urgent--real-database-lock-contention-bl",
+    "total_added": 72,
+    "total_matched": 0,
+    "overlap_ratio": 0.0,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 72,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260805-172722-urgent--real-database-lock-contention-bl",
+          "Related: UMR-20260805-121654-4b77 (blocked corruption-fix investigation)",
+          "Target DB: /opt/veridian/ai-os/memory/superboss-register.sqlite (1.4GB, WAL mode)",
+          "- [x] Checked for processes holding the DB file open (`fuser -v`, `lsof`): only",
+          "one process, PID 3095615 (`/opt/veridian/scripts/health-check-15min.py`,"
+        ]
+      }
+    ]
+  },
+  {
+    "number": 81,
+    "title": "feat(OCID-020 GTM): category 7 (regression testing) real check script",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/81",
+    "updated_at": "2026-08-05T17:34:31Z",
+    "head_ref": "feat/gtm-checks-regression-testing",
+    "total_added": 175,
+    "total_matched": 60,
+    "overlap_ratio": 0.34285714285714286,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 47,
+        "matched_in_main": 1,
+        "unmatched_sample": [
+          "# PROGRESS -- UMR-20260805-165906-0923 (child-umr-ocid020-gtm-remaining-8-category-scripts, OCID-020 GTM certification)",
+          "Executes the 8-category continuation task queued at UMR-20260805-165906-0923 (parent",
+          "UMR-20260802-165606-4413 / OCID-020), per PM instruction UMR-20260805-171657-01de. Categories",
+          "5, 6, 7, 9, 15, 16, 24, 25 -- 25 total categories, 13 already had real scripts before this task",
+          "(see the OCID-020 GTM certification checkpoint section above). Before any DB write this session,"
+        ]
+      },
+      {
+        "path": "gtm_check_regression_testing.py",
+        "status": "differs",
+        "added_lines": 128,
+        "matched_in_main": 59,
+        "unmatched_sample": [
+          "Defined deterministically, per the dispatching task's own instruction: does",
+          "compliance-tracker's real `bun test` suite still pass against a FRESH",
+          "`git clone --depth 1 -b main` of origin/main (never the live working",
+          "checkout at /opt/veridian/repos/compliance-tracker, which routinely carries",
+          "unrelated uncommitted local changes from other in-flight work -- a fresh"
+        ]
+      }
+    ]
+  },
+  {
+    "number": 83,
+    "title": "Verify no OCID canonical registry corruption occurred; clarify audit script dry-run output",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/83",
+    "updated_at": "2026-08-06T08:18:42Z",
+    "head_ref": "worker/task-20260805-172718-urgent--real-data-corruption-in-ocid-can",
+    "total_added": 146,
+    "total_matched": 17,
+    "overlap_ratio": 0.11643835616438356,
+    "files": [
+      {
+        "path": "OCID_CANONICAL_REGISTRY_DATA_CORRUPTION_FALSE_ALARM_VERIFICATION_2026-08-05T173527Z.md",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 34,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260805-172718-urgent--real-data-corruption-in-ocid-can",
+          "- [x] Independently verified the live `ocid_canonical_registry` table (via",
+          "`superboss-register.py`'s own `query_ocid_canonical_registry()`, never raw SQL) against",
+          "the cited known-correct snapshot `/tmp/full_roster.json` (69 rows) -- **0 diffs on every",
+          "row**, including all 9 rows the SPEC named as corrupted (OCID-001/003/004/005/007/011/012/"
+        ]
+      },
+      {
+        "path": "audit_ocid_canonical_registry.py",
+        "status": "differs",
+        "added_lines": 17,
+        "matched_in_main": 2,
+        "unmatched_sample": [
+          "# Every line of this run's terminal output is prefixed so a reader can",
+          "# never mistake a proposed/in-memory comparison for a confirmed live",
+          "# write by skimming only part of the output (real incident:",
+          "# UMR-20260805-121654-4b77 / UMR-20260805-122042-8dbc -- a dry run's",
+          "# per-OCID \"changed=True\"/\"CHANGED:\" lines, unprefixed, were misread as"
+        ]
+      },
+      {
+        "path": "tests/test_audit_ocid_canonical_registry.py",
+        "status": "differs",
+        "added_lines": 95,
+        "matched_in_main": 15,
+        "unmatched_sample": [
+          "import subprocess",
+          "def _run_cli(db_path, extra_args=()):",
+          "\"\"\"Real subprocess invocation of the real CLI entrypoint (never calling",
+          "main() in-process), against a real isolated temp-file SQLite DB pointed",
+          "at via the real SUPERBOSS_REGISTER_DB env-var seam"
+        ]
+      }
+    ]
+  },
+  {
+    "number": 84,
+    "title": "feat(OCID-020 GTM): category 9 (performance testing) + category 24 (lighthouse audit) real check scripts",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/84",
+    "updated_at": "2026-08-05T17:37:38Z",
+    "head_ref": "feat/gtm-checks-performance-lighthouse",
+    "total_added": 328,
+    "total_matched": 120,
+    "overlap_ratio": 0.36585365853658536,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 62,
+        "matched_in_main": 1,
+        "unmatched_sample": [
+          "# PROGRESS -- UMR-20260805-165906-0923 (child-umr-ocid020-gtm-remaining-8-category-scripts, OCID-020 GTM certification)",
+          "Executes the 8-category continuation task queued at UMR-20260805-165906-0923 (parent",
+          "UMR-20260802-165606-4413 / OCID-020), per PM instruction UMR-20260805-171657-01de. Categories",
+          "5, 6, 7, 9, 15, 16, 24, 25 -- 25 total categories, 13 already had real scripts before this task",
+          "(see the OCID-020 GTM certification checkpoint section above). Before any DB write this session,"
+        ]
+      },
+      {
+        "path": "gtm_check_lighthouse_audit.py",
+        "status": "differs",
+        "added_lines": 131,
+        "matched_in_main": 59,
+        "unmatched_sample": [
+          "Same real tooling situation as category_index=9 (\"performance testing\"):",
+          "lighthouse is not installed anywhere in this repo/server as a persistent",
+          "dependency, but `npx lighthouse` was confirmed this session to genuinely",
+          "work (real on-demand npm-registry fetch, real Chrome launch). Per the",
+          "dispatching task's own instruction (\"same tooling situation as category 9"
+        ]
+      },
+      {
+        "path": "gtm_check_performance_testing.py",
+        "status": "differs",
+        "added_lines": 135,
+        "matched_in_main": 60,
+        "unmatched_sample": [
+          "Lighthouse is not installed anywhere in this repo/server as a persistent",
+          "dependency (confirmed absent this session: no `lighthouse` on PATH, no",
+          "node_modules/lighthouse anywhere under /opt/veridian/repos). Per the",
+          "dispatching task's own instruction (\"try `npx lighthouse` -- on-demand",
+          "fetch, needs network access to npm registry, confirm it actually works"
+        ]
+      }
+    ]
+  },
+  {
+    "number": 89,
+    "title": "docs: reconcile OCID-020 GTM cert PM-decision SPEC against live state (no false-premise writes)",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/89",
+    "updated_at": "2026-08-06T08:18:05Z",
+    "head_ref": "worker/task-20260805-175304-ocid-020-gtm-certification--pm-decision",
+    "total_added": 30,
+    "total_matched": 0,
+    "overlap_ratio": 0.0,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 30,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260805-175304-ocid-020-gtm-certification--pm-decision",
+          "- [x] Independently verified the SPEC's premises before any write (per [[veridian-task-prompt-false-premise-pattern]]) \u2014 found material mismatches with live state, documented below, and stopped before duplicating or colliding with in-flight work.",
+          "- [x] PR opened: https://github.com/FChecklist/veridian-scripts/pull/89",
+          "- [ ] Owner decision needed: which of the two already-complete-or-in-flight items (schema+25 rows, brand fix PR #954) still need net-new action from this task, if any.",
+          "- [ ] If Owner confirms nothing further needed here: close this task as a verification/reconciliation pass, no code changes required."
+        ]
+      }
+    ]
+  },
+  {
+    "number": 90,
+    "title": "docs(OCID-020): re-verify PR #954 adoption cycle SPEC -- all 6 items already done or false",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/90",
+    "updated_at": "2026-08-06T08:19:11Z",
+    "head_ref": "worker/task-20260805-175309-ocid-020-cycle-decision--adopt-pr-954-on",
+    "total_added": 28,
+    "total_matched": 1,
+    "overlap_ratio": 0.03571428571428571,
+    "files": [
+      {
+        "path": "OCID_020_CYCLE_DECISION_PR954_ADOPTION_REVERIFICATION_2026-08-05.md",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 28,
+        "matched_in_main": 1,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260805-175309-ocid-020-cycle-decision--adopt-pr-954-on",
+          "SPEC: real PM decision cycle re: PR #954 adoption, GTM certification schema, OCID-068 Phase 2",
+          "backfill worker status, `ocid_artifact_links` deprecation, and a broader pre-auth brand gap",
+          "follow-up. Every one of the SPEC's 6 items was independently checked against live state (GitHub",
+          "API + live `superboss-register.sqlite`) before any action -- all 6 turned out to already be done or"
+        ]
+      }
+    ]
+  },
+  {
+    "number": 93,
+    "title": "docs(OCID-020): re-verify standalone GTM-schema SPEC -- items 2 & 3 false, no duplicate build",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/93",
+    "updated_at": "2026-08-05T19:01:59Z",
+    "head_ref": "worker/task-20260805-185211-ocid-020-gtm-schema-build--standalone-to",
+    "total_added": 29,
+    "total_matched": 0,
+    "overlap_ratio": 0.0,
+    "files": [
+      {
+        "path": "OCID_020_GTM_SCHEMA_STANDALONE_TASK_VERIFICATION_2026-08-05.md",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 29,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260805-185211-ocid-020-gtm-schema-build--standalone-to",
+          "- [x] Independent verification of all 3 SPEC items against live state before any write,",
+          "per standing memory on the Veridian task-dispatch false-premise pattern:",
+          "- Item 1 (PR #959): confirmed real/open via `gh`; migration file",
+          "(`drizzle/0313_preauth_brand_footer_column.sql`) independently reviewed line by line;"
+        ]
+      }
+    ]
+  },
+  {
+    "number": 94,
+    "title": "docs: reconcile OCID-020 GTM schema-build SPEC against live state (no false-premise writes)",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/94",
+    "updated_at": "2026-08-05T19:04:18Z",
+    "head_ref": "worker/task-20260805-185207-ocid-020-gtm-certification--build-the-re",
+    "total_added": 74,
+    "total_matched": 0,
+    "overlap_ratio": 0.0,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 74,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260805-185207-ocid-020-gtm-certification--build-the-re",
+          "- [x] Independent verification of SPEC premise before any write (per",
+          "[[veridian-task-prompt-false-premise-pattern]] -- this exact repo has a",
+          "documented history of urgent SPECs not matching live state, most recently",
+          "root-caused in commit a947412 and PR #77)."
+        ]
+      }
+    ]
+  },
+  {
+    "number": 99,
+    "title": "docs: owner directive report -- sqlite3 recovery (stopped, real reason) + item F (premise was false, no cutover needed)",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/99",
+    "updated_at": "2026-08-06T08:18:39Z",
+    "head_ref": "worker/task-20260806-030104-owner-directive--source-proper-sqlite3-b",
+    "total_added": 144,
+    "total_matched": 0,
+    "overlap_ratio": 0.0,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 144,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260806-030104-owner-directive--source-proper-sqlite3-b",
+          "Two separate items, relates to UMR-20260806-025638-cbea and UMR-20260802-123246-f2e7.",
+          "Both UMR rows independently confirmed real in `umr_tasks` (source_trigger",
+          "`owner_dispatch_gateway`) before acting on either.",
+          "## Item 1 -- sqlite3 build + resume corruption recovery (steps 3-6)"
+        ]
+      },
+      {
+        "path": "pr_url.txt",
+        "status": "missing_on_main"
+      }
+    ]
+  },
+  {
+    "number": 101,
+    "title": "docs: verify not-a-real-collision clarification independently; decline duplicate item 1-5 implementation",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/101",
+    "updated_at": "2026-08-06T08:17:59Z",
+    "head_ref": "worker/task-20260806-032356-clarification--not-a-real-collision--bot",
+    "total_added": 52,
+    "total_matched": 1,
+    "overlap_ratio": 0.019230769230769232,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 52,
+        "matched_in_main": 1,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260806-032356-clarification--not-a-real-collision--bot",
+          "SPEC recap: PM clarification claiming task-20260806-031225 and",
+          "task-20260806-031857 are not a duplicate collision (the second is a natural",
+          "sub-step of the first), and directing this task to \"complete, verify, and",
+          "implement all four [sic; text says both four and five] items now... without"
+        ]
+      }
+    ]
+  },
+  {
+    "number": 108,
+    "title": "Extend superboss-register.py with pm_decisions_pending insert/resolve functions (v2, corrected design, real relaunch)",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/108",
+    "updated_at": "2026-08-06T03:44:37Z",
+    "head_ref": "feat/pm-decisions-pending-writer-umr20260806-031558-4dbd",
+    "total_added": 486,
+    "total_matched": 147,
+    "overlap_ratio": 0.30246913580246915,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 80,
+        "matched_in_main": 1,
+        "unmatched_sample": [
+          "# PROGRESS -- UMR-20260806-031558-4dbd (pm_decisions_pending writer, v2 re-dispatch)",
+          "Owner standing SOP, explicit, do not deviate: exactly ONE deterministic",
+          "script (`superboss-register.py`) is the canonical read/write surface for",
+          "`superboss-register.sqlite`. This adds the one real missing write path --",
+          "`insert_pm_decision_pending()` / `resolve_pm_decision_pending()` -- directly"
+        ]
+      },
+      {
+        "path": "superboss-register.py",
+        "status": "differs",
+        "added_lines": 156,
+        "matched_in_main": 53,
+        "unmatched_sample": [
+          "\"\"\"Defensive CREATE TABLE IF NOT EXISTS for pm_decisions_pending, same",
+          "idempotent, standalone-callable convention as",
+          "_ensure_ocid_artifact_links_table above -- safe to call on every",
+          "read/write path, works even against a DB whose copy of this table",
+          "predates this module knowing about it. Schema matches the real,"
+        ]
+      },
+      {
+        "path": "tests/test_pm_decisions_pending.py",
+        "status": "differs",
+        "added_lines": 250,
+        "matched_in_main": 93,
+        "unmatched_sample": [
+          "(Owner standing SOP, UMR-20260806-031558-4dbd -- re-dispatch of",
+          "UMR-20260805-190440-ebe8 after its worker crashed on an unrelated real",
+          "Anthropic weekly usage-limit 429, root cause fixed by veridian-scripts PR",
+          "#98). Corrected, narrowed design: these two functions live directly in",
+          "superboss-register.py, NOT a separate script -- exactly one deterministic"
+        ]
+      }
+    ]
+  },
+  {
+    "number": 113,
+    "title": "Corruption recovery unblocked, resume the safety sequence from step three",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/113",
+    "updated_at": "2026-08-06T04:20:17Z",
+    "head_ref": "worker/task-20260806-041150-corruption-recovery-unblocked--resume-th",
+    "total_added": 2,
+    "total_matched": 1,
+    "overlap_ratio": 0.5,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 2,
+        "matched_in_main": 1,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260806-041150-corruption-recovery-unblocked--resume-th"
+        ]
+      }
+    ]
+  },
+  {
+    "number": 118,
+    "title": "fix: repair live file_inventory corruption (UMR-20260806-042004-e22f / proposal id=5)",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/118",
+    "updated_at": "2026-08-06T08:20:08Z",
+    "head_ref": "worker/task-20260806-042805-pm-approves-proposal-5--fresh-clean-corr",
+    "total_added": 132,
+    "total_matched": 1,
+    "overlap_ratio": 0.007575757575757576,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 132,
+        "matched_in_main": 1,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260806-042805-pm-approves-proposal-5--fresh-clean-corr",
+          "Real PM approval + fresh clean re-dispatch of the `file_inventory` corruption",
+          "recovery on `/opt/veridian/ai-os/memory/superboss-register.sqlite`, relates",
+          "to UMR-20260806-042004-e22f / `pm_decisions_pending` row id=5.",
+          "## Pre-flight independent verification (per standing false-premise-pattern guidance)"
+        ]
+      },
+      {
+        "path": "repair_file_inventory_20260806.py",
+        "status": "missing_on_main"
+      }
+    ]
+  },
+  {
+    "number": 169,
+    "title": "fix(hooks): real PreToolUse guard rejecting unbounded find / walks (UMR-20260806-121825-8ece)",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/169",
+    "updated_at": "2026-08-06T13:27:16Z",
+    "head_ref": "fix/find-root-walk-guard-umr20260806121825-8ece",
+    "total_added": 319,
+    "total_matched": 306,
+    "overlap_ratio": 0.9592476489028213,
+    "files": [
+      {
+        "path": "hooks/find_root_walk_guard.py",
+        "status": "differs",
+        "added_lines": 207,
+        "matched_in_main": 194,
+        "unmatched_sample": [
+          "# themselves being the thing invoked (their own flag tokens are also",
+          "# skipped, best-effort).",
+          "_SEGMENT_BREAKS = {\";\", \"&&\", \"||\", \"|\", \"(\", \")\"}",
+          "returns None (this segment is out of this guard's scope).\"\"\"",
+          "while i < n and segment[i] in _SKIP_WRAPPER_CMDS:"
+        ]
+      },
+      {
+        "path": "tests/test_find_root_walk_guard.py",
+        "status": "differs",
+        "added_lines": 112,
+        "matched_in_main": 112,
+        "unmatched_sample": []
+      }
+    ]
+  },
+  {
+    "number": 182,
+    "title": "Complete the unfinished disk retention steps six and seven from UMR-20260806-084306-f599",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/182",
+    "updated_at": "2026-08-06T15:22:52Z",
+    "head_ref": "worker/task-20260806-151752-complete-the-unfinished-disk-retention-s",
+    "total_added": 92,
+    "total_matched": 1,
+    "overlap_ratio": 0.010869565217391304,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 92,
+        "matched_in_main": 1,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260806-151752-complete-the-unfinished-disk-retention-s",
+          "## Verdict: SPEC premise is false. No further work performed. Stopped after independent verification (step 0), per the recurring veridian task-dispatch false-premise pattern.",
+          "This SPEC claimed steps 6-7 of UMR-20260806-084306-f599 were \"genuinely not done\":",
+          "script missing, no timer, no PR, 20 stray backup copies. Every one of those",
+          "claims is contradicted by the live system, checked directly before any"
+        ]
+      }
+    ]
+  },
+  {
+    "number": 183,
+    "title": "Deduplicate the disk retention work, one owner only",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/183",
+    "updated_at": "2026-08-06T15:23:33Z",
+    "head_ref": "worker/task-20260806-151757-deduplicate-the-disk-retention-work--one",
+    "total_added": 46,
+    "total_matched": 0,
+    "overlap_ratio": 0.0,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 46,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260806-151757-deduplicate-the-disk-retention-work--one",
+          "- [x] Investigated the SPEC's factual claims independently (per the recurring",
+          "veridian-scripts false-premise dispatch pattern) before taking any action.",
+          "- [x] Found the SPEC's core evidence claims to be **false**:",
+          "- Claim: \"`/opt/veridian/scripts/prune_memory_backups.py` still does not exist.\""
+        ]
+      }
+    ]
+  },
+  {
+    "number": 184,
+    "title": "fix(dispatch): gate blind resume/dispatch of hours-stale queued/interrupted work (UMR-20260806-151638-48cc)",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/184",
+    "updated_at": "2026-08-06T15:36:05Z",
+    "head_ref": "fix/resume-and-dispatch-staleness-gate-umr20260806151638-48cc",
+    "total_added": 143,
+    "total_matched": 15,
+    "overlap_ratio": 0.1048951048951049,
+    "files": [
+      {
+        "path": "dispatch-tick.py",
+        "status": "differs",
+        "added_lines": 100,
+        "matched_in_main": 8,
+        "unmatched_sample": [
+          "RESUME_STALE_HOURS gate (added 2026-08-06, UMR-20260806-151638-48cc):",
+          "a task.yaml this old (>2h since its own last_checkpoint_at/created_at,",
+          "see the constant's own docstring) is no longer auto-resumed here -- it's",
+          "flagged into pm_decisions_pending for a real human/PM decision instead.",
+          "A genuine crash/reboot is found and requeued within minutes by this same"
+        ]
+      },
+      {
+        "path": "resource_governor.py",
+        "status": "differs",
+        "added_lines": 28,
+        "matched_in_main": 7,
+        "unmatched_sample": [
+          "\"\"\"Real fix (UMR-20260806-151638-48cc, governing UMR-20260806-071025-1d28):",
+          "a queued row this old (real age >= MAX_QUEUED_AGE_SECONDS -- the exact",
+          "same threshold flag_stale_queued_tasks() already uses to open a real",
+          "pm_decisions_pending 'STALE-QUEUED:' row for it) is never selected here.",
+          "Live-confirmed the real gap this closes: UMR-20260806-082230-54b8,"
+        ]
+      },
+      {
+        "path": "tests/test_ocid_evidence_supersession.py",
+        "status": "differs",
+        "added_lines": 15,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "# Real, old-enough-to-supersede submission -- as if relayed and",
+          "# queued a while ago (this session's own real incident: ts_submitted",
+          "# 19:41, ts_dispatched would-be 74 minutes later at 20:55). Computed",
+          "# dynamically (real \"now\" minus 5 minutes -- comfortably before the",
+          "# ocid_artifact_link's own real, server-assigned created_at inserted"
+        ]
+      },
+      {
+        "path": "tests/test_resume_stale_task_flagged_not_replayed.py",
+        "status": "missing_on_main"
+      }
+    ]
+  },
+  {
+    "number": 190,
+    "title": "chore(scripts): preserve session_metadata_sync.py + sweep_awaiting_approval.py found during scripts-dir reconciliation",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/190",
+    "updated_at": "2026-08-06T16:05:29Z",
+    "head_ref": "preserve/scripts-dir-reconciliation-umr20260806160208-2482",
+    "total_added": 0,
+    "total_matched": 0,
+    "overlap_ratio": null,
+    "files": [
+      {
+        "path": "session_metadata_sync.py",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "sweep_awaiting_approval.py",
+        "status": "missing_on_main"
+      }
+    ]
+  },
+  {
+    "number": 196,
+    "title": "fix(resource-governor): aggregate STALE-QUEUED pm_decisions_pending rows into one row (UMR-20260806-163738-4323)",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/196",
+    "updated_at": "2026-08-06T16:50:37Z",
+    "head_ref": "fix/stale-queued-decision-aggregation-umr20260806163738-4323",
+    "total_added": 402,
+    "total_matched": 106,
+    "overlap_ratio": 0.263681592039801,
+    "files": [
+      {
+        "path": "resource_governor.py",
+        "status": "differs",
+        "added_lines": 115,
+        "matched_in_main": 11,
+        "unmatched_sample": [
+          "STALE_QUEUED_AGGREGATE_TITLE_PREFIX = \"STALE-QUEUED-AGGREGATE:\"",
+          "documented, bounded threshold (unchanged by the aggregation fix below --",
+          "the 4h MAX_QUEUED_AGE_SECONDS default and the underlying detection are",
+          "real and valuable, and are not being weakened here).",
+          "Real emission-shape fix (UMR-20260806-163738-4323, governing"
+        ]
+      },
+      {
+        "path": "superboss-register.py",
+        "status": "differs",
+        "added_lines": 82,
+        "matched_in_main": 15,
+        "unmatched_sample": [
+          "update_pm_decision_pending()/insert_owner_proposal()/decide_owner_proposal()/record_owner_proposal_completion()/",
+          "def update_pm_decision_pending(conn, decision_id, *, title=None, detail=None,",
+          "related_umr=None, recommended_option=None):",
+          "\"\"\"Updates one real, currently-open pm_decisions_pending row IN PLACE --",
+          "added for the STALE-QUEUED aggregation fix (UMR-20260806-163738-4323,"
+        ]
+      },
+      {
+        "path": "tests/test_flag_stale_queued_tasks.py",
+        "status": "differs",
+        "added_lines": 132,
+        "matched_in_main": 44,
+        "unmatched_sample": [
+          "safeguard (zero AI judgment: a real age threshold against a real timestamp).",
+          "Emission-shape fix (UMR-20260806-163738-4323, governing",
+          "UMR-20260806-071025-1d28): this function used to open one real, idempotent",
+          "pm_decisions_pending row PER stale umr_id, which drove Section 7 of the",
+          "standing PM report to 48-of-118 open decisions being the identical STALE-"
+        ]
+      },
+      {
+        "path": "tests/test_pm_decisions_pending.py",
+        "status": "differs",
+        "added_lines": 73,
+        "matched_in_main": 36,
+        "unmatched_sample": [
+          "def test_cli_update_pm_decision_pending_end_to_end():",
+          "\"\"\"UMR-20260806-163738-4323: real CLI coverage for",
+          "update_pm_decision_pending()/cmd_update_pm_decision_pending() -- the new",
+          "write path that lets an aggregate-condition row (e.g. resource_governor.py's",
+          "flag_stale_queued_tasks()) be refreshed in place instead of resolved and"
+        ]
+      }
+    ]
+  },
+  {
+    "number": 198,
+    "title": "feat(pm-report): add tracked-PR merge state + recent owner-UMR status sections (Sections 16-17)",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/198",
+    "updated_at": "2026-08-06T17:18:33Z",
+    "head_ref": "worker/task-20260806-165917-extend-deterministic-report-to-cover-pr",
+    "total_added": 418,
+    "total_matched": 47,
+    "overlap_ratio": 0.11244019138755981,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 71,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260806-165917-extend-deterministic-report-to-cover-pr",
+          "- [x] Verified the SPEC's two premises independently before writing code (per this repo's",
+          "own false-premise-verification convention):",
+          "- \"PM keeps re-deriving swap/EMERGENCY_STOP/worker-count values that already exist in",
+          "script output\" -- **true**. Section 1 of `generate_pm_report_v3.py` already reports"
+        ]
+      },
+      {
+        "path": "TRACKED_PRS.json",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "generate_pm_report_v3.py",
+        "status": "differs",
+        "added_lines": 201,
+        "matched_in_main": 28,
+        "unmatched_sample": [
+          "Sections 16-17 (this task's own real ask, Owner finding: the PM was still",
+          "making manual AI queries every ten-minute cycle for two real reasons -- (a)",
+          "re-deriving values -- swap, EMERGENCY_STOP, worker count -- that Section 1",
+          "above already reports directly, and (b) two genuine gaps this script had no",
+          "section for at all: real PR merge state for a real tracked-PR list, and real"
+        ]
+      },
+      {
+        "path": "test_generate_pm_report_v3.py",
+        "status": "differs",
+        "added_lines": 146,
+        "matched_in_main": 19,
+        "unmatched_sample": [
+          "# Sections 16-17: point at a real-but-nonexistent tmp path so this test",
+          "# never reads this repo's own real TRACKED_PRS.json.",
+          "monkeypatch.setattr(pm, \"TRACKED_PR_LIST_PATH\", str(tmp_path / \"TRACKED_PRS_nonexistent.json\"))",
+          "\"16. TRACKED PR MERGE STATE\",",
+          "\"17. RECENT OWNER-DISPATCHED UMR STATUS\","
+        ]
+      }
+    ]
+  },
+  {
+    "number": 200,
+    "title": "feat(wiring-health-check): real, standing, deterministic wiring health check",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/200",
+    "updated_at": "2026-08-06T17:31:40Z",
+    "head_ref": "worker/task-20260806-165908-build-real-proactive-system-wiring-healt",
+    "total_added": 104,
+    "total_matched": 3,
+    "overlap_ratio": 0.028846153846153848,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 57,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260806-165908-build-real-proactive-system-wiring-healt",
+          "- [x] Researched real integration seams (wiring_registry, dispatch-owner-task.sh",
+          "`--no-relay`, dispatch-tick.py vs resource_governor.py's real mechanical",
+          "pickup, superboss-register.py connection/tables, generate_pm_report_v3.py",
+          "cadence/section structure, external_agent_dispatch/eligibility function,"
+        ]
+      },
+      {
+        "path": "generate_pm_report_v3.py",
+        "status": "differs",
+        "added_lines": 47,
+        "matched_in_main": 3,
+        "unmatched_sample": [
+          "WIRING_HEALTH_CHECK_PATH = os.environ.get(",
+          "\"VERIDIAN_WIRING_HEALTH_CHECK_PY\", f\"{SCRIPTS}/wiring_health_check.py\")",
+          "# Section 16 (Owner directive, 2026-08-06: \"build a real, standing,",
+          "# deterministic wiring health check ... write its real pass or fail result",
+          "# into a real new section of that same report, never a separate file\"):"
+        ]
+      },
+      {
+        "path": "test_wiring_health_check.py",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "wiring_health_check.py",
+        "status": "missing_on_main"
+      }
+    ]
+  },
+  {
+    "number": 203,
+    "title": "Real found match, reuse engine-02 context.ts for prompt assembly, locate snip component via the unregistered sweep",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/203",
+    "updated_at": "2026-08-06T19:44:17Z",
+    "head_ref": "worker/task-20260806-181159-real-found-match--reuse-engine-02-contex",
+    "total_added": 51,
+    "total_matched": 0,
+    "overlap_ratio": 0.0,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 51,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260806-181159-real-found-match--reuse-engine-02-contex",
+          "SPEC: amendment to UMR-20260806-124327-6ffb / UMR-20260806-124654-a8d6.",
+          "Verified independently before acting (see [[veridian-task-prompt-false-premise-pattern]]",
+          "memory note -- confident SPEC claims in this project have not always matched live",
+          "state, so every claim below was checked against the real DB/filesystem, not assumed)."
+        ]
+      }
+    ]
+  },
+  {
+    "number": 204,
+    "title": "test: first real batch of load-bearing script tests (47/148 -> 57/150), UMR-20260806-175915-8f47",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/204",
+    "updated_at": "2026-08-06T18:24:11Z",
+    "head_ref": "worker/umr8f47-test-batch-load-bearing",
+    "total_added": 165,
+    "total_matched": 75,
+    "overlap_ratio": 0.45454545454545453,
+    "files": [
+      {
+        "path": "PLATFORM_COMPLETION_CHECKLIST.json",
+        "status": "differs",
+        "added_lines": 130,
+        "matched_in_main": 72,
+        "unmatched_sample": [
+          "\"evidence\": \"pytest ['test_agent_work_briefing.py'] -> {'test_agent_work_briefing.py': 'pass'}\"",
+          "\"evidence\": \"pytest ['test_agent_work_briefing.py', 'test_ai_agent_registry.py'] -> {'test_agent_work_briefing.py': 'pass', 'test_ai_agent_registry.py': 'pass'}\"",
+          "\"test_worker_entrypoint_and_docworker_entrypoint_guards.py\"",
+          "\"evidence\": \"pytest ['test_triage_owner_umr_24h.py', 'test_worker_entrypoint_and_docworker_entrypoint_guards.py'] -> {'test_triage_owner_umr_24h.py': 'pass', 'test_worker_entrypoint_and_docworker_entrypoint_guards.py': 'pass'}\"",
+          "\"test_worker_entrypoint_and_docworker_entrypoint_guards.py\""
+        ]
+      },
+      {
+        "path": "PLATFORM_COMPLETION_CHECKLIST.md",
+        "status": "differs",
+        "added_lines": 35,
+        "matched_in_main": 3,
+        "unmatched_sample": [
+          "## Scripts (57/150 genuinely complete+tested)",
+          "| `agent_work_briefing.py` | YES | pytest ['test_agent_work_briefing.py'] -> {'test_agent_work_briefing.py': 'pass'} |",
+          "| `ai_agent_registry.py` | YES | pytest ['test_agent_work_briefing.py', 'test_ai_agent_registry.py'] -> {'test_agent_work_briefing.py': 'pass', 'test_ai_agent_registry.py': 'pass'} |",
+          "| `credit-accountant.py` | YES | pytest ['test_triage_owner_umr_24h.py', 'test_worker_entrypoint_and_docworker_entrypoint_guards.py'] -> {'test_triage_owner_umr_24h.py': 'pass', 'test_worker_entrypoint_and_docworker_entrypoint_guards.py': 'pass'} |",
+          "| `doc-worker-entrypoint.sh` | YES | pytest ['test_worker_entrypoint_and_docworker_entrypoint_guards.py'] -> {'test_worker_entrypoint_and_docworker_entrypoint_guards.py': 'pass'} |"
+        ]
+      },
+      {
+        "path": "test_gtm_write_category_result.py",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "test_metadata_reconciliation.py",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "test_owner_status.py",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "test_recover_failed_workers.py",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "test_resource_governor_tick_loop.py",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "test_supervisor_sweep.py",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "test_worker_entrypoint_and_docworker_entrypoint_guards.py",
+        "status": "missing_on_main"
+      }
+    ]
+  },
+  {
+    "number": 205,
+    "title": "feat(superboss-register): steps one/two/four of the deterministic-first task gate (UMR-20260806-124654-a8d6)",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/205",
+    "updated_at": "2026-08-07T08:55:10Z",
+    "head_ref": "worker/task-20260806-181146-critical-amendment--every-task-must-sear",
+    "total_added": 398,
+    "total_matched": 60,
+    "overlap_ratio": 0.1507537688442211,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 82,
+        "matched_in_main": 1,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260806-181146-critical-amendment--every-task-must-sear",
+          "SPEC: critical amendment to UMR-20260806-124327-6ffb and stop work order",
+          "UMR-20260806-124055-bc80 (this task's own scoped UMR: UMR-20260806-124654-a8d6).",
+          "Required deterministic-first sequence for every task, before any AI",
+          "involvement: step one, exact capability_registry script match, no AI, stop."
+        ]
+      },
+      {
+        "path": "superboss-register.py",
+        "status": "differs",
+        "added_lines": 316,
+        "matched_in_main": 59,
+        "unmatched_sample": [
+          "# Same VERIDIAN_ROOT-relative resolution convention used by",
+          "# verify_registry_file_paths.py's resolve_path()/generate_wiring_registry.py's",
+          "# normalize_path(): absolute paths used as-is, root-relative paths (e.g.",
+          "# \"scripts/foo.py\") resolved under this root. Used by",
+          "# record_capability_graduation()'s real script_path existence check."
+        ]
+      },
+      {
+        "path": "tests/test_capability_graduation.py",
+        "status": "missing_on_main"
+      }
+    ]
+  },
+  {
+    "number": 207,
+    "title": "feat(orchestrator): close 3 real gaps -- submission contract, independent re-verification, general input/output validation",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/207",
+    "updated_at": "2026-08-07T08:56:01Z",
+    "head_ref": "worker/task-20260806-181155-amendment--close-three-real-gaps--submis",
+    "total_added": 185,
+    "total_matched": 11,
+    "overlap_ratio": 0.05945945945945946,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 110,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260806-181155-amendment--close-three-real-gaps--submis",
+          "SPEC: UMR-20260806-125524-720c, amendment to UMR-20260806-124055-bc80 /",
+          "-124327-6ffb / -124654-a8d6 / -124936-13b1. Close 3 real gaps found on",
+          "self-audit: (1) deterministic submission contract stated at AI hand-off,",
+          "(2) independent re-verification before status=completed, (3) general"
+        ]
+      },
+      {
+        "path": "superboss-register.py",
+        "status": "differs",
+        "added_lines": 75,
+        "matched_in_main": 11,
+        "unmatched_sample": [
+          "# --- Independent re-verification audit trail (this task's Gap 2:",
+          "# task-20260806-181155 / UMR-20260806-125524-720c) -------------------------",
+          "# NOTE: UMR-124327-6ffb step 2 (UMR-scoped agent_id reuse/mint) is NOT",
+          "# duplicated here -- mid-build, this task discovered PR #199 (merged into",
+          "# main during this same work session) already built the real, tested,"
+        ]
+      },
+      {
+        "path": "tests/test_unified_orchestrator.py",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "unified_orchestrator.py",
+        "status": "missing_on_main"
+      }
+    ]
+  },
+  {
+    "number": 209,
+    "title": "Mandatory real study, all twenty engines, all of superboss, every script, before the orchestrator build is accepted as complete",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/209",
+    "updated_at": "2026-08-06T19:38:20Z",
+    "head_ref": "worker/task-20260806-192038-mandatory-real-study--all-twenty-engines",
+    "total_added": 41,
+    "total_matched": 0,
+    "overlap_ratio": 0.0,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 41,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260806-192038-mandatory-real-study--all-twenty-engines",
+          "- [x] Located real data sources: wiring_registry/capability_registry live in",
+          "/opt/veridian/ai-os/memory/superboss-register.sqlite (not the repo-root",
+          "working-copy.sqlite). Confirmed via `resolve_superboss_db_path()`.",
+          "- [x] Pulled all 20 `entity_type='engine'` rows from wiring_registry (real"
+        ]
+      }
+    ]
+  },
+  {
+    "number": 213,
+    "title": "fix(orchestrator): mirror prompt-os-resolver.ts + orchestra-execution-logger.ts + direct find_code.sh call",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/213",
+    "updated_at": "2026-08-06T19:48:34Z",
+    "head_ref": "worker/task-20260806-192043-precise-correction-based-on-real-direct",
+    "total_added": 458,
+    "total_matched": 51,
+    "overlap_ratio": 0.11135371179039301,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 115,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260806-192043-precise-correction-based-on-real-direct",
+          "SPEC: apply 3 real precise corrections to the internal dev-ops orchestrator",
+          "chain (UMR-20260806-124327-6ffb / UMR-20260806-125524-720c), mirroring 3",
+          "proven compliance-tracker patterns: (1) prompt-os-resolver.ts's versioned",
+          "`prompt_templates` table instead of free-composed prose dispatch text, (2)"
+        ]
+      },
+      {
+        "path": "PROGRESS_PR207_task-181155.md",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "superboss-register.py",
+        "status": "differs",
+        "added_lines": 343,
+        "matched_in_main": 51,
+        "unmatched_sample": [
+          "# --- Independent re-verification audit trail (this task's Gap 2:",
+          "# task-20260806-181155 / UMR-20260806-125524-720c) -------------------------",
+          "# NOTE: UMR-124327-6ffb step 2 (UMR-scoped agent_id reuse/mint) is NOT",
+          "# duplicated here -- mid-build, this task discovered PR #199 (merged into",
+          "# main during this same work session) already built the real, tested,"
+        ]
+      },
+      {
+        "path": "tests/test_unified_orchestrator.py",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "unified_orchestrator.py",
+        "status": "missing_on_main"
+      }
+    ]
+  },
+  {
+    "number": 215,
+    "title": "Real disk emergency remediation root filesystem at 100 percent",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/215",
+    "updated_at": "2026-08-06T19:54:59Z",
+    "head_ref": "worker/task-20260806-151402-real-disk-emergency-remediation-root-fil",
+    "total_added": 14,
+    "total_matched": 0,
+    "overlap_ratio": 0.0,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 14,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260806-151402-real-disk-emergency-remediation-root-fil",
+          "- [x] Independently re-verified live disk/load/swap state before touching anything (per standing rule: verify before any write/restore/kill on Veridian PM dispatches).",
+          "- [x] Confirmed this task is a duplicate of a known false-premise cascade, already terminated once under UMR-20260806-153532-c0b1 (predecessor UMR-20260806-151638-48cc), but its task.yaml was left at status=in_progress so resume_interrupted_workers_tick() replayed it.",
+          "- [x] Closed the task out properly this time (checkpoint status=blocked) so it stops being replayed.",
+          "## Evidence gathered this invocation (2026-08-06 ~19:52 UTC)"
+        ]
+      }
+    ]
+  },
+  {
+    "number": 216,
+    "title": "Precise correction based on real direct study, reuse pruned_code_search, mirror prompt-os-resolver and orchestra-execution-logger patterns",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/216",
+    "updated_at": "2026-08-06T19:55:33Z",
+    "head_ref": "worker/task-20260806-192043-precise-correction-based-on-real-direct",
+    "total_added": 458,
+    "total_matched": 51,
+    "overlap_ratio": 0.11135371179039301,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 115,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260806-192043-precise-correction-based-on-real-direct",
+          "SPEC: apply 3 real precise corrections to the internal dev-ops orchestrator",
+          "chain (UMR-20260806-124327-6ffb / UMR-20260806-125524-720c), mirroring 3",
+          "proven compliance-tracker patterns: (1) prompt-os-resolver.ts's versioned",
+          "`prompt_templates` table instead of free-composed prose dispatch text, (2)"
+        ]
+      },
+      {
+        "path": "PROGRESS_PR207_task-181155.md",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "superboss-register.py",
+        "status": "differs",
+        "added_lines": 343,
+        "matched_in_main": 51,
+        "unmatched_sample": [
+          "# --- Independent re-verification audit trail (this task's Gap 2:",
+          "# task-20260806-181155 / UMR-20260806-125524-720c) -------------------------",
+          "# NOTE: UMR-124327-6ffb step 2 (UMR-scoped agent_id reuse/mint) is NOT",
+          "# duplicated here -- mid-build, this task discovered PR #199 (merged into",
+          "# main during this same work session) already built the real, tested,"
+        ]
+      },
+      {
+        "path": "tests/test_unified_orchestrator.py",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "unified_orchestrator.py",
+        "status": "missing_on_main"
+      }
+    ]
+  },
+  {
+    "number": 219,
+    "title": "Single deterministic orchestrator: one entrance, one exit, boolean output contract for VERIDIAN",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/219",
+    "updated_at": "2026-08-06T20:26:08Z",
+    "head_ref": "worker/task-20260806-201941-single-deterministic-orchestrator--one-e",
+    "total_added": 42,
+    "total_matched": 0,
+    "overlap_ratio": 0.0,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 42,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260806-201941-single-deterministic-orchestrator--one-e",
+          "- [x] Hard precondition check (SPEC: do not start until UMR-20260806-135632-329e,",
+          "UMR-20260806-140841-46d1, UMR-20260806-141055-1fec all show status=completed).",
+          "Verified live, not assumed:",
+          "- `resource_governor.py --query-umr --task-identity/--search` returned 0 hits for"
+        ]
+      }
+    ]
+  },
+  {
+    "number": 220,
+    "title": "OWNER DECISION: free capacity now, then directly execute the 3 sanctioned UMRs",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/220",
+    "updated_at": "2026-08-06T20:27:03Z",
+    "head_ref": "worker/task-20260806-201931-owner-decision--free-capacity-now--then",
+    "total_added": 71,
+    "total_matched": 0,
+    "overlap_ratio": 0.0,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 71,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260806-201931-owner-decision--free-capacity-now--then",
+          "- [x] Independently verified every factual premise in the incoming SPEC before taking any",
+          "write/stop/kill action (per standing guidance: veridian PM SPECs have a documented",
+          "11+ case history of confident claims that don't match live state -- verify first).",
+          "- [x] Result: **the SPEC's premises are false.** Did not execute Steps 1-3 as written."
+        ]
+      }
+    ]
+  },
+  {
+    "number": 222,
+    "title": "Phase 0: real stale-backlog reconciliation, 767 stuck tasks confirmed live",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/222",
+    "updated_at": "2026-08-06T21:00:27Z",
+    "head_ref": "worker/task-20260806-205156-phase-0--real-stale-backlog-reconciliati",
+    "total_added": 55,
+    "total_matched": 0,
+    "overlap_ratio": 0.0,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 55,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260806-205156-phase-0--real-stale-backlog-reconciliati",
+          "- [x] Ran `resource_governor.py --reconcile-stale` (real dry run) -> `{\"actions\": []}` (0 actions)",
+          "- [x] Ran `resource_governor.py --reconcile-stale --execute` (real writes) -> `{\"actions\": []}` (0 actions, 0 writes)",
+          "- [x] Regenerated STUCK_TASKS_HEARTBEAT.json for real via the actual production path",
+          "(`systemctl --user start veridian-cron-dispatch-tick.service`, exit 0/SUCCESS,"
+        ]
+      }
+    ]
+  },
+  {
+    "number": 223,
+    "title": "Diagnose real running-count discrepancy: 32 DB rows vs 3 real workers, capacity fix UMR-20260806-162019-4b4f still stuck",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/223",
+    "updated_at": "2026-08-06T21:04:20Z",
+    "head_ref": "worker/task-20260806-205205-diagnose-real-running-count-discrepancy",
+    "total_added": 10,
+    "total_matched": 0,
+    "overlap_ratio": 0.0,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 10,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260806-205205-diagnose-real-running-count-discrepancy",
+          "- [x] Verified real `status='running'` row count via `resource_governor.py --query-umr --status running` cross-checked directly against `/opt/veridian/ai-os/memory/superboss-register.sqlite` (the real DB path per `resolve_superboss_db_path()` -- the `scripts/superboss-register.sqlite` file is a known 0-byte decoy, not used). Real count at check time: **30** (SPEC said 32 -- minor time drift, not fabricated; system churns every few seconds).",
+          "- [x] Split the 30 real rows: 27 `unit_name IS NOT NULL` (systemd-backed), 3 `unit_name IS NULL` (external_ai_state_machine-backed). Confirmed **all 30 rows have `last_heartbeat IS NULL`** -- so `--reconcile-stale` (which always skips NULL heartbeats) is structurally a no-op here; the correct existing canonical mechanism for this exact situation is `--backfill-null-heartbeats` (real `systemctl --user is-active` ground-truth for unit_name rows, real `external_ai_state_machine.py list-sessions` ground-truth for unit_name-null rows -- never a guess, never a delete, only `UPDATE ... status/reason` via the module's own `update_umr_task()`).",
+          "- [x] Ran `--backfill-null-heartbeats` dry run, then `--execute` (real, reversible write via the existing canonical path only, no data deleted -- every corrected row keeps its full history plus a new `reason` recording the exact evidence used). Real result: **20 confirmed ghost rows corrected `running`\u2192`failed`**, 3 confirmed real-forward-progress rows refreshed and kept `running` (real task.yaml/branch evidence), 4 systemd rows genuinely `active` left untouched, 3 external (unit_name-null) rows left untouched (no matching `list-sessions` entry -- inconclusive, not confirmed-dead, correctly not touched per the mechanism's own conservative design).",
+          "- [x] Confirmed real freed capacity: DB `status='running'` count dropped **30 \u2192 10** (real bookkeeping fix). Real live systemd worker count (`dispatch_core.running_worker_count()`, ground truth for the actual dispatch gate) was **unchanged at 4** before and after -- ghost DB rows never consumed real resources, so this reconciliation fixes the *reporting* discrepancy, it does not free real RAM/swap/CPU."
+        ]
+      }
+    ]
+  },
+  {
+    "number": 225,
+    "title": "docs: verified SPEC premise stale/false, directive-resubmission flood already fixed (UMR-20260806-092209-7a2e)",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/225",
+    "updated_at": "2026-08-07T00:30:37Z",
+    "head_ref": "worker/task-20260806-212444-stop-the-directive-resubmission-flood-po",
+    "total_added": 135,
+    "total_matched": 0,
+    "overlap_ratio": 0.0,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 135,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260806-212444-stop-the-directive-resubmission-flood-po",
+          "UMR: UMR-20260806-092209-7a2e",
+          "## Verdict: SPEC premise stale/false -- the described defect was real but was",
+          "already found and fixed by prior work (UMR-20260806-090229-f2a7) hours before",
+          "this SPEC was issued. No new code change made. Documenting the independent"
+        ]
+      }
+    ]
+  },
+  {
+    "number": 226,
+    "title": "docs: verified SPEC premise false, reused-umr_id resume is intentional (UMR-20260806-093654-7566)",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/226",
+    "updated_at": "2026-08-06T22:08:47Z",
+    "head_ref": "worker/task-20260806-212456-narrow-umr-20260806-092722-e526--pr-153",
+    "total_added": 76,
+    "total_matched": 0,
+    "overlap_ratio": 0.0,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 76,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260806-212456-narrow-umr-20260806-092722-e526--pr-153",
+          "Governing UMR: UMR-20260806-071025-1d28. Own UMR: UMR-20260806-093654-7566.",
+          "Supersedes step 3/4 of UMR-20260806-092722-e526.",
+          "- [x] Step 5 (dedup/coordination): confirmed PR 153 (`fix/dispatch-queue-starvation-umr20260806090229-f2a7`,",
+          "merged 2026-08-06T09:46:45Z, merge commit `2782998`) is already in this branch's"
+        ]
+      }
+    ]
+  },
+  {
+    "number": 229,
+    "title": "docs: PM ruling relayed but stale -- cat15/16 creds already self-provisioned (hard rule 6/8 violation); directive_engine.py premise reconfirmed false",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/229",
+    "updated_at": "2026-08-06T22:42:05Z",
+    "head_ref": "worker/task-20260806-223034-pm-decision-on-categories-15-and-16-cred",
+    "total_added": 147,
+    "total_matched": 0,
+    "overlap_ratio": 0.0,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 147,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260806-223034-pm-decision-on-categories-15-and-16-cred",
+          "Governing UMR: UMR-20260806-071025-1d28. Own UMR: UMR-20260806-102610-1930.",
+          "### PART ONE -- categories 15/16 credential ruling",
+          "- [x] Verified the SPEC's premise (\"the executor is holding with an",
+          "unanswered question\") against the live DB before relaying the ruling."
+        ]
+      }
+    ]
+  },
+  {
+    "number": 232,
+    "title": "test(quality-gate): prove build-lock requeue is bounded (SPEC premise verified stale -- proposal 62 already merged PR #168/#172)",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/232",
+    "updated_at": "2026-08-06T23:56:11Z",
+    "head_ref": "worker/task-20260806-234542-pm-approval-of-proposal-62--implement-th",
+    "total_added": 42,
+    "total_matched": 0,
+    "overlap_ratio": 0.0,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 42,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260806-234542-pm-approval-of-proposal-62--implement-th",
+          "Governing UMR: UMR-20260806-071025-1d28. Subject: PM approval of proposal 62.",
+          "## Finding: SPEC premise is stale. Proposal 62 (pm_decisions_pending row 62), its",
+          "## investigation UMR-20260806-120603-217b, its implementation UMR-20260806-123316-cf9f",
+          "## (child UMR-20260806-121247-a93a), and the prerequisite incident fix UMR-20260806-121640-bee5"
+        ]
+      },
+      {
+        "path": "SPEC_VERIFICATION_2026-08-06T234542Z.md",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "tests/test_build_lock_spin_bound.py",
+        "status": "missing_on_main"
+      }
+    ]
+  },
+  {
+    "number": 233,
+    "title": "Merges must run inside a real worker unit, not the interactive session, complete PR 169 167 165",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/233",
+    "updated_at": "2026-08-06T23:59:46Z",
+    "head_ref": "worker/task-20260806-234552-merges-must-run-inside-a-real-worker-uni",
+    "total_added": 27,
+    "total_matched": 0,
+    "overlap_ratio": 0.0,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 27,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260806-234552-merges-must-run-inside-a-real-worker-uni",
+          "Governing UMR: UMR-20260806-071025-1d28. Continues UMR-20260806-123547-e503.",
+          "Full detail: SPEC_VERIFICATION_2026-08-06T235757Z.md",
+          "- [x] Step 1: confirmed genuinely executing inside a real worker unit --",
+          "`veridian-worker@task-20260806-234552-merges-must-run-inside-a-real-worker-uni.service`"
+        ]
+      },
+      {
+        "path": "SPEC_VERIFICATION_2026-08-06T235757Z.md",
+        "status": "missing_on_main"
+      }
+    ]
+  },
+  {
+    "number": 236,
+    "title": "docs: diagnose UMR-20260806-135632-329e false stall premise + find live DB corruption",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/236",
+    "updated_at": "2026-08-07T00:40:32Z",
+    "head_ref": "worker/task-20260807-002858-diagnose-real-stall--umr-20260806-135632",
+    "total_added": 76,
+    "total_matched": 1,
+    "overlap_ratio": 0.013157894736842105,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 76,
+        "matched_in_main": 1,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260807-002858-diagnose-real-stall--umr-20260806-135632",
+          "Governing chain: UMR-20260806-124055-bc80, UMR-20260806-135632-329e.",
+          "- [x] Verified live `umr_tasks` row for `UMR-20260806-135632-329e` directly (not trusting the",
+          "SPEC narrative). **SPEC premise (\"status running... over 60 minutes, stalled at 17662\")",
+          "is false as of now**: the row is `status='failed'`, `ts_completed` populated"
+        ]
+      }
+    ]
+  },
+  {
+    "number": 239,
+    "title": "Resume and finish task-20260806-192052: commit, push, record-completion only",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/239",
+    "updated_at": "2026-08-07T00:48:53Z",
+    "head_ref": "worker/task-20260807-002904-resume-and-finish-task-20260806-192052",
+    "total_added": 55,
+    "total_matched": 0,
+    "overlap_ratio": 0.0,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 55,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260807-002904-resume-and-finish-task-20260806-192052",
+          "Resumed task-20260806-192052 (real substantive work already done: full_server_file_registration.py",
+          "built and run for real, CAP-20260806-194100-e97b registered, wiring_registry file entities backfilled).",
+          "Both real remaining steps (commit+push, agent_work_briefing.py record-completion) are now done.",
+          "- [x] Independently verified live state before acting (per standing anti-false-premise practice):"
+        ]
+      }
+    ]
+  },
+  {
+    "number": 240,
+    "title": "CRITICAL: real corruption confirmed in wiring_registry table, safe recovery required",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/240",
+    "updated_at": "2026-08-07T00:53:25Z",
+    "head_ref": "worker/task-20260807-003146-critical--real-corruption-confirmed-in-w",
+    "total_added": 205,
+    "total_matched": 1,
+    "overlap_ratio": 0.004878048780487805,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 205,
+        "matched_in_main": 1,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260807-003146-critical--real-corruption-confirmed-in-w",
+          "Governing chain: UMR-20260806-124055-bc80, UMR-20260806-135632-329e",
+          "- [x] Independent verification of SPEC claims before any write/destructive action (per",
+          "standing lesson on recurring false-premise dispatch SPECs in this environment):",
+          "- Real DB path resolved via `superboss-register.py`'s own `resolve_superboss_db_path()`:"
+        ]
+      }
+    ]
+  },
+  {
+    "number": 243,
+    "title": "CORRECTION: wiring_registry corruption NOT resolved, Step 5 rebuild is required not optional",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/243",
+    "updated_at": "2026-08-07T05:21:58Z",
+    "head_ref": "worker/task-20260807-051409-correction--wiring-registry-corruption-n",
+    "total_added": 85,
+    "total_matched": 0,
+    "overlap_ratio": 0.0,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 85,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260807-051409-correction--wiring-registry-corruption-n",
+          "Governing chain (as claimed by SPEC): UMR-20260806-124055-bc80, UMR-20260806-222708-1d3b,",
+          "task-20260807-003146-critical--real-corruption-confirmed-in-w.",
+          "- [x] Independently verified every load-bearing claim in the SPEC before taking any",
+          "destructive DDL action (per known recurring false-premise pattern in this repo --"
+        ]
+      }
+    ]
+  },
+  {
+    "number": 244,
+    "title": "docs: verify wiring_registry re-escalation SPEC is false-premise (5th duplicate)",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/244",
+    "updated_at": "2026-08-07T05:28:35Z",
+    "head_ref": "worker/task-20260807-052031-rca-confirmed---interference-removed--no",
+    "total_added": 97,
+    "total_matched": 0,
+    "overlap_ratio": 0.0,
+    "files": [
+      {
+        "path": "FINDING_wiring_registry_reescalation_loop_2026-08-07.md",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 97,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260807-052031-rca-confirmed---interference-removed--no",
+          "Governing chain (as claimed by SPEC): UMR-20260806-124055-bc80, UMR-20260807-010907-6984,",
+          "UMR-20260807-020846-772f.",
+          "- [x] Independently verified every load-bearing claim in the SPEC before taking any",
+          "write/DROP/rebuild action (per known recurring false-premise dispatch pattern in this"
+        ]
+      }
+    ]
+  },
+  {
+    "number": 247,
+    "title": "feat: real embedding/vector-similarity semantic search over capability_registry + wiring_registry (UMR-20260806-124055-bc80)",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/247",
+    "updated_at": "2026-08-07T05:46:06Z",
+    "head_ref": "worker/task-20260807-053223-upgrade-script-and-capability-search-to",
+    "total_added": 87,
+    "total_matched": 1,
+    "overlap_ratio": 0.011494252873563218,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 87,
+        "matched_in_main": 1,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260807-053223-upgrade-script-and-capability-search-to",
+          "Governing chain: UMR-20260806-124055-bc80",
+          "## False-premise finding (verified independently before writing any code)",
+          "The dispatch's claimed precedent -- \"document_engine.py, intent_engine.py,",
+          "and superboss-register.py already contain real embedding or vector-similarity"
+        ]
+      },
+      {
+        "path": "capability_semantic_search.py",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "capability_semantic_search_capability_record.json",
+        "status": "missing_on_main"
+      },
+      {
+        "path": "test_capability_semantic_search.py",
+        "status": "missing_on_main"
+      }
+    ]
+  },
+  {
+    "number": 266,
+    "title": "Register the real 965-issue resolution matrix in capability_registry",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/266",
+    "updated_at": "2026-08-07T14:39:32Z",
+    "head_ref": "worker/task-20260807-142924-register-the-real-965-issue-resolution-m",
+    "total_added": 38,
+    "total_matched": 0,
+    "overlap_ratio": 0.0,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 38,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260807-142924-register-the-real-965-issue-resolution-m",
+          "- [x] Independently verified `/opt/veridian/ai-os/UMR_5767_ISSUE_RESOLUTION_MATRIX.json`",
+          "is real, well-formed JSON (`python3 json.load()`, 1,263,697 bytes,",
+          "sha256 `d633dec8488550895927c793d3ccd55bb68427aba97d57ae77c86cefcfacf4ca`).",
+          "`real_checklist_item_count`=70 matches `len(checklist_resolution_table)`"
+        ]
+      },
+      {
+        "path": "umr_5767_issue_resolution_matrix_capability_record.json",
+        "status": "missing_on_main"
+      }
+    ]
+  },
+  {
+    "number": 267,
+    "title": "Fix PR 256 real audit FAIL: memoize owner_priority_sequence member checks",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/267",
+    "updated_at": "2026-08-07T14:40:11Z",
+    "head_ref": "worker/task-20260807-142156-fix-pr-256-real-audit-fail--memoize-owne",
+    "total_added": 90,
+    "total_matched": 0,
+    "overlap_ratio": 0.0,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "status": "differs",
+        "added_lines": 90,
+        "matched_in_main": 0,
+        "unmatched_sample": [
+          "# PROGRESS -- task-20260807-142156-fix-pr-256-real-audit-fail--memoize-owne",
+          "Governing chain: UMR-20260807-070904-736a, UMR-20260807-070110-5ea7.",
+          "Real PR: FChecklist/veridian-scripts#256 (same PR, not a new one).",
+          "## Pre-work verification (before any write -- standing false-premise-check policy)",
+          "- [x] Fetched PR #256's real head at task start (`d890bae`, committed"
+        ]
+      }
+    ]
+  }
+]
