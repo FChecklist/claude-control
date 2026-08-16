@@ -46,7 +46,8 @@ progress/task-20260816-141439-dispose-of-the-ten-rejected-pull-request.md.
 ## Remaining
 - [x] Nothing left -- all 7 PRs disposed of per spec (0 merged, 0 newly closed, 7 left open with
       real defect/decision restated and re-verified against current head)
-- [ ] record-completion write-back to UMR-20260816-171258-bf1d
+- [x] Opened progress PR FChecklist/claude-control#251 (not self-merged -- never self-certify)
+- [x] record-completion write-back to UMR-20260816-171258-bf1d (AGENT-20260816-171258-bf1d)
 
 TASK COMPLETE. 0/7 merged (no fresh PASS existed against current head for any), 7/7 verdicts
 re-verified live and left standing (5 real-defect, 1 infra-blocked, 1 owner-decision-required).
