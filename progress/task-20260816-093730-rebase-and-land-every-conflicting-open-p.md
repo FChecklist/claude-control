@@ -89,9 +89,14 @@ commit is real, has two real parents, and is visible in the PR's own commit hist
       pass against the merged code. New head `8334889` (parents `58f4975` + `04b0e73`),
       now `mergeable=true`/`clean`. Posted `@claude please audit` at this exact head SHA
       -- not merged yet, no self-certification.
+- [x] 111 — **real conflict resolved, pushed via API, audit requested, awaiting verdict**.
+      Conflict in `ai-os/MASTER_INDEX.yaml`: both branch and master independently appended
+      registry entries at the same list position -- resolved by concatenation (branch's
+      `litert_spike` entry + all 9 of master's entries), no id collisions. New head
+      `8735ce5` (parents `549988b` + `04b0e73`), now `mergeable=true`/`clean`. Posted
+      `@claude please audit` -- not merged yet.
 
 ## Remaining
-- [ ] 111 — merge master, resolve conflicts, push, audit, merge/block/close
 - [ ] 72 — merge master, resolve conflicts, push, audit, merge/block/close
 - [ ] Final report table
 - [ ] `record-completion` call
