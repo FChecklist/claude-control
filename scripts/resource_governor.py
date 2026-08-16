@@ -78,6 +78,41 @@ EMERGENCY_CONSECUTIVE_TICKS_HARDSTOP = int(os.environ.get("VERIDIAN_GOVERNOR_EME
 
 METRIC_NAMES = ("cpu", "ram", "disk_io", "network")
 
+# Duplicate-resubmission loop hard cap (real incident, PM sentinel evidence
+# gathered 2026-08-14T07:50Z via `resource_governor.py --query-umr --limit
+# 120`, 2026-08-14T01:51-07:47 UTC window): 59 of 120 real umr_tasks rows
+# (49%) were status=rejected_duplicate, all against a small number of
+# task_identity values whose underlying task is long dead and already RCA'd
+# as correctly-killed with no remaining scope. The root cause: submit()'s own
+# de-duplication (find_active_umr_by_identity, below) only ever looks at
+# whether an ACTIVE (queued/dispatched/running) row exists RIGHT NOW for this
+# task_identity -- it has no memory of an identity that has been rejected as
+# a duplicate over and over. So the moment the one lingering active/blocking
+# row for that identity itself finally reaches a terminal state (killed,
+# completed, or is itself rejected_duplicate), the NEXT resume/requeue call
+# for that exact same identity -- from ANY caller that funnels through this
+# one submit() choke point, e.g. veridian-task-watchdog.py's step_2
+# apply_known_fix()/_fix_restart_unit() "resume the stalled unit" path and
+# its step_3 escalate() "requeue a new RCA" path, both of which re-fire every
+# ~60s watchdog tick for as long as the target still looks stalled/looping --
+# sees no active row at all and is free to create a brand new "queued" row,
+# resetting the loop forever with zero real progress ever made. Real fix:
+# rejected_duplicate now counts as a REAL consumed attempt against its
+# task_identity (never a free, unlimited retry) -- once an identity
+# accumulates MAX_DUPLICATE_ATTEMPTS_PER_IDENTITY of them, it is retired
+# PERMANENTLY (a genuinely new terminal status, RETIRED_STATUS) instead of
+# being resubmitted every tick. Once retired, submit() refuses ANY further
+# submission for that identity immediately -- it does not even re-check
+# find_active_umr_by_identity, and it writes no new umr_tasks row, so the
+# retired identity can never again consume a real governor cycle. Comfortably
+# above the largest legitimate rapid-fire burst this module's own tests
+# exercise (10 submissions in one tight loop, see
+# test_submit_dedup_rejects_rapid_fire_duplicate_submissions), comfortably
+# below the real 59-in-~6h runaway this constant exists to stop.
+MAX_DUPLICATE_ATTEMPTS_PER_IDENTITY = int(
+    os.environ.get("VERIDIAN_GOVERNOR_MAX_DUPLICATE_ATTEMPTS", "20"))
+RETIRED_STATUS = "retired_max_attempts"
+
 
 def _run(cmd, **kw):
     return subprocess.run(cmd, capture_output=True, text=True, **kw)
@@ -247,14 +282,30 @@ def _save_json(path, data):
     os.replace(tmp, path)
 
 
-def sample_metrics(now=None):
+def sample_metrics(now=None, persist=True):
     """Real, delta-based sample of all 4 metrics against the PREVIOUSLY
     persisted raw sample (resource-governor-metric-state.json) -- delta-based
     so a single-shot tick invocation (cron, not just a long-lived loop) still
     computes a real rate, not just an instantaneous (and for disk/net,
     meaningless) counter value. First-ever call (no prior state) seeds state
     and reports 0% for the three delta-based metrics -- never freezes the
-    queue on cold-start noise."""
+    queue on cold-start noise.
+
+    persist=True (default, dispatch_one()'s own periodic --tick usage):
+    unchanged original behavior -- the freshly read raw sample is saved to
+    METRIC_STATE_PATH, becoming the baseline the NEXT call deltas against.
+
+    persist=False (UMR-20260814-085900, read-only mode for on-demand/
+    high-frequency callers like task-gateway.py cmd_start's stop-work gate
+    check, via resource_threshold_block_reason(persist=False)): the current
+    raw sample is still read and deltas are still computed against whatever
+    baseline is already on disk, but that baseline is left untouched. Without
+    this, every cmd_start call -- and cmd_start is now the primary,
+    high-frequency entrypoint for starting any task -- would overwrite the
+    single shared METRIC_STATE_PATH file dispatch_one()'s own periodic --tick
+    loop relies on for ITS interval (dt) math, corrupting the disk_io/network
+    rate calculations for the whole system's real periodic gate, not just
+    this on-demand check (AUDIT:FAIL on PR#219, 2026-08-14)."""
     now = now or _utcnow()
     curr_cpu = read_cpu_times()
     curr_disk = read_disk_sectors()
@@ -262,8 +313,9 @@ def sample_metrics(now=None):
     ram = read_mem_percent()
 
     prev = _load_json(METRIC_STATE_PATH)
-    state = {"ts": now.isoformat(), "cpu": curr_cpu, "disk_sectors": curr_disk, "net_bytes": curr_net}
-    _save_json(METRIC_STATE_PATH, state)
+    if persist:
+        state = {"ts": now.isoformat(), "cpu": curr_cpu, "disk_sectors": curr_disk, "net_bytes": curr_net}
+        _save_json(METRIC_STATE_PATH, state)
 
     if prev is None:
         return {"cpu": 0.0, "ram": ram, "disk_io": 0.0, "network": 0.0}
@@ -319,17 +371,51 @@ def submit(task_spec, tier, source_trigger):
     with sbr._write_lock():
         conn = sbr._connect()
         sbr._ensure_umr_table(conn)
+
+        # Permanently-retired identities short-circuit here, BEFORE the
+        # active-row check below -- this is what actually stops the
+        # resubmission loop: no find_active_umr_by_identity() re-check, no
+        # new umr_tasks row written, so a retired identity can never consume
+        # another real governor cycle no matter how many more times a
+        # resume/requeue caller re-fires for it.
+        retired = sbr.query_umr_tasks(conn, status=RETIRED_STATUS, task_identity=task_identity, limit=1)
+        if retired:
+            retired_row = retired[0]
+            conn.close()
+            reason = (
+                f"submission refused: task_identity={task_identity!r} was permanently retired "
+                f"as umr_id={retired_row['umr_id']} after {MAX_DUPLICATE_ATTEMPTS_PER_IDENTITY} "
+                f"rejected_duplicate attempts -- never resubmitted again."
+            )
+            return {"accepted": False, "umr_id": retired_row["umr_id"], "reason": reason}
+
         existing = sbr.find_active_umr_by_identity(conn, task_identity)
         if existing:
-            reason = (
-                f"duplicate submission rejected: task_identity={task_identity!r} already "
-                f"{existing['status']} as umr_id={existing['umr_id']} "
-                f"(source_trigger={existing['source_trigger']!r}, tier={existing['tier']})"
-            )
+            prior_rejections = sbr.query_umr_tasks(
+                conn, status="rejected_duplicate", task_identity=task_identity, limit=1_000_000)
+            attempt_count = len(prior_rejections) + 1
+            if attempt_count >= MAX_DUPLICATE_ATTEMPTS_PER_IDENTITY:
+                status = RETIRED_STATUS
+                reason = (
+                    f"task_identity={task_identity!r} retired permanently: reached "
+                    f"{attempt_count} rejected_duplicate attempts (hard cap="
+                    f"{MAX_DUPLICATE_ATTEMPTS_PER_IDENTITY}) -- already {existing['status']} as "
+                    f"umr_id={existing['umr_id']} (source_trigger={existing['source_trigger']!r}, "
+                    f"tier={existing['tier']}); no further resubmission will ever be accepted for "
+                    f"this identity."
+                )
+            else:
+                status = "rejected_duplicate"
+                reason = (
+                    f"duplicate submission rejected: task_identity={task_identity!r} already "
+                    f"{existing['status']} as umr_id={existing['umr_id']} "
+                    f"(source_trigger={existing['source_trigger']!r}, tier={existing['tier']}) "
+                    f"[attempt {attempt_count}/{MAX_DUPLICATE_ATTEMPTS_PER_IDENTITY}]"
+                )
             umr_id = sbr.upsert_umr_task(conn, {
                 "task_identity": task_identity,
                 "tier": tier,
-                "status": "rejected_duplicate",
+                "status": status,
                 "source_trigger": source_trigger,
                 "task_kind": task_spec.get("task_kind", "systemctl_action"),
                 "unit_name": task_spec.get("unit_name"),
@@ -416,6 +502,50 @@ def _perform_spawn(row):
     return {"status": "failed", "unit_name": row.get("unit_name"), "outputs": {"error": f"unknown task_kind {task_kind!r}"}}
 
 
+def resource_threshold_block_reason(now=None, persist=True):
+    """UMR-20260813-042708-e592 (governing chain UMR-20260806-171945-5767):
+    real, shared stop-work gate -- the EMERGENCY_STOP sentinel-file check
+    and the live metric-threshold ("frozen") check dispatch_one() already
+    ran, unconditionally, before selecting or spawning any real work, are
+    extracted here -- pure extraction, same two checks, same order, same
+    real return values -- so task-gateway.py's cmd_start (a different,
+    synchronous, direct-spawn calling convention this extraction
+    deliberately leaves unchanged, rather than restructuring cmd_start into
+    dispatch_one()'s async submit-and-queue shape) gets the identical real
+    protection before IT spawns a real systemd unit too, instead of a
+    parallel, divergent reimplementation of these same two checks.
+
+    persist controls whether the underlying sample_metrics() call is allowed
+    to overwrite the shared METRIC_STATE_PATH baseline (see sample_metrics()'s
+    own docstring for why this matters, UMR-20260814-085900): dispatch_one()'s
+    own periodic --tick call keeps the default persist=True (unchanged
+    behavior -- it IS the owner of that baseline). task-gateway.py cmd_start's
+    on-demand --check-task-start-gate CLI call passes persist=False, so a
+    high-frequency, non-periodic gate check can never corrupt the periodic
+    tick dispatcher's own interval (dt) math.
+
+    Returns (blocked: bool, detail: str|None, metrics: dict|None). metrics
+    is None only for the emergency-stop case (sample_metrics() never runs
+    there -- unnecessary once already blocked, matching the original
+    inline code's own short-circuit).
+
+    Deliberately does NOT call _record_emergency_tick() -- that is
+    dispatch_one()'s own tick-cadence-specific escalation bookkeeping (a
+    consecutive-TICKS-over-threshold counter that can itself write the
+    EMERGENCY_STOP sentinel or shed load). Calling it from here would let
+    cmd_start's on-demand, non-periodic calls corrupt that real "consecutive
+    ticks" semantics. _record_emergency_tick() stays dispatch_one()-only,
+    called by it after this function returns, exactly as before this
+    extraction."""
+    if os.path.exists(EMERGENCY_STOP_PATH):
+        return True, "EMERGENCY_STOP sentinel present -- clear via --clear-emergency-stop", None
+    metrics = sample_metrics(now=now, persist=persist)
+    over = over_threshold_metrics(metrics)
+    if over:
+        return True, f"metric(s) at/over {METRIC_THRESHOLD_PERCENT}%: {over}", metrics
+    return False, None, metrics
+
+
 def dispatch_one(dry_run=False, now=None):
     """Checks all 4 real metrics, and only if NONE are at/over threshold,
     acquires dispatch_core's shared lock and does EVERYTHING else --
@@ -428,16 +558,20 @@ def dispatch_one(dry_run=False, now=None):
     ("callers must check this WHILE holding acquire_dispatch_lock(), never
     before/after"). Never raises for a normal 'nothing to do'/'frozen'
     outcome."""
-    if os.path.exists(EMERGENCY_STOP_PATH):
-        return {"action": "emergency_stopped",
-                "detail": "EMERGENCY_STOP sentinel present -- clear via --clear-emergency-stop"}
+    # UMR-20260813-042708-e592: these two checks are now
+    # resource_threshold_block_reason() (see its own docstring) -- behavior
+    # here is UNCHANGED, this is a pure extraction so task-gateway.py's
+    # cmd_start can share the identical real checks.
+    blocked, detail, metrics = resource_threshold_block_reason(now=now)
+    if metrics is None:
+        # EMERGENCY_STOP sentinel -- short-circuited before sample_metrics()
+        # ever ran, exactly as this function's own pre-extraction code did.
+        return {"action": "emergency_stopped", "detail": detail}
 
-    metrics = sample_metrics(now=now)
     over = over_threshold_metrics(metrics)
     _record_emergency_tick(over)
-    if over:
-        return {"action": "frozen", "detail": f"metric(s) at/over {METRIC_THRESHOLD_PERCENT}%: {over}",
-                "metrics": metrics}
+    if blocked:
+        return {"action": "frozen", "detail": detail, "metrics": metrics}
 
     dc = _dispatch_core()
     sbr = _superboss_register()
@@ -655,11 +789,31 @@ def main():
     ap.add_argument("--search", default=None, help="free-text FTS5 query over task_identity/source_trigger/logs_ref")
     ap.add_argument("--task-identity", dest="task_identity", default=None)
     ap.add_argument("--clear-emergency-stop", action="store_true")
+    ap.add_argument("--check-task-start-gate", dest="check_task_start_gate", action="store_true",
+                     help="UMR-20260813-042708-e592: real, shared stop-work-order + "
+                          "resource-threshold check for a caller OUTSIDE dispatch_one()'s own queue "
+                          "(currently: task-gateway.py's cmd_start, before it spawns a real systemd "
+                          "unit) -- same real gate dispatch_one() applies to every queued row, exposed "
+                          "as its own callable check rather than a parallel/divergent reimplementation. "
+                          "Prints {\"blocked\": bool, \"detail\": str|None} and exits 0 regardless of "
+                          "blocked (the caller decides what a block means; this command's own exit "
+                          "code is not the gate signal, exactly like --query-umr above).")
+    ap.add_argument("--title", default=None)
     args = ap.parse_args()
 
     if args.clear_emergency_stop:
         clear_emergency_stop()
         print(json.dumps({"ok": True, "cleared": True}))
+        return
+
+    if args.check_task_start_gate:
+        # persist=False (UMR-20260814-085900): this is an on-demand,
+        # high-frequency caller (task-gateway.py cmd_start), never the
+        # periodic --tick dispatcher -- it must never overwrite the shared
+        # METRIC_STATE_PATH baseline dispatch_one() deltas its own next tick
+        # against. See sample_metrics()'s docstring.
+        blocked, detail, metrics = resource_threshold_block_reason(persist=False)
+        print(json.dumps({"blocked": blocked, "detail": detail, "metrics": metrics}, default=str))
         return
 
     if args.query_umr:

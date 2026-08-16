@@ -300,14 +300,19 @@ items:
   domain: intelligence_matching
   name: Capability Engine (prompt-lifecycle sense)
   requirement: Required software capability assessment matching prompt needs to available tools.
-  verdict: not_implemented
-  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
-    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
-    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
-    evidence (reproduced below). See ai-os/VERIDIAN_ARCHITECTURE_V2_GAP_ANALYSIS_2026-07-25.yaml engine-capability-intel
-    for full evidence (Capability Registry Engine remains a different-domain, reusable pattern, not a
-    functional match).'
-  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+  verdict: partially_implemented
+  evidence: 'UPDATED 2026-07-27 (phase_9_gateway_knowledge_sync_infrastructure, FChecklist/compliance-tracker#588,
+    FChecklist/claude-control#112): the prior "not_implemented" verdict is now stale for one real path -- this
+    phase wired one real VERIDIAN-v2 prompt-execution request (orchestrate/route.ts, layerKey "task_oa") to
+    the EXISTING capability_registry table via scripts/superboss-register.py register-capability/
+    lookup-capability (capability_id CAP-20260727-084004-bff8, capability_name "task_oa" reused verbatim from
+    orchestraLayers.layerKey, not a new parallel matcher, per the gap analysis''s own reuse note). `lookup-capability
+    --capability-name task_oa` returns a real, live exact-match row. This is a genuine functional match, not
+    the "different-domain, reusable pattern" the prior UNCHANGED verdict described -- but it covers exactly
+    ONE prompt-execution route''s capability, not a general/automatic prompt-needs-to-capability assessment run
+    for every prompt template in prompt_templates/prompt_versions. Remains partially_implemented, not
+    fully_implemented, until that generalization exists.'
+  status_as_of_2026_07_27: UPDATED
 - id: engine-confidence
   domain: intelligence_matching
   name: Confidence Engine
@@ -739,24 +744,48 @@ items:
   name: Gateway Integration Engine
   requirement: API gateway routing, rate limiting, protocol translation for external integrations.
   verdict: partially_implemented
-  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
-    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
-    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
-    evidence (reproduced below). G05 (mother-router.ts/model-tier-eligibility.ts) remains the real, live
-    provider/model-selection gateway boundary; no rate-limiting/protocol-translation code added.'
+  evidence: 'UPDATED 2026-07-27 (phase_9_gateway_knowledge_sync_infrastructure, FChecklist/compliance-tracker#588,
+    FChecklist/claude-control#112): the ROUTING half of this requirement is now more real than the prior
+    UNCHANGED verdict described. G05 (mother-router.ts) is not just "the real, live provider/model-selection
+    gateway boundary" in the abstract -- its end_user_org scope (computeEndUserOrgResolution/resolveModel) had
+    ZERO real callers anywhere in the repo before this phase (grep-confirmed), a fact this gap analysis had not
+    previously surfaced. orchestrate/route.ts now genuinely crosses it (resolveModel({scope:"end_user_org",...})
+    at orchestrate/route.ts:225-226, replacing a direct orchestra-model-resolver.ts call), with a real
+    ai_routing_audit_log write on every call -- registered as wiring_registry route
+    RT-veridian-v2-gateway-knowledge-sync-001, hops_through gateway-G05, VERIFIED_MATCH. Verdict stays
+    partially_implemented, NOT upgraded to fully_implemented: rate limiting and protocol translation for
+    external integrations -- the other two thirds of this requirement -- remain entirely unbuilt, and this
+    phase''s own CONSTRAINTS explicitly scope those out as a separate, distinct open gap this phase does not
+    close. Roughly a third of the repo''s other AI dispatch call sites (mother-router.ts''s own documented
+    35-file inventory) still bypass G05 entirely -- unchanged by this phase, which touched exactly one call
+    site by design (WIRING_ENGINE_PHASE_PLAN_2026-07-25.yaml phase_1''s own "one proven path first" method).'
   known_partial_prior_art_ref: engines_gateways_architecture_pattern
-  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+  status_as_of_2026_07_27: UPDATED
 - id: engine-knowledge-sync
   domain: sync_infrastructure
   name: Knowledge Sync Engine
   requirement: Domain knowledge synchronization between browser cache and server knowledge base.
   verdict: partially_implemented
-  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
-    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
-    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
-    evidence (reproduced below). knowledge_engine remains the real server-side half only.'
+  evidence: 'UPDATED 2026-07-27 (phase_9_gateway_knowledge_sync_infrastructure, FChecklist/claude-control#112):
+    the SERVER-SIDE half of this requirement gained one more real, exercised sync path -- a new knowledge_engine
+    row (KE-20260727-084038-6d5f, identifier veridian_v2_gateway_knowledge_sync, tag
+    domain:veridian_architecture_v2) registered via the real register-knowledge/query-knowledge write-path
+    (`query-knowledge "veridian_v2_gateway_knowledge_sync" --tag domain:veridian_architecture_v2` returns
+    found=1), documenting this same phase''s gateway hop. This phase deliberately did NOT attempt the
+    browser-cache half of this requirement (a separate, phase_5_browser_execution_tiers concern, out of this
+    phase''s scope per VERIDIAN_ARCHITECTURE_V2_PHASE_PLAN_2026-07-25.yaml''s own scope note) -- knowledge_engine
+    remains the real server-side half only, verdict correctly stays partially_implemented, not upgraded to
+    fully_implemented. Separately, unrelated to this phase''s own work: KE-20260725-233806-1d75 (an existing
+    domain:veridian_architecture_v2 row for compliance-tracker''s prompt-compiler/pipeline.ts) is currently
+    PATH_MISSING against the live /opt/veridian/repos/compliance-tracker checkout -- confirmed this is checkout
+    staleness (that shared checkout is on an unrelated branch with its own uncommitted changes, and the
+    sync-repos.sh cron that used to keep it current is intentionally disabled per
+    #STOPPED-ALL-CRON-2026-07-26#), not a real missing file (pipeline.ts is real and merged on main, confirmed
+    via a fresh checkout). Named here as an explicit, un-reconciled decision -- not fixed by this phase, since
+    doing so would require touching a disabled cron or another session''s uncommitted checkout, both outside
+    this phase''s CONSTRAINTS.'
   known_partial_prior_art_ref: knowledge_engine
-  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+  status_as_of_2026_07_27: UPDATED
 - id: engine-model-selection
   domain: sync_infrastructure
   name: Model Selection Engine

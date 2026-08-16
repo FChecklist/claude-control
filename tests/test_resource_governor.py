@@ -190,6 +190,114 @@ def test_submit_allows_resubmission_once_prior_entry_reaches_a_terminal_state(tm
 
 
 # ---------------------------------------------------------------------------
+# Duplicate-resubmission loop hard cap -- the real fix for the 49%-of-fleet-
+# capacity incident (PM sentinel evidence, resource_governor.py --query-umr,
+# 2026-08-14T01:51-07:47Z: 59/120 rows rejected_duplicate against a handful
+# of long-dead, already-RCA'd task identities).
+# ---------------------------------------------------------------------------
+
+def test_duplication_blocked_identity_is_retired_and_never_resubmitted_again(tmp_path, monkeypatch):
+    """Reproduces the real incident shape: a resume/requeue caller (e.g.
+    veridian-task-watchdog.py's step_2/step_3 fix/escalate paths) keeps
+    calling submit() for the SAME task_identity every tick. Proves (1)
+    rejected_duplicate attempts are counted against the identity and, once
+    the hard cap is hit, the identity is retired with a real terminal status
+    instead of rejected_duplicate, and (2) critically, even after the
+    ORIGINAL blocking row itself later reaches a terminal state too (the
+    literal "already-terminal task identity" resubmission bug), the very
+    next submit() call for that identity -- simulating the next dispatch
+    tick's resume attempt -- is refused immediately with NO new umr_tasks
+    row written, so the identity can never again be resubmitted."""
+    work, env = build_governor_fixture_tree(tmp_path)
+    env["VERIDIAN_GOVERNOR_MAX_DUPLICATE_ATTEMPTS"] = "3"
+    rg = _load_resource_governor(work, env, monkeypatch)
+    sbr = rg._superboss_register()
+
+    task_spec = {
+        "task_identity": "task-20260807-052027",
+        "task_kind": "systemctl_action",
+        "unit_name": "veridian-worker@task-20260807-052027.service",
+        "inputs": {"action": "restart"},
+    }
+
+    r1 = rg.submit(task_spec, tier=2, source_trigger="veridian-task-watchdog:restart_unit")
+    assert r1["accepted"]
+
+    r2 = rg.submit(task_spec, tier=2, source_trigger="veridian-task-watchdog:restart_unit")
+    assert not r2["accepted"]
+    assert "duplicate submission rejected" in r2["reason"]
+
+    # 3rd submission is the 2nd rejected_duplicate attempt -- still under cap=3.
+    r3 = rg.submit(task_spec, tier=2, source_trigger="veridian-task-watchdog:restart_unit")
+    assert not r3["accepted"]
+    assert "duplicate submission rejected" in r3["reason"]
+
+    # 4th submission is the 3rd rejected_duplicate attempt -- hits cap=3, gets retired.
+    r4 = rg.submit(task_spec, tier=2, source_trigger="veridian-task-watchdog:restart_unit")
+    assert not r4["accepted"]
+    assert "retired permanently" in r4["reason"]
+
+    statuses_after_retirement = _umr_statuses(env["SUPERBOSS_REGISTER_DB"], "task-20260807-052027")
+    assert statuses_after_retirement.count("queued") == 1
+    assert statuses_after_retirement.count("rejected_duplicate") == 2
+    assert statuses_after_retirement.count(rg.RETIRED_STATUS) == 1
+
+    # The underlying task is now confirmed long-dead (RCA concluded
+    # correctly-killed) -- the ORIGINAL row that used to block de-dup also
+    # reaches a terminal state. Before this fix, this is exactly the moment
+    # a fresh submit() would see NO active row and create a brand new
+    # "queued" entry, resetting the loop forever.
+    conn = sbr._connect()
+    with sbr._write_lock():
+        sbr.update_umr_task(conn, r1["umr_id"], status="killed")
+        conn.commit()
+    conn.close()
+
+    rows_before_next_tick = len(sbr.query_umr_tasks(
+        sbr._connect(), status=None, task_identity="task-20260807-052027", limit=1000))
+
+    # "Next tick": the resume/requeue caller fires again for the exact same
+    # already-terminal task_identity.
+    r5 = rg.submit(task_spec, tier=2, source_trigger="veridian-task-watchdog:restart_unit")
+    assert not r5["accepted"], "a permanently retired identity must never be resubmitted again"
+    assert "permanently retired" in r5["reason"]
+    assert r5["umr_id"] == r4["umr_id"], "retirement short-circuit must return the SAME retired row, not write a new one"
+
+    conn = sbr._connect()
+    rows_after_next_tick = len(sbr.query_umr_tasks(conn, status=None, task_identity="task-20260807-052027", limit=1000))
+    conn.close()
+    assert rows_after_next_tick == rows_before_next_tick, (
+        "a retired identity's next-tick resubmission attempt must write NO new umr_tasks row -- "
+        f"had {rows_before_next_tick} rows, now {rows_after_next_tick}"
+    )
+
+    statuses_final = _umr_statuses(env["SUPERBOSS_REGISTER_DB"], "task-20260807-052027")
+    assert statuses_final.count("queued") == 0, "no brand-new queued row must ever be created for a retired identity"
+    assert statuses_final.count("killed") == 1, "the original row's own terminal transition must be untouched"
+    assert statuses_final.count(rg.RETIRED_STATUS) == 1
+
+
+def test_rapid_fire_duplicate_burst_stays_under_the_retirement_cap(tmp_path, monkeypatch):
+    """The existing rapid-fire dedup scenario (10 submissions in one tight
+    loop) must NOT accidentally retire the identity -- the default
+    MAX_DUPLICATE_ATTEMPTS_PER_IDENTITY is comfortably above a normal single
+    burst, only a sustained real loop across many ticks should ever retire
+    one."""
+    work, env = build_governor_fixture_tree(tmp_path)
+    rg = _load_resource_governor(work, env, monkeypatch)
+    assert rg.MAX_DUPLICATE_ATTEMPTS_PER_IDENTITY > 10
+
+    task_spec = {"task_identity": "task-burst", "task_kind": "systemctl_action",
+                 "unit_name": "u-burst", "inputs": {"action": "restart"}}
+    results = [rg.submit(task_spec, tier=2, source_trigger="test") for _ in range(10)]
+    assert sum(1 for r in results if r["accepted"]) == 1
+    assert all(r["accepted"] or r["reason"].startswith("duplicate submission rejected") for r in results)
+
+    statuses = _umr_statuses(env["SUPERBOSS_REGISTER_DB"], "task-burst")
+    assert rg.RETIRED_STATUS not in statuses
+
+
+# ---------------------------------------------------------------------------
 # Real per-metric 99% hard cap -- any ONE metric freezes the queue
 # ---------------------------------------------------------------------------
 
@@ -200,7 +308,7 @@ def test_any_single_metric_at_99_percent_freezes_the_queue(tmp_path, monkeypatch
 
     metrics = {"cpu": 10.0, "ram": 10.0, "disk_io": 10.0, "network": 10.0}
     metrics[metric] = 99.5
-    monkeypatch.setattr(rg, "sample_metrics", lambda now=None: metrics)
+    monkeypatch.setattr(rg, "sample_metrics", lambda now=None, persist=True: metrics)
 
     submitted = rg.submit(
         {"task_identity": "task-frozen", "task_kind": "systemctl_action",
@@ -220,7 +328,7 @@ def test_any_single_metric_at_99_percent_freezes_the_queue(tmp_path, monkeypatch
 def test_all_metrics_under_threshold_does_not_freeze(tmp_path, monkeypatch):
     work, env = build_governor_fixture_tree(tmp_path)
     rg = _load_resource_governor(work, env, monkeypatch)
-    monkeypatch.setattr(rg, "sample_metrics", lambda now=None: {"cpu": 98.9, "ram": 1.0, "disk_io": 1.0, "network": 1.0})
+    monkeypatch.setattr(rg, "sample_metrics", lambda now=None, persist=True: {"cpu": 98.9, "ram": 1.0, "disk_io": 1.0, "network": 1.0})
     assert rg.over_threshold_metrics(rg.sample_metrics()) == []
 
 
@@ -235,7 +343,7 @@ def test_dispatch_proceeds_via_real_dispatch_core_when_metrics_are_clear(tmp_pat
     units_file.write_text("")
     env["MOCK_RUNNING_UNITS_FILE"] = str(units_file)
     rg = _load_resource_governor(work, env, monkeypatch)
-    monkeypatch.setattr(rg, "sample_metrics", lambda now=None: {"cpu": 5.0, "ram": 5.0, "disk_io": 5.0, "network": 5.0})
+    monkeypatch.setattr(rg, "sample_metrics", lambda now=None, persist=True: {"cpu": 5.0, "ram": 5.0, "disk_io": 5.0, "network": 5.0})
 
     rg.submit({"task_identity": "task-clear", "task_kind": "systemctl_action",
                "unit_name": "veridian-worker@task-clear.service", "inputs": {"action": "start"}},
@@ -409,9 +517,175 @@ def test_emergency_stop_blocks_all_dispatch_including_tier_0_until_cleared(tmp_p
     assert result["action"] == "emergency_stopped"
 
     rg.clear_emergency_stop()
-    monkeypatch.setattr(rg, "sample_metrics", lambda now=None: {"cpu": 1.0, "ram": 1.0, "disk_io": 1.0, "network": 1.0})
+    monkeypatch.setattr(rg, "sample_metrics", lambda now=None, persist=True: {"cpu": 1.0, "ram": 1.0, "disk_io": 1.0, "network": 1.0})
     result = rg.dispatch_one()
     assert result["action"] != "emergency_stopped"
+
+
+# ---------------------------------------------------------------------------
+# resource_threshold_block_reason() / --check-task-start-gate
+# (UMR-20260813-042708-e592): the real, shared stop-work gate exposed for a
+# caller OUTSIDE dispatch_one()'s own queue -- task-gateway.py's cmd_start.
+# ---------------------------------------------------------------------------
+
+def test_resource_threshold_block_reason_blocked_by_emergency_stop_sentinel(tmp_path, monkeypatch):
+    work, env = build_governor_fixture_tree(tmp_path)
+    rg = _load_resource_governor(work, env, monkeypatch)
+    rg._save_json(rg.EMERGENCY_STOP_PATH, {"ts": "test", "state": {}})
+
+    blocked, detail, metrics = rg.resource_threshold_block_reason()
+    assert blocked is True
+    assert "EMERGENCY_STOP" in detail
+    assert metrics is None, "sample_metrics() must never run once already blocked by the sentinel"
+
+
+def test_resource_threshold_block_reason_blocked_by_metric_over_threshold(tmp_path, monkeypatch):
+    work, env = build_governor_fixture_tree(tmp_path)
+    rg = _load_resource_governor(work, env, monkeypatch)
+    monkeypatch.setattr(rg, "sample_metrics", lambda now=None, persist=True: {"cpu": 99.5, "ram": 1.0, "disk_io": 1.0, "network": 1.0})
+
+    blocked, detail, metrics = rg.resource_threshold_block_reason()
+    assert blocked is True
+    assert "cpu" in detail
+    assert metrics["cpu"] == 99.5
+
+
+def test_resource_threshold_block_reason_clear_when_nothing_over_and_no_sentinel(tmp_path, monkeypatch):
+    work, env = build_governor_fixture_tree(tmp_path)
+    rg = _load_resource_governor(work, env, monkeypatch)
+    monkeypatch.setattr(rg, "sample_metrics", lambda now=None, persist=True: {"cpu": 1.0, "ram": 1.0, "disk_io": 1.0, "network": 1.0})
+
+    blocked, detail, metrics = rg.resource_threshold_block_reason()
+    assert blocked is False
+    assert detail is None
+    assert metrics == {"cpu": 1.0, "ram": 1.0, "disk_io": 1.0, "network": 1.0}
+
+
+def test_resource_threshold_block_reason_never_corrupts_emergency_tick_counters(tmp_path, monkeypatch):
+    """Deliberately does NOT call _record_emergency_tick() -- calling on-demand,
+    non-periodic cmd_start checks would corrupt dispatch_one()'s own
+    consecutive-ticks-over-threshold escalation counter (see the function's
+    own docstring)."""
+    work, env = build_governor_fixture_tree(tmp_path)
+    rg = _load_resource_governor(work, env, monkeypatch)
+    monkeypatch.setattr(rg, "sample_metrics", lambda now=None, persist=True: {"cpu": 99.5, "ram": 1.0, "disk_io": 1.0, "network": 1.0})
+
+    for _ in range(10):
+        rg.resource_threshold_block_reason()
+
+    assert not os.path.exists(rg.EMERGENCY_STATE_PATH), (
+        "resource_threshold_block_reason() must never itself write emergency-tick state"
+    )
+    assert not os.path.exists(rg.EMERGENCY_STOP_PATH)
+
+
+def test_check_task_start_gate_cli_reports_blocked_true_with_detail(tmp_path, monkeypatch):
+    work, env = build_governor_fixture_tree(tmp_path)
+    rg = _load_resource_governor(work, env, monkeypatch)  # only to compute EMERGENCY_STOP_PATH under this env
+    rg._save_json(rg.EMERGENCY_STOP_PATH, {"ts": "test", "state": {}})
+
+    proc = run_script(work, env, "resource_governor.py",
+                       ["--check-task-start-gate", "--task-identity", "task-x", "--title", "some title"])
+    assert proc.returncode == 0, proc.stderr
+    result = json.loads(proc.stdout)
+    assert result["blocked"] is True
+    assert "EMERGENCY_STOP" in result["detail"]
+
+
+def test_check_task_start_gate_cli_reports_blocked_false_when_clear(tmp_path, monkeypatch):
+    work, env = build_governor_fixture_tree(tmp_path)
+    env["VERIDIAN_GOVERNOR_METRIC_THRESHOLD"] = "1000000"  # real host load must never fail this test
+
+    proc = run_script(work, env, "resource_governor.py",
+                       ["--check-task-start-gate", "--task-identity", "task-x", "--title", "some title"])
+    assert proc.returncode == 0, proc.stderr
+    result = json.loads(proc.stdout)
+    assert result["blocked"] is False
+    assert result["detail"] is None
+
+
+# ---------------------------------------------------------------------------
+# sample_metrics(persist=False) / resource_threshold_block_reason(persist=False)
+# (UMR-20260814-085900, PR#219 AUDIT:FAIL corrective fix): task-gateway.py
+# cmd_start's on-demand, high-frequency gate check must never overwrite the
+# single shared METRIC_STATE_PATH baseline dispatch_one()'s own periodic
+# --tick loop deltas its disk_io/network rate math against.
+# ---------------------------------------------------------------------------
+
+def test_sample_metrics_persist_false_never_writes_metric_state_file(tmp_path, monkeypatch):
+    work, env = build_governor_fixture_tree(tmp_path)
+    rg = _load_resource_governor(work, env, monkeypatch)
+
+    assert not os.path.exists(rg.METRIC_STATE_PATH)
+    rg.sample_metrics(persist=False)
+    assert not os.path.exists(rg.METRIC_STATE_PATH), (
+        "a read-only sample_metrics(persist=False) call must never create/overwrite METRIC_STATE_PATH"
+    )
+
+
+def test_sample_metrics_persist_false_leaves_existing_baseline_untouched(tmp_path, monkeypatch):
+    work, env = build_governor_fixture_tree(tmp_path)
+    rg = _load_resource_governor(work, env, monkeypatch)
+
+    now = datetime(2026, 8, 14, 0, 0, 0, tzinfo=timezone.utc)
+    rg.sample_metrics(now=now, persist=True)
+    baseline_after_first_real_tick = rg._load_json(rg.METRIC_STATE_PATH)
+    assert baseline_after_first_real_tick is not None
+
+    # Simulate many high-frequency, on-demand cmd_start-style calls happening
+    # between two real periodic ticks -- none of them may move the baseline.
+    for i in range(25):
+        rg.sample_metrics(now=now + timedelta(seconds=i + 1), persist=False)
+
+    assert rg._load_json(rg.METRIC_STATE_PATH) == baseline_after_first_real_tick, (
+        "persist=False calls must never advance the baseline dispatch_one()'s next real tick deltas against"
+    )
+
+
+def test_resource_threshold_block_reason_persist_false_never_writes_metric_state_file(tmp_path, monkeypatch):
+    work, env = build_governor_fixture_tree(tmp_path)
+    rg = _load_resource_governor(work, env, monkeypatch)
+
+    blocked, detail, metrics = rg.resource_threshold_block_reason(persist=False)
+    assert metrics is not None
+    assert not os.path.exists(rg.METRIC_STATE_PATH), (
+        "resource_threshold_block_reason(persist=False) (task-gateway.py cmd_start's gate check) must "
+        "never write METRIC_STATE_PATH"
+    )
+
+
+def test_check_task_start_gate_cli_never_mutates_shared_metric_state_file(tmp_path, monkeypatch):
+    """End-to-end reproduction of the exact PR#219 AUDIT:FAIL scenario:
+    task-gateway.py cmd_start calls resource_governor.py
+    --check-task-start-gate as a subprocess on every task start. Before this
+    fix, that subprocess's own resource_threshold_block_reason() ->
+    sample_metrics() call unconditionally overwrote METRIC_STATE_PATH --
+    corrupting the baseline dispatch_one()'s own periodic --tick delta
+    calculation relies on. Proves many high-frequency CLI gate checks leave
+    that shared file exactly as dispatch_one()'s own real tick left it."""
+    work, env = build_governor_fixture_tree(tmp_path)
+    env["VERIDIAN_GOVERNOR_METRIC_THRESHOLD"] = "1000000"  # real host load must never fail this test
+    rg = _load_resource_governor(work, env, monkeypatch)
+
+    # A real periodic dispatch_one() tick establishes the shared baseline,
+    # exactly as the live --tick loop does.
+    rg.dispatch_one()
+    baseline_after_real_tick = rg._load_json(rg.METRIC_STATE_PATH)
+    assert baseline_after_real_tick is not None
+
+    # Many high-frequency cmd_start-style CLI gate checks happen in between --
+    # this is the shape of the real bug: cmd_start is the primary entrypoint
+    # for starting any task, called far more often than the periodic tick.
+    for _ in range(10):
+        proc = run_script(work, env, "resource_governor.py",
+                           ["--check-task-start-gate", "--task-identity", "task-x", "--title", "t"])
+        assert proc.returncode == 0, proc.stderr
+        assert json.loads(proc.stdout)["blocked"] is False
+
+    assert rg._load_json(rg.METRIC_STATE_PATH) == baseline_after_real_tick, (
+        "--check-task-start-gate must never corrupt the shared baseline dispatch_one()'s periodic tick "
+        "delta (disk_io/network rate) math relies on"
+    )
 
 
 # ---------------------------------------------------------------------------

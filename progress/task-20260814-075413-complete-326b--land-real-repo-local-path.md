@@ -1,0 +1,19 @@
+# task-20260814-075413-complete-326b--land-real-repo-local-path
+
+## Completed
+- [x] Re-read SPEC and the audited docs-only diff it references (UMR-20260813-104321-99ff / claude-control PR#148, commit ba749c60) -- confirmed it is STATUS_REPORT.md only, no code, as claimed.
+- [x] Checked commits `4eadc5a`/`bb3fee7` cited by that audit (in `/opt/veridian/repos/claude-control`, `git show`): **both are unrelated to the REPO_LOCAL_PATHS bug**. `bb3fee7` = "collapse server-native PM sentinel + financial-escalation + hierarchy policy into ONE script" (adds `scripts/pm-sentinel-tick.sh` etc.). `4eadc5a` = the STATUS_REPORT.md dedup-finding doc itself (PR#148's own commit). Neither touches `reconcile_stale_running_workers.py` or `superboss-register.py`. The audit's citation was wrong.
+- [x] Independently located the REAL fix by grepping the live deployed files directly: `/opt/veridian/scripts/reconcile_stale_running_workers.py` and `/opt/veridian/scripts/superboss-register.py` **already have `claude-control` wired into `REPO_LOCAL_PATHS`, `MARK_TERMINAL_REPO_CHOICES`, and `DEFAULT_OCID_RESOLVER_REPO_LOCAL_PATHS`** (all 3 locations named in the SPEC).
+- [x] Traced it to commit `108652d` "fix(reconcile): add claude-control repo mapping + supervisor-liveness race guard" in the **veridian-scripts** repo (not claude-control) -- diff covers exactly the 3 named locations across both named files (`reconcile_stale_running_workers.py` +49/-1, `superboss-register.py` +18).
+- [x] Confirmed that commit is real, merged history, not a stray branch: `git merge-base --is-ancestor 108652d origin/main` on `/opt/veridian/repos/veridian-scripts` → **YES, ancestor of origin/main**. It shipped via **`FChecklist/veridian-scripts` PR #304** ("fix(reconcile): claude-control repo mapping + supervisor-liveness race guard (UMR-20260813-115911-df5c)"), `gh pr view 304` confirms `state: MERGED`, merge commit `d65d468`, which is also directly visible in the live `/opt/veridian/scripts` git log.
+- [x] Confirmed live-deployed copy at `/opt/veridian/scripts/*.py` matches (has the same 3-location wiring) -- not just merged on GitHub but actually running.
+- [x] Per SPEC instruction, ran `gh pr list --repo FChecklist/claude-control --state open` -- only one open PR (#215, "verify+merge the real fake fix detec...", files: `progress/...md` + `tests/test_progress_completion_gate_reverify_prior_fake_completions.py`). It does **not** contain this fix. No open claude-control PR duplicates PR #304's work.
+- [x] Confirmed `reconcile_stale_running_workers.py` and a real (non-stale) `superboss-register.py` are not part of the `claude-control` repo at all -- they live in, and are deployed from, `veridian-scripts`. `claude-control`'s own `scripts/superboss-register.py` is a long-stale, unrelated, pre-DB_PATH-era copy (last touched commit `95e9294`), not the canonical file the SPEC/audit meant.
+
+## Conclusion
+The real, 3-location `REPO_LOCAL_PATHS`/`MARK_TERMINAL_REPO_CHOICES`/`DEFAULT_OCID_RESOLVER_REPO_LOCAL_PATHS` fix genuinely already exists, is genuinely merged to `origin/main`, and is genuinely live-deployed. It shipped as **`FChecklist/veridian-scripts` PR #304** (commit `108652d`, merged as `d65d468`), **not** on commits `4eadc5a`/`bb3fee7` as the prior audit claimed, and **not** in the `claude-control` repo at all (the target files don't live there). There is nothing left to land: PR #304 already *is* "its own clean PR" containing exactly this fix, merged before this task was even dispatched. No new code was written because none is real/outstanding -- writing a duplicate fix into either repo would itself be the exact re-implementation-of-already-real-work this task's SPEC (326b point 3) exists to prevent.
+
+**Real PR: `FChecklist/veridian-scripts#304`** (merged, commit `108652d`/`d65d468`).
+
+## Remaining
+- [ ] None. Reported real PR number per SPEC; recording completion via agent_work_briefing.py.

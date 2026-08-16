@@ -1,0 +1,19 @@
+[Unit]
+Description=VERIDIAN Prometheus -- localhost-only scrape of node_exporter (task-20260814-131031, real gap: full monitoring stack confirmed not installed natively as of 2026-08-14, superseding the 2026-08-07 docker-compose-based veridian_prometheus container). Config/alert rules reused unmodified in content from the prior /opt/veridian/monitoring/prometheus/{prometheus.yml,alert_rules.yml} design, only paths fixed from docker-internal to real local paths.
+After=veridian-node-exporter.service
+Wants=veridian-node-exporter.service
+
+[Service]
+Type=simple
+ExecStart=/opt/veridian/monitoring/bin/prometheus \
+  --config.file=/opt/veridian/monitoring/prometheus/prometheus.yml \
+  --storage.tsdb.path=/opt/veridian/monitoring/prometheus/data \
+  --web.listen-address=127.0.0.1:9090 \
+  --web.enable-lifecycle
+Restart=on-failure
+RestartSec=5
+StandardOutput=append:/opt/veridian/ai-os/logs/veridian-prometheus.log
+StandardError=append:/opt/veridian/ai-os/logs/veridian-prometheus.log
+
+[Install]
+WantedBy=default.target

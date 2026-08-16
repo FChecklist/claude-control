@@ -1,0 +1,11 @@
+id: task-20260726-195236-rca-task-20260726-083946-fix-task-lifecy
+title: 'rca-task-20260726-083946-fix-task-lifecycle--real-branch-resoluti (round 2)'
+status: failed
+repo: claude-control
+created_at: '2026-07-26T19:52:36.000000+00:00'
+last_checkpoint_at: '2026-07-26T19:53:44.597453+00:00'
+completed_steps:
+- 'RCA of task-20260726-083946: real fix was opened as PR #81 ("Fix stale PR-branch resolution
+  + enforce HOLD_FOR_OWNER_SIGNOFF") but PR #81 was CLOSED without merging.'
+remaining_steps:
+- 'Redispatch with root-cause fix.'

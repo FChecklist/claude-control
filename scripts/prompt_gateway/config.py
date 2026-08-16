@@ -103,6 +103,24 @@ CHAT_CATEGORIES = {
         "keywords": ["hello", "hi", "hey", "thanks", "thank", "bye", "goodbye",
                      "ok", "okay", "sure", "yes", "no", "please", "welcome"],
         "patterns": []
+    },
+    # task-20260730-owner-engine-layer0: defense-in-depth alongside
+    # engine/layer0_router.py's dedicated GOVERNANCE_PATTERNS pre-classifier
+    # (which runs BEFORE this scoring and normally decides governance-shaped
+    # text first). This category exists so that if Layer 0 ever misses a
+    # governance-shaped phrasing, the regular argmax scoring below still has
+    # a real bucket to land in, instead of the message defaulting into QUERY
+    # purely because of incidental "how"/"what" keyword overlap (the real
+    # root cause of gateway_output_20260730.json's QUERY/0.3263 result).
+    "GOVERNANCE": {
+        "description": "Policy directives, standing-rule corrections, root-cause "
+                        "governance statements from the Owner about how the system "
+                        "itself must operate going forward",
+        "keywords": ["going forward", "root cause", "policy", "protocol", "directive",
+                     "governance", "standing rule", "from now on", "single point of entry",
+                     "versioning", "traceability", "audited", "end to end", "not assumption"],
+        "patterns": [r"\bgoing\s+forward\b", r"\broot\s+cause\b", r"\bwe\s+identified\s+(this|the)\s+issue\b",
+                     r"\bensure\s+that\b", r"\bfrom\s+now\s+on\b", r"\bsingle\s+point\s+of\s+entry\b"]
     }
 }
 

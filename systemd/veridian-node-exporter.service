@@ -1,0 +1,15 @@
+[Unit]
+Description=VERIDIAN node_exporter -- localhost-only host metrics (task-20260814-131031, real gap: full monitoring stack confirmed not installed natively as of 2026-08-14, superseding the 2026-08-07 docker-compose-based veridian_node_exporter container). Reads real host swap/mem/load + the textfile collector at /opt/veridian/monitoring/textfile_collector, no dispatch-decision coupling.
+
+[Service]
+Type=simple
+ExecStart=/opt/veridian/monitoring/bin/node_exporter \
+  --web.listen-address=127.0.0.1:9100 \
+  --collector.textfile.directory=/opt/veridian/monitoring/textfile_collector
+Restart=on-failure
+RestartSec=5
+StandardOutput=append:/opt/veridian/ai-os/logs/veridian-node-exporter.log
+StandardError=append:/opt/veridian/ai-os/logs/veridian-node-exporter.log
+
+[Install]
+WantedBy=default.target

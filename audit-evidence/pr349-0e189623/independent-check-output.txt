@@ -1,0 +1,45 @@
+=== symlink-attack proof (live register data outside /tmp cannot be touched) ===
+before:
+total 264
+drwx------    3 rajat rajat   4096 Aug 14 06:09 .
+drwxrwxrwt 1104 root  root  258048 Aug 14 06:09 ..
+lrwxrwxrwx    1 rajat rajat     47 Aug 14 03:09 pm_sentinel_tick_symlink_attack -> /tmp/audit_reaper_proof_YOfZab/real_target_data
+drwxrwxr-x    2 rajat rajat   4096 Aug 14 06:09 real_target_data
+reap_stale_test_scratch: removed /tmp/audit_reaper_proof_YOfZab/pm_sentinel_tick_symlink_attack (~0.0MB)
+reap_stale_test_scratch: 1 removed (~0.0MB), 0 too young, 0 open-handle skips, 0 errors
+after:
+total 264
+drwx------    3 rajat rajat   4096 Aug 14 06:09 .
+drwxrwxrwt 1104 root  root  258048 Aug 14 06:09 ..
+drwxrwxr-x    2 rajat rajat   4096 Aug 14 06:09 real_target_data
+target data still present?
+precious live data
+
+=== lsof-gap proof (in-use scratch CAN be deleted -- undetected by lsof check) ===
+before:
+total 264
+drwx------    3 rajat rajat   4096 Aug 14 06:09 .
+drwxrwxrwt 1104 root  root  258048 Aug 14 06:09 ..
+lrwxrwxrwx    1 rajat rajat     47 Aug 14 03:09 pm_sentinel_tick_symlink_attack -> /tmp/audit_reaper_proof_nY1Dj8/real_target_data
+drwxrwxr-x    2 rajat rajat   4096 Aug 14 06:09 real_target_data
+reap_stale_test_scratch: removed /tmp/audit_reaper_proof_nY1Dj8/pm_sentinel_tick_symlink_attack (~0.0MB)
+reap_stale_test_scratch: 1 removed (~0.0MB), 0 too young, 0 open-handle skips, 0 errors
+after:
+total 264
+drwx------    3 rajat rajat   4096 Aug 14 06:09 .
+drwxrwxrwt 1104 root  root  258048 Aug 14 06:09 ..
+drwxrwxr-x    2 rajat rajat   4096 Aug 14 06:09 real_target_data
+target data still present?
+precious live data
+
+before (process 1584645 still holding a file open inside this dir, cwd is NOT this dir):
+total 12
+drwxrwxr-x 2 rajat rajat 4096 Aug 14 03:09 .
+drwx------ 3 rajat rajat 4096 Aug 14 06:09 ..
+-rw-rw-r-- 1 rajat rajat   59 Aug 14 06:09 superboss-register-copy.sqlite
+reap_stale_test_scratch: removed /tmp/audit_reaper_lsofgap_i0nhwK/pm_sentinel_tick_live_process_dir (~0.0MB)
+reap_stale_test_scratch: 1 removed (~0.0MB), 0 too young, 0 open-handle skips, 0 errors
+after:
+total 260
+drwx------    2 rajat rajat   4096 Aug 14 06:09 .
+drwxrwxrwt 1104 root  root  258048 Aug 14 06:09 ..

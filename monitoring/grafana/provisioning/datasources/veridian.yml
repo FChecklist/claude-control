@@ -1,0 +1,27 @@
+# VERIDIAN Grafana datasource provisioning (task-20260814-131031).
+# Two datasources: Prometheus (node_exporter host metrics) and the SQLite
+# plugin pointed READ-ONLY at the live superboss-register.sqlite dispatch
+# register, for the dispatch-queue-depth panel. Neither writes to the
+# register or touches dispatch-decision logic -- pure read/observability.
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    uid: veridian-prometheus
+    type: prometheus
+    access: proxy
+    url: http://127.0.0.1:9090
+    isDefault: true
+    editable: true
+    jsonData:
+      httpMethod: POST
+
+  - name: superboss-register (SQLite, read-only)
+    type: frser-sqlite-datasource
+    access: proxy
+    isDefault: false
+    editable: true
+    jsonData:
+      path: /opt/veridian/ai-os/memory/superboss-register.sqlite
+      queryTimeout: 30
+      timeout: 30

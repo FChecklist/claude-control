@@ -53,11 +53,12 @@ import fcntl
 import hashlib
 import json
 import os
+import re
 import secrets
 import sqlite3
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 DB_PATH = os.environ.get("SUPERBOSS_REGISTER_DB", "/opt/veridian/ai-os/memory/superboss-register.sqlite")
 _WRITE_LOCK_PATH = DB_PATH + ".writelock"
@@ -106,6 +107,7 @@ def _new_id(prefix):
 def _connect():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     conn = sqlite3.connect(DB_PATH, timeout=30)
+    conn.execute("PRAGMA busy_timeout=30000")
     conn.execute("PRAGMA journal_mode=WAL")
     conn.row_factory = sqlite3.Row
     return conn
@@ -358,6 +360,15 @@ def init_db():
     -- capability-tree-service.ts's CapabilityNode tree do not carry as
     -- structured columns. Same table/FTS5/upsert-on-conflict convention as
     -- knowledge_engine above, not a new pattern.
+    --
+    -- Stage 7 pilot (2026-07-29, task-20260729, VERIDIAN_CONSOLIDATED_COMPLETION,
+    -- Option B system-wide UTM adoption): utm_source/utm_medium/utm_campaign/
+    -- utm_content/utm_term added -- the smallest, lowest-stakes of the 3 bespoke
+    -- tables targeted for the UTM metadata standard already used by
+    -- instructions/work_items/actions above. register_capability() populates all
+    -- five on every insert/update going forward; see
+    -- _derive_capability_utm_fields()/_migrate_capability_registry_utm() for the
+    -- real backfill of the 11 pre-existing rows.
     CREATE TABLE IF NOT EXISTS capability_registry (
         capability_id TEXT PRIMARY KEY,
         ts TEXT NOT NULL,
@@ -376,28 +387,34 @@ def init_db():
         version TEXT NOT NULL DEFAULT 'unversioned',
         owner TEXT NOT NULL,
         last_verified_ts TEXT,
-        metadata_json TEXT NOT NULL DEFAULT '{}'
+        metadata_json TEXT NOT NULL DEFAULT '{}',
+        utm_source TEXT NOT NULL DEFAULT 'superboss-register.py',
+        utm_medium TEXT NOT NULL DEFAULT 'register-capability',
+        utm_campaign TEXT,
+        utm_content TEXT,
+        utm_term TEXT
     );
     CREATE VIRTUAL TABLE IF NOT EXISTS capability_registry_fts USING fts5(
-        capability_name, owner, apis, ui_screens, workflow,
+        capability_name, owner, apis, ui_screens, workflow, utm_source, utm_campaign, utm_term,
         content='capability_registry', content_rowid='rowid'
     );
     CREATE TRIGGER IF NOT EXISTS capability_registry_ai AFTER INSERT ON capability_registry BEGIN
-        INSERT INTO capability_registry_fts(rowid, capability_name, owner, apis, ui_screens, workflow)
-        VALUES (new.rowid, new.capability_name, new.owner, new.apis, new.ui_screens, new.workflow);
+        INSERT INTO capability_registry_fts(rowid, capability_name, owner, apis, ui_screens, workflow, utm_source, utm_campaign, utm_term)
+        VALUES (new.rowid, new.capability_name, new.owner, new.apis, new.ui_screens, new.workflow, new.utm_source, new.utm_campaign, new.utm_term);
     END;
     CREATE TRIGGER IF NOT EXISTS capability_registry_au AFTER UPDATE ON capability_registry BEGIN
-        INSERT INTO capability_registry_fts(capability_registry_fts, rowid, capability_name, owner, apis, ui_screens, workflow)
-        VALUES ('delete', old.rowid, old.capability_name, old.owner, old.apis, old.ui_screens, old.workflow);
-        INSERT INTO capability_registry_fts(rowid, capability_name, owner, apis, ui_screens, workflow)
-        VALUES (new.rowid, new.capability_name, new.owner, new.apis, new.ui_screens, new.workflow);
+        INSERT INTO capability_registry_fts(capability_registry_fts, rowid, capability_name, owner, apis, ui_screens, workflow, utm_source, utm_campaign, utm_term)
+        VALUES ('delete', old.rowid, old.capability_name, old.owner, old.apis, old.ui_screens, old.workflow, old.utm_source, old.utm_campaign, old.utm_term);
+        INSERT INTO capability_registry_fts(rowid, capability_name, owner, apis, ui_screens, workflow, utm_source, utm_campaign, utm_term)
+        VALUES (new.rowid, new.capability_name, new.owner, new.apis, new.ui_screens, new.workflow, new.utm_source, new.utm_campaign, new.utm_term);
     END;
     CREATE TRIGGER IF NOT EXISTS capability_registry_ad AFTER DELETE ON capability_registry BEGIN
-        INSERT INTO capability_registry_fts(capability_registry_fts, rowid, capability_name, owner, apis, ui_screens, workflow)
-        VALUES ('delete', old.rowid, old.capability_name, old.owner, old.apis, old.ui_screens, old.workflow);
+        INSERT INTO capability_registry_fts(capability_registry_fts, rowid, capability_name, owner, apis, ui_screens, workflow, utm_source, utm_campaign, utm_term)
+        VALUES ('delete', old.rowid, old.capability_name, old.owner, old.apis, old.ui_screens, old.workflow, old.utm_source, old.utm_campaign, old.utm_term);
     END;
     CREATE UNIQUE INDEX IF NOT EXISTS idx_capability_registry_name ON capability_registry(capability_name);
     CREATE INDEX IF NOT EXISTS idx_capability_registry_ai_required ON capability_registry(ai_required);
+    CREATE INDEX IF NOT EXISTS idx_capability_registry_campaign ON capability_registry(utm_campaign);
 
     -- 9th tree (2026-07-24, Testing Engine / IRVF Phase 3, task-20260724-115924,
     -- TESTING_ENGINE_PHASE_PLAN_2026-07-24.yaml phase_3_route_replay_storage_and_diff).
@@ -546,6 +563,8 @@ def _migrate_schema(conn):
     _migrate_wiring_registry_content_hash(conn)
     _migrate_wiring_registry_entity_types(conn)
     _ensure_umr_table(conn)
+    _migrate_instructions_content_hash(conn)
+    _migrate_capability_registry_utm(conn)
 
 
 def _migrate_wiring_registry_content_hash(conn):
@@ -628,15 +647,324 @@ def _migrate_wiring_registry_entity_types(conn):
     conn.commit()
 
 
+def _derive_capability_utm_fields(record, campaign_override=None):
+    """Real, deterministic UTM field derivation for one capability_registry row
+    (Stage 7 pilot, task-20260729, VERIDIAN_CONSOLIDATED_COMPLETION, Option B
+    system-wide UTM adoption). Every value is pulled from data already present
+    on the row/record itself -- never a placeholder:
+
+    utm_source   -- constant 'superboss-register.py': the one real mechanism
+                     that has ever written to capability_registry
+                     (register_capability() is the only INSERT/UPDATE call
+                     site against this table in this file).
+    utm_medium   -- constant 'register-capability': the actual CLI subcommand
+                     name (sub.add_parser("register-capability") below) every
+                     row is written through, whether by a live caller or a
+                     batch backfill script shelling out to it.
+    utm_campaign -- the real initiative/phase/task this capability was
+                     registered under. Prefers metadata_json's own
+                     'registered_by_phase' key when the caller supplied one
+                     (e.g. the Mother Router phase_9 registrations), else
+                     falls back to the owner field itself when it already IS
+                     a task id (owner.startswith('task-')), else
+                     `campaign_override` (used by the one-time backfill below
+                     to propagate a same-batch sibling's resolved campaign),
+                     else 'unclassified' -- never a fabricated phase name for
+                     a row that genuinely doesn't carry one.
+    utm_content  -- the real, specific mechanism differentiator for this
+                     exact capability: workflow, else automation, else the
+                     first documents entry, else the first apis entry, else
+                     'n/a' if the record genuinely has none of those.
+    utm_term     -- capability_name itself, so FTS keyword continuity
+                     survives even if capability_name is ever renamed in
+                     place (register_capability()'s ON CONFLICT DO UPDATE
+                     keeps capability_id stable but capability_name can
+                     legitimately change).
+
+    `record` accepts either a live capability_registry row (dict/sqlite3.Row,
+    JSON-encoded TEXT columns as stored) or a --record-file dict
+    (already-parsed Python lists/dicts) -- same field names either way.
+    """
+    def _first_of(v):
+        if v is None:
+            return None
+        if isinstance(v, str):
+            try:
+                v = json.loads(v)
+            except (ValueError, TypeError):
+                return v.strip() or None
+        if isinstance(v, list):
+            return v[0] if v else None
+        return v or None
+
+    metadata = record.get("metadata_json") if record.get("metadata_json") is not None else record.get("metadata")
+    if isinstance(metadata, str):
+        try:
+            metadata = json.loads(metadata) if metadata else {}
+        except (ValueError, TypeError):
+            metadata = {}
+    metadata = metadata or {}
+
+    owner = record.get("owner") or ""
+    campaign = (
+        metadata.get("registered_by_phase")
+        or (owner if owner.startswith("task-") else None)
+        or campaign_override
+        or "unclassified"
+    )
+    content = (
+        _first_of(record.get("workflow"))
+        or _first_of(record.get("automation"))
+        or _first_of(record.get("documents"))
+        or _first_of(record.get("apis"))
+        or "n/a"
+    )
+    return {
+        "utm_source": "superboss-register.py",
+        "utm_medium": "register-capability",
+        "utm_campaign": campaign,
+        "utm_content": content,
+        "utm_term": record.get("capability_name"),
+    }
+
+
+def _migrate_capability_registry_utm(conn):
+    """Stage 7 pilot (task-20260729, VERIDIAN_CONSOLIDATED_COMPLETION, Option B
+    system-wide UTM adoption, per the evidence-based options memo): additive
+    ALTER TABLE ADD COLUMN for capability_registry's five UTM fields, same
+    no-CHECK-constraint / no-base-table-rebuild pattern as
+    _migrate_wiring_registry_content_hash / _migrate_instructions_content_hash
+    above -- capability_registry has never had a CHECK constraint that would
+    force the full-table-rebuild path _migrate_wiring_registry_entity_types
+    uses instead. Columns are added nullable (not NOT NULL) because SQLite's
+    ALTER TABLE ADD COLUMN cannot add a NOT NULL column to a non-empty table
+    without a constant DEFAULT -- same real constraint _migrate_instructions_
+    content_hash's content_hash column works around the same way. No-op once
+    the columns exist (checked via PRAGMA table_info, same convention as
+    every other migration in this file) -- safe to call on every startup.
+
+    Backfill: the real, live rows this pilot ran against (11 total, well
+    within hand-verifiable range) must not carry NULL utm_term forever (a
+    NULL term can never match capability_registry_fts's utm_term column,
+    silently defeating the FTS-continuity purpose it exists for). Re-checked
+    on every subsequent call (cheap indexed SELECT, normally 0 rows) so an
+    interrupted backfill self-heals on the next startup instead of leaving
+    stragglers NULL forever -- same self-healing convention as
+    _migrate_instructions_content_hash.
+
+    Real campaign backfill nuance: 5 of the 11 pre-existing rows (the
+    2026-07-24T08:56:34 VCEL-engine-audit batch) carry no metadata_json
+    phase key and no task-id-shaped owner field, so their utm_campaign is
+    honestly 'unclassified' -- not guessed. The other 6 (the
+    2026-07-24T13:47:04 document-pipeline batch, 5 rows, plus the standalone
+    2026-07-27 Mother Router row) DO resolve for real: one row in the
+    document-pipeline batch (document_duplicate_detection) has its owner
+    field literally set to the real task id that registered the whole
+    batch (task-20260724-133622-phase4-unify-document-pipeline-pdf-gener) --
+    since every row in that batch shares the same wall-clock registration
+    second (a real, verifiable fact, not an assumption) and none contradicts
+    it with a metadata phase of its own, that resolved id is propagated to
+    its same-second siblings via `campaign_override` below rather than left
+    unclassified. This propagation runs once per real distinct row set, not
+    hardcoded per capability_name, so it re-applies correctly to any future
+    DB carrying the same historical rows.
+
+    FTS5 rebuild: capability_registry_fts must gain utm_source/utm_campaign/
+    utm_term as real searchable columns (Stage 6's check_duplicate()/
+    _fts_query() regression target). FTS5 has no ALTER-TABLE-ADD-COLUMN path
+    usable here without losing the external-content 'rebuild' semantics, so
+    this mirrors _migrate_wiring_registry_entity_types's proven mechanism
+    exactly: drop the 3 triggers, drop the shadow table, recreate both via
+    the idempotent _ensure_capability_registry_table() (which already carries
+    the widened column list), then re-populate via the fts5 'rebuild'
+    command. Checked for need via the shadow table's own stored CREATE TABLE
+    text (same idiom as the entity_type widening check above) so this half
+    only runs once, is a no-op afterward, and self-heals if a prior run
+    added the base columns but was interrupted before the FTS rebuild."""
+    row = conn.execute(
+        "SELECT sql FROM sqlite_master WHERE type='table' AND name='capability_registry'"
+    ).fetchone()
+    if row is None:
+        return  # table doesn't exist yet; the next CREATE TABLE IF NOT EXISTS covers it
+
+    cols = {r["name"] for r in conn.execute("PRAGMA table_info(capability_registry)").fetchall()}
+    if "utm_source" not in cols:
+        for col in ("utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"):
+            conn.execute(f"ALTER TABLE capability_registry ADD COLUMN {col} TEXT")
+        conn.commit()
+
+    backfill_rows = conn.execute(
+        "SELECT * FROM capability_registry WHERE utm_term IS NULL"
+    ).fetchall()
+    if backfill_rows:
+        # Pass 1: resolve every row independently from its own real data.
+        resolved = {r["capability_id"]: _derive_capability_utm_fields(dict(r)) for r in backfill_rows}
+        # Pass 2: propagate a resolved same-second sibling's campaign to any
+        # row in the same real registration batch that couldn't resolve one
+        # on its own (see docstring above -- a real, verifiable grouping by
+        # wall-clock second, not a guess).
+        by_second = {}
+        for r in backfill_rows:
+            by_second.setdefault(r["ts"][:19], []).append(r["capability_id"])
+        for cids in by_second.values():
+            batch_campaign = next(
+                (resolved[cid]["utm_campaign"] for cid in cids if resolved[cid]["utm_campaign"] != "unclassified"),
+                None,
+            )
+            if batch_campaign:
+                for cid in cids:
+                    if resolved[cid]["utm_campaign"] == "unclassified":
+                        row_for_cid = next(r for r in backfill_rows if r["capability_id"] == cid)
+                        resolved[cid] = _derive_capability_utm_fields(dict(row_for_cid), campaign_override=batch_campaign)
+        for cid, fields in resolved.items():
+            conn.execute(
+                "UPDATE capability_registry SET utm_source=?, utm_medium=?, utm_campaign=?, utm_content=?, utm_term=? "
+                "WHERE capability_id=?",
+                (fields["utm_source"], fields["utm_medium"], fields["utm_campaign"], fields["utm_content"], fields["utm_term"], cid),
+            )
+        conn.commit()
+
+    fts_row = conn.execute(
+        "SELECT sql FROM sqlite_master WHERE type='table' AND name='capability_registry_fts'"
+    ).fetchone()
+    if fts_row is not None and "utm_term" not in fts_row["sql"]:
+        conn.execute("DROP TRIGGER IF EXISTS capability_registry_ai")
+        conn.execute("DROP TRIGGER IF EXISTS capability_registry_au")
+        conn.execute("DROP TRIGGER IF EXISTS capability_registry_ad")
+        conn.execute("DROP TABLE IF EXISTS capability_registry_fts")
+        _ensure_capability_registry_table(conn)  # recreates the FTS5 table + its 3 triggers (IF NOT EXISTS, safe)
+        conn.execute("INSERT INTO capability_registry_fts(capability_registry_fts) VALUES ('rebuild')")
+        conn.commit()
+
+
+def _migrate_instructions_content_hash(conn):
+    """Stage 2 (task-20260729, VERIDIAN_CONSOLIDATED_COMPLETION Phase 3, content-hash
+    dedup for same-text chat resubmission): additive ALTER TABLE ADD COLUMN for
+    instructions.content_hash, same no-CHECK-constraint / no-rebuild-needed pattern as
+    _migrate_wiring_registry_content_hash above -- instructions has never had a CHECK
+    constraint that would force the full-table-rebuild path
+    _migrate_wiring_registry_entity_types uses instead. No-op once the column exists
+    (checked via PRAGMA table_info, same convention as every other migration in this
+    file) -- safe to call on every startup.
+
+    Backfill: hundreds of pre-existing rows must not carry a NULL content_hash
+    forever (a NULL hash can never match in check_content_duplicate below, silently
+    defeating dedup for anything resembling their text). Runs in the same pass as
+    the ADD COLUMN, and also re-checked on every subsequent call (cheap indexed
+    SELECT, normally 0 rows) so an interrupted backfill self-heals on the next
+    startup instead of leaving stragglers NULL forever.
+    """
+    row = conn.execute(
+        "SELECT sql FROM sqlite_master WHERE type='table' AND name='instructions'"
+    ).fetchone()
+    if row is None:
+        return  # table doesn't exist yet; the next CREATE TABLE IF NOT EXISTS covers it
+    cols = {r["name"] for r in conn.execute("PRAGMA table_info(instructions)").fetchall()}
+    if "content_hash" not in cols:
+        conn.execute("ALTER TABLE instructions ADD COLUMN content_hash TEXT")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_instructions_content_hash ON instructions(content_hash)")
+        conn.commit()
+
+    backfill_rows = conn.execute(
+        "SELECT instruction_id, raw_text FROM instructions WHERE content_hash IS NULL"
+    ).fetchall()
+    if backfill_rows:
+        for r in backfill_rows:
+            conn.execute(
+                "UPDATE instructions SET content_hash = ? WHERE instruction_id = ?",
+                (_content_hash_for_text(r["raw_text"]), r["instruction_id"]),
+            )
+        conn.commit()
+
+
+def _normalize_instruction_text_for_hash(text):
+    """Content-hash dedup normalization (Stage 2, task-20260729). Strips the real,
+    consistent OWNER_ENGINE wrapper that prompt_gateway/gateway.py's
+    _build_final_output() prepends/appends to every gated chat before it ever
+    reaches log-instruction: a per-submission '[VERIDIAN:<chat_id>]' header (a
+    different chat_id every single call -- hashing it in would mean identical
+    resubmitted text NEVER matches, defeating this feature entirely), a
+    '[CAT:...|INTENT:...]' line, optional '[ENTS:...]' / '[SNIPS:...]' lines, and a
+    trailing '---\\n[CONTEXT]\\n...' block (prior-turn context that legitimately
+    differs between two submissions of the same real instruction -- the dedup
+    question is "is the core instruction the same", not "was the surrounding chat
+    session identical"). Each piece is optional/independent, matching how
+    _build_final_output builds them, so text that never went through the gate
+    (ai_agent/software submissions, transcript auto-index rows) simply has nothing
+    to strip here and falls through untouched to the plain whitespace/case
+    normalization every input gets regardless.
+    """
+    t = text
+    # The [CONTEXT] block is anchored at the end -- strip it first so the header
+    # strips below don't have to worry about it reappearing mid-text.
+    t = re.split(r"\n-{3,}\n\[CONTEXT\]\n", t, maxsplit=1)[0]
+    t = re.sub(r"^\[VERIDIAN:[^\]\n]*\]\n?", "", t)
+    t = re.sub(r"^\[CAT:[^\]\n]*\]\n?", "", t)
+    t = re.sub(r"^\[ENTS:[^\]\n]*\]\n?", "", t)
+    # [SNIPS:...] is emitted right after machine_prompt (not at the very top), so
+    # strip it wherever it appears as its own line rather than assuming position.
+    t = re.sub(r"\n\[SNIPS:[^\]\n]*\]", "", t)
+    # Same-text-regardless-of-formatting normalization every input gets, gated or not.
+    t = re.sub(r"\s+", " ", t).strip().lower()
+    return t
+
+
+def _content_hash_for_text(text):
+    """sha256 of the normalized text -- see _normalize_instruction_text_for_hash's
+    docstring for exactly what is/isn't included."""
+    return hashlib.sha256(_normalize_instruction_text_for_hash(text).encode("utf-8")).hexdigest()
+
+
+def check_content_duplicate(text, window_hours=24):
+    """Stage 2 (task-20260729, VERIDIAN_CONSOLIDATED_COMPLETION Phase 3): the
+    content-hash counterpart to check_duplicate() above. That function catches
+    "does a mechanism like this already exist" (system_index, category/keyword
+    search); this one catches "has THIS EXACT instruction text already been
+    submitted recently" (instructions, content_hash exact match) -- a real,
+    confirmed gap: every gateway.py "start" action minted a fresh instruction_id
+    even for byte-identical repeated instruction text, with nothing catching it.
+
+    window_hours bounds the match to recent submissions only (default 24h) so a
+    deliberate, legitimate resubmission days later is never silently blocked --
+    this is a dedup guard against accidental resubmission, not a permanent ban on
+    ever repeating yourself.
+
+    Returns the prior matching instruction_id (str) if a real match exists within
+    the window, else None. Callable directly (as here, e.g. for tests or other
+    Python callers within this process) or via the check-content-duplicate CLI
+    subcommand below, which is how task-gateway.py's cmd_submit reaches it
+    (subprocess, same convention as its existing check-duplicate call)."""
+    init_db_silent()
+    conn = _connect()
+    target_hash = _content_hash_for_text(text)
+    cutoff = (datetime.now(timezone.utc) - timedelta(hours=window_hours)).isoformat()
+    row = conn.execute(
+        "SELECT instruction_id FROM instructions WHERE content_hash = ? AND ts >= ? "
+        "ORDER BY ts ASC LIMIT 1",
+        (target_hash, cutoff),
+    ).fetchone()
+    conn.close()
+    return row["instruction_id"] if row else None
+
+
+def cmd_check_content_duplicate(args):
+    prior_id = check_content_duplicate(args.text, window_hours=args.window_hours)
+    print(json.dumps({
+        "content_duplicate_found": prior_id is not None,
+        "duplicate_instruction_id": prior_id,
+    }))
+
+
 def log_instruction(args):
     init_db_silent()
     conn = _connect()
     iid = _new_id("INS")
+    content_hash = _content_hash_for_text(args.text)
     conn.execute(
-        "INSERT INTO instructions (instruction_id, ts, session_id, utm_source, utm_medium, utm_campaign, utm_content, utm_term, raw_text, metadata_json, response_summary) "
-        "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+        "INSERT INTO instructions (instruction_id, ts, session_id, utm_source, utm_medium, utm_campaign, utm_content, utm_term, raw_text, metadata_json, response_summary, content_hash) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
         (iid, _now_iso(), args.session_id, args.source, args.medium, args.campaign, args.content, args.term,
-         args.text, json.dumps(json.loads(args.metadata) if args.metadata else {}), args.response_summary),
+         args.text, json.dumps(json.loads(args.metadata) if args.metadata else {}), args.response_summary, content_hash),
     )
     conn.commit()
     conn.close()
@@ -700,10 +1028,11 @@ def index_transcript(args):
                 iid = _new_id("INS")
                 try:
                     conn.execute(
-                        "INSERT INTO instructions (instruction_id, ts, session_id, utm_source, utm_medium, utm_campaign, utm_content, utm_term, raw_text, metadata_json, response_summary) "
-                        "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                        "INSERT INTO instructions (instruction_id, ts, session_id, utm_source, utm_medium, utm_campaign, utm_content, utm_term, raw_text, metadata_json, response_summary, content_hash) "
+                        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
                         (iid, ts, args.session_id, role, "laptop_chat_auto", "", "", "",
-                         text, json.dumps({"transcript_uuid": entry_uuid, "transcript_line": line_no}), None),
+                         text, json.dumps({"transcript_uuid": entry_uuid, "transcript_line": line_no}), None,
+                         _content_hash_for_text(text)),
                     )
                     indexed += 1
                 except Exception:
@@ -784,12 +1113,62 @@ def _fts_query(raw):
     'vs') isn't indexed anywhere, which is exactly the false-negative this
     whole tool exists to prevent (a missed duplicate is worse than noise
     from a false positive). Strip stopwords, OR the remaining terms
-    together -- forgiving by design for a discovery search."""
-    terms = [t.strip('"') for t in raw.split() if t.strip('"').lower() not in STOPWORDS and t.strip('"')]
-    if not terms:
-        terms = raw.split() or [raw]
-    escaped = [t.replace('"', '""') for t in terms]
-    return " OR ".join(f'"{t}"' for t in escaped)
+    together -- forgiving by design for a discovery search.
+
+    2026-07-29 Stage 4 fix: that OR-of-terms design is intentionally kept
+    as-is here -- the bug was specifically that a multi-word phrase the
+    caller marked as ONE unit (by wrapping it in double quotes, e.g.
+    '"vendor invoice reconciliation"', or by hyphenating it into one token,
+    e.g. 'vendor-invoice-reconciliation') lost that phrase boundary: the old
+    code did raw.split() first -- which breaks on every space/hyphen -- and
+    only stripped stray '"' characters off each already-severed word
+    afterwards, so each word of the phrase became its own independent OR'd
+    term. That let one generic constituent word (e.g. just 'invoice') match
+    unrelated text on its own and false-flag as a duplicate. Quoted and
+    hyphenated phrases are now pulled out before the split and re-emitted as
+    a single FTS5 "exact phrase" clause (quoted, space-joined, adjacency
+    required); every other bare word keeps the original behavior of its own
+    OR'd term."""
+    phrase_terms = []
+
+    def _take_quoted_phrase(m):
+        phrase_terms.append(m.group(1).strip())
+        return " "
+
+    # Pull out explicit "double quoted phrases" before the whitespace split
+    # below ever gets a chance to sever them word-by-word.
+    remainder = re.sub(r'"([^"]+)"', _take_quoted_phrase, raw)
+
+    bare_terms = []
+    for w in remainder.split():
+        w = w.strip('"')
+        if not w:
+            continue
+        if "-" in w:
+            # A hyphenated single token is the caller's other way of
+            # marking a multi-word phrase as one unit -- keep those words
+            # together as one phrase too, instead of OR'ing them apart.
+            phrase_terms.append(w.replace("-", " ").strip())
+            continue
+        if w.lower() in STOPWORDS:
+            continue
+        bare_terms.append(w)
+
+    if not bare_terms and not phrase_terms:
+        # Same "never return an empty/unusable query" fallback as before.
+        fallback = raw.split() or [raw]
+        bare_terms = [t.strip('"') for t in fallback if t.strip('"')]
+
+    clauses = [f'"{t.replace(chr(34), chr(34) * 2)}"' for t in bare_terms]
+    for p in phrase_terms:
+        words_in_phrase = [w.replace('"', '""') for w in p.split() if w]
+        if words_in_phrase:
+            clauses.append('"' + " ".join(words_in_phrase) + '"')
+
+    if not clauses:
+        clauses = [f'"{raw.replace(chr(34), chr(34) * 2)}"']
+
+    return " OR ".join(clauses)
 
 
 def search(args):
@@ -848,7 +1227,43 @@ def index_add(args):
 def check_duplicate(args):
     """The concrete fix for 'we keep duplicating': search system_index by
     category and/or keyword BEFORE building something new. Prints every
-    existing mechanism that might already do what's being considered."""
+    existing mechanism that might already do what's being considered.
+
+    Stage 6 (task-20260729, VERIDIAN_CONSOLIDATED_COMPLETION Phase 3) extension:
+    system_index (113 rows) was the ONLY source ever consulted here, but three
+    other real FTS-backed tables in this same DB carry real inventory that is
+    just as relevant to "does this already exist" -- most importantly
+    wiring_registry (7,783+ rows, by far the largest real inventory of actual
+    code entities: engines/gateways/tables/functions/routes/files), plus
+    knowledge_engine (349 rows) and capability_registry (11 rows). Reuses the
+    existing _fts_query() (fixed Stage 4, same session) for every table rather
+    than reimplementing FTS querying -- one query-building function, four
+    tables. category filtering only ever applied to system_index historically
+    (the other three tables don't share that column), so it continues to
+    apply ONLY to system_index rows, exactly as before; the other three
+    sources are keyword-only and unaffected by --category, whether or not one
+    is supplied.
+
+    Return shape is unchanged on purpose ({"found", "verdict", "matches"}) so
+    every existing caller (task-gateway.py, credit-accountant.py,
+    directive_engine.py -- all three invoke this via subprocess + JSON, none
+    import the function directly) keeps working with zero changes. Each match
+    dict gains one extra "_source_table" key (system_index / wiring_registry /
+    knowledge_engine / capability_registry) so a caller CAN tell where a hit
+    came from if it wants to, without that key being required by anything
+    existing today.
+
+    Merge/dedup: the same real path can legitimately be indexed in more than
+    one of these four tables (e.g. system_index and wiring_registry both
+    carry a "path" column and do sometimes overlap). Rows are deduped on a
+    normalized identity key (path / artifact_path / capability_name,
+    lower-cased, with a leading "/opt/veridian/" prefix stripped so an
+    absolute and a repo-relative record of the same real file collapse to
+    one hit) so "found" reflects distinct real things, not distinct rows.
+    system_index is checked first so its exact pre-existing dict shape wins
+    the dedup for anything already indexed there -- no behavior change for
+    a query that only ever matched system_index before this fix.
+    """
     init_db_silent()
     conn = _connect()
     conditions = []
@@ -870,8 +1285,55 @@ def check_duplicate(args):
             rows = fts_rows
     elif conditions:
         rows = conn.execute(f"SELECT * FROM system_index {where}", params).fetchall()
+    merged = [dict(r, _source_table="system_index") for r in rows]
+
+    # Stage 6: also consult the three other real FTS-backed inventories.
+    # These have no "category" column, so args.category never filters them --
+    # matches the pre-existing behavior where category filtering was always
+    # system_index-specific. Only run when a keyword query was actually given
+    # (a bare --category-only call has no keyword to match on here, same as
+    # the system_index branch above requiring args.query for its FTS path).
+    if args.query:
+        q = _fts_query(args.query)
+        for table, fts in (
+            ("wiring_registry", "wiring_registry_fts"),
+            ("knowledge_engine", "knowledge_engine_fts"),
+            ("capability_registry", "capability_registry_fts"),
+        ):
+            try:
+                extra_rows = conn.execute(
+                    f"SELECT t.* FROM {fts} f JOIN {table} t ON t.rowid = f.rowid WHERE {fts} MATCH ?",
+                    (q,),
+                ).fetchall()
+            except sqlite3.OperationalError:
+                # Same fail-open posture as search() above -- a missing/broken
+                # FTS table on one source must never block the other three.
+                extra_rows = []
+            merged.extend(dict(r, _source_table=table) for r in extra_rows)
+
+    def _dedup_key(d):
+        ident = d.get("path") or d.get("artifact_path") or d.get("capability_name")
+        if not ident:
+            # No comparable identity field at all (shouldn't happen for these
+            # four schemas, but never silently drop a real hit over it) --
+            # fall back to the row's own primary-key-ish id so it still
+            # counts as a distinct match rather than being dropped.
+            ident = d.get("index_id") or d.get("entity_id") or d.get("artifact_id") or d.get("capability_id") or id(d)
+        ident = str(ident).strip().lower()
+        if ident.startswith("/opt/veridian/"):
+            ident = ident[len("/opt/veridian/"):]
+        return ident
+
+    seen = set()
+    result = []
+    for d in merged:
+        key = _dedup_key(d)
+        if key in seen:
+            continue
+        seen.add(key)
+        result.append(d)
+
     conn.close()
-    result = [dict(r) for r in rows]
     print(json.dumps({
         "found": len(result),
         "verdict": "STOP -- existing mechanism(s) found, review before building" if result else "no existing match found -- safe to proceed, but this is not exhaustive",
@@ -1029,8 +1491,101 @@ def _ensure_knowledge_engine_table(conn):
     END""")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_knowledge_engine_type ON knowledge_engine(artifact_type)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_knowledge_engine_path ON knowledge_engine(artifact_path)")
+    # Structural duplicate-artifact constraint (task-20260731-074406, real
+    # #634-vs-#639 / #641-vs-#629 duplicate-task incidents this session):
+    # a bare UNIQUE(content_hash) is wrong -- confirmed against live data
+    # that content_hash legitimately repeats (15 rows share the 'n/a'
+    # no-hash placeholder; 13 distinct real artifacts share the
+    # sha256-of-empty-string hash). (content_hash, artifact_path) is the
+    # real key: querying GROUP BY on the live DB found exactly 2 genuine
+    # accidental duplicate registrations (same content_hash+artifact_path+
+    # artifact_type+secondary_path, minutes apart) and zero false positives
+    # against legitimate same-path-different-content re-registrations. Only
+    # created here if the 2 known pre-existing duplicates have already been
+    # removed by migrate_2026-07-31_dedup_constraints.py -- if a future DB
+    # rebuild from an older backup ever reintroduces old duplicate rows,
+    # this CREATE UNIQUE INDEX will fail loudly at startup rather than
+    # silently skipping; re-run that migration script to fix it (it is
+    # idempotent and safe to re-run).
+    conn.execute(
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_knowledge_engine_content_hash_path "
+        "ON knowledge_engine(content_hash, artifact_path)"
+    )
     conn.commit()
     _migrate_knowledge_engine_fts(conn)
+    _migrate_knowledge_engine_utm(conn)
+
+
+def _migrate_knowledge_engine_utm(conn):
+    """UTM metadata consolidation, phase 6 (2026-07-30, campaign
+    utm-metadata-consolidation-phase6-2026-07-30): additive ALTER TABLE ADD
+    COLUMN for knowledge_engine's five UTM fields, same pattern as
+    _migrate_capability_registry_utm (Stage 7 pilot) -- nullable columns
+    (SQLite ALTER TABLE ADD COLUMN can't add NOT NULL to a non-empty table
+    without a constant DEFAULT), no-op once present (checked via PRAGMA
+    table_info), safe to call on every startup.
+
+    Real finding this phase: of 6 bespoke metadata mechanisms evaluated
+    (capability_registry's own fields, wiring_registry's fields,
+    compliance-tracker Postgres's prompt_versions/orchestraExecutions+
+    activityLog/task_capabilities, and this table's own fields),
+    knowledge_engine.tags was the ONE genuine UTM-candidate: a free-form JSON
+    array of search keywords that duplicates exactly what utm_term already
+    exists to hold system-wide (this file's own header docstring literally
+    defines utm_term as "comma-separated search keywords") -- a
+    format-only difference (JSON array vs comma-joined string), not a real
+    second mechanism carrying distinct information. `purpose` (a real one-
+    line prose description, not a short categorical label) and
+    artifact_type/verification_status/content_hash/entity_relationships (all
+    real structural/audit data with CHECK-constrained enums or hash values)
+    were evaluated and correctly kept OUT of UTM -- forcing them in would
+    lose type safety/queryability for no real simplification gain. Full
+    per-mechanism analysis: knowledge_engine artifact_id
+    KE-PHASE6-UTM-MERGE-ANALYSIS (register_knowledge'd the same phase this
+    migration was written).
+
+    Backfill: utm_term = comma-join of the existing tags JSON array, a
+    lossless format conversion (nothing in tags is dropped). `tags` and
+    knowledge_engine_fts (which indexes tags, not utm_term) are deliberately
+    NOT removed or altered -- still the real FTS5 search surface and the
+    --tags convention shared with index-add; nothing that reads tags today
+    breaks. utm_source/utm_medium/utm_campaign/utm_content are left
+    honestly NULL for historical rows (no reliable per-row "who registered
+    this" data exists retroactively, unlike capability_registry's owner-field
+    based backfill) -- register_knowledge() populates them for new rows
+    going forward when the caller supplies that context, same interface
+    convention as log-instruction's --source/--medium/--campaign/--content."""
+    row = conn.execute(
+        "SELECT sql FROM sqlite_master WHERE type='table' AND name='knowledge_engine'"
+    ).fetchone()
+    if row is None:
+        return  # table doesn't exist yet; the CREATE TABLE IF NOT EXISTS above covers it
+
+    cols = {r["name"] for r in conn.execute("PRAGMA table_info(knowledge_engine)").fetchall()}
+    if "utm_source" not in cols:
+        for col in ("utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"):
+            conn.execute(f"ALTER TABLE knowledge_engine ADD COLUMN {col} TEXT")
+        conn.commit()
+
+    backfill_rows = conn.execute(
+        "SELECT artifact_id, tags FROM knowledge_engine WHERE utm_term IS NULL"
+    ).fetchall()
+    for r in backfill_rows:
+        tags_raw = r["tags"]
+        if not tags_raw:
+            continue
+        try:
+            arr = json.loads(tags_raw)
+        except (TypeError, ValueError):
+            continue
+        if not isinstance(arr, list) or not arr:
+            continue
+        conn.execute(
+            "UPDATE knowledge_engine SET utm_term = ? WHERE artifact_id = ?",
+            (",".join(str(t) for t in arr), r["artifact_id"]),
+        )
+    if backfill_rows:
+        conn.commit()
 
 
 def _migrate_knowledge_engine_fts(conn):
@@ -1114,14 +1669,45 @@ def register_knowledge(args):
             "evidence": rel.get("evidence"),
         })
 
-    conn.execute(
-        "INSERT INTO knowledge_engine (artifact_id, ts, artifact_path, content_hash, artifact_type, "
-        "secondary_path, exists_on_disk, purpose, tags, entity_relationships, last_verified_ts, "
-        "verification_status, metadata_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
-        (aid, now, args.path, content_hash, args.artifact_type, args.secondary_path,
-         1 if exists else 0, args.purpose, json.dumps(tags_list), json.dumps(entity_relationships),
-         now, verification_status, json.dumps(json.loads(args.metadata) if args.metadata else {})),
-    )
+    # UTM metadata consolidation, phase 6 (2026-07-30): utm_term is auto-
+    # derived from --tags (comma-join of the same list stored in tags) --
+    # never asked for separately, since tags already IS the caller's real
+    # keyword input and this file's own utm_term convention (comma-separated
+    # search keywords) is a lossless format match. The other 4 UTM fields
+    # are only ever set from real caller-supplied context (never guessed);
+    # left NULL when the caller doesn't know/supply them.
+    utm_term = ",".join(tags_list) if tags_list else getattr(args, "utm_term", None)
+
+    try:
+        conn.execute(
+            "INSERT INTO knowledge_engine (artifact_id, ts, artifact_path, content_hash, artifact_type, "
+            "secondary_path, exists_on_disk, purpose, tags, entity_relationships, last_verified_ts, "
+            "verification_status, metadata_json, utm_source, utm_medium, utm_campaign, utm_content, utm_term) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            (aid, now, args.path, content_hash, args.artifact_type, args.secondary_path,
+             1 if exists else 0, args.purpose, json.dumps(tags_list), json.dumps(entity_relationships),
+             now, verification_status, json.dumps(json.loads(args.metadata) if args.metadata else {}),
+             getattr(args, "utm_source", None), getattr(args, "utm_medium", None),
+             getattr(args, "utm_campaign", None), getattr(args, "utm_content", None), utm_term),
+        )
+    except sqlite3.IntegrityError:
+        # Structural duplicate hit (task-20260731-074406): the real fix for
+        # #634-vs-#639/#641-vs-#629 -- this used to be an uncaught traceback
+        # from the plain INSERT above (nothing enforced content_hash+path
+        # uniqueness before idx_knowledge_engine_content_hash_path existed).
+        # A clear, structured signal now, not a crash.
+        existing = conn.execute(
+            "SELECT artifact_id, ts FROM knowledge_engine WHERE content_hash=? AND artifact_path=?",
+            (content_hash, args.path),
+        ).fetchone()
+        conn.close()
+        print(json.dumps({
+            "error": "duplicate_artifact", "duplicate": True,
+            "artifact_path": args.path, "content_hash": content_hash,
+            "existing_artifact_id": existing["artifact_id"] if existing else None,
+            "existing_ts": existing["ts"] if existing else None,
+        }, indent=2, default=str))
+        sys.exit(1)
     conn.commit()
     conn.close()
     print(json.dumps({
@@ -1331,14 +1917,33 @@ def upsert_knowledge_fragment(args):
     else:
         artifact_id = _new_id("KE")
         status = "VERIFIED_MATCH"
-        conn.execute(
-            "INSERT INTO knowledge_engine (artifact_id, ts, artifact_path, content_hash, artifact_type, "
-            "secondary_path, exists_on_disk, purpose, tags, entity_relationships, last_verified_ts, "
-            "verification_status, metadata_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
-            (artifact_id, now, args.path, new_hash, args.artifact_type, args.secondary_path, 1,
-             args.purpose, json.dumps(tags_list), "[]", now, status,
-             json.dumps(json.loads(args.metadata) if args.metadata else {})),
-        )
+        try:
+            conn.execute(
+                "INSERT INTO knowledge_engine (artifact_id, ts, artifact_path, content_hash, artifact_type, "
+                "secondary_path, exists_on_disk, purpose, tags, entity_relationships, last_verified_ts, "
+                "verification_status, metadata_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                (artifact_id, now, args.path, new_hash, args.artifact_type, args.secondary_path, 1,
+                 args.purpose, json.dumps(tags_list), "[]", now, status,
+                 json.dumps(json.loads(args.metadata) if args.metadata else {})),
+            )
+        except sqlite3.IntegrityError:
+            # The SELECT-then-INSERT above isn't atomic -- two concurrent
+            # callers can both see "no row" and both reach this INSERT
+            # (task-20260731-074406). idx_knowledge_engine_content_hash_path
+            # now catches that race structurally instead of racing to a
+            # silent duplicate row.
+            existing = conn.execute(
+                "SELECT artifact_id, ts FROM knowledge_engine WHERE content_hash=? AND artifact_path=?",
+                (new_hash, args.path),
+            ).fetchone()
+            conn.close()
+            print(json.dumps({
+                "error": "duplicate_artifact", "duplicate": True,
+                "artifact_path": args.path, "content_hash": new_hash,
+                "existing_artifact_id": existing["artifact_id"] if existing else None,
+                "existing_ts": existing["ts"] if existing else None,
+            }, indent=2, default=str))
+            sys.exit(1)
         created = True
 
     conn.commit()
@@ -1368,6 +1973,96 @@ def list_knowledge(args):
     print(json.dumps({"count": len(matches), "matches": matches}, indent=2, default=str))
 
 
+def _ensure_task_claims_table(conn):
+    """Structural duplicate-TASK lease table (task-20260731-074406), separate
+    from knowledge_engine's ARTIFACT constraint above -- work_items has no
+    single stable per-task column (software_task_id/ai_task_id each repeat
+    multiple times per real task, one row per lifecycle event), so a
+    lease/claim concept needed its own table rather than a constraint bolted
+    onto work_items. task_key is a stable, title-derived identity (see
+    task-gateway.py's _slugify_title -- the SAME algorithm veridian-task.py's
+    cmd_create uses for its task_id slug, minus the timestamp prefix), NOT
+    task_id itself (task_id can never collide by construction, since it's
+    timestamp-prefixed -- that's exactly why two concurrent dispatches of
+    "the same" task get two different task_ids and nothing before this
+    caught them). UNIQUE(task_key) via a real index (not a Python-side
+    SELECT-then-INSERT check) so a concurrent duplicate claim raises
+    sqlite3.IntegrityError instead of racing past a check."""
+    conn.execute("""CREATE TABLE IF NOT EXISTS task_claims (
+        claim_id TEXT PRIMARY KEY,
+        task_key TEXT NOT NULL,
+        ts TEXT NOT NULL,
+        task_id TEXT,
+        title TEXT,
+        utm_source TEXT,
+        metadata_json TEXT NOT NULL DEFAULT '{}'
+    )""")
+    conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_task_claims_task_key ON task_claims(task_key)")
+    conn.commit()
+
+
+def claim_task_key(args):
+    """Atomic lease insert -- the real fix behind task-20260731-074406's real
+    #634-vs-#639 / #641-vs-#629 duplicate-dispatch incidents. Called by
+    task-gateway.py cmd_start immediately before veridian-task.py create
+    actually spends real resources (worktree/branch/systemd unit) on a new
+    task. Catches sqlite3.IntegrityError from the UNIQUE(task_key) index
+    (see _ensure_task_claims_table) and returns a clear, structured
+    duplicate signal instead of an uncaught traceback -- callers treat
+    claimed=false as a hard block, not a crash."""
+    init_db_silent()
+    conn = _connect()
+    _ensure_task_claims_table(conn)
+    cid = _new_id("CLM")
+    now = _now_iso()
+    try:
+        conn.execute(
+            "INSERT INTO task_claims (claim_id, task_key, ts, task_id, title, utm_source, metadata_json) "
+            "VALUES (?,?,?,?,?,?,?)",
+            (cid, args.task_key, now, getattr(args, "task_id", None), getattr(args, "title", None),
+             getattr(args, "source", None), "{}"),
+        )
+        conn.commit()
+        conn.close()
+        print(json.dumps({"claimed": True, "claim_id": cid, "task_key": args.task_key}, indent=2, default=str))
+    except sqlite3.IntegrityError:
+        existing = conn.execute(
+            "SELECT claim_id, ts, task_id, title FROM task_claims WHERE task_key=?",
+            (args.task_key,),
+        ).fetchone()
+        conn.close()
+        print(json.dumps({
+            "claimed": False, "task_key": args.task_key, "error": "duplicate_task_key",
+            "existing_claim_id": existing["claim_id"] if existing else None,
+            "existing_task_id": existing["task_id"] if existing else None,
+            "existing_title": existing["title"] if existing else None,
+            "existing_ts": existing["ts"] if existing else None,
+        }, indent=2, default=str))
+
+
+def check_task_key(args):
+    """Read-only lookup (no _write_lock needed -- same convention as
+    search/query-knowledge/list-knowledge in main()'s dispatch table below).
+    Used by task-gateway.py cmd_submit as an early advisory signal before a
+    real title/task_id exists to actually claim (submit only has --text, not
+    --title, so it cannot itself make the real atomic claim -- that happens
+    in cmd_start once a title is known)."""
+    init_db_silent()
+    conn = _connect()
+    _ensure_task_claims_table(conn)
+    row = conn.execute(
+        "SELECT claim_id, ts, task_id, title FROM task_claims WHERE task_key=?",
+        (args.task_key,),
+    ).fetchone()
+    conn.close()
+    print(json.dumps({
+        "task_key": args.task_key, "already_claimed": row is not None,
+        "existing_task_id": row["task_id"] if row else None,
+        "existing_title": row["title"] if row else None,
+        "existing_ts": row["ts"] if row else None,
+    }, indent=2, default=str))
+
+
 def _ensure_capability_registry_table(conn):
     """Standalone idempotent create, same defensiveness convention as
     _ensure_knowledge_engine_table -- works even if init_db() was never run
@@ -1390,28 +2085,34 @@ def _ensure_capability_registry_table(conn):
         version TEXT NOT NULL DEFAULT 'unversioned',
         owner TEXT NOT NULL,
         last_verified_ts TEXT,
-        metadata_json TEXT NOT NULL DEFAULT '{}'
+        metadata_json TEXT NOT NULL DEFAULT '{}',
+        utm_source TEXT NOT NULL DEFAULT 'superboss-register.py',
+        utm_medium TEXT NOT NULL DEFAULT 'register-capability',
+        utm_campaign TEXT,
+        utm_content TEXT,
+        utm_term TEXT
     )""")
     conn.execute("""CREATE VIRTUAL TABLE IF NOT EXISTS capability_registry_fts USING fts5(
-        capability_name, owner, apis, ui_screens, workflow,
+        capability_name, owner, apis, ui_screens, workflow, utm_source, utm_campaign, utm_term,
         content='capability_registry', content_rowid='rowid'
     )""")
     conn.execute("""CREATE TRIGGER IF NOT EXISTS capability_registry_ai AFTER INSERT ON capability_registry BEGIN
-        INSERT INTO capability_registry_fts(rowid, capability_name, owner, apis, ui_screens, workflow)
-        VALUES (new.rowid, new.capability_name, new.owner, new.apis, new.ui_screens, new.workflow);
+        INSERT INTO capability_registry_fts(rowid, capability_name, owner, apis, ui_screens, workflow, utm_source, utm_campaign, utm_term)
+        VALUES (new.rowid, new.capability_name, new.owner, new.apis, new.ui_screens, new.workflow, new.utm_source, new.utm_campaign, new.utm_term);
     END""")
     conn.execute("""CREATE TRIGGER IF NOT EXISTS capability_registry_au AFTER UPDATE ON capability_registry BEGIN
-        INSERT INTO capability_registry_fts(capability_registry_fts, rowid, capability_name, owner, apis, ui_screens, workflow)
-        VALUES ('delete', old.rowid, old.capability_name, old.owner, old.apis, old.ui_screens, old.workflow);
-        INSERT INTO capability_registry_fts(rowid, capability_name, owner, apis, ui_screens, workflow)
-        VALUES (new.rowid, new.capability_name, new.owner, new.apis, new.ui_screens, new.workflow);
+        INSERT INTO capability_registry_fts(capability_registry_fts, rowid, capability_name, owner, apis, ui_screens, workflow, utm_source, utm_campaign, utm_term)
+        VALUES ('delete', old.rowid, old.capability_name, old.owner, old.apis, old.ui_screens, old.workflow, old.utm_source, old.utm_campaign, old.utm_term);
+        INSERT INTO capability_registry_fts(rowid, capability_name, owner, apis, ui_screens, workflow, utm_source, utm_campaign, utm_term)
+        VALUES (new.rowid, new.capability_name, new.owner, new.apis, new.ui_screens, new.workflow, new.utm_source, new.utm_campaign, new.utm_term);
     END""")
     conn.execute("""CREATE TRIGGER IF NOT EXISTS capability_registry_ad AFTER DELETE ON capability_registry BEGIN
-        INSERT INTO capability_registry_fts(capability_registry_fts, rowid, capability_name, owner, apis, ui_screens, workflow)
-        VALUES ('delete', old.rowid, old.capability_name, old.owner, old.apis, old.ui_screens, old.workflow);
+        INSERT INTO capability_registry_fts(capability_registry_fts, rowid, capability_name, owner, apis, ui_screens, workflow, utm_source, utm_campaign, utm_term)
+        VALUES ('delete', old.rowid, old.capability_name, old.owner, old.apis, old.ui_screens, old.workflow, old.utm_source, old.utm_campaign, old.utm_term);
     END""")
     conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_capability_registry_name ON capability_registry(capability_name)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_capability_registry_ai_required ON capability_registry(ai_required)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_capability_registry_campaign ON capability_registry(utm_campaign)")
     conn.commit()
 
 
@@ -1580,7 +2281,15 @@ def register_capability(args):
     UPDATEs it in place (refreshes ts/last_verified_ts/every field), same
     living-catalog convention as index_add's ON CONFLICT(path) DO UPDATE,
     since a capability's real business_rules/apis/confidence can legitimately
-    change between registrations and this must stay current, not write-once."""
+    change between registrations and this must stay current, not write-once.
+
+    Stage 7 pilot (2026-07-29, task-20260729, VERIDIAN_CONSOLIDATED_COMPLETION,
+    Option B system-wide UTM adoption): every insert/update also populates the
+    five UTM fields via _derive_capability_utm_fields() -- real values derived
+    from this same record (utm_campaign from metadata.registered_by_phase or a
+    task-id-shaped owner; utm_content from workflow/automation/documents/apis;
+    utm_term from capability_name), not placeholders, so a fresh registration
+    never needs the one-time backfill migration to catch up."""
     init_db_silent()
     conn = _connect()
     _ensure_capability_registry_table(conn)
@@ -1593,18 +2302,23 @@ def register_capability(args):
         print(json.dumps({"error": "record-file missing required capability_record_schema field(s)", "missing": missing}))
         sys.exit(1)
 
+    utm = _derive_capability_utm_fields(record)
+
     cid = _new_id("CAP")
     now = _now_iso()
     conn.execute(
         "INSERT INTO capability_registry (capability_id, ts, capability_name, inputs, business_rules, "
         "workflow, automation, documents, reports, apis, ui_screens, permissions, ai_required, confidence, "
-        "version, owner, last_verified_ts, metadata_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) "
+        "version, owner, last_verified_ts, metadata_json, utm_source, utm_medium, utm_campaign, utm_content, utm_term) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) "
         "ON CONFLICT(capability_name) DO UPDATE SET ts=excluded.ts, inputs=excluded.inputs, "
         "business_rules=excluded.business_rules, workflow=excluded.workflow, automation=excluded.automation, "
         "documents=excluded.documents, reports=excluded.reports, apis=excluded.apis, "
         "ui_screens=excluded.ui_screens, permissions=excluded.permissions, ai_required=excluded.ai_required, "
         "confidence=excluded.confidence, version=excluded.version, owner=excluded.owner, "
-        "last_verified_ts=excluded.last_verified_ts, metadata_json=excluded.metadata_json",
+        "last_verified_ts=excluded.last_verified_ts, metadata_json=excluded.metadata_json, "
+        "utm_source=excluded.utm_source, utm_medium=excluded.utm_medium, utm_campaign=excluded.utm_campaign, "
+        "utm_content=excluded.utm_content, utm_term=excluded.utm_term",
         (
             cid, now, record["capability_name"], json.dumps(record["inputs"]), json.dumps(record["business_rules"]),
             record.get("workflow"), record.get("automation"),
@@ -1615,6 +2329,7 @@ def register_capability(args):
             record["permissions"], 1 if record["ai_required"] else 0, float(record["confidence"]),
             record["version"], record["owner"], now,
             json.dumps(record.get("metadata", {})),
+            utm["utm_source"], utm["utm_medium"], utm["utm_campaign"], utm["utm_content"], utm["utm_term"],
         ),
     )
     conn.commit()
@@ -1908,9 +2623,20 @@ def list_entities(args):
 #                                   task_identity -- logged, not silently
 #                                   dropped, per this table's own row)
 # ---------------------------------------------------------------------------
+#   queued -> rejected_duplicate -> retired_max_attempts (2026-08-14, real
+#                                   fix for the duplicate-resubmission-loop
+#                                   incident: resource_governor.submit()
+#                                   counts rejected_duplicate as a real
+#                                   consumed attempt against its
+#                                   task_identity -- once the count hits
+#                                   MAX_DUPLICATE_ATTEMPTS_PER_IDENTITY, the
+#                                   identity is retired PERMANENTLY with this
+#                                   terminal status instead of being
+#                                   resubmitted every tick; see
+#                                   _migrate_umr_status_check() below)
 UMR_STATUSES = (
     "queued", "dispatched", "running", "completed", "failed",
-    "rejected_duplicate", "sigterm_sent", "killed",
+    "rejected_duplicate", "sigterm_sent", "killed", "retired_max_attempts",
 )
 UMR_ACTIVE_STATUSES = ("queued", "dispatched", "running")
 
@@ -1930,7 +2656,26 @@ def _ensure_umr_table(conn):
     CREATE TABLE IF NOT EXISTS is genuinely sufficient. Tested against a
     fixture DB seeded with the real pre-existing (non-UMR) schema in
     tests/test_resource_governor.py, not a fresh DB, per PR #101's own
-    postmortem on trusting CREATE TABLE IF NOT EXISTS alone."""
+    postmortem on trusting CREATE TABLE IF NOT EXISTS alone.
+
+    2026-08-02 fast path (fixes recurring 'database is locked' crashes,
+    see /var/crash/..superboss-register.py.1000.crash 2026-08-01 21:52):
+    resource_governor.py calls this before every umr_tasks read/write, and
+    touch_umr_heartbeat() (CLI `heartbeat`) is fired every 5 minutes by every
+    active worker's checkpoint loop -- so under real concurrency this ran the
+    full CREATE TABLE/TRIGGER/INDEX sequence plus 3 migration functions (each
+    with its own commit()) on nearly every call, almost always as a pure
+    no-op, contending for SQLite's single writer lock. Once the schema is
+    fully migrated (checked here via a plain read, no transaction), every
+    subsequent call returns immediately with zero writes."""
+    row = conn.execute(
+        "SELECT sql FROM sqlite_master WHERE type='table' AND name='umr_tasks'"
+    ).fetchone()
+    if row is not None:
+        cols = {r["name"] for r in conn.execute("PRAGMA table_info(umr_tasks)").fetchall()}
+        status_check_current = all(f"'{s}'" in row["sql"] for s in UMR_STATUSES)
+        if {"last_heartbeat", "tenant_id", "utm_source"} <= cols and status_check_current:
+            return
     status_sql = ",".join("'" + s + "'" for s in UMR_STATUSES)
     conn.execute(f"""CREATE TABLE IF NOT EXISTS umr_tasks (
         umr_id TEXT PRIMARY KEY,
@@ -1973,6 +2718,363 @@ def _ensure_umr_table(conn):
     conn.execute("CREATE INDEX IF NOT EXISTS idx_umr_tasks_status ON umr_tasks(status)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_umr_tasks_tier ON umr_tasks(tier)")
     conn.commit()
+    _migrate_umr_last_heartbeat(conn)
+    _migrate_umr_tenant_id(conn)
+    _migrate_umr_utm(conn)
+    _migrate_umr_status_check(conn)
+
+
+def _migrate_umr_last_heartbeat(conn):
+    """2026-07-29 (Stage 3 reconciliation-sweep fix for 'task exits cleanly but
+    umr_tasks status never reconciles', 5 real historical instances): additive
+    ALTER TABLE ADD COLUMN for umr_tasks.last_heartbeat (nullable TEXT
+    ISO-8601 timestamp), same pattern as _migrate_wiring_registry_content_hash's
+    system_index.tags column above -- no CHECK constraint involved, so a
+    straight ALTER TABLE ADD COLUMN is sufficient, no full-table rebuild
+    needed. Deliberately nullable with no DEFAULT: every umr_tasks row written
+    before this migration (all 5 real in-flight tasks at the moment this
+    deploys -- PR617-REVIEW, PR618-REVIEW, PR58-CONFLICT, PR610-CONFLICT,
+    PHASE-2-CROSSREF) must read back NULL here, never a synthesized 'now' or
+    epoch value that a stale-TTL sweep could misread as already-expired.
+    resource_governor.py's reconcile_stale_heartbeats() explicitly treats
+    NULL as 'unknown, skip', by construction (its own SQL WHERE excludes
+    NULL), not as a convention callers must remember.
+    Called from INSIDE _ensure_umr_table() itself, not only from
+    _migrate_schema(), because resource_governor.py calls _ensure_umr_table()
+    directly at several read/write call sites, bypassing _migrate_schema() by
+    that function's own documented design (see _ensure_umr_table's docstring)
+    -- this column must exist before any of those callers can run a query
+    that references it."""
+    cols = {r["name"] for r in conn.execute("PRAGMA table_info(umr_tasks)").fetchall()}
+    if "last_heartbeat" not in cols:
+        conn.execute("ALTER TABLE umr_tasks ADD COLUMN last_heartbeat TEXT")
+        conn.commit()
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_umr_tasks_last_heartbeat ON umr_tasks(last_heartbeat)")
+    conn.commit()
+
+
+def _migrate_umr_tenant_id(conn):
+    """2026-07-29 (Stage 10 END_USER_ENGINE foundation): additive ALTER TABLE
+    ADD COLUMN for umr_tasks.tenant_id (nullable TEXT), same pattern as
+    _migrate_umr_last_heartbeat's last_heartbeat column above -- no CHECK
+    constraint involved and no full-table rebuild needed. Deliberately
+    nullable with no DEFAULT: every real umr_tasks row submitted so far is
+    Owner-side work, not real end-user/tenant work, so NULL here correctly
+    means "not yet a multi-tenant-scoped task," not a data-quality gap.
+    resource_governor.py's submit() passes tenant_id=None for every existing
+    real caller (none of them set it), preserving that meaning exactly and
+    keeping 100% backward compatibility.
+
+    Checked before this migration: the UTM-shaped instructions/work_items/
+    actions tables in this same file have no existing tenant/org_id
+    convention (no such column, and their metadata_json has no established
+    tenant/org key) -- so tenant_id TEXT is a new convention here, not a
+    mismatch with one that already existed.
+
+    Indexed as a PARTIAL index (WHERE tenant_id IS NOT NULL): at the moment
+    this migrates, all real umr_tasks rows are NULL (Owner-side), so a full
+    index over the column would spend entirely on NULL entries with zero
+    query benefit today. A partial index costs nothing while every row is
+    NULL, and is ready the moment a future END_USER_ENGINE caller starts
+    passing real tenant_id values, at which point "all tasks for tenant X"
+    (WHERE tenant_id=?) becomes an index seek instead of a full table scan --
+    worth doing now given this table is already growing under active
+    dispatch load (a sibling table already has 8,000+ rows per the Stage 7
+    investigation).
+
+    Called from INSIDE _ensure_umr_table() itself, not only from
+    _migrate_schema(), for the same reason _migrate_umr_last_heartbeat() is:
+    resource_governor.py calls _ensure_umr_table() directly at several
+    read/write call sites, bypassing _migrate_schema()."""
+    cols = {r["name"] for r in conn.execute("PRAGMA table_info(umr_tasks)").fetchall()}
+    if "tenant_id" not in cols:
+        conn.execute("ALTER TABLE umr_tasks ADD COLUMN tenant_id TEXT")
+        conn.commit()
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_umr_tasks_tenant_id ON umr_tasks(tenant_id) "
+        "WHERE tenant_id IS NOT NULL"
+    )
+    conn.commit()
+
+
+def _derive_umr_utm_fields(record):
+    """Real, deterministic UTM field derivation for one umr_tasks row (Phase 6,
+    task-umr-tasks-utm-correlation-phase6-2026-07-29 -- closes the one real
+    gap identified in the UTM tagging standard sweep: instructions/work_items/
+    actions/system_index/capability_registry already carry the standard 5
+    fields; umr_tasks -- the real task-execution table resource_governor.py's
+    submit()/dispatch_one() write to -- did not). Same "pull only from data
+    already on the row/record itself, never a placeholder" rule
+    _derive_capability_utm_fields established:
+
+    utm_source   -- classified from the row's own real source_trigger (the
+                     actual caller-supplied classification of what triggered
+                     this task -- see resource_governor.submit()'s docstring):
+                     values starting with 'owner' (the real, live
+                     'owner_dispatch_gateway' / 'owner_directive_2026-07-28' /
+                     'owner_directive_direct_ai_analysis_mid_turn' /
+                     'owner_directive_laptop_offline_continuity' rows already
+                     in this table) -> 'owner_engine'; values starting with
+                     'DIRECTIVE' (the real 'DIRECTIVE' / 'DIRECTIVE-001' /
+                     'DIRECTIVE-002' rows) -> 'directive_engine'; anything
+                     containing 'test', 'scenario', 'adversarial', or
+                     'verif' (the real, live adversarial-test/load-test/
+                     scenario-test/verification rows already in this table)
+                     -> 'test_harness'; else 'resource_governor' (the real
+                     scheduled-trigger default path -- cron/systemd timer/
+                     worker spawn per submit()'s own docstring, none of which
+                     self-identify any further than source_trigger already
+                     does).
+    utm_medium   -- constant 'submit': resource_governor.submit() ->
+                     upsert_umr_task() is the one real function that has ever
+                     written a umr_tasks row (confirmed: upsert_umr_task's
+                     only 2 call sites are both inside submit()) -- same
+                     single-real-mechanism rule capability_registry's
+                     'register-capability' constant medium uses.
+    utm_campaign -- source_trigger IS already the real grouping slug for most
+                     rows (e.g. 'stage11-loadtest-manual'); several real rows
+                     already encode a campaign:variant split with ':'
+                     themselves (e.g.
+                     'stage10-tenant-column-verification:tenant-test') --
+                     split on the first ':' when present and use the left
+                     side, else the whole source_trigger, else 'unclassified'
+                     for the genuinely-empty case (never fabricated).
+    utm_content  -- task_kind: the real, specific mechanism differentiator
+                     for this exact row (systemctl_action /
+                     veridian_task_create / direct_ai_analysis / ...), same
+                     role workflow/automation play in
+                     _derive_capability_utm_fields.
+    utm_term     -- task_identity, plus unit_name appended when present
+                     (comma-separated, per this file's own utm_term
+                     convention documented at the top of this module) -- the
+                     real identifying/searchable label(s) for this row.
+
+    `record` accepts either a live umr_tasks row (dict/sqlite3.Row) or the
+    plain dict resource_governor.submit() builds for upsert_umr_task() --
+    same field names either way (task_identity/source_trigger/task_kind/
+    unit_name)."""
+    source_trigger = record.get("source_trigger") or ""
+    lower = source_trigger.lower()
+    if lower.startswith("owner"):
+        utm_source = "owner_engine"
+    elif source_trigger.startswith("DIRECTIVE"):
+        utm_source = "directive_engine"
+    elif any(k in lower for k in ("test", "scenario", "adversarial", "verif")):
+        utm_source = "test_harness"
+    else:
+        utm_source = "resource_governor"
+
+    utm_campaign = source_trigger.split(":", 1)[0] if ":" in source_trigger else (source_trigger or "unclassified")
+    utm_content = record.get("task_kind") or "n/a"
+    term_parts = [p for p in (record.get("task_identity"), record.get("unit_name")) if p]
+    utm_term = ", ".join(term_parts) if term_parts else None
+
+    return {
+        "utm_source": utm_source,
+        "utm_medium": "submit",
+        "utm_campaign": utm_campaign,
+        "utm_content": utm_content,
+        "utm_term": utm_term,
+    }
+
+
+def _migrate_umr_utm(conn):
+    """Phase 6 (task-umr-tasks-utm-correlation-phase6-2026-07-29): additive
+    ALTER TABLE ADD COLUMN for umr_tasks's five UTM fields, same real,
+    working pattern _migrate_capability_registry_utm above actually uses
+    (not the NOT-NULL-DEFAULT shorthand in that table's base CREATE TABLE
+    text) -- all 5 columns added as plain nullable TEXT via ALTER TABLE
+    (SQLite's ALTER TABLE ADD COLUMN with NOT NULL only works with a
+    constant DEFAULT, which utm_campaign/utm_content/utm_term genuinely
+    don't have -- they're derived per-row, not a blanket constant), then
+    backfilled via UPDATE using _derive_umr_utm_fields() -- same self-healing
+    "re-checked on every subsequent call, no-op once done" convention as
+    every other migration in this file. Also matches umr_tasks's own local
+    precedent: _migrate_umr_last_heartbeat/_migrate_umr_tenant_id above both
+    add their column nullable via ALTER TABLE only, never touching the base
+    CREATE TABLE text in _ensure_umr_table().
+
+    utm_source/utm_medium are backfilled per-row too (not a blanket
+    constant), unlike capability_registry's utm_source -- umr_tasks has 3
+    real, distinct historical origins (owner-driven DIRECTIVE-queue rows,
+    owner_dispatch_gateway rows, and adversarial/scenario/load-test harness
+    rows), so a single constant would flatten a real, useful distinction
+    capability_registry's single-mechanism table never had.
+
+    Index: utm_campaign (not the full row) -- same idx_capability_registry_
+    campaign precedent -- this is the field real future queries actually
+    group/filter by.
+
+    FTS5 rebuild: umr_tasks_fts must gain utm_source/utm_campaign/utm_term
+    as real searchable columns, exact same 3-column subset (not
+    utm_medium/utm_content) _migrate_capability_registry_utm added to
+    capability_registry_fts. FTS5 has no ALTER-TABLE-ADD-COLUMN path usable
+    here without losing the external-content 'rebuild' semantics, so this
+    mirrors that migration's mechanism exactly: drop the 3 triggers, drop
+    the shadow table, recreate both with the widened column list, then
+    re-populate via the fts5 'rebuild' command. Checked for need via the
+    shadow table's own stored CREATE TABLE text (same idiom as
+    capability_registry's) so this half only runs once, is a no-op
+    afterward, and self-heals if a prior run added the base columns but was
+    interrupted before the FTS rebuild.
+
+    Called from INSIDE _ensure_umr_table() itself, not only from
+    _migrate_schema(), for the same reason _migrate_umr_last_heartbeat/
+    _migrate_umr_tenant_id are: resource_governor.py calls _ensure_umr_table()
+    directly at several read/write call sites, bypassing _migrate_schema()."""
+    row = conn.execute(
+        "SELECT sql FROM sqlite_master WHERE type='table' AND name='umr_tasks'"
+    ).fetchone()
+    if row is None:
+        return  # table doesn't exist yet; _ensure_umr_table's CREATE TABLE covers it next call
+
+    cols = {r["name"] for r in conn.execute("PRAGMA table_info(umr_tasks)").fetchall()}
+    if "utm_source" not in cols:
+        for col in ("utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"):
+            conn.execute(f"ALTER TABLE umr_tasks ADD COLUMN {col} TEXT")
+        conn.commit()
+
+    backfill_rows = conn.execute(
+        "SELECT umr_id, task_identity, source_trigger, task_kind, unit_name FROM umr_tasks WHERE utm_term IS NULL"
+    ).fetchall()
+    if backfill_rows:
+        for r in backfill_rows:
+            fields = _derive_umr_utm_fields(dict(r))
+            conn.execute(
+                "UPDATE umr_tasks SET utm_source=?, utm_medium=?, utm_campaign=?, utm_content=?, utm_term=? "
+                "WHERE umr_id=?",
+                (fields["utm_source"], fields["utm_medium"], fields["utm_campaign"],
+                 fields["utm_content"], fields["utm_term"], r["umr_id"]),
+            )
+        conn.commit()
+
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_umr_tasks_utm_campaign ON umr_tasks(utm_campaign)")
+    conn.commit()
+
+    fts_row = conn.execute(
+        "SELECT sql FROM sqlite_master WHERE type='table' AND name='umr_tasks_fts'"
+    ).fetchone()
+    if fts_row is not None and "utm_term" not in fts_row["sql"]:
+        conn.execute("DROP TRIGGER IF EXISTS umr_tasks_ai")
+        conn.execute("DROP TRIGGER IF EXISTS umr_tasks_au")
+        conn.execute("DROP TRIGGER IF EXISTS umr_tasks_ad")
+        conn.execute("DROP TABLE IF EXISTS umr_tasks_fts")
+        conn.execute("""CREATE VIRTUAL TABLE IF NOT EXISTS umr_tasks_fts USING fts5(
+            task_identity, source_trigger, logs_ref, utm_source, utm_campaign, utm_term,
+            content='umr_tasks', content_rowid='rowid'
+        )""")
+        conn.execute("""CREATE TRIGGER IF NOT EXISTS umr_tasks_ai AFTER INSERT ON umr_tasks BEGIN
+            INSERT INTO umr_tasks_fts(rowid, task_identity, source_trigger, logs_ref, utm_source, utm_campaign, utm_term)
+            VALUES (new.rowid, new.task_identity, new.source_trigger, new.logs_ref, new.utm_source, new.utm_campaign, new.utm_term);
+        END""")
+        conn.execute("""CREATE TRIGGER IF NOT EXISTS umr_tasks_au AFTER UPDATE ON umr_tasks BEGIN
+            INSERT INTO umr_tasks_fts(umr_tasks_fts, rowid, task_identity, source_trigger, logs_ref, utm_source, utm_campaign, utm_term)
+            VALUES ('delete', old.rowid, old.task_identity, old.source_trigger, old.logs_ref, old.utm_source, old.utm_campaign, old.utm_term);
+            INSERT INTO umr_tasks_fts(rowid, task_identity, source_trigger, logs_ref, utm_source, utm_campaign, utm_term)
+            VALUES (new.rowid, new.task_identity, new.source_trigger, new.logs_ref, new.utm_source, new.utm_campaign, new.utm_term);
+        END""")
+        conn.execute("""CREATE TRIGGER IF NOT EXISTS umr_tasks_ad AFTER DELETE ON umr_tasks BEGIN
+            INSERT INTO umr_tasks_fts(umr_tasks_fts, rowid, task_identity, source_trigger, logs_ref, utm_source, utm_campaign, utm_term)
+            VALUES ('delete', old.rowid, old.task_identity, old.source_trigger, old.logs_ref, old.utm_source, old.utm_campaign, old.utm_term);
+        END""")
+        conn.execute("INSERT INTO umr_tasks_fts(umr_tasks_fts) VALUES ('rebuild')")
+        conn.commit()
+
+
+def _migrate_umr_status_check(conn):
+    """2026-08-14 (real fix for the duplicate-resubmission-loop incident,
+    UMR-20260814-080315-d854 -- see UMR_STATUSES' own 'retired_max_attempts'
+    comment above): widens umr_tasks.status's CHECK constraint to allow the
+    new terminal status resource_governor.submit() now writes once a
+    task_identity's rejected_duplicate attempts hit
+    MAX_DUPLICATE_ATTEMPTS_PER_IDENTITY. SQLite has no ALTER TABLE for CHECK
+    constraints (same limitation _migrate_wiring_registry_entity_types
+    already documents for wiring_registry) -- a pre-existing umr_tasks table
+    needs a real rebuild. Rather than hand-copying a full column list here
+    (which would drift out of sync with _migrate_umr_last_heartbeat/
+    _migrate_umr_tenant_id/_migrate_umr_utm's own ALTER TABLE ADD COLUMNs the
+    moment any of them changes), this reads the table's OWN currently-stored
+    CREATE TABLE text from sqlite_master -- which SQLite keeps in sync with
+    every prior ADD COLUMN migration automatically -- and substitutes only
+    the status CHECK's value list inside that text, so every real column
+    this table has ever grown is preserved verbatim. Every row copies across
+    unchanged via a plain `INSERT ... SELECT *` (safe: source and destination
+    have identical column order, only the CHECK differs). Run strictly AFTER
+    _migrate_umr_last_heartbeat/_migrate_umr_tenant_id/_migrate_umr_utm above
+    (see _ensure_umr_table's call order) so every column those add already
+    exists by the time this reads the stored SQL -- and the FTS5 index this
+    function rebuilds can therefore safely assume the final, already-widened
+    6-column shape (task_identity, source_trigger, logs_ref, utm_source,
+    utm_campaign, utm_term) _migrate_umr_utm establishes, the same "drop the
+    3 triggers, drop the shadow table, recreate both, then fts5 'rebuild'"
+    mechanism that migration and _migrate_wiring_registry_entity_types both
+    already use. No-op (checked via whether the stored SQL already contains
+    every current UMR_STATUSES member) once already migrated.
+
+    Called from INSIDE _ensure_umr_table() itself, not only from
+    _migrate_schema(), for the same reason its 3 siblings above are:
+    resource_governor.py calls _ensure_umr_table() directly at several
+    read/write call sites, bypassing _migrate_schema(). _ensure_umr_table's
+    own fast-path early-return was widened (see its own body) to also check
+    the status CHECK is current, not just that the 3 sibling migrations'
+    columns exist -- otherwise a DB that already had last_heartbeat/
+    tenant_id/utm_source (i.e. every real production DB as of this fix)
+    would hit that fast path and this function would never even be called."""
+    row = conn.execute(
+        "SELECT sql FROM sqlite_master WHERE type='table' AND name='umr_tasks'"
+    ).fetchone()
+    if row is None or all(f"'{s}'" in row["sql"] for s in UMR_STATUSES):
+        return  # table doesn't exist yet (a later CREATE TABLE IF NOT EXISTS covers that) or already migrated
+
+    m = re.search(r"status TEXT NOT NULL DEFAULT 'queued' CHECK\(status IN \([^)]*\)\)", row["sql"])
+    if not m:
+        return  # defensive: unexpected schema shape, never touched by this migration
+    new_status_clause = (
+        "status TEXT NOT NULL DEFAULT 'queued' CHECK(status IN ("
+        + ",".join("'" + s + "'" for s in UMR_STATUSES) + "))"
+    )
+    new_create_sql = row["sql"][:m.start()] + new_status_clause + row["sql"][m.end():]
+    new_create_sql = new_create_sql.replace("CREATE TABLE umr_tasks", "CREATE TABLE umr_tasks__migrate", 1)
+
+    conn.execute("DROP TRIGGER IF EXISTS umr_tasks_ai")
+    conn.execute("DROP TRIGGER IF EXISTS umr_tasks_au")
+    conn.execute("DROP TRIGGER IF EXISTS umr_tasks_ad")
+    conn.execute("DROP TABLE IF EXISTS umr_tasks_fts")
+
+    conn.execute(new_create_sql)
+    conn.execute("INSERT INTO umr_tasks__migrate SELECT * FROM umr_tasks")
+    conn.execute("DROP TABLE umr_tasks")
+    conn.execute("ALTER TABLE umr_tasks__migrate RENAME TO umr_tasks")
+
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_umr_tasks_identity ON umr_tasks(task_identity)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_umr_tasks_status ON umr_tasks(status)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_umr_tasks_tier ON umr_tasks(tier)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_umr_tasks_last_heartbeat ON umr_tasks(last_heartbeat)")
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_umr_tasks_tenant_id ON umr_tasks(tenant_id) WHERE tenant_id IS NOT NULL"
+    )
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_umr_tasks_utm_campaign ON umr_tasks(utm_campaign)")
+
+    conn.execute("""CREATE VIRTUAL TABLE IF NOT EXISTS umr_tasks_fts USING fts5(
+        task_identity, source_trigger, logs_ref, utm_source, utm_campaign, utm_term,
+        content='umr_tasks', content_rowid='rowid'
+    )""")
+    conn.execute("""CREATE TRIGGER IF NOT EXISTS umr_tasks_ai AFTER INSERT ON umr_tasks BEGIN
+        INSERT INTO umr_tasks_fts(rowid, task_identity, source_trigger, logs_ref, utm_source, utm_campaign, utm_term)
+        VALUES (new.rowid, new.task_identity, new.source_trigger, new.logs_ref, new.utm_source, new.utm_campaign, new.utm_term);
+    END""")
+    conn.execute("""CREATE TRIGGER IF NOT EXISTS umr_tasks_au AFTER UPDATE ON umr_tasks BEGIN
+        INSERT INTO umr_tasks_fts(umr_tasks_fts, rowid, task_identity, source_trigger, logs_ref, utm_source, utm_campaign, utm_term)
+        VALUES ('delete', old.rowid, old.task_identity, old.source_trigger, old.logs_ref, old.utm_source, old.utm_campaign, old.utm_term);
+        INSERT INTO umr_tasks_fts(rowid, task_identity, source_trigger, logs_ref, utm_source, utm_campaign, utm_term)
+        VALUES (new.rowid, new.task_identity, new.source_trigger, new.logs_ref, new.utm_source, new.utm_campaign, new.utm_term);
+    END""")
+    conn.execute("""CREATE TRIGGER IF NOT EXISTS umr_tasks_ad AFTER DELETE ON umr_tasks BEGIN
+        INSERT INTO umr_tasks_fts(umr_tasks_fts, rowid, task_identity, source_trigger, logs_ref, utm_source, utm_campaign, utm_term)
+        VALUES ('delete', old.rowid, old.task_identity, old.source_trigger, old.logs_ref, old.utm_source, old.utm_campaign, old.utm_term);
+    END""")
+    conn.execute("INSERT INTO umr_tasks_fts(umr_tasks_fts) VALUES ('rebuild')")
+    conn.commit()
 
 
 def find_active_umr_by_identity(conn, task_identity):
@@ -1994,14 +3096,40 @@ def upsert_umr_task(conn, record):
     """Insert-or-replace ONE umr_tasks row keyed on umr_id (generated here if
     not supplied). Does NOT commit -- caller (resource_governor.py) owns the
     transaction/commit, same convention register_entity_row() documents for
-    wiring_registry. Returns the umr_id."""
+    wiring_registry. Returns the umr_id.
+
+    record["tenant_id"] (Stage 10 END_USER_ENGINE foundation, 2026-07-29):
+    optional, defaults to None via record.get() below -- every existing real
+    caller omits this key entirely and gets NULL, same as before this field
+    existed (100% backward compatible). Treated as an immutable
+    submission-time classification field, same as tier/task_kind/
+    source_trigger: it is written once on INSERT and deliberately NOT part of
+    the ON CONFLICT DO UPDATE SET list, so a later re-upsert of the same
+    umr_id (e.g. the running->completed status transitions this function is
+    also used for) can never silently overwrite/clear the tenant a task was
+    originally submitted under.
+
+    Phase 6 (task-umr-tasks-utm-correlation-phase6-2026-07-29): every INSERT
+    also populates the five UTM fields via _derive_umr_utm_fields(record) --
+    real values derived from this same record's task_identity/source_trigger/
+    task_kind/unit_name, not placeholders -- same "compute at the one real
+    call site" pattern register_capability() uses for capability_registry.
+    Deliberately NOT part of the ON CONFLICT DO UPDATE SET list, same reason
+    tenant_id is excluded above: fixed at INSERT time, never silently
+    overwritten by a later re-upsert (in practice every real status
+    transition goes through update_umr_task()'s partial UPDATE instead, which
+    never touches these columns either -- this exclusion is defense-in-depth
+    for this function's own generic re-upsert path, not something that fires
+    today)."""
     umr_id = record.get("umr_id") or _new_id("UMR")
     now = _now_iso()
+    utm = _derive_umr_utm_fields(record)
     conn.execute(
         "INSERT INTO umr_tasks (umr_id, task_identity, ts_submitted, tier, status, source_trigger, "
-        "task_kind, unit_name, inputs_json, outputs_json, logs_ref, metric_snapshot_json, "
-        "ts_dispatched, ts_sigterm, ts_completed, reason, metadata_json) "
-        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) "
+        "task_kind, unit_name, tenant_id, inputs_json, outputs_json, logs_ref, metric_snapshot_json, "
+        "ts_dispatched, ts_sigterm, ts_completed, reason, metadata_json, "
+        "utm_source, utm_medium, utm_campaign, utm_content, utm_term) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) "
         "ON CONFLICT(umr_id) DO UPDATE SET status=excluded.status, unit_name=excluded.unit_name, "
         "outputs_json=excluded.outputs_json, logs_ref=excluded.logs_ref, "
         "metric_snapshot_json=excluded.metric_snapshot_json, ts_dispatched=excluded.ts_dispatched, "
@@ -2010,11 +3138,12 @@ def upsert_umr_task(conn, record):
         (
             umr_id, record["task_identity"], record.get("ts_submitted") or now,
             record["tier"], record.get("status", "queued"), record["source_trigger"],
-            record.get("task_kind", "systemctl_action"), record.get("unit_name"),
+            record.get("task_kind", "systemctl_action"), record.get("unit_name"), record.get("tenant_id"),
             json.dumps(record.get("inputs") or {}), json.dumps(record.get("outputs") or {}),
             record.get("logs_ref"), json.dumps(record["metric_snapshot"]) if record.get("metric_snapshot") is not None else None,
             record.get("ts_dispatched"), record.get("ts_sigterm"), record.get("ts_completed"),
             record.get("reason"), json.dumps(record.get("metadata") or {}),
+            utm["utm_source"], utm["utm_medium"], utm["utm_campaign"], utm["utm_content"], utm["utm_term"],
         ),
     )
     return umr_id
@@ -2088,6 +3217,32 @@ def query_umr_tasks(conn, limit=20, status=None, tier=None, task_identity=None, 
     return matches
 
 
+def touch_umr_heartbeat(args):
+    """2026-07-29 (Stage 3 reconciliation-sweep prerequisite): CLI entrypoint
+    worker-entrypoint.sh/doc-worker-entrypoint.sh call to stamp
+    last_heartbeat=now() on the ACTIVE umr_tasks row for --task-identity,
+    using the exact same resolution find_active_umr_by_identity() already
+    uses for de-duplication (same convention every other lookup path in this
+    table follows, not a new one). Best-effort, never an error: a task
+    whose dispatch never went through resource_governor.py (e.g. any legacy
+    path that still calls systemctl directly) simply has no active umr_tasks
+    row yet, and that is a normal, silent no-op here -- callers already wrap
+    this in `|| true`, same convention as every other call into this script
+    from those two entrypoints, but the function itself must not raise for
+    that case either."""
+    conn = _connect()
+    _ensure_umr_table(conn)
+    row = find_active_umr_by_identity(conn, args.task_identity)
+    if row is None:
+        conn.close()
+        print(json.dumps({"ok": True, "updated": False, "reason": "no active umr_tasks row for this task_identity"}))
+        return
+    update_umr_task(conn, row["umr_id"], last_heartbeat=_now_iso())
+    conn.commit()
+    conn.close()
+    print(json.dumps({"ok": True, "updated": True, "umr_id": row["umr_id"]}))
+
+
 def init_db_silent():
     if not os.path.exists(DB_PATH):
         conn = _connect()
@@ -2103,6 +3258,10 @@ if __name__ == "__main__":
     sub = p.add_subparsers(dest="cmd", required=True)
 
     p_init = sub.add_parser("init")
+
+    p_hb = sub.add_parser("heartbeat", help="Stage 3 reconciliation-sweep prerequisite: stamp "
+                           "last_heartbeat=now() on the active umr_tasks row for --task-identity")
+    p_hb.add_argument("--task-identity", dest="task_identity", required=True)
 
     p_ins = sub.add_parser("log-instruction")
     p_ins.add_argument("--text", required=True)
@@ -2162,6 +3321,12 @@ if __name__ == "__main__":
     p_dup.add_argument("query", nargs="?", default="")
     p_dup.add_argument("--category", default="")
 
+    p_cdup = sub.add_parser("check-content-duplicate", help="Stage 2 (task-20260729): "
+                             "content-hash dedup for same-text chat resubmission -- has "
+                             "this exact instruction text already been submitted recently.")
+    p_cdup.add_argument("--text", required=True)
+    p_cdup.add_argument("--window-hours", dest="window_hours", type=float, default=24)
+
     p_exec = sub.add_parser("log-execution")
     p_exec.add_argument("--phase", required=True, choices=["PRE", "POST"])
     p_exec.add_argument("--work-item-id", dest="work_item_id", default=None)
@@ -2196,6 +3361,18 @@ if __name__ == "__main__":
     p_regk.add_argument("--secondary-path", dest="secondary_path", default=None,
                          help="nullable -- only for artifacts with a real dual-location precedent (e.g. MASTER_INDEX.yaml)")
     p_regk.add_argument("--metadata", default="")
+    # UTM metadata consolidation, phase 6 (2026-07-30): optional, same
+    # interface convention as log-instruction's --source/--medium/--campaign/
+    # --content/--term. utm_term is NOT listed here -- it's auto-derived
+    # from --tags (comma-join), never asked for separately.
+    p_regk.add_argument("--utm-source", dest="utm_source", default=None,
+                         help="who: owner|end_user|org|ai_agent|software (optional, left NULL if unknown)")
+    p_regk.add_argument("--utm-medium", dest="utm_medium", default=None,
+                         help="channel: ssh_session|claude_code_cli|chat_ui|api|cron (optional)")
+    p_regk.add_argument("--utm-campaign", dest="utm_campaign", default=None,
+                         help="initiative/project grouping, freeform slug (optional)")
+    p_regk.add_argument("--utm-content", dest="utm_content", default=None,
+                         help="short structured label of what, not a sentence (optional)")
 
     p_queryk = sub.add_parser("query-knowledge")
     p_queryk.add_argument("query")
@@ -2283,10 +3460,24 @@ if __name__ == "__main__":
                           help="engine|gateway|supabase_table|function|route|file|script|cron_job|"
                                "ai_role|vercel_project|github_repo|browser_component")
 
+    # Structural duplicate-task lease (task-20260731-074406) -- see
+    # _ensure_task_claims_table's docstring for task_key vs task_id.
+    p_claimtk = sub.add_parser("claim-task-key")
+    p_claimtk.add_argument("--task-key", dest="task_key", required=True)
+    p_claimtk.add_argument("--task-id", dest="task_id", default=None)
+    p_claimtk.add_argument("--title", default=None)
+    p_claimtk.add_argument("--source", default=None, help="who's claiming: owner|ai_agent|software (optional)")
+
+    p_checktk = sub.add_parser("check-task-key")
+    p_checktk.add_argument("--task-key", dest="task_key", required=True)
+
     args = p.parse_args()
     if args.cmd == "init":
         with _write_lock():
             init_db()
+    elif args.cmd == "heartbeat":
+        with _write_lock():
+            touch_umr_heartbeat(args)
     elif args.cmd == "log-instruction":
         with _write_lock():
             log_instruction(args)
@@ -2303,6 +3494,8 @@ if __name__ == "__main__":
             index_add(args)
     elif args.cmd == "check-duplicate":
         check_duplicate(args)
+    elif args.cmd == "check-content-duplicate":
+        cmd_check_content_duplicate(args)
     elif args.cmd == "log-execution":
         with _write_lock():
             log_execution(args)
@@ -2360,3 +3553,8 @@ if __name__ == "__main__":
         lookup_entity(args)
     elif args.cmd == "list-entities":
         list_entities(args)
+    elif args.cmd == "claim-task-key":
+        with _write_lock():
+            claim_task_key(args)
+    elif args.cmd == "check-task-key":
+        check_task_key(args)

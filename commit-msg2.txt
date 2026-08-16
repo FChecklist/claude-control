@@ -1,0 +1,3 @@
+docs(progress): PR #425 opened on veridian-scripts, propagate real preflight denial reason into register row
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>

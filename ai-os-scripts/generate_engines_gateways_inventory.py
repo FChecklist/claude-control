@@ -111,13 +111,40 @@ DISCOVERY = [
             "scripts/preflight-guard.py",
             "ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml",
             "repos/compliance-tracker/src/lib/policy-enforcement-engine.ts",
+            "scripts/ddl_authorization_check.py",
+            "scripts/credit-accountant.py",
         ],
         coverage="partial",
         gap="preflight-guard.py gates server-side task dispatch (resource/crontab/scope checks); "
             "policy-enforcement-engine.ts is a deterministic pre-LLM-call gate (personal-use/prompt-injection/"
             "out-of-domain categories) in compliance-tracker. Both are real, enforced gates -- but two separate "
             "policy engines with no shared schema or single point of truth, and neither covers the other's domain "
-            "(server ops vs in-app LLM calls).",
+            "(server ops vs in-app LLM calls). "
+            "Re-verified 2026-07-27 (supersedes the 2026-07-26 pass, which correctly withheld 2 paths pending "
+            "merge): scripts/ddl_authorization_check.py (dispatch-time pre-flight gate blocking unauthorized "
+            "DDL/DCL statements, 3 real audit rounds, PR #79) is now MERGED (2026-07-26T11:59:10Z) and confirmed "
+            "live on disk -- added to exists_as above. The interactive-session write-gate (PR #80, also now "
+            "MERGED 2026-07-26T17:18:34Z, git-tracked at ai-os/OWNER_DIRECTIVES/interactive-session-guard.bashrc-"
+            "snippet) is real and merged too, but its actual DEPLOYED copy lives outside this script's "
+            "VERIDIAN_ROOT-relative verification scope -- at ~/.claude-interactive-session-guard.bashrc-snippet "
+            "(+ ~/.claude-interactive-session-guard.d), sourced from ~/.bashrc by design (a home-directory hook, "
+            "not a repo-deployed file) -- confirmed still live via a direct grep of ~/.bashrc. Deliberately NOT "
+            "added to exists_as: the git-tracked repo path does not itself exist under /opt/veridian, and adding "
+            "it would falsely flip verified_on_disk to false for this row's other, genuinely live paths. "
+            "Hardening continues: PR #98 ('Round 5: close native git/gh command-alias bypass of the "
+            "interactive-session write gate') is open as of this pass. Also added this pass: "
+            "scripts/credit-accountant.py -- a real, live, FAILS-CLOSED $1-increment approval gate on metered "
+            "AI credit spend (predates this session, live since 2026-07-23) that was never previously listed "
+            "under any engine despite being unmistakably Policy-Engine-shaped. It is also independently invoked "
+            "from Engine 8's task-gateway.py cmd_start -- see that row's gap_description for the genuine, "
+            "still-unreconciled call-site duplication this creates for metered (non---no-proxy) tasks, "
+            "re-confirmed by direct source read this pass, not assumed from the prior claim. PR #89 (MERGED "
+            "2026-07-26T16:30:57Z, 'unify DDL gate onto policy schema, build real policy gate registry') shipped "
+            "ai-os/POLICY_GATE_REGISTRY_2026-07-26.yaml -- real first progress on this row's own 'no shared "
+            "schema/single point of truth' gap, registering preflight-guard.py/policy-enforcement-engine.ts/"
+            "ddl_authorization_check.py/the interactive-session guard under one queryable registry. "
+            "credit-accountant.py is NOT yet in that registry either -- a real remaining gap, not silently "
+            "assumed covered.",
     ),
     dict(
         n=6, name="Rule Engine",
@@ -152,6 +179,8 @@ DISCOVERY = [
         exists_as=[
             "scripts/task-gateway.py",
             "repos/compliance-tracker/src/lib/task-execution-engine.ts",
+            "scripts/veridian-task.py",
+            "scripts/supervisor-entrypoint.sh",
         ],
         coverage="partial",
         gap="task-gateway.py's submit/start/log/close lifecycle is real, enforced process orchestration for "
@@ -159,7 +188,43 @@ DISCOVERY = [
             "chains. Neither is BPMN-modeled (confirmed zero bpmn-js/camunda dependency in any of the 3 repos' "
             "package.json, per AUDITOR_ENGINE_PHASE_PLAN_2026-07-24.yaml's own workflow-domain finding) -- "
             "VERIDIAN's 'workflows' today are status-enum transitions and task-gateway phases, not a modeled "
-            "process definition a workflow engine would normally execute against.",
+            "process definition a workflow engine would normally execute against. "
+            "Re-verified 2026-07-26: scripts/veridian-task.py (task create/checkpoint CLI) and "
+            "scripts/supervisor-entrypoint.sh (the real review -> merge/hold decision process) are two more "
+            "real, live pieces of this same lifecycle -- both deliberately excluded from git historically (same "
+            "'live-deployed but not git-tracked' class as scripts/credit-accountant.py) but genuinely present on "
+            "the live filesystem today, so added above. This session found and fixed a real gap in this "
+            "lifecycle: HOLD_FOR_OWNER_SIGNOFF was previously prose-only -- the PR563 incident auto-merged a "
+            "task explicitly instructed 'must be held for Owner sign-off, do not merge under any circumstance' "
+            "because nothing in supervisor-entrypoint.sh's pipeline read prompt-level prose, only risk-tier.py's "
+            "tier plus the AI reviewer's verdict. The fix (a real hold_for_owner_signoff field threaded "
+            "task-gateway.py's cmd_start -> veridian-task.py's cmd_create -> task.yaml -> "
+            "supervisor-entrypoint.sh's merge-decision block, which now unconditionally skips auto-merge when "
+            "set) shipped via commit e6c7049 -- PR #81, a stale redispatch of the same diff, was CLOSED without "
+            "merging; e6c7049 was briefly, mistakenly deleted from master and recovered via PR #84 (MERGED). "
+            "Also found and fixed (PR #82, MERGED 2026-07-26T11:02:41Z, via commits 615ee53/581e734): "
+            "task-gateway.py's cmd_start never called credit-accountant.py propose, so worker-entrypoint.sh's "
+            "later `report --increment 1` always failed with 'no matching approved plan' -- cmd_start now "
+            "proposes right after veridian-task.py create succeeds; confirmed live in current master "
+            "(CREDIT_ACCOUNTANT constant + the real propose subprocess call, both present at "
+            "scripts/task-gateway.py's cmd_start). GENUINE DUPLICATION RISK found and NOT fixed (report-only "
+            "per this task's own CONSTRAINTS): preflight-guard.py's check_credit_accountant_approval (invoked "
+            "by worker-entrypoint.sh at a later pipeline stage) ALREADY calls `credit-accountant.py propose "
+            "--task-id <task_id> ...` for the same task_id -- cmd_start's own call proposes for that same "
+            "task_id earlier. Re-confirmed by direct source read 2026-07-27 that this is still unreconciled: "
+            "preflight-guard.py's own gate structure only runs check_credit_accountant_approval for metered "
+            "(non---no-proxy) tasks -- subscription-billed (--no-proxy) tasks skip it entirely and log_"
+            "subscription_usage() instead -- so the overlap is real specifically for metered/OpenRouter-billed "
+            "tasks (both call sites fire) and absent for subscription tasks (only cmd_start's call fires). Two "
+            "independent, uncoordinated propose call sites for what credit-accountant.py's own docstring "
+            "describes as a single per-task $1-increment gate is a real overlap neither PR's own scope "
+            "reconciled; still needs its own follow-up task. Fresh PR-state re-check 2026-07-27 (task-20260727-"
+            "034439-re-verify-20-engine-inventory---confirm, via `gh pr view --json state,mergedAt`): PR #79 "
+            "(DDL gate, see Engine 5) MERGED 2026-07-26T11:59:10Z; PR #80 (interactive-session write-gate, see "
+            "Engine 5) MERGED 2026-07-26T17:18:34Z (was still open as of the prior 2026-07-26 correction pass); "
+            "PR #81 CLOSED/unmerged (superseded by e6c7049/PR #84, unchanged); PR #82 MERGED 2026-07-26T11:02:41Z "
+            "(unchanged). All 4 PRs from this session's KNOWN_CONTEXT are now resolved (3 merged, 1 correctly "
+            "superseded) -- only the credit-accountant.py duplication risk remains genuinely open.",
     ),
     dict(
         n=9, name="Automation Engine",

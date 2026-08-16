@@ -1,0 +1,306 @@
+generated_note: 'Non-mutating audit: real ai-os/tasks/*/task.yaml records with status=superseded whose
+  superseded_reason cites plan_backlog_completion.py''s dedup routine, cross-checked against what the
+  FIXED, SUCCESS_CRITERIA-verifying classify() concludes when run fresh against current live state (real
+  gh pr view + real default-branch re-verification). Read-only: reads ai-os/tasks/*/task.yaml but never
+  writes to it.'
+total_superseded_by_this_routine: 32
+mismatch_count: 31
+mismatches:
+- task_id: task-20260726-055454-migration-drift-audit-and-reconciliation
+  recorded_duplicate_of: task-20260726-071400-migration-drift-audit-and-reconciliation
+  recorded_superseded_reason: Collapsed by plan_backlog_completion.py dedup 2026-07-27 -- same underlying
+    issue as task-20260726-071400-migration-drift-audit-and-reconciliation (2 total attempts in chain).
+  fresh_classification_category: SUBSTANTIAL_WORK_NO_PR_NEEDS_REVIEW
+  fresh_representative_task_id: task-20260726-071400-migration-drift-audit-and-reconciliation
+  reason_not_qualified: real classifier concludes 'SUBSTANTIAL_WORK_NO_PR_NEEDS_REVIEW', not the verified
+    ALREADY_DONE_STALE_STATUS -- Real progress recorded in attempt `task-20260726-071400-migration-drift-audit-and-reconciliation`
+    (9 completed steps, no PR opened, no gate marker) -- inspect that attempt's workspace branch before
+    redispatching; may just need a PR opened, not fresh work.
+- task_id: task-20260726-055619-phase5-browser-execution-lite-llm-npu-bu
+  recorded_duplicate_of: task-20260726-171420-phase5-browser-execution-lite-llm-npu-bu
+  recorded_superseded_reason: Collapsed by plan_backlog_completion.py dedup 2026-07-27 -- same underlying
+    issue as task-20260726-171420-phase5-browser-execution-lite-llm-npu-bu (2 total attempts in chain).
+  fresh_classification_category: SUBSTANTIAL_WORK_NO_PR_NEEDS_REVIEW
+  fresh_representative_task_id: task-20260726-171420-phase5-browser-execution-lite-llm-npu-bu
+  reason_not_qualified: real classifier concludes 'SUBSTANTIAL_WORK_NO_PR_NEEDS_REVIEW', not the verified
+    ALREADY_DONE_STALE_STATUS -- Real progress recorded in attempt `task-20260726-171420-phase5-browser-execution-lite-llm-npu-bu`
+    (8 completed steps, no PR opened, no gate marker) -- inspect that attempt's workspace branch before
+    redispatching; may just need a PR opened, not fresh work.
+- task_id: task-20260726-083946-fix-task-lifecycle--real-branch-resoluti
+  recorded_duplicate_of: task-20260726-195236-rca-task-20260726-083946-fix-task-lifecy
+  recorded_superseded_reason: Collapsed by plan_backlog_completion.py dedup 2026-07-27 -- same underlying
+    issue as task-20260726-195236-rca-task-20260726-083946-fix-task-lifecy (3 total attempts in chain).
+  fresh_classification_category: PR_CLOSED_NEEDS_REDISPATCH
+  fresh_representative_task_id: task-20260727-034446-rca-task-20260726-083946-fix-task-lifecy
+  reason_not_qualified: 'real classifier concludes ''PR_CLOSED_NEEDS_REDISPATCH'', not the verified ALREADY_DONE_STALE_STATUS
+    -- PR #81 was closed without merging -- needs fresh redispatch with root-cause fix.'
+- task_id: task-20260726-091933-fix-task-lifecycle--real-branch-resoluti
+  recorded_duplicate_of: task-20260726-195236-rca-task-20260726-083946-fix-task-lifecy
+  recorded_superseded_reason: Collapsed by plan_backlog_completion.py dedup 2026-07-27 -- same underlying
+    issue as task-20260726-195236-rca-task-20260726-083946-fix-task-lifecy (3 total attempts in chain).
+  fresh_classification_category: PR_CLOSED_NEEDS_REDISPATCH
+  fresh_representative_task_id: task-20260727-034446-rca-task-20260726-083946-fix-task-lifecy
+  reason_not_qualified: 'real classifier concludes ''PR_CLOSED_NEEDS_REDISPATCH'', not the verified ALREADY_DONE_STALE_STATUS
+    -- PR #81 was closed without merging -- needs fresh redispatch with root-cause fix.'
+- task_id: task-20260726-160604-append-4-new-x-post-analyses-to-x-post-a
+  recorded_duplicate_of: task-20260726-171405-append-4-new-x-post-analyses-to-x-post-a
+  recorded_superseded_reason: Collapsed by plan_backlog_completion.py dedup 2026-07-27 -- same underlying
+    issue as task-20260726-171405-append-4-new-x-post-analyses-to-x-post-a (2 total attempts in chain).
+  fresh_classification_category: SUBSTANTIAL_WORK_NO_PR_NEEDS_REVIEW
+  fresh_representative_task_id: task-20260726-171405-append-4-new-x-post-analyses-to-x-post-a
+  reason_not_qualified: real classifier concludes 'SUBSTANTIAL_WORK_NO_PR_NEEDS_REVIEW', not the verified
+    ALREADY_DONE_STALE_STATUS -- Real progress recorded in attempt `task-20260726-160604-append-4-new-x-post-analyses-to-x-post-a`
+    (8 completed steps, no PR opened, no gate marker) -- inspect that attempt's workspace branch before
+    redispatching; may just need a PR opened, not fresh work.
+- task_id: task-20260726-171129-tier2-fix--pr-563-migration-drift-ci-fai
+  recorded_duplicate_of: task-20260726-195240-rca-task-20260726-171129-tier2-fix--pr-5
+  recorded_superseded_reason: Collapsed by plan_backlog_completion.py dedup 2026-07-27 -- same underlying
+    issue as task-20260726-195240-rca-task-20260726-171129-tier2-fix--pr-5 (4 total attempts in chain).
+  fresh_classification_category: PR_PENDING_MERGE
+  fresh_representative_task_id: task-20260726-195240-rca-task-20260726-171129-tier2-fix--pr-5
+  reason_not_qualified: 'real classifier concludes ''PR_PENDING_MERGE'', not the verified ALREADY_DONE_STALE_STATUS
+    -- Real work done, PR #566 open (no review yet, mergeable=UNKNOWN). Route through the merge pipeline
+    -- do not redispatch.'
+- task_id: task-20260726-171157-redispatch--land-unified-bottom-nav-stri
+  recorded_duplicate_of: task-20260726-194908-rca-task-20260726-171157-redispatch--lan
+  recorded_superseded_reason: Collapsed by plan_backlog_completion.py dedup 2026-07-27 -- same underlying
+    issue as task-20260726-194908-rca-task-20260726-171157-redispatch--lan (2 total attempts in chain).
+  fresh_classification_category: CANNOT_AUTO_VERIFY_NEEDS_HUMAN_READ
+  fresh_representative_task_id: task-20260726-194908-rca-task-20260726-171157-redispatch--lan
+  reason_not_qualified: 'real classifier concludes ''CANNOT_AUTO_VERIFY_NEEDS_HUMAN_READ'', not the verified
+    ALREADY_DONE_STALE_STATUS -- PR #572 merged, but original task `task-20260726-171157-redispatch--land-unified-bottom-nav-stri`''s
+    SUCCESS_CRITERIA is missing or has no mechanically-runnable (pytest/grep) lines -- a merged PR mention
+    alone is not proof this issue''s real objective was met. Needs a human to read the original SUCCESS_CRITERIA
+    and the merged PR''s real diff before any status change.'
+- task_id: task-20260726-171926-remove-anthropic-api-key-dead-code-path
+  recorded_duplicate_of: task-20260726-181517-rca-task-20260726-171926-remove-anthropi
+  recorded_superseded_reason: Collapsed by plan_backlog_completion.py dedup 2026-07-27 -- same underlying
+    issue as task-20260726-181517-rca-task-20260726-171926-remove-anthropi (5 total attempts in chain).
+  fresh_classification_category: OWNER_OR_REVIEWER_DECISION_NEEDED
+  fresh_representative_task_id: task-20260726-181517-rca-task-20260726-171926-remove-anthropi
+  reason_not_qualified: real classifier concludes 'OWNER_OR_REVIEWER_DECISION_NEEDED', not the verified
+    ALREADY_DONE_STALE_STATUS -- No PR yet -- needs a human/owner decision recorded before this can proceed,
+    not a redispatch.
+- task_id: task-20260726-171942-serverless-resource-limit-tradeoff-doc
+  recorded_duplicate_of: task-20260726-194912-rca-task-20260726-171942-serverless-reso
+  recorded_superseded_reason: Collapsed by plan_backlog_completion.py dedup 2026-07-27 -- same underlying
+    issue as task-20260726-194912-rca-task-20260726-171942-serverless-reso (3 total attempts in chain).
+  fresh_classification_category: PR_PENDING_MERGE
+  fresh_representative_task_id: task-20260726-194912-rca-task-20260726-171942-serverless-reso
+  reason_not_qualified: 'real classifier concludes ''PR_PENDING_MERGE'', not the verified ALREADY_DONE_STALE_STATUS
+    -- Real work done, PR #581 open (no review yet, mergeable=CONFLICTING). Route through the merge pipeline
+    -- do not redispatch.'
+- task_id: task-20260726-171946-chat-context---terminology---mode-pill-a
+  recorded_duplicate_of: task-20260726-194915-rca-task-20260726-171946-chat-context
+  recorded_superseded_reason: Collapsed by plan_backlog_completion.py dedup 2026-07-27 -- same underlying
+    issue as task-20260726-194915-rca-task-20260726-171946-chat-context (5 total attempts in chain).
+  fresh_classification_category: CANNOT_AUTO_VERIFY_NEEDS_HUMAN_READ
+  fresh_representative_task_id: task-20260726-194915-rca-task-20260726-171946-chat-context
+  reason_not_qualified: 'real classifier concludes ''CANNOT_AUTO_VERIFY_NEEDS_HUMAN_READ'', not the verified
+    ALREADY_DONE_STALE_STATUS -- PR #580 merged, but original task `task-20260726-171946-chat-context---terminology---mode-pill-a`''s
+    SUCCESS_CRITERIA is missing or has no mechanically-runnable (pytest/grep) lines -- a merged PR mention
+    alone is not proof this issue''s real objective was met. Needs a human to read the original SUCCESS_CRITERIA
+    and the merged PR''s real diff before any status change.'
+- task_id: task-20260726-171954-storage-rls---backup-pitr---supabase-mon
+  recorded_duplicate_of: task-20260726-195243-rca-task-20260726-171954-storage-rls---b
+  recorded_superseded_reason: Collapsed by plan_backlog_completion.py dedup 2026-07-27 -- same underlying
+    issue as task-20260726-195243-rca-task-20260726-171954-storage-rls---b (2 total attempts in chain).
+  fresh_classification_category: PR_PENDING_MERGE
+  fresh_representative_task_id: task-20260726-195243-rca-task-20260726-171954-storage-rls---b
+  reason_not_qualified: 'real classifier concludes ''PR_PENDING_MERGE'', not the verified ALREADY_DONE_STALE_STATUS
+    -- Real work done, PR #575 open (no review yet, mergeable=UNKNOWN). Route through the merge pipeline
+    -- do not redispatch.'
+- task_id: task-20260726-172000-hr-performance-error-handling---payroll
+  recorded_duplicate_of: task-20260726-195246-rca-task-20260726-172000-hr-performance
+  recorded_superseded_reason: Collapsed by plan_backlog_completion.py dedup 2026-07-27 -- same underlying
+    issue as task-20260726-195246-rca-task-20260726-172000-hr-performance (6 total attempts in chain).
+  fresh_classification_category: SUBSTANTIAL_WORK_NO_PR_NEEDS_REVIEW
+  fresh_representative_task_id: task-20260726-195246-rca-task-20260726-172000-hr-performance
+  reason_not_qualified: real classifier concludes 'SUBSTANTIAL_WORK_NO_PR_NEEDS_REVIEW', not the verified
+    ALREADY_DONE_STALE_STATUS -- Real progress recorded in attempt `task-20260726-172000-hr-performance-error-handling---payroll`
+    (8 completed steps, no PR opened, no gate marker) -- inspect that attempt's workspace branch before
+    redispatching; may just need a PR opened, not fresh work.
+- task_id: task-20260726-172004-search-performance-explain-analyze---gin
+  recorded_duplicate_of: task-20260726-194917-rca-task-20260726-172004-search-performa
+  recorded_superseded_reason: Collapsed by plan_backlog_completion.py dedup 2026-07-27 -- same underlying
+    issue as task-20260726-194917-rca-task-20260726-172004-search-performa (4 total attempts in chain).
+  fresh_classification_category: PR_PENDING_MERGE
+  fresh_representative_task_id: task-20260726-194917-rca-task-20260726-172004-search-performa
+  reason_not_qualified: 'real classifier concludes ''PR_PENDING_MERGE'', not the verified ALREADY_DONE_STALE_STATUS
+    -- Real work done, PR #582 open (no review yet, mergeable=UNKNOWN). Route through the merge pipeline
+    -- do not redispatch.'
+- task_id: task-20260726-172016-mother-router-and-roster-persistent-memo
+  recorded_duplicate_of: task-20260726-194920-rca-task-20260726-172016-mother-router-a
+  recorded_superseded_reason: Collapsed by plan_backlog_completion.py dedup 2026-07-27 -- same underlying
+    issue as task-20260726-194920-rca-task-20260726-172016-mother-router-a (2 total attempts in chain).
+  fresh_classification_category: SUBSTANTIAL_WORK_NO_PR_NEEDS_REVIEW
+  fresh_representative_task_id: task-20260726-194920-rca-task-20260726-172016-mother-router-a
+  reason_not_qualified: real classifier concludes 'SUBSTANTIAL_WORK_NO_PR_NEEDS_REVIEW', not the verified
+    ALREADY_DONE_STALE_STATUS -- Real progress recorded in attempt `task-20260726-172016-mother-router-and-roster-persistent-memo`
+    (7 completed steps, no PR opened, no gate marker) -- inspect that attempt's workspace branch before
+    redispatching; may just need a PR opened, not fresh work.
+- task_id: task-20260726-175009-rca-task-20260726-171926-remove-anthropi
+  recorded_duplicate_of: task-20260726-181517-rca-task-20260726-171926-remove-anthropi
+  recorded_superseded_reason: Collapsed by plan_backlog_completion.py dedup 2026-07-27 -- same underlying
+    issue as task-20260726-181517-rca-task-20260726-171926-remove-anthropi (5 total attempts in chain).
+  fresh_classification_category: OWNER_OR_REVIEWER_DECISION_NEEDED
+  fresh_representative_task_id: task-20260726-181517-rca-task-20260726-171926-remove-anthropi
+  reason_not_qualified: real classifier concludes 'OWNER_OR_REVIEWER_DECISION_NEEDED', not the verified
+    ALREADY_DONE_STALE_STATUS -- No PR yet -- needs a human/owner decision recorded before this can proceed,
+    not a redispatch.
+- task_id: task-20260726-175957-rca-task-20260726-171946-chat-context
+  recorded_duplicate_of: task-20260726-194915-rca-task-20260726-171946-chat-context
+  recorded_superseded_reason: Collapsed by plan_backlog_completion.py dedup 2026-07-27 -- same underlying
+    issue as task-20260726-194915-rca-task-20260726-171946-chat-context (5 total attempts in chain).
+  fresh_classification_category: CANNOT_AUTO_VERIFY_NEEDS_HUMAN_READ
+  fresh_representative_task_id: task-20260726-194915-rca-task-20260726-171946-chat-context
+  reason_not_qualified: 'real classifier concludes ''CANNOT_AUTO_VERIFY_NEEDS_HUMAN_READ'', not the verified
+    ALREADY_DONE_STALE_STATUS -- PR #580 merged, but original task `task-20260726-171946-chat-context---terminology---mode-pill-a`''s
+    SUCCESS_CRITERIA is missing or has no mechanically-runnable (pytest/grep) lines -- a merged PR mention
+    alone is not proof this issue''s real objective was met. Needs a human to read the original SUCCESS_CRITERIA
+    and the merged PR''s real diff before any status change.'
+- task_id: task-20260726-180527-rca-task-20260726-171926-remove-anthropi
+  recorded_duplicate_of: task-20260726-181517-rca-task-20260726-171926-remove-anthropi
+  recorded_superseded_reason: Collapsed by plan_backlog_completion.py dedup 2026-07-27 -- same underlying
+    issue as task-20260726-181517-rca-task-20260726-171926-remove-anthropi (5 total attempts in chain).
+  fresh_classification_category: OWNER_OR_REVIEWER_DECISION_NEEDED
+  fresh_representative_task_id: task-20260726-181517-rca-task-20260726-171926-remove-anthropi
+  reason_not_qualified: real classifier concludes 'OWNER_OR_REVIEWER_DECISION_NEEDED', not the verified
+    ALREADY_DONE_STALE_STATUS -- No PR yet -- needs a human/owner decision recorded before this can proceed,
+    not a redispatch.
+- task_id: task-20260726-180631-rca-task-20260726-171926-remove-anthropi
+  recorded_duplicate_of: task-20260726-181517-rca-task-20260726-171926-remove-anthropi
+  recorded_superseded_reason: Collapsed by plan_backlog_completion.py dedup 2026-07-27 -- same underlying
+    issue as task-20260726-181517-rca-task-20260726-171926-remove-anthropi (5 total attempts in chain).
+  fresh_classification_category: OWNER_OR_REVIEWER_DECISION_NEEDED
+  fresh_representative_task_id: task-20260726-181517-rca-task-20260726-171926-remove-anthropi
+  reason_not_qualified: real classifier concludes 'OWNER_OR_REVIEWER_DECISION_NEEDED', not the verified
+    ALREADY_DONE_STALE_STATUS -- No PR yet -- needs a human/owner decision recorded before this can proceed,
+    not a redispatch.
+- task_id: task-20260726-182658-rca-task-20260726-171942-serverless-reso
+  recorded_duplicate_of: task-20260726-194912-rca-task-20260726-171942-serverless-reso
+  recorded_superseded_reason: Collapsed by plan_backlog_completion.py dedup 2026-07-27 -- same underlying
+    issue as task-20260726-194912-rca-task-20260726-171942-serverless-reso (3 total attempts in chain).
+  fresh_classification_category: PR_PENDING_MERGE
+  fresh_representative_task_id: task-20260726-194912-rca-task-20260726-171942-serverless-reso
+  reason_not_qualified: 'real classifier concludes ''PR_PENDING_MERGE'', not the verified ALREADY_DONE_STALE_STATUS
+    -- Real work done, PR #581 open (no review yet, mergeable=CONFLICTING). Route through the merge pipeline
+    -- do not redispatch.'
+- task_id: task-20260726-182702-rca-task-20260726-172004-search-performa
+  recorded_duplicate_of: task-20260726-194917-rca-task-20260726-172004-search-performa
+  recorded_superseded_reason: Collapsed by plan_backlog_completion.py dedup 2026-07-27 -- same underlying
+    issue as task-20260726-194917-rca-task-20260726-172004-search-performa (4 total attempts in chain).
+  fresh_classification_category: PR_PENDING_MERGE
+  fresh_representative_task_id: task-20260726-194917-rca-task-20260726-172004-search-performa
+  reason_not_qualified: 'real classifier concludes ''PR_PENDING_MERGE'', not the verified ALREADY_DONE_STALE_STATUS
+    -- Real work done, PR #582 open (no review yet, mergeable=UNKNOWN). Route through the merge pipeline
+    -- do not redispatch.'
+- task_id: task-20260726-183201-rca-task-20260726-172004-search-performa
+  recorded_duplicate_of: task-20260726-194917-rca-task-20260726-172004-search-performa
+  recorded_superseded_reason: Collapsed by plan_backlog_completion.py dedup 2026-07-27 -- same underlying
+    issue as task-20260726-194917-rca-task-20260726-172004-search-performa (4 total attempts in chain).
+  fresh_classification_category: PR_PENDING_MERGE
+  fresh_representative_task_id: task-20260726-194917-rca-task-20260726-172004-search-performa
+  reason_not_qualified: 'real classifier concludes ''PR_PENDING_MERGE'', not the verified ALREADY_DONE_STALE_STATUS
+    -- Real work done, PR #582 open (no review yet, mergeable=UNKNOWN). Route through the merge pipeline
+    -- do not redispatch.'
+- task_id: task-20260726-185101-rca-task-20260726-172000-hr-performance
+  recorded_duplicate_of: task-20260726-195246-rca-task-20260726-172000-hr-performance
+  recorded_superseded_reason: Collapsed by plan_backlog_completion.py dedup 2026-07-27 -- same underlying
+    issue as task-20260726-195246-rca-task-20260726-172000-hr-performance (6 total attempts in chain).
+  fresh_classification_category: SUBSTANTIAL_WORK_NO_PR_NEEDS_REVIEW
+  fresh_representative_task_id: task-20260726-195246-rca-task-20260726-172000-hr-performance
+  reason_not_qualified: real classifier concludes 'SUBSTANTIAL_WORK_NO_PR_NEEDS_REVIEW', not the verified
+    ALREADY_DONE_STALE_STATUS -- Real progress recorded in attempt `task-20260726-172000-hr-performance-error-handling---payroll`
+    (8 completed steps, no PR opened, no gate marker) -- inspect that attempt's workspace branch before
+    redispatching; may just need a PR opened, not fresh work.
+- task_id: task-20260726-185117-rca-task-20260726-172000-hr-performance
+  recorded_duplicate_of: task-20260726-195246-rca-task-20260726-172000-hr-performance
+  recorded_superseded_reason: Collapsed by plan_backlog_completion.py dedup 2026-07-27 -- same underlying
+    issue as task-20260726-195246-rca-task-20260726-172000-hr-performance (6 total attempts in chain).
+  fresh_classification_category: SUBSTANTIAL_WORK_NO_PR_NEEDS_REVIEW
+  fresh_representative_task_id: task-20260726-195246-rca-task-20260726-172000-hr-performance
+  reason_not_qualified: real classifier concludes 'SUBSTANTIAL_WORK_NO_PR_NEEDS_REVIEW', not the verified
+    ALREADY_DONE_STALE_STATUS -- Real progress recorded in attempt `task-20260726-172000-hr-performance-error-handling---payroll`
+    (8 completed steps, no PR opened, no gate marker) -- inspect that attempt's workspace branch before
+    redispatching; may just need a PR opened, not fresh work.
+- task_id: task-20260726-185217-rca-task-20260726-171129-tier2-fix--pr-5
+  recorded_duplicate_of: task-20260726-195240-rca-task-20260726-171129-tier2-fix--pr-5
+  recorded_superseded_reason: Collapsed by plan_backlog_completion.py dedup 2026-07-27 -- same underlying
+    issue as task-20260726-195240-rca-task-20260726-171129-tier2-fix--pr-5 (4 total attempts in chain).
+  fresh_classification_category: PR_PENDING_MERGE
+  fresh_representative_task_id: task-20260726-195240-rca-task-20260726-171129-tier2-fix--pr-5
+  reason_not_qualified: 'real classifier concludes ''PR_PENDING_MERGE'', not the verified ALREADY_DONE_STALE_STATUS
+    -- Real work done, PR #566 open (no review yet, mergeable=UNKNOWN). Route through the merge pipeline
+    -- do not redispatch.'
+- task_id: task-20260726-185220-rca-task-20260726-171946-chat-context
+  recorded_duplicate_of: task-20260726-194915-rca-task-20260726-171946-chat-context
+  recorded_superseded_reason: Collapsed by plan_backlog_completion.py dedup 2026-07-27 -- same underlying
+    issue as task-20260726-194915-rca-task-20260726-171946-chat-context (5 total attempts in chain).
+  fresh_classification_category: CANNOT_AUTO_VERIFY_NEEDS_HUMAN_READ
+  fresh_representative_task_id: task-20260726-194915-rca-task-20260726-171946-chat-context
+  reason_not_qualified: 'real classifier concludes ''CANNOT_AUTO_VERIFY_NEEDS_HUMAN_READ'', not the verified
+    ALREADY_DONE_STALE_STATUS -- PR #580 merged, but original task `task-20260726-171946-chat-context---terminology---mode-pill-a`''s
+    SUCCESS_CRITERIA is missing or has no mechanically-runnable (pytest/grep) lines -- a merged PR mention
+    alone is not proof this issue''s real objective was met. Needs a human to read the original SUCCESS_CRITERIA
+    and the merged PR''s real diff before any status change.'
+- task_id: task-20260726-185224-rca-task-20260726-172000-hr-performance
+  recorded_duplicate_of: task-20260726-195246-rca-task-20260726-172000-hr-performance
+  recorded_superseded_reason: Collapsed by plan_backlog_completion.py dedup 2026-07-27 -- same underlying
+    issue as task-20260726-195246-rca-task-20260726-172000-hr-performance (6 total attempts in chain).
+  fresh_classification_category: SUBSTANTIAL_WORK_NO_PR_NEEDS_REVIEW
+  fresh_representative_task_id: task-20260726-195246-rca-task-20260726-172000-hr-performance
+  reason_not_qualified: real classifier concludes 'SUBSTANTIAL_WORK_NO_PR_NEEDS_REVIEW', not the verified
+    ALREADY_DONE_STALE_STATUS -- Real progress recorded in attempt `task-20260726-172000-hr-performance-error-handling---payroll`
+    (8 completed steps, no PR opened, no gate marker) -- inspect that attempt's workspace branch before
+    redispatching; may just need a PR opened, not fresh work.
+- task_id: task-20260726-185419-rca-task-20260726-171129-tier2-fix--pr-5
+  recorded_duplicate_of: task-20260726-195240-rca-task-20260726-171129-tier2-fix--pr-5
+  recorded_superseded_reason: Collapsed by plan_backlog_completion.py dedup 2026-07-27 -- same underlying
+    issue as task-20260726-195240-rca-task-20260726-171129-tier2-fix--pr-5 (4 total attempts in chain).
+  fresh_classification_category: PR_PENDING_MERGE
+  fresh_representative_task_id: task-20260726-195240-rca-task-20260726-171129-tier2-fix--pr-5
+  reason_not_qualified: 'real classifier concludes ''PR_PENDING_MERGE'', not the verified ALREADY_DONE_STALE_STATUS
+    -- Real work done, PR #566 open (no review yet, mergeable=UNKNOWN). Route through the merge pipeline
+    -- do not redispatch.'
+- task_id: task-20260726-185423-rca-task-20260726-171946-chat-context
+  recorded_duplicate_of: task-20260726-194915-rca-task-20260726-171946-chat-context
+  recorded_superseded_reason: Collapsed by plan_backlog_completion.py dedup 2026-07-27 -- same underlying
+    issue as task-20260726-194915-rca-task-20260726-171946-chat-context (5 total attempts in chain).
+  fresh_classification_category: CANNOT_AUTO_VERIFY_NEEDS_HUMAN_READ
+  fresh_representative_task_id: task-20260726-194915-rca-task-20260726-171946-chat-context
+  reason_not_qualified: 'real classifier concludes ''CANNOT_AUTO_VERIFY_NEEDS_HUMAN_READ'', not the verified
+    ALREADY_DONE_STALE_STATUS -- PR #580 merged, but original task `task-20260726-171946-chat-context---terminology---mode-pill-a`''s
+    SUCCESS_CRITERIA is missing or has no mechanically-runnable (pytest/grep) lines -- a merged PR mention
+    alone is not proof this issue''s real objective was met. Needs a human to read the original SUCCESS_CRITERIA
+    and the merged PR''s real diff before any status change.'
+- task_id: task-20260726-185426-rca-task-20260726-172000-hr-performance
+  recorded_duplicate_of: task-20260726-195246-rca-task-20260726-172000-hr-performance
+  recorded_superseded_reason: Collapsed by plan_backlog_completion.py dedup 2026-07-27 -- same underlying
+    issue as task-20260726-195246-rca-task-20260726-172000-hr-performance (6 total attempts in chain).
+  fresh_classification_category: SUBSTANTIAL_WORK_NO_PR_NEEDS_REVIEW
+  fresh_representative_task_id: task-20260726-195246-rca-task-20260726-172000-hr-performance
+  reason_not_qualified: real classifier concludes 'SUBSTANTIAL_WORK_NO_PR_NEEDS_REVIEW', not the verified
+    ALREADY_DONE_STALE_STATUS -- Real progress recorded in attempt `task-20260726-172000-hr-performance-error-handling---payroll`
+    (8 completed steps, no PR opened, no gate marker) -- inspect that attempt's workspace branch before
+    redispatching; may just need a PR opened, not fresh work.
+- task_id: task-20260726-205525-extend-44-worker-unit-disposition-audit
+  recorded_duplicate_of: task-20260726-210243-extend-44-worker-unit-disposition-audit
+  recorded_superseded_reason: Collapsed by plan_backlog_completion.py dedup 2026-07-27 -- same underlying
+    issue as task-20260726-210243-extend-44-worker-unit-disposition-audit (2 total attempts in chain).
+  fresh_classification_category: SUBSTANTIAL_WORK_NO_PR_NEEDS_REVIEW
+  fresh_representative_task_id: task-20260726-210243-extend-44-worker-unit-disposition-audit
+  reason_not_qualified: real classifier concludes 'SUBSTANTIAL_WORK_NO_PR_NEEDS_REVIEW', not the verified
+    ALREADY_DONE_STALE_STATUS -- Real progress recorded in attempt `task-20260726-210243-extend-44-worker-unit-disposition-audit`
+    (10 completed steps, no PR opened, no gate marker) -- inspect that attempt's workspace branch before
+    redispatching; may just need a PR opened, not fresh work.
+- task_id: task-20260726-205712-consolidate-6-dispatch-status-scripts-in
+  recorded_duplicate_of: task-20260726-210339-consolidate-6-dispatch-status-scripts-in
+  recorded_superseded_reason: Collapsed by plan_backlog_completion.py dedup 2026-07-27 -- same underlying
+    issue as task-20260726-210339-consolidate-6-dispatch-status-scripts-in (2 total attempts in chain).
+  fresh_classification_category: SUBSTANTIAL_WORK_NO_PR_NEEDS_REVIEW
+  fresh_representative_task_id: task-20260726-210339-consolidate-6-dispatch-status-scripts-in
+  reason_not_qualified: real classifier concludes 'SUBSTANTIAL_WORK_NO_PR_NEEDS_REVIEW', not the verified
+    ALREADY_DONE_STALE_STATUS -- Real progress recorded in attempt `task-20260726-210339-consolidate-6-dispatch-status-scripts-in`
+    (5 completed steps, no PR opened, no gate marker) -- inspect that attempt's workspace branch before
+    redispatching; may just need a PR opened, not fresh work.
