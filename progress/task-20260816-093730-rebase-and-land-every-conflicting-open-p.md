@@ -68,9 +68,14 @@ commit is real, has two real parents, and is visible in the PR's own commit hist
       `443d7a0`), plus follow-on `395e4c3`. Only conflict was shared scratch
       `STATUS_REPORT.md`. Closed with a comment citing PR #216, not merged (redundant
       diff).
+- [x] 147 — **superseded-and-closed**. Docs-only `STATUS_REPORT.md` re-verifying the
+      `UMR-20260813-115911-df5c` repo-routing fix already shipped. Same fact confirmed with
+      a more authoritative writeup already on master: `progress/task-20260814-075413-
+      complete-326b--land-real-repo-local-path.md` (PR #217, `7b36261`). Only conflict was
+      shared scratch `STATUS_REPORT.md`. Closed with a comment citing PR #217, not merged
+      (redundant diff).
 
 ## Remaining
-- [ ] 147 — merge master, resolve conflicts, push, audit, merge/block/close
 - [ ] 142 — merge master, resolve conflicts, push, audit, merge/block/close
 - [ ] 114 — merge master, resolve conflicts, push, audit, merge/block/close
 - [ ] 111 — merge master, resolve conflicts, push, audit, merge/block/close
