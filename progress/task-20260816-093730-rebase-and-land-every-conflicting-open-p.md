@@ -56,10 +56,14 @@ commit is real, has two real parents, and is visible in the PR's own commit hist
       `_second_pass.md` (PR #183, `d7e3a30`), both reaching the same "status=killed is
       correct" conclusion. Only conflict was the shared scratch `RCA.md` filename. Closed
       with a comment citing PR #177/#183, not merged (redundant diff).
+- [x] 153 — **superseded-and-closed**. RCA content (shared `STATUS_REPORT.md`, for
+      `UMR-20260813-092654-326b`) is explicitly named as "the 3rd real RCA" inside a later,
+      already-merged 4th RCA reaching the same conclusion:
+      `RCA_20260813_UMR-20260813-092654-326b_p4_live_deploy_drift.md` (PR #178, `0801a96`).
+      Only conflict was the shared scratch `STATUS_REPORT.md` filename. Closed with a
+      comment citing PR #178, not merged (redundant diff).
 
 ## Remaining
-- [ ] 158 — merge master, resolve conflicts, push, audit, merge/block/close
-- [ ] 153 — merge master, resolve conflicts, push, audit, merge/block/close
 - [ ] 150 — merge master, resolve conflicts, push, audit, merge/block/close
 - [ ] 147 — merge master, resolve conflicts, push, audit, merge/block/close
 - [ ] 142 — merge master, resolve conflicts, push, audit, merge/block/close
