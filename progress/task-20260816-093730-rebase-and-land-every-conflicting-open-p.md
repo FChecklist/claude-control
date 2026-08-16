@@ -80,9 +80,17 @@ commit is real, has two real parents, and is visible in the PR's own commit hist
       `RCA_20260813_UMR-20260813-092654-326b_p4_live_deploy_drift.md` (PR #178, `0801a96`).
       Only conflict was shared scratch `STATUS_REPORT.md`. Closed with a comment citing
       PR #178, not merged (redundant diff).
+- [x] 114 — **real conflict resolved, pushed via API, audit requested, awaiting verdict**.
+      Conflict in `scripts/veridian-task-watchdog.py`: combined this branch's
+      `rca_already_in_flight()` step_3 dedup guard with master's independent
+      `escalate()` governor-routing + real repo-correctness rewrite -- both real changes
+      preserved. Fixed this branch's own `tests/veridian_task_watchdog_dedup_test.py` to
+      stub `lookup_known_fix` (was implicitly depending on live DB state); all 3 tests
+      pass against the merged code. New head `8334889` (parents `58f4975` + `04b0e73`),
+      now `mergeable=true`/`clean`. Posted `@claude please audit` at this exact head SHA
+      -- not merged yet, no self-certification.
 
 ## Remaining
-- [ ] 114 — merge master, resolve conflicts, push, audit, merge/block/close
 - [ ] 111 — merge master, resolve conflicts, push, audit, merge/block/close
 - [ ] 72 — merge master, resolve conflicts, push, audit, merge/block/close
 - [ ] Final report table
