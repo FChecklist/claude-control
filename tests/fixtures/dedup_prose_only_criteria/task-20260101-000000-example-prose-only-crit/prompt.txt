@@ -1,0 +1,14 @@
+## OBJECTIVE
+Improve the widget rendering pipeline so it looks nicer.
+
+## SCOPE
+Make the widget look better, use good judgment.
+
+## SUCCESS_CRITERIA
+The widget should look visually polished and the team should be happy with it.
+
+## EXPECTED_OUTPUT
+A real PR against claude-control.
+
+## COMPLEXITY_TIER
+judgment

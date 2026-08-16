@@ -1,0 +1,11 @@
+id: task-20260727-034446-rca-task-20260726-083946-fix-task-lifecy
+title: 'rca-task-20260726-083946-fix-task-lifecycle--real-branch-resoluti (round 3)'
+status: failed
+repo: claude-control
+created_at: '2026-07-27T03:44:46.000000+00:00'
+last_checkpoint_at: '2026-07-27T04:20:00.000000+00:00'
+completed_steps:
+- 'RCA: task.yaml kept looping with PRE-FLIGHT REJECTED (crontab_unauthorized_change, transient)
+  checkpoints for ~11 hours. Root cause: preflight rejections for crontab_unauthorized_change were
+  routed to transient retry instead of hard-stop. Fixed worker-entrypoint.sh/doc-worker-entrypoint.sh
+  hard-stop reason lists plus one new regression test. Merged as PR #104.'
