@@ -62,9 +62,14 @@ commit is real, has two real parents, and is visible in the PR's own commit hist
       `RCA_20260813_UMR-20260813-092654-326b_p4_live_deploy_drift.md` (PR #178, `0801a96`).
       Only conflict was the shared scratch `STATUS_REPORT.md` filename. Closed with a
       comment citing PR #178, not merged (redundant diff).
+- [x] 150 — **superseded-and-closed**. Docs-only `STATUS_REPORT.md` about the
+      query-once/decide-and-fix gap (`UMR-20260813-105106-e9a7`). Real implementation has
+      since shipped: `scripts/pm_sentinel_query_once_decide_and_fix.sh` + test (PR #216,
+      `443d7a0`), plus follow-on `395e4c3`. Only conflict was shared scratch
+      `STATUS_REPORT.md`. Closed with a comment citing PR #216, not merged (redundant
+      diff).
 
 ## Remaining
-- [ ] 150 — merge master, resolve conflicts, push, audit, merge/block/close
 - [ ] 147 — merge master, resolve conflicts, push, audit, merge/block/close
 - [ ] 142 — merge master, resolve conflicts, push, audit, merge/block/close
 - [ ] 114 — merge master, resolve conflicts, push, audit, merge/block/close
