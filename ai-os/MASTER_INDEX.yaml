@@ -3752,6 +3752,40 @@ registries:
     trustworthy rather than silently drifting.'
   query_command: python3 scripts/superboss-register.py query-knowledge "cross_system_verification_summary_2026_07_26"
     --tag registry-id:cross_system_verification_summary_2026_07_26
+- id: litert_spike
+  type: browser_native_inference_prototype
+  path: 'repos/compliance-tracker/src/app/litert-spike/ (page.tsx, worker-src/inference-worker.ts,
+    types.ts) + repos/compliance-tracker/src/app/litert-spike-embeddings/ (page.tsx,
+    worker-src/inference-worker.ts, worker-src/wordpiece-tokenizer.ts, types.ts)'
+  scope: >
+    Registration closes gap-analysis item litert-spike-unregistered
+    (ai-os/VERIDIAN_ARCHITECTURE_V2_GAP_ANALYSIS_2026-07-25.yaml
+    known_partial_prior_art.litert_spike) -- phase_5_browser_execution_tiers's own
+    FIRST required step, done before any new browser-execution engine code, per
+    that phase's own scope bullet. litert-spike is a real, working, isolated
+    experimental spike (no auth gate, no AppShell chrome, no nav entry, no
+    production DB/route touched) proving Google's LiteRT.js
+    (@litertjs/core) can run a real pretrained MobileNetV2 blur/sharp vision
+    classifier client-side via a real WebGPU-with-WASM-fallback code path in a
+    dedicated Web Worker. litert-spike-embeddings is a separate, smaller spike
+    (a WordPiece tokenizer only -- not a Transformers.js/embedding-model
+    integration, confirmed by reading the file) evaluating the same runtime for
+    a different, embeddings-adjacent use case. Known limitation, stated
+    plainly in litert-spike's own page.tsx header: the pretrained vision model
+    it loads has no LICENSE file (fetched live from its third-party GitHub
+    source, never vendored into the repo) -- not licensed for production use
+    without resolving that first.
+  real_capability: 'Only real browser-native ML inference prior art in this whole
+    system as of 2026-07-25 (per the gap analysis this registration closes).
+    Real webgpu-with-wasm-fallback pattern reused, generalized to all 5 browser
+    compute tiers, by src/lib/browser-execution/tier-detection.ts
+    (phase_5_browser_execution_tiers increment 1, 2026-07-27). Does NOT provide
+    text-generation LLM inference -- see
+    ai-os/BROWSER_LITE_LLM_TECH_DECISION_2026-07-27.md (compliance-tracker repo)
+    for the resulting WebLLM-vs-LiteRT technology decision for the Lite LLM tier.'
+  status: registered_2026_07_27_not_yet_production
+  query_command: python3 scripts/superboss-register.py query-knowledge "litert_spike"
+    --tag registry-id:litert_spike
 - id: browser_intent_cache
   type: application_feature
   path: compliance-tracker/src/lib/browser-intent-cache.ts
