@@ -1,0 +1,3 @@
+progress: re-verify 7 remaining claude-control PRs -- no head moved, no fresh PASS, all verdicts stand
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
