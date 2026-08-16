@@ -67,6 +67,26 @@ JUDGMENT CALLS (per this task's own OBJECTIVE -- these are not mechanical):
      watchdog performs no automated system action for it beyond that record
      -- action_taken in watchdog.jsonl says so explicitly, never fabricates
      a recovery that did not happen.
+
+  4. step_3 in-flight dedup (added by RCA task-20260726-181517, root-causing
+     task-20260726-171926's own watchdog escalation): a single stall/loop
+     window can span many STALL_MINUTES-plus polls (this timer runs every
+     60s), and step_1/step_2 have no way to see a fix an already-dispatched
+     RCA task hasn't finished registering yet -- known_fixes/ATTENTION.md/
+     task_audits are only written when that RCA task actually completes.
+     Without a check for "is an RCA for this exact task_id already running",
+     every poll during that window escalates ANOTHER billed RCA task.
+     Confirmed live: task-20260726-171926's one stall (root cause: a
+     different bug, worker-entrypoint.sh killing the periodic-checkpoint
+     heartbeat before the unbounded quality-gate phase) spawned FOUR separate
+     RCA tasks (task-20260726-175009-rca-..., -180527-rca-..., -180631-rca-...,
+     -181517-rca-...) before any of them had gotten far enough to register a
+     fix. rca_already_in_flight() closes this by checking task.yaml's own
+     `title` field (== f"rca-{task_id}", set by escalate() below) across
+     every existing RCA task dir for a non-terminal status before creating a
+     new one. Matches on `title`, not the dir/id name, because
+     veridian-task.py's `create` truncates long ids for the directory name
+     but keeps the full title intact.
 """
 import argparse
 import glob
@@ -116,6 +136,11 @@ def _governor():
 LOOP_EXCLUDED_NOTES = {
     "periodic checkpoint",
 }
+
+# Statuses that mean an RCA task is done (successfully or not) and no longer
+# "in flight" -- anything else (pending, in_progress, pending_review, blocked)
+# still counts as active work that could still register a known_fixes row.
+TERMINAL_TASK_STATUSES = {"completed", "failed", "cancelled"}
 
 
 def _now():
@@ -328,6 +353,28 @@ judgment
 """
 
 
+def rca_already_in_flight(task_id):
+    """step_3 dedup guard -- see JUDGMENT CALLS #4 above. Returns
+    (in_flight: bool, existing_task_id: str|None)."""
+    target_title = f"rca-{task_id}"
+    for path in glob.glob(f"{TASKS_DIR}/*-rca-*/task.yaml"):
+        other_dir = os.path.basename(os.path.dirname(path))
+        if other_dir == task_id:
+            continue  # don't compare a task against its own task.yaml
+        try:
+            import yaml
+            with open(path) as f:
+                other = yaml.safe_load(f)
+        except Exception:
+            continue
+        if not other or other.get("title") != target_title:
+            continue
+        if other.get("status") in TERMINAL_TASK_STATUSES:
+            continue
+        return True, other.get("id", other_dir)
+    return False, None
+
+
 def escalate(task_id, task, signature, dry_run=False):
     title = f"rca-{task_id}"
     prompt = RCA_PROMPT_TEMPLATE.format(original_task_id=task_id, signature=signature)
@@ -403,11 +450,19 @@ def process_task(task_id, task, dry_run_escalation=False):
             entry["action_taken"] = f"step_2: {applied_desc} (signature {seen_desc}); recheck after {RECHECK_DELAY_SECONDS}s: recovered"
             return entry
         entry["action_taken"] = f"step_2: {applied_desc} (signature {seen_desc}); recheck after {RECHECK_DELAY_SECONDS}s: still stalled/looping -> "
+        in_flight, in_flight_id = rca_already_in_flight(task_id)
+        if in_flight:
+            entry["action_taken"] += f"step_3 SKIPPED: RCA already in flight ({in_flight_id})"
+            return entry
         esc = escalate(task_id, task, signature, dry_run=dry_run_escalation)
         entry["action_taken"] += f"step_3: {esc}"
         return entry
 
     reason = "no prior occurrence found (step_1)" if not found else "prior occurrence found but no known_fixes entry (step_2)"
+    in_flight, in_flight_id = rca_already_in_flight(task_id)
+    if in_flight:
+        entry["action_taken"] = f"step_1: {reason} -> step_3 SKIPPED: RCA already in flight ({in_flight_id})"
+        return entry
     esc = escalate(task_id, task, signature, dry_run=dry_run_escalation)
     entry["action_taken"] = f"step_1: {reason} -> step_3: {esc}"
     return entry
