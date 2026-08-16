@@ -115,4 +115,11 @@ shows PR #247 CONFLICTING now -- re-derived live list wins per instructions):
 ## Remaining
 - [x] All 14 PRs adopted, swept, and given real verdicts
 - [x] 4 merges confirmed present in git log origin/master
-- [ ] Write final report table to user
+- [x] Re-checked live open-PR list at end: 75,91,114,186,206,240,242,243,246,247 still open (matches
+      the 10 real rejects/blocks above exactly) -- no new PRs appeared mid-sweep
+- [x] record-completion write-back to UMR-20260816-120141-7468 done
+- [x] Final report table delivered to user
+
+TASK COMPLETE. 4/14 merged (all confirmed via gh + git log origin/master), 10/14 real-audited and
+correctly left unmerged with real blocking reasons documented above. Zero self-certified verdicts --
+every verdict came from a real veridian-supervisor@<task>.service run's review.json.
