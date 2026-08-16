@@ -91,9 +91,12 @@ shows PR #247 CONFLICTING now -- re-derived live list wins per instructions):
   `yaml.safe_load` (ParserError), which would break `scripts/auto_phase_continuation.py`'s phase-detection
   for the whole file -- opposite of the change's stated purpose. Real FAIL. **NOT MERGED**, blocked.
 
+- **PR 98**: verdict=approve tier1 -- real code fix (closes git/gh alias-based bypass of the
+  interactive-session write gate, ships regression test suite). Docs-only=NO (real code+tests).
+  Auto-merged 2026-08-16T12:13:59Z, confirmed MERGED via gh. **MERGED.**
+
 ## Remaining
 - [ ] PR 186 -- audit still running (pending_review)
 - [ ] PR 114 -- audit still running (pending_review)
-- [ ] PR 98 -- audit still running (pending_review)
 - [ ] Verify head-SHA match + merge status for all completed ones above once caught up
 - [ ] Final report table
