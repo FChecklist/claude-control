@@ -90,6 +90,14 @@ def test_process_task_skips_escalation_when_rca_in_flight():
         wd = _load_module()
         wd.TASKS_DIR = tasks_dir
         wd.search_prior_occurrence = lambda signature: (False, "")
+        # Merge-time fix (2026-08-16, conflict resolution against origin/master's
+        # later NO_ESCALATE_ON_RECHECK feature): must also stub lookup_known_fix,
+        # or this test depends on live, mutable superboss-register.sqlite state --
+        # a real known_fixes row for the "periodic checkpoint" signature (added by
+        # master after this test was originally written) now short-circuits
+        # process_task() via the no-op-fix path before ever reaching the in-flight
+        # dedup guard this test exists to exercise, making the test non-hermetic.
+        wd.lookup_known_fix = lambda signature: None
         wd.escalate = lambda *a, **k: (_ for _ in ()).throw(AssertionError("escalate() must not be called when an RCA is already in flight"))
 
         orig_id = "task-20260726-171926-remove-anthropic-api-key-dead-code-path"

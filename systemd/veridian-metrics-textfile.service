@@ -1,0 +1,8 @@
+[Unit]
+Description=VERIDIAN observability textfile-collector refresh (task-20260814-131031). Read-only: real running veridian-worker@*/veridian-supervisor@* systemd --user unit count + real superboss-register.sqlite work_items queue depth, written to node_exporter's textfile collector dir. Not part of the 20-unit veridian-cron-* closed set (~/.config/systemd/user/README.md) -- that set governs dispatch/business-process ticks; this is a new category (observability sidecar for the node_exporter/Prometheus/Grafana triad this same task installs), analogous precedent to veridian-task-watchdog/veridian-webhook-receiver already living outside that set. Zero coupling to dispatch-decision logic: shells out to `systemctl --user list-units` (read-only) and opens superboss-register.sqlite via a strict mode=ro URI; never imports dispatch_core.py or writes to the register.
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /opt/veridian/monitoring/scripts/veridian_metrics_textfile.py
+StandardOutput=append:/opt/veridian/ai-os/logs/veridian-metrics-textfile.log
+StandardError=append:/opt/veridian/ai-os/logs/veridian-metrics-textfile.log

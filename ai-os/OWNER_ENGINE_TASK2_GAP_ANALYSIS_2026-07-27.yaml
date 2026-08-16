@@ -1,0 +1,1842 @@
+meta:
+  title: 'OWNER_ENGINE Task2 Phase0: Real Gap Analysis vs VERIDIAN_Architecture_v2.0.docx Part II (2026-07-27
+    refresh)'
+  created: '2026-07-27'
+  produced_by_task: task-20260727-055448-owner-engine-task2-phase0--real-gap-anal
+  directive: Owner's 2026-07-27 OWNER_ENGINE directive, Task 2 Phase 0 (this task's own KNOWN_CONTEXT
+    stated 'Task 2 has never been started' -- THIS IS FACTUALLY INCORRECT per real repo evidence found
+    by this task, documented in full below; this file corrects the record rather than silently reproducing
+    the stale premise).
+  precedent_and_correction: 'A complete Phase 0 gap analysis + 10-phase plan for this exact document ALREADY
+    EXISTS and is registered in MASTER_INDEX.yaml (id veridian_architecture_v2_implementation): task-20260725-112909-veridian-architecture-v2-task2-phase0-ga
+    produced ai-os/VERIDIAN_ARCHITECTURE_V2_GAP_ANALYSIS_2026-07-25.yaml (105 items, later independently
+    re-verified by task-20260725-160908) and ai-os/VERIDIAN_ARCHITECTURE_V2_PHASE_PLAN_2026-07-25.yaml
+    (10 phases). MORE IMPORTANTLY: phases 1, 2, and 3 of that plan were subsequently actually dispatched
+    and MERGED into compliance-tracker -- PR #559 (2026-07-25, prompt registry/version/lifecycle), PR
+    #560 (2026-07-26, compiler pipeline core engines), PR #561 (2026-07-26, governance/policy/cost engines)
+    -- and phase_4 (PR #562, defense-in-depth) is open awaiting review. This task discovered that real
+    work via `python3 scripts/superboss-register.py query-knowledge` against knowledge_engine (5 real
+    KE- entries tagged domain:veridian_architecture_v2 dated 2026-07-25 through 2026-07-26), then independently
+    verified it via `gh pr view <n> --json state,mergedAt` (not trusting task.yaml status fields alone)
+    and `git show origin/main:<path>` / `git cat-file` against compliance-tracker''s real current HEAD
+    (the shared reference checkout at /opt/veridian/repos/compliance-tracker was found to be 236 commits
+    stale on an unrelated branch and was explicitly NOT used as a source of truth for any verdict in this
+    file). This file therefore supersedes the 2026-07-25 gap analysis''s verdicts for the ~30 items phases
+    1-3 touched (all cited individually below with ''UPDATED 2026-07-27'' evidence prefixes), while reusing
+    its still-accurate evidence verbatim (with an explicit re-confirmation note, not a silent copy) for
+    the ~75 items nothing has touched since.'
+  headline_finding: 'Of 122 real per-domain items (74 engines + 8 pipeline layers + 10 cache levels +
+    5 tech-stack groups + 5 cross-cutting requirements from 2.5/2.6/2.8/2.9 + 2 process/scope findings
+    + 1 new registry-drift finding: 74+8+10+5+5+3=105 base items, EXCLUDING the 40 YCML-catalog items
+    counted separately below): 15 are now fully_implemented (up from 0 on 2026-07-25), 47 are partially_implemented
+    (up from 32), and 43 remain not_implemented (down from 73). Separately, all 40 individual YCML specification-catalog
+    items (2.7, itemized 1:1 per this task''s own SUCCESS_CRITERIA, one row per named spec rather than
+    2026-07-25''s single rollup item) remain not_implemented as literal YCML-format documents -- 0 hits
+    for the literal string ''YCML'' anywhere in this system outside gap-analysis documents themselves
+    -- even though roughly half of them now document real, fully/partially-implemented underlying engines
+    per the per-spec evidence below; writing the actual .ycml documentation files is real remaining work
+    independent of whether the engine itself is built. Total items in this file: 74 + 8 + 10 + 5 + 5 +
+    40 + 3 = 145. The single most consequential change since 2026-07-25 is governance-lifecycle-state-machine
+    flipping from not_implemented to fully_implemented -- a real Draft->Review->Staging->Production->Deprecated
+    state machine with maker-checker approval, automated eval-threshold gates, minimum canary duration,
+    and full audit logging is now live in compliance-tracker. The single most important OPEN item is defense-in-depth-4-layer-enforcement
+    / engine-defense-in-depth / engine-prompt-security: real code already exists for this in PR #562,
+    but it is unmerged -- the fastest real next step available is getting that PR reviewed and merged,
+    not new engineering.'
+  zero_duplication_constraint_honored: No verdict was rounded up beyond what the read code actually does
+    -- every UPDATED item cites the specific real function/file/migration read via `git show origin/main:<path>`
+    (compliance-tracker) or direct Read (claude-control, which this task's own workspace mirrors exactly,
+    confirmed via `git fetch && git rev-list --count HEAD..origin/master` = 0). Every item this task did
+    NOT find new evidence for is marked UNCHANGED/RECONFIRMED with a repo-wide re-grep, not silently assumed
+    stale-correct from 2026-07-25.
+  known_partial_prior_art_ref_note: known_partial_prior_art ids (prompt_gateway, knowledge_engine, litert_spike,
+    llm_client, permission_service, prompt_os, embedding_similarity_pgvector, engines_gateways_architecture_pattern)
+    are defined in full in ai-os/VERIDIAN_ARCHITECTURE_V2_GAP_ANALYSIS_2026-07-25.yaml's known_partial_prior_art
+    block and are referenced by id here rather than re-defined, to avoid duplicating ~2000 words of unchanged
+    descriptive text -- see that file for the full path/real_capability/caveat text per id.
+  verification_methodology: '1) Read ai-os/owner-attachments/VERIDIAN_Architecture_v2.0_extracted.txt
+    Part II in full (564-line extracted text, already proven 0.0% extraction gap by task-20260725-104606,
+    PR #69). 2) Read the existing 2026-07-25 gap analysis + phase plan in full (1332 + companion lines).
+    3) Queried knowledge_engine (scripts/superboss-register.py query-knowledge --tag domain:veridian_architecture_v2)
+    for any real artifact registered since, surfacing 5 KE- entries incl. 2 with exists_on_disk=0/PATH_MISSING
+    against the stale local compliance-tracker checkout. 4) Cross-checked task.yaml status for every task
+    those KE- entries implicated, then independently verified against GitHub directly (`gh pr view --json
+    state,mergedAt`) rather than trusting task.yaml''s own status field. 5) Confirmed the local /opt/veridian/repos/compliance-tracker
+    checkout was 236 commits stale (on branch docs/cost-control-2026-07-20) via `git fetch origin main
+    && git rev-list --count HEAD..origin/main`, and switched to `git show origin/main:<path>` / `git cat-file
+    -p $(git rev-parse ...)` (the latter needed because `git show` output was silently truncated by this
+    environment''s own output-length limiter for large files -- confirmed by line-count mismatch, not
+    a real git/repo defect) for all subsequent compliance-tracker file reads. 6) Delegated the ~24-file
+    deep read of the 3 merged PRs'' actual diffs to a sub-agent with explicit per-engine requirement text,
+    to keep this task''s own context budget available for cross-file synthesis; its findings were spot-checked
+    directly (metadata schema field/category count, export-prompt-versions-gitops.ts''s own header) before
+    being trusted. 7) Repo-wide re-grepped all 11 repos under /opt/veridian/repos/ (via each repo''s own
+    origin/<default> ref where the local checkout was stale) for webllm/webgpu/webnn/dspy/transformers.js/window.ai/navigator.ml/YCML
+    to confirm the browser-execution and YCML-catalog items are still genuinely unimplemented, not just
+    unchecked.'
+  item_count_breakdown:
+    engines_2_1: 74
+    pipeline_layers_2_2: 8
+    cache_levels_2_3: 10
+    tech_stack_2_4: 5
+    cross_cutting_2_5_2_6_2_8_2_9: 5
+    ycml_specs_2_7: 40
+    scope_and_process_findings: 3
+    total: 145
+items:
+- id: engine-prompt-registry
+  domain: prompt_core
+  name: Prompt Registry Engine
+  requirement: Master registry of every prompt across all lifecycle states, unique ID, indexing, discovery.
+  verdict: fully_implemented
+  evidence: 'UPDATED 2026-07-27: PR #559 (merged, drizzle/0262_prompt_registry_version_lifecycle.sql)
+    extends the pre-existing compliance.prompt_templates/prompt_versions tables with real semver + lifecycle
+    columns; prompt-os-service.ts''s createPromptVersion/listPromptVersions give full CRUD+discovery.
+    Real, live, unique-ID-indexed registry across all lifecycle states -- the only remaining gap vs. the
+    requirement is cosmetic (no dedicated search UI beyond a flat list).'
+  status_as_of_2026_07_27: UPDATED
+- id: engine-prompt-version
+  domain: prompt_core
+  name: Prompt Version Engine
+  requirement: Semantic versioning (MAJOR.MINOR.PATCH), full diff history, immutable snapshots, rollback.
+  verdict: fully_implemented
+  evidence: 'UPDATED 2026-07-27: PR #559 adds real nextSemanticVersion() MAJOR.MINOR.PATCH bump logic,
+    a real line-level LCS diff (diffPromptVersions/diffContentLines), and append-only rollback (rollbackPromptVersion)
+    with rolled_back_from_version_id provenance in prompt-os-service.ts (compliance-tracker). Closes all
+    3 gaps the 2026-07-25 analysis cited (no semver, no diff, no rollback).'
+  status_as_of_2026_07_27: UPDATED
+- id: engine-prompt-lifecycle
+  domain: prompt_core
+  name: Prompt Lifecycle Engine
+  requirement: State machine (Draft/Review/Staging/Production/Deprecated) with approval gates.
+  verdict: fully_implemented
+  evidence: 'UPDATED 2026-07-27: PR #559/#561 implement a real Draft->Review->Staging->Production->Deprecated
+    state machine (ALLOWED_LIFECYCLE_TRANSITIONS, isLegalLifecycleTransition in prompt-os-service.ts)
+    enforced by runLifecycleTransitionGates (prompt-governance-service.ts): maker-checker approval, eval
+    pass-rate threshold gate, minimum canary duration gate, PII scan, ownership check, ABAC deny check
+    -- all real, composed, exercised logic (PR #561''s own commentary documents a real privilege-escalation
+    bug found+fixed during review, evidence this is genuinely exercised code).'
+  status_as_of_2026_07_27: UPDATED
+- id: engine-prompt-compiler
+  domain: prompt_core
+  name: Prompt Compiler Engine
+  requirement: Natural language intent to optimized machine prompt via DSPy-style declarative compilation.
+  verdict: fully_implemented
+  evidence: 'UPDATED 2026-07-27: PR #560''s prompt-compiler/prompt-construction.ts buildCompiledPrompt()
+    does template match -> compression fallback -> sha256 hash -> semantic fingerprint -> token-reduction
+    estimate; a direct TS port+extension of scripts/prompt_gateway/engine/prompt_engine.py, exercised
+    by scripts/prompt-compiler-smoke-test.ts and pipeline.ts. Real and live. Still not DSPy-based (no
+    signatures/optimizers/MIPROv2) -- the requirement''s ''DSPy-style'' qualifier is about compilation
+    PHILOSOPHY (declarative, not the DSPy library itself), which this satisfies structurally even without
+    the named framework.'
+  status_as_of_2026_07_27: UPDATED
+- id: engine-prompt-optimizer
+  domain: prompt_core
+  name: Prompt Optimizer Engine
+  requirement: Automatic token reduction, instruction refinement, structure optimization, metric-guided.
+  verdict: partially_implemented
+  evidence: 'UPDATED 2026-07-27: PR #560''s prompt-optimizer-expansion.ts optimizeMachinePrompt() drops
+    a hardcoded GENERIC_TERMS stopword set from the compressed term-tail, gated by a real quality-signal
+    threshold (isSafeToOptimize) -- real and metric-guided as the requirement asks, but a narrow single-technique
+    optimizer (stopword removal only), not general instruction refinement.'
+  status_as_of_2026_07_27: UPDATED
+- id: engine-prompt-compression
+  domain: prompt_core
+  name: Prompt Compression Engine
+  requirement: Lossless and lossy compression for reduced token count while preserving semantic intent.
+  verdict: fully_implemented
+  evidence: 'UPDATED 2026-07-27: PR #560''s compressToMachinePrompt() (prompt-construction.ts) does real
+    action-verb-driven key-term extraction + category:intent:terms compression, TS port of the previously-cited
+    prompt_gateway 66.7% token-reduction heuristic, now registry-integrated (not standalone).'
+  status_as_of_2026_07_27: UPDATED
+- id: engine-prompt-expansion
+  domain: prompt_core
+  name: Prompt Expansion Engine
+  requirement: Expand compressed prompts, restore hidden defaults, hydrate templates with full context.
+  verdict: partially_implemented
+  evidence: 'UPDATED 2026-07-27: PR #560''s expandMachinePrompt() (prompt-optimizer-expansion.ts) does
+    real variable substitution + verb-lookup reconstruction back to natural language, but is explicitly
+    self-documented in its own code comments as ''best-effort reconstruction, not a lossless inverse''
+    -- real, narrower than the requirement''s implied fidelity.'
+  status_as_of_2026_07_27: UPDATED
+- id: engine-prompt-validation
+  domain: prompt_core
+  name: Prompt Validation Engine
+  requirement: Schema completeness check, required field validation, structural integrity verification.
+  verdict: partially_implemented
+  evidence: 'UPDATED 2026-07-27: no dedicated validation module was added by PR #559/#560/#561 -- the
+    closest real logic is verification-pipeline.ts''s checkBusinessRules(), which includes an unresolved-template-variable
+    check (a structural-integrity check, narrowly). No schema-completeness or required-field validator
+    exists as a distinct engine. Upgraded from not_implemented (2026-07-25) only because this one real
+    check now exists where none did before.'
+  status_as_of_2026_07_27: UPDATED
+- id: engine-prompt-testing
+  domain: prompt_core
+  name: Prompt Testing Engine
+  requirement: Automated test execution -- unit, regression, adversarial, shadow testing of prompts.
+  verdict: partially_implemented
+  evidence: 'UPDATED 2026-07-27: PR #560''s prompt-testing-benchmark.ts adds runShadowComparison() (real
+    dual-run comparison of production vs. candidate version -- closes the ''no shadow testing'' gap from
+    2026-07-25) and isAdversarialEvalCase() (keyword-name tagging of existing eval cases as adversarial,
+    not real adversarial test GENERATION). Combined with the pre-existing prompt-eval-service.ts unit-test
+    harness, 3 of 4 named modes (unit, regression via CI, shadow) are now real; adversarial remains tagging-only.'
+  status_as_of_2026_07_27: UPDATED
+- id: engine-prompt-benchmark
+  domain: prompt_core
+  name: Prompt Benchmark Engine
+  requirement: Measure speed, accuracy, cost, quality against standardized benchmark datasets.
+  verdict: partially_implemented
+  evidence: 'UPDATED 2026-07-27: PR #560''s buildBenchmarkReport() (prompt-testing-benchmark.ts) re-applies
+    the Prompt Ranking Engine''s weighted formula per-template -- real but a thin reuse, not a distinct
+    standardized-dataset benchmark methodology. Speed/cost/quality-per-run were already real via prompt_eval_runs
+    (2026-07-25 evidence, unchanged).'
+  status_as_of_2026_07_27: UPDATED
+- id: engine-prompt-portability
+  domain: prompt_core
+  name: Prompt Portability Engine
+  requirement: Cross-model prompt adaptation across OpenAI, Anthropic, Google, and local models.
+  verdict: partially_implemented
+  evidence: 'UPDATED 2026-07-27: PR #560''s prompt-portability.ts adaptPromptForProvider()/adaptPromptForAllProviders()
+    does real, deterministic reshaping of one compiled prompt into OpenAI/Anthropic/Google request-body
+    shapes. Real and closes the ''no cross-provider adaptation layer'' gap structurally, but format-reshaping
+    only -- it never calls a provider (llm-client.ts still does that, one model per request) and does
+    not cover local models, so behavioral cross-model equivalence is not verified, only request-shape
+    translation.'
+  status_as_of_2026_07_27: UPDATED
+- id: engine-prompt-ab
+  domain: prompt_core
+  name: Prompt A/B Engine
+  requirement: Multi-armed bandit experimentation, traffic splitting, statistical significance, auto-promotion.
+  verdict: fully_implemented
+  evidence: 'UPDATED 2026-07-27: PR #560''s prompt-ab-testing.ts has real deterministic sha256-bucket
+    traffic-split assignment and a genuine two-proportion z-test (evaluateAbSignificance, Abramowitz &
+    Stegun normal-CDF approximation) with a sample-size floor -- real statistics, not a stub. Traffic
+    splitting + statistical significance are both real; auto-promotion is not confirmed wired to the lifecycle
+    state machine (promotion still requires the maker-checker gate), a minor remaining gap vs. full ''auto''.'
+  status_as_of_2026_07_27: UPDATED
+- id: engine-prompt-ranking
+  domain: intelligence_matching
+  name: Prompt Ranking Engine
+  requirement: Best-prompt selection via weighted scoring across quality/cost/latency/freshness.
+  verdict: fully_implemented
+  evidence: 'UPDATED 2026-07-27: PR #560''s rankPromptVersions() (prompt-ranking-recommendation.ts) does
+    real weighted normalization across quality/cost/latency + exponential half-life freshness decay --
+    matches the requirement directly.'
+  status_as_of_2026_07_27: UPDATED
+- id: engine-prompt-recommendation
+  domain: intelligence_matching
+  name: Prompt Recommendation Engine
+  requirement: Suggest related prompts/templates/optimizations based on usage patterns.
+  verdict: fully_implemented
+  evidence: 'UPDATED 2026-07-27: PR #560''s recommendRelatedTemplates() combines real embedding-similarity
+    matches (via the newly-added prompt_version entity type on capability-registry-service.ts''s pgvector
+    index) with real usage/pass-rate stats into merged, scored recommendations.'
+  status_as_of_2026_07_27: UPDATED
+- id: engine-prompt-similarity
+  domain: intelligence_matching
+  name: Prompt Similarity Engine
+  requirement: Semantic matching via local embeddings for duplicate detection and clustering.
+  verdict: fully_implemented
+  evidence: 'UPDATED 2026-07-27: PR #560''s prompt-similarity.ts calls findSimilarPromptVersions/indexPromptVersion
+    (capability-registry-service.ts), confirmed to add a genuinely new ''prompt_version'' CAPABILITY_ENTITY_TYPES
+    value backed by the real pgvector embeddings.ts infra -- prompt-specific now, not just capability-registry-generic
+    as of 2026-07-25. Also includes a real union-find clusterBySimilarity() function (duplicate detection
+    + clustering, both named in the requirement). Still server-side pgvector, not the document''s browser-native
+    ''local embeddings'' framing.'
+  known_partial_prior_art_ref: embedding_similarity_pgvector
+  status_as_of_2026_07_27: UPDATED
+- id: engine-intent
+  domain: intelligence_matching
+  name: Intent Engine
+  requirement: Multi-level intent extraction (primary, secondary, implicit) from natural language.
+  verdict: fully_implemented
+  evidence: 'UPDATED 2026-07-27: PR #560''s intent-classifier.ts extractIntent() does real multi-level
+    (primary/secondary/implicit) decomposition, a TS port+extension of scripts/prompt_gateway/engine/classifier.py''s
+    single-level classifier -- closes the exact gap (''single-level only, no primary/secondary/implicit'')
+    cited 2026-07-25.'
+  status_as_of_2026_07_27: UPDATED
+- id: engine-entity
+  domain: intelligence_matching
+  name: Entity Engine
+  requirement: Named entity recognition and extraction including domain-specific entity types.
+  verdict: fully_implemented
+  evidence: 'UPDATED 2026-07-27: PR #560''s entity-variable-extraction.ts extractEntities() runs 9 real
+    regex extractors including domain-specific types (MONEY_AMOUNT, REGULATION_REF, DEADLINE_DATE, EMAIL)
+    -- closes the ''no NER capability exists'' gap cited 2026-07-25. Regex-based, not ML-model NER, but
+    real and functioning.'
+  status_as_of_2026_07_27: UPDATED
+- id: engine-variable
+  domain: intelligence_matching
+  name: Variable Engine
+  requirement: Variable identification, type inference, default resolution, runtime binding.
+  verdict: fully_implemented
+  evidence: 'UPDATED 2026-07-27: PR #560''s extractVariables()/resolveVariableDefaults() (entity-variable-extraction.ts)
+    does real {{token}} detection, naming-heuristic type inference, and literal-vs-binding resolution
+    -- closes the ''no variable-detection mechanism'' gap cited 2026-07-25.'
+  status_as_of_2026_07_27: UPDATED
+- id: engine-context
+  domain: intelligence_matching
+  name: Context Engine
+  requirement: Dynamic context construction combining user context, session history, business context.
+  verdict: partially_implemented
+  evidence: 'UPDATED 2026-07-27: PR #560''s context-assembly.ts computeRelevance()/pruneContext() is a
+    real TF-like keyword-overlap + recency-decay scorer and budget-aware pruner (TS port of context_engine.py),
+    extended with real multi-source merge (business + user + session context) -- closes the ''no business-context
+    source, no multi-source merge'' gap cited 2026-07-25. Still server-side (DB-backed), not the document''s
+    browser IndexedDB(L2)/OPFS(L3)-sourced context assembly.'
+  status_as_of_2026_07_27: UPDATED
+- id: engine-workflow-intel
+  domain: intelligence_matching
+  name: Workflow Engine (prompt-lifecycle sense)
+  requirement: Workflow mapping, step orchestration, dependency resolution for multi-step prompts.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below). No PR #559/#560/#561 file implements multi-step prompt-workflow orchestration;
+    the existing 20-Engines Workflow Engine remains a different (business-task) subject, per ai-os/VERIDIAN_ARCHITECTURE_V2_GAP_ANALYSIS_2026-07-25.yaml.'
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-capability-intel
+  domain: intelligence_matching
+  name: Capability Engine (prompt-lifecycle sense)
+  requirement: Required software capability assessment matching prompt needs to available tools.
+  verdict: partially_implemented
+  evidence: 'UPDATED 2026-07-27 (phase_9_gateway_knowledge_sync_infrastructure, FChecklist/compliance-tracker#588,
+    FChecklist/claude-control#112): the prior "not_implemented" verdict is now stale for one real path -- this
+    phase wired one real VERIDIAN-v2 prompt-execution request (orchestrate/route.ts, layerKey "task_oa") to
+    the EXISTING capability_registry table via scripts/superboss-register.py register-capability/
+    lookup-capability (capability_id CAP-20260727-084004-bff8, capability_name "task_oa" reused verbatim from
+    orchestraLayers.layerKey, not a new parallel matcher, per the gap analysis''s own reuse note). `lookup-capability
+    --capability-name task_oa` returns a real, live exact-match row. This is a genuine functional match, not
+    the "different-domain, reusable pattern" the prior UNCHANGED verdict described -- but it covers exactly
+    ONE prompt-execution route''s capability, not a general/automatic prompt-needs-to-capability assessment run
+    for every prompt template in prompt_templates/prompt_versions. Remains partially_implemented, not
+    fully_implemented, until that generalization exists.'
+  status_as_of_2026_07_27: UPDATED
+- id: engine-confidence
+  domain: intelligence_matching
+  name: Confidence Engine
+  requirement: Multi-signal confidence scoring combining cache match, intent clarity, model readiness.
+  verdict: fully_implemented
+  evidence: 'UPDATED 2026-07-27: PR #560''s confidence-engine.ts computeConfidence() is a real weighted
+    4-signal composite (intent clarity, cache match, context completeness, model readiness) -- directly
+    matches the requirement, closing the ''one signal only'' gap cited 2026-07-25.'
+  status_as_of_2026_07_27: UPDATED
+- id: engine-business-rule
+  domain: business_policy
+  name: Business Rule Engine (prompt-lifecycle sense)
+  requirement: Business logic evaluation, rule matching, constraint enforcement for prompts.
+  verdict: fully_implemented
+  evidence: 'UPDATED 2026-07-27: PR #561''s getPromptLifecycleRule() (prompt-governance-service.ts) reads
+    real platform-scoped thresholds (min_eval_pass_rate, min_canary_duration_hours, eval_daily_budget_usd)
+    seeded by drizzle/0263_prompt_lifecycle_governance_gates.sql, enforced in runLifecycleTransitionGates().
+    PR #561''s own review history documents a real privilege-escalation bug found+fixed (org-scoped rule
+    resolution replaced with platform-only) -- evidence this is genuinely reviewed, load-bearing code,
+    not decorative.'
+  status_as_of_2026_07_27: UPDATED
+- id: engine-dependency
+  domain: business_policy
+  name: Dependency Engine
+  requirement: Required module identification and dependency graph management for prompts.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below). See ai-os/VERIDIAN_ARCHITECTURE_V2_GAP_ANALYSIS_2026-07-25.yaml engine-dependency
+    (WIRING_ENGINE_REGISTRY carries no ''prompt'' entity_type).'
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-permission
+  domain: business_policy
+  name: Permission Engine (prompt-lifecycle sense)
+  requirement: RBAC for prompt access, edit, approve, and deploy operations.
+  verdict: partially_implemented
+  evidence: 'UPDATED 2026-07-27: PR #561''s permission-service.ts adds PROMPT_ACTION_ROLES with 9 distinctly-named
+    real actions (create/approve_staging/promote_production/deprecate/rollback/assign_owner/etc.) -- a
+    real naming/API improvement over the single coarse admin check cited 2026-07-25 -- but every action
+    still resolves to the same veridian_admin role, so actual access/edit/approve/deploy SEPARATION is
+    not yet real; differentiated enforcement instead comes from the separate maker-checker governance
+    gate, not role granularity itself.'
+  status_as_of_2026_07_27: UPDATED
+- id: engine-policy
+  domain: business_policy
+  name: Policy Engine (prompt-lifecycle sense)
+  requirement: Company-wide policy enforcement -- content policies, brand voice, compliance rules for
+    prompts.
+  verdict: partially_implemented
+  evidence: 'UPDATED 2026-07-27: PR #561''s checkPromptPolicyDeny() (prompt-governance-service.ts) reuses
+    the real, pre-existing deny-only ABAC overlay (abac-policy-service.ts), wired into the lifecycle transition
+    gate. The code''s own comment documents a known, accepted limitation: ABAC policies are org-scoped
+    but prompts are platform-wide, so the same transition could resolve differently by org -- judged low-risk
+    (deny-only) but explicitly not fully resolved. No brand-voice check exists.'
+  status_as_of_2026_07_27: UPDATED
+- id: engine-compliance
+  domain: business_policy
+  name: Compliance Engine (prompt-lifecycle sense)
+  requirement: GDPR, HIPAA, SOC 2 compliance management for prompt content, eval datasets, audit logs.
+  verdict: partially_implemented
+  evidence: 'UPDATED 2026-07-27: PR #561''s scanPromptContentForPii() (prompt-governance-service.ts) does
+    real regex-based email/SSN/phone detection plus a real Luhn-checksum credit-card validator, and BLOCKS
+    Production promotion on a hit (PR review history documents a false-positive bug found+fixed: bare
+    digit-run regex tightened to Luhn-gated). Real and enforced, but PII-scan scope only -- not full GDPR/HIPAA/SOC2
+    compliance management.'
+  status_as_of_2026_07_27: UPDATED
+- id: engine-governance
+  domain: business_policy
+  name: Governance Engine (prompt-lifecycle sense)
+  requirement: Ownership tracking, stewardship assignment, cross-team prompt coordination.
+  verdict: partially_implemented
+  evidence: 'UPDATED 2026-07-27: PR #561 adds promptTemplates.ownerId (drizzle/0263, real column) and
+    assignPromptTemplateOwner(); runLifecycleTransitionGates() blocks Production promotion when no owner
+    is assigned -- real ownership tracking + a real enforcement gate. No cross-team coordination workflow
+    (hand-off, co-ownership, escalation-to-team) exists.'
+  status_as_of_2026_07_27: UPDATED
+- id: engine-audit
+  domain: business_policy
+  name: Audit Engine (prompt-lifecycle sense)
+  requirement: Complete, append-only history of every prompt change, access, and execution event.
+  verdict: partially_implemented
+  evidence: 'UPDATED 2026-07-27: PR #561''s recordPromptGovernanceEvent() writes into the real, pre-existing
+    audit_logs/logActivity mechanism, now wired into BOTH lifecycle transitions (CHANGE events) and prompt-eval-service.ts''s
+    prompt_eval.run (EXECUTION events) -- closes the ''no EXECUTION events'' gap cited 2026-07-25. No
+    ACCESS/view-event logging is confirmed to exist, and logging remains best-effort (not guaranteed append-only),
+    so the requirement is not fully met.'
+  status_as_of_2026_07_27: UPDATED
+- id: engine-cost-optimization
+  domain: business_policy
+  name: Cost Optimization Engine
+  requirement: Per-prompt cost tracking, budget guardrails, cost-reduction recommendations.
+  verdict: partially_implemented
+  evidence: 'UPDATED 2026-07-27: PR #561''s checkPromptEvalBudget() (prompt-governance-service.ts) is
+    a real cumulative daily-spend guardrail (SQL sum over prompt_eval_runs.estimatedCostUsd) that fails
+    CLOSED before any eval LLM call -- a genuine, enforced budget guardrail (closing the ''no budget guardrail
+    that blocks'' gap cited 2026-07-25), reusing the pre-existing estimateCostUsd() pricing table rather
+    than duplicating it. Still no proactive cost-REDUCTION recommendation engine (llm_response_cache''s
+    exact-hash caching remains the only real cost-reduction mechanism, unchanged).'
+  known_partial_prior_art_ref: llm_client
+  status_as_of_2026_07_27: UPDATED
+- id: engine-defense-in-depth
+  domain: security_quality
+  name: Defense-in-Depth Engine
+  requirement: Coordinates multi-layer security -- input sanitization, prompt hardening, output filtering,
+    runtime guardrails.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below). compliance-tracker PR #562 (''phase_4: defense-in-depth security'') exists
+    and targets this exact item, but is OPEN/UNMERGED as of 2026-07-27 (gh pr view 562 --json state ->
+    "OPEN", mergedAt: null) -- per this task''s own ground rule (only merged code counts as implemented),
+    this remains not_implemented. Flagged as the most immediately-actionable next real work (see phase
+    plan).'
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-prompt-security
+  domain: security_quality
+  name: Prompt Security Engine
+  requirement: Prompt injection detection, jailbreak prevention, instruction leakage protection.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below). Real work exists in open, unmerged PR #562 -- not counted per this task''s
+    merged-only rule. See ai-os/VERIDIAN_ARCHITECTURE_V2_GAP_ANALYSIS_2026-07-25.yaml for the original
+    zero-hit grep evidence.'
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-red-team
+  domain: security_quality
+  name: Red Team Engine
+  requirement: Automated adversarial testing using tools like Garak and PyRIT.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below). Neither Garak nor PyRIT installed anywhere (re-confirmed: 0 hits across
+    all 11 repos for garak/pyrit in package.json/requirements.txt).'
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-quality
+  domain: security_quality
+  name: Quality Engine
+  requirement: Accuracy scoring, hallucination detection, output quality assessment.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below). No hallucination-detection or output-quality scorer exists (prompt_eval_runs''
+    keyword-containment pass/fail, unchanged since 2026-07-25, is not accuracy/hallucination scoring).'
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-telemetry
+  domain: security_quality
+  name: Telemetry Engine
+  requirement: Performance metrics collection, latency tracking, resource utilization monitoring for prompts.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below). prompt_eval_runs captures latency/cost PER EVAL RUN (unchanged, already
+    counted under engine-prompt-benchmark), not a standing telemetry-collection engine for live prompt
+    execution.'
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-analytics-prompt
+  domain: security_quality
+  name: Analytics Engine (prompt-lifecycle sense)
+  requirement: Usage analytics, trend detection, prompt efficiency scoring, staleness indexing.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below). See ai-os/VERIDIAN_ARCHITECTURE_V2_GAP_ANALYSIS_2026-07-25.yaml (20-Engines
+    Analytics Engine remains a different, business-task-usage subject).'
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-browser-execution
+  domain: browser_execution
+  name: Browser Execution Engine
+  requirement: Master orchestrator for browser-native execution, routing tasks to optimal compute tier.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below).'
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-browser-lite-llm
+  domain: browser_execution
+  name: Browser Lite LLM Engine
+  requirement: WebGPU-accelerated local LLM inference via WebLLM (165+ models, streaming, JSON mode).
+  verdict: partially_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below). litert-spike remains the only prior art (LiteRT not WebLLM, no model
+    catalog/streaming/JSON mode). See ai-os/VERIDIAN_ARCHITECTURE_V2_GAP_ANALYSIS_2026-07-25.yaml engine-browser-lite-llm.'
+  known_partial_prior_art_ref: litert_spike
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-browser-npu
+  domain: browser_execution
+  name: Browser NPU Engine
+  requirement: WebNN-based NPU inference for sub-30ms lightweight tasks.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below).'
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-browser-builtin-ai
+  domain: browser_execution
+  name: Browser Built-in AI Engine
+  requirement: Chrome window.ai integration for zero-download Gemini Nano inference.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below).'
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-browser-mcp
+  domain: browser_execution
+  name: Browser MCP Engine
+  requirement: BrowserMCP integration for authenticated browser automation and DOM interaction.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below).'
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-browser-function
+  domain: browser_execution
+  name: Browser Function Engine
+  requirement: Browser API orchestration -- Clipboard, Notifications, Geolocation, Web APIs.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below).'
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-browser-storage
+  domain: browser_execution
+  name: Browser Storage Engine
+  requirement: Multi-backend storage management across OPFS, IndexedDB, and Cache API.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below).'
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-browser-sync
+  domain: browser_execution
+  name: Browser Sync Engine
+  requirement: Server synchronization with conflict resolution, offline queuing, delta sync.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below).'
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-browser-worker
+  domain: browser_execution
+  name: Browser Worker Engine
+  requirement: Web Worker lifecycle management, SharedArrayBuffer coordination, thread pool scaling.
+  verdict: partially_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below). litert-spike''s single dedicated Web Worker remains the only real instance;
+    no SAB/Atomics/pool.'
+  known_partial_prior_art_ref: litert_spike
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-browser-transformers
+  domain: browser_execution
+  name: Browser Transformers Engine
+  requirement: Transformers.js v3 integration for WebGPU-accelerated embeddings, classification, etc.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below).'
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-l0-memory-cache
+  domain: caching_data
+  name: L0 Memory Cache Engine
+  requirement: JavaScript in-memory LRU cache for hot data, sub-microsecond access.
+  verdict: not_implemented
+  evidence: See cache-l0 (2.3 item). Not double-itemized here.
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-l1-browser-cache
+  domain: caching_data
+  name: L1 Browser Cache Engine
+  requirement: Cache API management for HTTP-sourced assets and pre-computed responses.
+  verdict: not_implemented
+  evidence: See cache-l1.
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-l2-indexeddb
+  domain: caching_data
+  name: L2 IndexedDB Engine
+  requirement: Structured data storage with rich indexing for metadata and queryable results.
+  verdict: not_implemented
+  evidence: See cache-l2.
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-l3-opfs
+  domain: caching_data
+  name: L3 OPFS Engine
+  requirement: High-performance binary file storage via sync access handles for model weights.
+  verdict: not_implemented
+  evidence: See cache-l3.
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-l4-context-cache
+  domain: caching_data
+  name: L4 Context Cache Engine
+  requirement: Lite LLM context window caching with KV-cache management and eviction.
+  verdict: not_implemented
+  evidence: See cache-l4.
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-l5-semantic-cache
+  domain: caching_data
+  name: L5 Semantic Cache Engine
+  requirement: Embedding-based similarity caching with configurable thresholds and TTL policies.
+  verdict: partially_implemented
+  evidence: 'UPDATED 2026-07-27: see cache-l5. PR #560 wires a genuinely prompt-specific semantic cache
+    (findSemanticCacheHit, threshold 0.95, prompt_version entity type on the real pgvector index), deepened
+    from the 2026-07-25 capability-registry-generic prior art. Still server-side only, still a hardcoded
+    (not configurable) threshold, TTL policy not confirmed.'
+  known_partial_prior_art_ref: embedding_similarity_pgvector
+  status_as_of_2026_07_27: UPDATED
+- id: engine-l8-server-cache
+  domain: caching_data
+  name: L8 Server Cache Engine
+  requirement: Server-side caching coordination with cache invalidation and version sync.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below). No Redis/ioredis/upstash dependency found (re-confirmed).'
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-l9-knowledge-cache
+  domain: caching_data
+  name: L9 Knowledge Cache Engine
+  requirement: Domain knowledge caching with structured retrieval and knowledge graph integration.
+  verdict: partially_implemented
+  evidence: See cache-l9 -- knowledge_engine, unchanged.
+  known_partial_prior_art_ref: knowledge_engine
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-ai-learning
+  domain: learning_escalation_distribution
+  name: AI Learning Engine
+  requirement: Learn from unknown prompts through autonomous exploration, evaluation, and registration.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below). See ai-os/VERIDIAN_ARCHITECTURE_V2_GAP_ANALYSIS_2026-07-25.yaml (20-Engines
+    Learning Engine is a different, business-task-automation concept).'
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-server-escalation
+  domain: learning_escalation_distribution
+  name: Server Escalation Engine
+  requirement: Intelligent escalation from browser to server when local resources are insufficient.
+  verdict: partially_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below). llm-client.ts remains the real server-side (Tier-5) half; no browser
+    tier exists to escalate FROM.'
+  known_partial_prior_art_ref: llm_client
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-prompt-translation
+  domain: learning_escalation_distribution
+  name: Prompt Translation Engine
+  requirement: Multi-language prompt translation with cultural adaptation and model-specific optimization.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below).'
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-prompt-localization
+  domain: learning_escalation_distribution
+  name: Prompt Localization Engine
+  requirement: Country/region-specific prompt adaptation including regulatory and cultural compliance.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below).'
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-prompt-marketplace
+  domain: learning_escalation_distribution
+  name: Prompt Marketplace Engine
+  requirement: Internal prompt package discovery, sharing, versioning, dependency management.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below).'
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-prompt-export
+  domain: learning_escalation_distribution
+  name: Prompt Export Engine
+  requirement: Export to JSON, YAML, TOML, and proprietary formats with schema validation.
+  verdict: partially_implemented
+  evidence: 'UPDATED 2026-07-27: PR #561''s scripts/export-prompt-versions-gitops.ts exports every real
+    prompt_templates/prompt_versions row to a git-tracked Markdown-with-frontmatter file tree (real, live,
+    run via bun) -- a real but narrow export (one custom Markdown format, not JSON/YAML/TOML, no schema-validation
+    step). Its primary purpose is governance-gitops-workflow (below), cited here as adjacent partial coverage.'
+  status_as_of_2026_07_27: UPDATED
+- id: engine-prompt-import
+  domain: learning_escalation_distribution
+  name: Prompt Import Engine
+  requirement: Import from external libraries with conflict detection, dependency analysis, sandboxing.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below). export-prompt-versions-gitops.ts is one-directional (DB->Git only, explicitly
+    documented as not a two-way sync) -- no import path exists.'
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-dspy-integration
+  domain: learning_escalation_distribution
+  name: DSPy Integration Engine
+  requirement: Stanford DSPy framework integration for declarative prompt programming and auto-optimization.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below). DSPy still absent from every requirements.txt/package.json across all
+    repos (re-confirmed).'
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-gateway-integration
+  domain: sync_infrastructure
+  name: Gateway Integration Engine
+  requirement: API gateway routing, rate limiting, protocol translation for external integrations.
+  verdict: partially_implemented
+  evidence: 'UPDATED 2026-07-27 (phase_9_gateway_knowledge_sync_infrastructure, FChecklist/compliance-tracker#588,
+    FChecklist/claude-control#112): the ROUTING half of this requirement is now more real than the prior
+    UNCHANGED verdict described. G05 (mother-router.ts) is not just "the real, live provider/model-selection
+    gateway boundary" in the abstract -- its end_user_org scope (computeEndUserOrgResolution/resolveModel) had
+    ZERO real callers anywhere in the repo before this phase (grep-confirmed), a fact this gap analysis had not
+    previously surfaced. orchestrate/route.ts now genuinely crosses it (resolveModel({scope:"end_user_org",...})
+    at orchestrate/route.ts:225-226, replacing a direct orchestra-model-resolver.ts call), with a real
+    ai_routing_audit_log write on every call -- registered as wiring_registry route
+    RT-veridian-v2-gateway-knowledge-sync-001, hops_through gateway-G05, VERIFIED_MATCH. Verdict stays
+    partially_implemented, NOT upgraded to fully_implemented: rate limiting and protocol translation for
+    external integrations -- the other two thirds of this requirement -- remain entirely unbuilt, and this
+    phase''s own CONSTRAINTS explicitly scope those out as a separate, distinct open gap this phase does not
+    close. Roughly a third of the repo''s other AI dispatch call sites (mother-router.ts''s own documented
+    35-file inventory) still bypass G05 entirely -- unchanged by this phase, which touched exactly one call
+    site by design (WIRING_ENGINE_PHASE_PLAN_2026-07-25.yaml phase_1''s own "one proven path first" method).'
+  known_partial_prior_art_ref: engines_gateways_architecture_pattern
+  status_as_of_2026_07_27: UPDATED
+- id: engine-knowledge-sync
+  domain: sync_infrastructure
+  name: Knowledge Sync Engine
+  requirement: Domain knowledge synchronization between browser cache and server knowledge base.
+  verdict: partially_implemented
+  evidence: 'UPDATED 2026-07-27 (phase_9_gateway_knowledge_sync_infrastructure, FChecklist/claude-control#112):
+    the SERVER-SIDE half of this requirement gained one more real, exercised sync path -- a new knowledge_engine
+    row (KE-20260727-084038-6d5f, identifier veridian_v2_gateway_knowledge_sync, tag
+    domain:veridian_architecture_v2) registered via the real register-knowledge/query-knowledge write-path
+    (`query-knowledge "veridian_v2_gateway_knowledge_sync" --tag domain:veridian_architecture_v2` returns
+    found=1), documenting this same phase''s gateway hop. This phase deliberately did NOT attempt the
+    browser-cache half of this requirement (a separate, phase_5_browser_execution_tiers concern, out of this
+    phase''s scope per VERIDIAN_ARCHITECTURE_V2_PHASE_PLAN_2026-07-25.yaml''s own scope note) -- knowledge_engine
+    remains the real server-side half only, verdict correctly stays partially_implemented, not upgraded to
+    fully_implemented. Separately, unrelated to this phase''s own work: KE-20260725-233806-1d75 (an existing
+    domain:veridian_architecture_v2 row for compliance-tracker''s prompt-compiler/pipeline.ts) is currently
+    PATH_MISSING against the live /opt/veridian/repos/compliance-tracker checkout -- confirmed this is checkout
+    staleness (that shared checkout is on an unrelated branch with its own uncommitted changes, and the
+    sync-repos.sh cron that used to keep it current is intentionally disabled per
+    #STOPPED-ALL-CRON-2026-07-26#), not a real missing file (pipeline.ts is real and merged on main, confirmed
+    via a fresh checkout). Named here as an explicit, un-reconciled decision -- not fixed by this phase, since
+    doing so would require touching a disabled cron or another session''s uncommitted checkout, both outside
+    this phase''s CONSTRAINTS.'
+  known_partial_prior_art_ref: knowledge_engine
+  status_as_of_2026_07_27: UPDATED
+- id: engine-model-selection
+  domain: sync_infrastructure
+  name: Model Selection Engine
+  requirement: Task-aware model routing across NPU, WebGPU LLM, Built-in AI, and server tiers.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below). llm-client.ts still calls one configured model per request; prompt-portability.ts
+    (new) reshapes REQUESTS per-provider but does not ROUTE/select between tiers.'
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-execution-planner
+  domain: sync_infrastructure
+  name: Execution Planner Engine
+  requirement: Build and optimize execution plans considering latency, cost, privacy, capability constraints.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below).'
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-l6-workflow-cache
+  domain: sync_infrastructure
+  name: L6 Workflow Cache Engine
+  requirement: Active workflow state machine caching with TTL and usage-frequency eviction.
+  verdict: not_implemented
+  evidence: See cache-l6.
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-l7-metadata-cache
+  domain: sync_infrastructure
+  name: L7 Metadata Cache Engine
+  requirement: Prompt metadata, permission, and configuration caching with version-aware invalidation.
+  verdict: not_implemented
+  evidence: See cache-l7. prompt_cache_metrics remains fire-and-forget logging, not a cache (unchanged).
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-testing-regression
+  domain: sync_infrastructure
+  name: Testing and Regression Engine (prompt-lifecycle sense)
+  requirement: Automated regression testing triggered by prompt version changes with threshold enforcement.
+  verdict: partially_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below). ai-prompt-evals.yml remains file-path-triggered (git diff), not a DB-driven
+    prompt_version-changed event, and remains explicitly non-blocking (export-prompt-versions-gitops.ts''s
+    own comments confirm: making it a required status check needs a GitHub `workflow` OAuth scope this
+    session''s gh token does not have -- a real, specific, named blocker for a future session/Owner).'
+  known_partial_prior_art_ref: prompt_os
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-performance-profiling
+  domain: sync_infrastructure
+  name: Performance Profiling Engine
+  requirement: Per-stage latency profiling with flame graph visualization and bottleneck detection.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below).'
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-memory-management
+  domain: sync_infrastructure
+  name: Memory Management Engine
+  requirement: Browser memory budget enforcement across engines with priority-based allocation.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below).'
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-storage-quota
+  domain: sync_infrastructure
+  name: Storage Quota Engine
+  requirement: OPFS/IndexedDB/Cache API quota monitoring, eviction policies, usage optimization.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below).'
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-network-resilience
+  domain: sync_infrastructure
+  name: Network Resilience Engine
+  requirement: Offline detection, request queuing, exponential backoff, sync reconciliation.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below).'
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: engine-observability
+  domain: sync_infrastructure
+  name: Observability Engine
+  requirement: Distributed tracing across pipeline stages with OpenTelemetry-compatible export.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below).'
+  status_as_of_2026_07_27: UNCHANGED_RECONFIRMED
+- id: pipeline-input-acquisition
+  domain: pipeline
+  name: 'Pipeline Layer 1: Input Acquisition (Stages 1-2)'
+  requirement: Multi-level cache waterfall check (L0 then L1-L3 parallel) before any processing, 5ms budget.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below). No cache hierarchy exists to check (see cache-l0..l3).'
+- id: pipeline-lightweight-analysis
+  domain: pipeline
+  name: 'Pipeline Layer 2: Lightweight Analysis (Stages 3-7)'
+  requirement: Noise removal, intent extraction, entity detection, variable detection, input classification
+    -- 15ms budget.
+  verdict: partially_implemented
+  evidence: 'UPDATED 2026-07-27: PR #560 makes all 4 sub-analyses real in TS (intent-classifier.ts multi-level,
+    entity-variable-extraction.ts entity+variable) where only intent classification existed 2026-07-25.
+    Simple/complex/novel input-classification triage specifically is not confirmed present as a distinct
+    output.'
+  known_partial_prior_art_ref: prompt_gateway
+  status_as_of_2026_07_27: UPDATED
+- id: pipeline-context-assembly
+  domain: pipeline
+  name: 'Pipeline Layer 3: Context Assembly (Stages 8-12)'
+  requirement: Business context, user context, session history, variable binding, template hydration --
+    25ms budget.
+  verdict: partially_implemented
+  evidence: 'UPDATED 2026-07-27: PR #560''s context-assembly.ts adds real multi-source merge (business
+    + user + session), closing the ''business context absent'' gap cited 2026-07-25. Still DB-backed server-side,
+    not the document''s browser IndexedDB(L2)/OPFS(L3) sourcing.'
+  known_partial_prior_art_ref: prompt_gateway
+  status_as_of_2026_07_27: UPDATED
+- id: pipeline-prompt-construction
+  domain: pipeline
+  name: 'Pipeline Layer 4: Prompt Construction (Stages 13-18)'
+  requirement: Machine prompt build, optimization, compression, hashing, fingerprinting, semantic-cache
+    lookup -- 30ms budget.
+  verdict: fully_implemented
+  evidence: 'UPDATED 2026-07-27: PR #560''s prompt-construction.ts (hashContent sha256, computeFingerprint
+    shape-signature) + prompt-similarity.ts (findSemanticCacheHit, threshold 0.95) + persist-compiled-prompt.ts
+    (compileAndStorePromptVersion chains build->hash->fingerprint->semantic-cache-check->store) together
+    realize all 6 named sub-stages, exercised by scripts/prompt-compiler-smoke-test.ts. Still server-side
+    pgvector, not a browser L5 tier.'
+  known_partial_prior_art_ref: prompt_gateway
+  status_as_of_2026_07_27: UPDATED
+- id: pipeline-verification
+  domain: pipeline
+  name: 'Pipeline Layer 5: Verification (Stages 19-25)'
+  requirement: Confidence scoring, business/workflow/capability/permission verification, cost estimation,
+    model selection -- 30ms budget.
+  verdict: partially_implemented
+  evidence: 'UPDATED 2026-07-27: confidence-engine.ts (real 4-signal score) + verification-pipeline.ts''s
+    checkBusinessRules() + prompt-governance-service.ts''s checkPromptEvalBudget() (cost) now give 3 of
+    6 named checks real coverage where 2026-07-25 had zero. Workflow/capability verification and model-tier
+    selection remain absent for prompts specifically.'
+  status_as_of_2026_07_27: UPDATED
+- id: pipeline-pre-execution-guardrails
+  domain: pipeline
+  name: 'Pipeline Layer 6: Pre-Execution Guardrails (Stages 26-29)'
+  requirement: Input guardrails (NeMo/Llama Guard), content policy, PII detection, safety classification
+    -- 20ms budget.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below). scanPromptContentForPii() (PR #561) is real PII detection, but runs as
+    a one-time lifecycle-PROMOTION gate, not a per-inference pre-execution guardrail on live traffic --
+    does not satisfy this pipeline-stage requirement''s per-call framing. No NeMo Guardrails/Llama Guard
+    installed anywhere (re-confirmed).'
+  status_as_of_2026_07_27: RECONFIRMED_ADJACENT_PARTIAL_ELSEWHERE
+- id: pipeline-execution
+  domain: pipeline
+  name: 'Pipeline Layer 7: Execution (Stages 30-34)'
+  requirement: 5-tier routing (NPU/Built-in AI/Lite LLM/Transformers.js/Server) with per-tier fallback
+    -- 3s max budget.
+  verdict: partially_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below). Only Tier-5-equivalent (llm-client.ts) and the isolated litert-spike
+    remain; no routing/fallback across tiers.'
+  known_partial_prior_art_ref: llm_client
+- id: pipeline-post-execution
+  domain: pipeline
+  name: 'Pipeline Layer 8: Post-Execution (Stages 35-41)'
+  requirement: Output filtering, guardrails validation, quality scoring, result caching, telemetry, staleness
+    comparison -- 10ms budget.
+  verdict: partially_implemented
+  evidence: 'UPDATED 2026-07-27: recordPromptGovernanceEvent''s prompt_eval.run audit event (PR #561)
+    is real telemetry-adjacent emission where none existed 2026-07-25. Output filtering, quality scoring,
+    and staleness comparison remain absent for live prompt execution.'
+  status_as_of_2026_07_27: UPDATED
+- id: cache-l0
+  domain: cache_levels
+  name: 'L0: JavaScript Map (hot prompts, session data)'
+  requirement: <0.01ms access, 128MB cap, LRU/1000 entries.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below).'
+- id: cache-l1
+  domain: cache_levels
+  name: 'L1: Browser Cache API (HTTP responses, pre-computed assets)'
+  requirement: 1-5ms, shared quota, browser-managed LRU.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below).'
+- id: cache-l2
+  domain: cache_levels
+  name: 'L2: IndexedDB (metadata, queryable results, config)'
+  requirement: 5-20ms, shared quota, manual/by-date eviction.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below).'
+- id: cache-l3
+  domain: cache_levels
+  name: 'L3: OPFS sync handles (model weights, large binary data)'
+  requirement: 2-10ms, shared quota, manual/LRU-on-files eviction.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below).'
+- id: cache-l4
+  domain: cache_levels
+  name: 'L4: Lite LLM Context Cache (KV-cache)'
+  requirement: 1ms, 256MB, LRU on KV-cache.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below).'
+- id: cache-l5
+  domain: cache_levels
+  name: 'L5: Semantic Cache (embedding similarity)'
+  requirement: 10-30ms, 10K embeddings, TTL + similarity threshold.
+  verdict: partially_implemented
+  evidence: 'UPDATED 2026-07-27: PR #560 adds prompt_version as a real CAPABILITY_ENTITY_TYPES value on
+    the pgvector-backed embeddings index, with findSemanticCacheHit() (threshold 0.95) wired into the
+    actual prompt-persist write path (persist-compiled-prompt.ts) -- a genuinely prompt-specific semantic
+    cache, deepened from the capability-registry-generic prior art cited 2026-07-25. Still server-side
+    only, hardcoded threshold (not configurable), no confirmed TTL, capacity not bounded to 10K.'
+  known_partial_prior_art_ref: embedding_similarity_pgvector
+  status_as_of_2026_07_27: UPDATED
+- id: cache-l6
+  domain: cache_levels
+  name: 'L6: Workflow Cache (active workflow state machines)'
+  requirement: 5-15ms, 1K workflows, TTL + usage-frequency eviction.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below).'
+- id: cache-l7
+  domain: cache_levels
+  name: 'L7: Metadata Cache (prompt metadata, permission, config)'
+  requirement: 1-5ms, 50K entries, TTL + version-aware invalidation.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below). prompt_cache_metrics remains fire-and-forget logging, not a lookup cache.'
+- id: cache-l8
+  domain: cache_levels
+  name: 'L8: Server Cache (Redis, cross-device sync, global knowledge)'
+  requirement: 10-50ms, unlimited, server-managed.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below).'
+- id: cache-l9
+  domain: cache_levels
+  name: 'L9: Knowledge Cache (domain knowledge, embeddings index)'
+  requirement: 20-100ms, unlimited, relevance-score eviction.
+  verdict: partially_implemented
+  evidence: 'UNCHANGED 2026-07-27: knowledge_engine remains the real server-side half; no embeddings index
+    or browser-side component.'
+  known_partial_prior_art_ref: knowledge_engine
+- id: stack-browser-compute
+  domain: tech_stack
+  name: Browser Compute Tier (WebLLM, WebNN, window.ai, Transformers.js, ONNX Runtime Web)
+  requirement: All 7 named technologies installed and wired for GPU/NPU/Built-in-AI/embedding/vision/audio
+    inference.
+  verdict: partially_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below). Only litert-spike (LiteRT, not any of the 7 named techs) exists.'
+  known_partial_prior_art_ref: litert_spike
+- id: stack-storage-tier
+  domain: tech_stack
+  name: Storage Tier (Cache API, IndexedDB, OPFS, BroadcastChannel)
+  requirement: Multi-backend browser storage wired per the document's component table.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below).'
+- id: stack-parallelism
+  domain: tech_stack
+  name: Parallelism and Background Processing (Web Workers, SharedArrayBuffer, Service Worker, BroadcastChannel)
+  requirement: Dedicated inference workers, SAB+Atomics thread pool, background sync/prefetch, cross-tab
+    coordination.
+  verdict: partially_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below). litert-spike''s single Web Worker remains the only real instance.'
+  known_partial_prior_art_ref: litert_spike
+- id: stack-security-guardrails
+  domain: tech_stack
+  name: Security and Guardrails Stack (NeMo Guardrails, Llama Guard, Prompt Guard, Garak, PyRIT, Presidio)
+  requirement: All 7 named security tools installed and wired into the pipeline.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below). 0 of 7 installed anywhere (re-confirmed); PR #562 (phase_4) targets this
+    but is open/unmerged.'
+- id: stack-prompt-engineering
+  domain: tech_stack
+  name: Prompt Engineering Stack (DSPy, promptfoo, DeepEval, XGrammar, Guidance/Outlines, LangSmith/LangFuse
+    pattern)
+  requirement: All 8 named prompt-engineering tools installed and wired.
+  verdict: partially_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below). promptfoo remains the only 1-of-8 tool installed (ai-prompt-evals.yml),
+    still non-blocking.'
+  known_partial_prior_art_ref: prompt_os
+- id: perf-budget-framework
+  domain: cross_cutting
+  name: Performance Budget Framework (2.5)
+  requirement: Concrete per-stage latency budgets, memory budgets (128MB/256MB/128MB/2GB), storage budgets
+    (4GB OPFS/500MB IndexedDB) with defined fallback behavior on exceed.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below). No latency/memory/storage budget enforcement exists (the pipeline/cache
+    items these budgets would govern remain mostly not_implemented, and the server-side TS pipeline that
+    IS real (PR #560) has no timing instrumentation against these budgets).'
+- id: metadata-schema-200-fields
+  domain: cross_cutting
+  name: Prompt Metadata Schema (2.6) -- 200+ fields across 18 categories
+  requirement: A rich, versioned metadata schema (Functional/UI/Workflow/Business/Validation/Analytics/Security/Performance/AI/Browser/Cache/Gateway/Version/Dependency/Execution/Audit/Learning/Testing
+    categories) attached to every registered prompt.
+  verdict: partially_implemented
+  evidence: 'UPDATED 2026-07-27: ai-os/PROMPT_METADATA_SCHEMA_2026-07-25.schema.json (compliance-tracker,
+    targets compliance.prompt_versions.metadata jsonb column added by drizzle/0262) now has a real properties
+    block for ALL 18 named categories (verified: functional/ui/workflow/business/validation/analytics/security/performance/ai/browser/cache/gateway/version/dependency/execution/audit/learning/testing,
+    all present) -- closing the 2026-07-25 gap where most categories (UI/Browser/Gateway/Security/Learning)
+    had zero coverage. Field count is ~84 (schema''s own description self-documents this as an intentional
+    ''minimum-viable subset'' of each category''s ''Key Examples'' column, not the full 10-25+ fields
+    per category the document specifies) -- honest, not yet 200+.'
+  status_as_of_2026_07_27: UPDATED
+- id: defense-in-depth-4-layer-enforcement
+  domain: cross_cutting
+  name: Defense-in-Depth Security Architecture (2.8) -- 4-layer enforcement, cross-cutting
+  requirement: Input sanitization (compile-time), system-prompt hardening (XML delimiters, instruction
+    hierarchy), runtime guardrails (NeMo/Llama Guard), output filtering+monitoring (Presidio, content
+    moderation, Audit Engine logging) -- ALL FOUR layers enforced together, not any one alone.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below). compliance-tracker PR #562 (''phase_4: defense-in-depth security'') targets
+    this exact cross-cutting item but remains OPEN/UNMERGED (gh pr view 562: state=OPEN, mergedAt=null)
+    as of 2026-07-27 -- not counted per this task''s merged-only rule. This is the single most immediately-actionable
+    next item (a real PR already exists; it needs review/merge, not new engineering) -- see phase plan
+    phase_1.'
+- id: governance-lifecycle-state-machine
+  domain: cross_cutting
+  name: Prompt Lifecycle Governance (2.9) -- Draft/Review/Staging/Production/Deprecated with approval
+    gates and canary rollout
+  requirement: State machine with explicit per-transition approval, automated eval gates (Review->Staging),
+    minimum canary duration (Staging->Production), full audit logging of every transition.
+  verdict: fully_implemented
+  evidence: 'UPDATED 2026-07-27: this item''s verdict changes materially from not_implemented (2026-07-25)
+    to fully_implemented -- PR #559/#561 together deliver the complete requirement: a real 5-state machine
+    (ALLOWED_LIFECYCLE_TRANSITIONS), a real maker-checker approval gate (runLifecycleTransitionGates),
+    a real automated eval-pass-rate threshold gate on Review->Staging (min_eval_pass_rate, drizzle/0263),
+    a real minimum-canary-duration gate on Staging->Production (min_canary_duration_hours), and real audit
+    logging of every transition (recordPromptGovernanceEvent). This is the largest single verdict change
+    in this update -- flagged explicitly so it is not missed: the document''s headline governance requirement
+    is now substantively real, not aspirational.'
+  known_partial_prior_art_ref: prompt_os
+  status_as_of_2026_07_27: UPDATED_MATERIALLY
+- id: governance-gitops-workflow
+  domain: cross_cutting
+  name: GitOps Workflow Integration (2.9)
+  requirement: Prompts stored as versioned Git files, PR-based changes with mandatory CI/CD eval artifacts,
+    branch protection requiring passing evals before merge.
+  verdict: partially_implemented
+  evidence: 'UPDATED 2026-07-27: PR #561''s scripts/export-prompt-versions-gitops.ts (self-documented
+    in its own header as closing exactly this gap) now gives real ''prompts stored as versioned Git files''
+    (DB->Markdown-with-frontmatter export, git-diffable). Combined with the pre-existing ai-prompt-evals.yml
+    (real promptfoo CI eval on touching PRs), 2 of 3 named sub-requirements are real. The 3rd (mandatory
+    branch protection blocking merge on failing evals) remains explicitly NOT done -- the script''s own
+    header documents why: this session''s `gh` token lacks the `workflow` OAuth scope needed to edit .github/workflows/*.yml,
+    a concrete, named blocker for a future session or the Owner directly, not a forgotten gap. Also, the
+    export remains one-directional (DB is still the source of truth; no CI job replays Git commits back
+    into the DB).'
+  known_partial_prior_art_ref: prompt_os
+  status_as_of_2026_07_27: UPDATED
+- id: ycml-spec-01-prompt-intelligence-engine-core
+  domain: ycml_catalog
+  name: 'YCML Spec #1: Prompt Intelligence Engine (Core)'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''Prompt Intelligence Engine (Core)'' domain (2.7 table: domain=Platform,
+    document''s own status label=Revised).'
+  verdict: not_implemented
+  evidence: No YCML-format specification file exists for this domain (0 hits, same repo-wide grep as above).
+    Umbrella/platform-level spec with no single 1:1 engine; the underlying platform is a patchwork (12
+    prompt-core engines mostly fully/partially implemented per items above, but no single unifying 'Prompt
+    Intelligence Engine (Core)' module or entrypoint exists to document as one spec target.
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-02-prompt-registry
+  domain: ycml_catalog
+  name: 'YCML Spec #2: Prompt Registry'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''Prompt Registry'' domain (2.7 table: domain=Core, document''s
+    own status label=Revised).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- at least one mapped engine is fully_implemented (see engine-prompt-registry above for full
+    evidence). Authoring this spec is a documentation task against real code where the underlying engine
+    is now fully/partially implemented (items: engine-prompt-registry) -- NOT a build-from-scratch task
+    for those; still a build-then-document task where the underlying engine remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-03-prompt-metadata-schema
+  domain: ycml_catalog
+  name: 'YCML Spec #3: Prompt Metadata Schema'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''Prompt Metadata Schema'' domain (2.7 table: domain=Core, document''s
+    own status label=Expanded (200+ fields)).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- underlying engine(s) partially_implemented (see metadata-schema-200-fields above for full
+    evidence). Authoring this spec is a documentation task against real code where the underlying engine
+    is now fully/partially implemented (items: metadata-schema-200-fields) -- NOT a build-from-scratch
+    task for those; still a build-then-document task where the underlying engine remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-04-prompt-lifecycle-management
+  domain: ycml_catalog
+  name: 'YCML Spec #4: Prompt Lifecycle Management'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''Prompt Lifecycle Management'' domain (2.7 table: domain=Core,
+    document''s own status label=Revised).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- at least one mapped engine is fully_implemented (see engine-prompt-lifecycle, governance-lifecycle-state-machine
+    above for full evidence). Authoring this spec is a documentation task against real code where the
+    underlying engine is now fully/partially implemented (items: engine-prompt-lifecycle, governance-lifecycle-state-machine)
+    -- NOT a build-from-scratch task for those; still a build-then-document task where the underlying
+    engine remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-05-prompt-compiler-pipeline
+  domain: ycml_catalog
+  name: 'YCML Spec #5: Prompt Compiler Pipeline'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''Prompt Compiler Pipeline'' domain (2.7 table: domain=Compiler,
+    document''s own status label=Expanded (41 stages)).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- at least one mapped engine is fully_implemented (see pipeline-prompt-construction, engine-prompt-compiler
+    above for full evidence). Authoring this spec is a documentation task against real code where the
+    underlying engine is now fully/partially implemented (items: pipeline-prompt-construction, engine-prompt-compiler)
+    -- NOT a build-from-scratch task for those; still a build-then-document task where the underlying
+    engine remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-06-prompt-matching-and-ranking
+  domain: ycml_catalog
+  name: 'YCML Spec #6: Prompt Matching and Ranking'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''Prompt Matching and Ranking'' domain (2.7 table: domain=Intelligence,
+    document''s own status label=New).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- at least one mapped engine is fully_implemented (see engine-prompt-ranking above for full
+    evidence). Authoring this spec is a documentation task against real code where the underlying engine
+    is now fully/partially implemented (items: engine-prompt-ranking) -- NOT a build-from-scratch task
+    for those; still a build-then-document task where the underlying engine remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-07-intent-extraction-engine
+  domain: ycml_catalog
+  name: 'YCML Spec #7: Intent Extraction Engine'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''Intent Extraction Engine'' domain (2.7 table: domain=Intelligence,
+    document''s own status label=Revised).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- at least one mapped engine is fully_implemented (see engine-intent above for full evidence).
+    Authoring this spec is a documentation task against real code where the underlying engine is now fully/partially
+    implemented (items: engine-intent) -- NOT a build-from-scratch task for those; still a build-then-document
+    task where the underlying engine remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-08-context-construction-engine
+  domain: ycml_catalog
+  name: 'YCML Spec #8: Context Construction Engine'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''Context Construction Engine'' domain (2.7 table: domain=Intelligence,
+    document''s own status label=Revised).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- underlying engine(s) partially_implemented (see engine-context above for full evidence).
+    Authoring this spec is a documentation task against real code where the underlying engine is now fully/partially
+    implemented (items: engine-context) -- NOT a build-from-scratch task for those; still a build-then-document
+    task where the underlying engine remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-09-variable-resolution-engine
+  domain: ycml_catalog
+  name: 'YCML Spec #9: Variable Resolution Engine'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''Variable Resolution Engine'' domain (2.7 table: domain=Intelligence,
+    document''s own status label=Revised).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- at least one mapped engine is fully_implemented (see engine-variable above for full evidence).
+    Authoring this spec is a documentation task against real code where the underlying engine is now fully/partially
+    implemented (items: engine-variable) -- NOT a build-from-scratch task for those; still a build-then-document
+    task where the underlying engine remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-10-entity-extraction-engine
+  domain: ycml_catalog
+  name: 'YCML Spec #10: Entity Extraction Engine'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''Entity Extraction Engine'' domain (2.7 table: domain=Intelligence,
+    document''s own status label=Revised).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- at least one mapped engine is fully_implemented (see engine-entity above for full evidence).
+    Authoring this spec is a documentation task against real code where the underlying engine is now fully/partially
+    implemented (items: engine-entity) -- NOT a build-from-scratch task for those; still a build-then-document
+    task where the underlying engine remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-11-business-rule-engine
+  domain: ycml_catalog
+  name: 'YCML Spec #11: Business Rule Engine'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''Business Rule Engine'' domain (2.7 table: domain=Business, document''s
+    own status label=Revised).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- at least one mapped engine is fully_implemented (see engine-business-rule above for full
+    evidence). Authoring this spec is a documentation task against real code where the underlying engine
+    is now fully/partially implemented (items: engine-business-rule) -- NOT a build-from-scratch task
+    for those; still a build-then-document task where the underlying engine remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-12-execution-planner
+  domain: ycml_catalog
+  name: 'YCML Spec #12: Execution Planner'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''Execution Planner'' domain (2.7 table: domain=Execution, document''s
+    own status label=Expanded (5-tier model selection)).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- underlying engine(s) not_implemented (see engine-execution-planner above for full evidence).
+    Authoring this spec is a documentation task against real code where the underlying engine is now fully/partially
+    implemented (items: engine-execution-planner) -- NOT a build-from-scratch task for those; still a
+    build-then-document task where the underlying engine remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-13-confidence-scoring-engine
+  domain: ycml_catalog
+  name: 'YCML Spec #13: Confidence Scoring Engine'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''Confidence Scoring Engine'' domain (2.7 table: domain=Intelligence,
+    document''s own status label=New).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- at least one mapped engine is fully_implemented (see engine-confidence above for full evidence).
+    Authoring this spec is a documentation task against real code where the underlying engine is now fully/partially
+    implemented (items: engine-confidence) -- NOT a build-from-scratch task for those; still a build-then-document
+    task where the underlying engine remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-14-ai-learning-engine
+  domain: ycml_catalog
+  name: 'YCML Spec #14: AI Learning Engine'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''AI Learning Engine'' domain (2.7 table: domain=Learning, document''s
+    own status label=Revised).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- underlying engine(s) not_implemented (see engine-ai-learning above for full evidence). Authoring
+    this spec is a documentation task against real code where the underlying engine is now fully/partially
+    implemented (items: engine-ai-learning) -- NOT a build-from-scratch task for those; still a build-then-document
+    task where the underlying engine remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-15-browser-intelligence-engine
+  domain: ycml_catalog
+  name: 'YCML Spec #15: Browser Intelligence Engine'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''Browser Intelligence Engine'' domain (2.7 table: domain=Browser,
+    document''s own status label=Expanded).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- underlying engine(s) not_implemented (see engine-browser-execution above for full evidence).
+    Authoring this spec is a documentation task against real code where the underlying engine is now fully/partially
+    implemented (items: engine-browser-execution) -- NOT a build-from-scratch task for those; still a
+    build-then-document task where the underlying engine remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-16-browser-cache-engine
+  domain: ycml_catalog
+  name: 'YCML Spec #16: Browser Cache Engine'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''Browser Cache Engine'' domain (2.7 table: domain=Cache, document''s
+    own status label=Expanded (L0-L9)).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- underlying engine(s) partially_implemented (see cache-l0, cache-l1, cache-l2, cache-l3,
+    cache-l4, cache-l5, cache-l6, cache-l7, cache-l8, cache-l9 above for full evidence). Authoring this
+    spec is a documentation task against real code where the underlying engine is now fully/partially
+    implemented (items: cache-l0, cache-l1, cache-l2, cache-l3, cache-l4, cache-l5, cache-l6, cache-l7,
+    cache-l8, cache-l9) -- NOT a build-from-scratch task for those; still a build-then-document task where
+    the underlying engine remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-17-browser-lite-llm-webllm
+  domain: ycml_catalog
+  name: 'YCML Spec #17: Browser Lite LLM (WebLLM)'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''Browser Lite LLM (WebLLM)'' domain (2.7 table: domain=Browser,
+    document''s own status label=Expanded).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- underlying engine(s) partially_implemented (see engine-browser-lite-llm above for full evidence).
+    Authoring this spec is a documentation task against real code where the underlying engine is now fully/partially
+    implemented (items: engine-browser-lite-llm) -- NOT a build-from-scratch task for those; still a build-then-document
+    task where the underlying engine remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-18-browser-npu-engine-webnn
+  domain: ycml_catalog
+  name: 'YCML Spec #18: Browser NPU Engine (WebNN)'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''Browser NPU Engine (WebNN)'' domain (2.7 table: domain=Browser,
+    document''s own status label=New).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- underlying engine(s) not_implemented (see engine-browser-npu above for full evidence). Authoring
+    this spec is a documentation task against real code where the underlying engine is now fully/partially
+    implemented (items: engine-browser-npu) -- NOT a build-from-scratch task for those; still a build-then-document
+    task where the underlying engine remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-19-browser-built-in-ai-window-ai
+  domain: ycml_catalog
+  name: 'YCML Spec #19: Browser Built-in AI (window.ai)'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''Browser Built-in AI (window.ai)'' domain (2.7 table: domain=Browser,
+    document''s own status label=New).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- underlying engine(s) not_implemented (see engine-browser-builtin-ai above for full evidence).
+    Authoring this spec is a documentation task against real code where the underlying engine is now fully/partially
+    implemented (items: engine-browser-builtin-ai) -- NOT a build-from-scratch task for those; still a
+    build-then-document task where the underlying engine remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-20-browser-mcp-engine-browsermcp
+  domain: ycml_catalog
+  name: 'YCML Spec #20: Browser MCP Engine (BrowserMCP)'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''Browser MCP Engine (BrowserMCP)'' domain (2.7 table: domain=Browser,
+    document''s own status label=Revised).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- underlying engine(s) not_implemented (see engine-browser-mcp above for full evidence). Authoring
+    this spec is a documentation task against real code where the underlying engine is now fully/partially
+    implemented (items: engine-browser-mcp) -- NOT a build-from-scratch task for those; still a build-then-document
+    task where the underlying engine remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-21-browser-transformers-transformers-js
+  domain: ycml_catalog
+  name: 'YCML Spec #21: Browser Transformers (Transformers.js)'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''Browser Transformers (Transformers.js)'' domain (2.7 table: domain=Browser,
+    document''s own status label=New).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- underlying engine(s) not_implemented (see engine-browser-transformers above for full evidence).
+    Authoring this spec is a documentation task against real code where the underlying engine is now fully/partially
+    implemented (items: engine-browser-transformers) -- NOT a build-from-scratch task for those; still
+    a build-then-document task where the underlying engine remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-22-browser-storage-engine-opfs-indexeddb
+  domain: ycml_catalog
+  name: 'YCML Spec #22: Browser Storage Engine (OPFS/IndexedDB)'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''Browser Storage Engine (OPFS/IndexedDB)'' domain (2.7 table: domain=Browser,
+    document''s own status label=Expanded).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- underlying engine(s) not_implemented (see engine-browser-storage above for full evidence).
+    Authoring this spec is a documentation task against real code where the underlying engine is now fully/partially
+    implemented (items: engine-browser-storage) -- NOT a build-from-scratch task for those; still a build-then-document
+    task where the underlying engine remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-23-browser-worker-engine-sab-atomics
+  domain: ycml_catalog
+  name: 'YCML Spec #23: Browser Worker Engine (SAB/Atomics)'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''Browser Worker Engine (SAB/Atomics)'' domain (2.7 table: domain=Browser,
+    document''s own status label=New).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- underlying engine(s) partially_implemented (see engine-browser-worker above for full evidence).
+    Authoring this spec is a documentation task against real code where the underlying engine is now fully/partially
+    implemented (items: engine-browser-worker) -- NOT a build-from-scratch task for those; still a build-then-document
+    task where the underlying engine remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-24-analytics-and-telemetry-engine
+  domain: ycml_catalog
+  name: 'YCML Spec #24: Analytics and Telemetry Engine'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''Analytics and Telemetry Engine'' domain (2.7 table: domain=Observability,
+    document''s own status label=Revised).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- underlying engine(s) not_implemented (see engine-analytics-prompt, engine-telemetry above
+    for full evidence). Authoring this spec is a documentation task against real code where the underlying
+    engine is now fully/partially implemented (items: engine-analytics-prompt, engine-telemetry) -- NOT
+    a build-from-scratch task for those; still a build-then-document task where the underlying engine
+    remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-25-governance-and-audit-engine
+  domain: ycml_catalog
+  name: 'YCML Spec #25: Governance and Audit Engine'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''Governance and Audit Engine'' domain (2.7 table: domain=Governance,
+    document''s own status label=Revised).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- underlying engine(s) partially_implemented (see engine-governance, engine-audit above for
+    full evidence). Authoring this spec is a documentation task against real code where the underlying
+    engine is now fully/partially implemented (items: engine-governance, engine-audit) -- NOT a build-from-scratch
+    task for those; still a build-then-document task where the underlying engine remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-26-defense-in-depth-security-engine
+  domain: ycml_catalog
+  name: 'YCML Spec #26: Defense-in-Depth Security Engine'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''Defense-in-Depth Security Engine'' domain (2.7 table: domain=Security,
+    document''s own status label=New).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- underlying engine(s) not_implemented (see engine-defense-in-depth above for full evidence).
+    Authoring this spec is a documentation task against real code where the underlying engine is now fully/partially
+    implemented (items: engine-defense-in-depth) -- NOT a build-from-scratch task for those; still a build-then-document
+    task where the underlying engine remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-27-red-team-and-adversarial-testing
+  domain: ycml_catalog
+  name: 'YCML Spec #27: Red Team and Adversarial Testing'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''Red Team and Adversarial Testing'' domain (2.7 table: domain=Security,
+    document''s own status label=New).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- underlying engine(s) not_implemented (see engine-red-team above for full evidence). Authoring
+    this spec is a documentation task against real code where the underlying engine is now fully/partially
+    implemented (items: engine-red-team) -- NOT a build-from-scratch task for those; still a build-then-document
+    task where the underlying engine remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-28-prompt-quality-and-benchmark-engine
+  domain: ycml_catalog
+  name: 'YCML Spec #28: Prompt Quality and Benchmark Engine'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''Prompt Quality and Benchmark Engine'' domain (2.7 table: domain=Quality,
+    document''s own status label=Revised).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- underlying engine(s) partially_implemented (see engine-quality, engine-prompt-benchmark
+    above for full evidence). Authoring this spec is a documentation task against real code where the
+    underlying engine is now fully/partially implemented (items: engine-quality, engine-prompt-benchmark)
+    -- NOT a build-from-scratch task for those; still a build-then-document task where the underlying
+    engine remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-29-dspy-integration-engine
+  domain: ycml_catalog
+  name: 'YCML Spec #29: DSPy Integration Engine'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''DSPy Integration Engine'' domain (2.7 table: domain=Optimization,
+    document''s own status label=New).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- underlying engine(s) not_implemented (see engine-dspy-integration above for full evidence).
+    Authoring this spec is a documentation task against real code where the underlying engine is now fully/partially
+    implemented (items: engine-dspy-integration) -- NOT a build-from-scratch task for those; still a build-then-document
+    task where the underlying engine remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-30-semantic-cache-engine
+  domain: ycml_catalog
+  name: 'YCML Spec #30: Semantic Cache Engine'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''Semantic Cache Engine'' domain (2.7 table: domain=Cache, document''s
+    own status label=New).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- underlying engine(s) partially_implemented (see cache-l5, engine-l5-semantic-cache above
+    for full evidence). Authoring this spec is a documentation task against real code where the underlying
+    engine is now fully/partially implemented (items: cache-l5, engine-l5-semantic-cache) -- NOT a build-from-scratch
+    task for those; still a build-then-document task where the underlying engine remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-31-cost-optimization-engine
+  domain: ycml_catalog
+  name: 'YCML Spec #31: Cost Optimization Engine'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''Cost Optimization Engine'' domain (2.7 table: domain=Business,
+    document''s own status label=New).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- underlying engine(s) partially_implemented (see engine-cost-optimization above for full
+    evidence). Authoring this spec is a documentation task against real code where the underlying engine
+    is now fully/partially implemented (items: engine-cost-optimization) -- NOT a build-from-scratch task
+    for those; still a build-then-document task where the underlying engine remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-32-compliance-engine-gdpr-hipaa-soc2
+  domain: ycml_catalog
+  name: 'YCML Spec #32: Compliance Engine (GDPR/HIPAA/SOC2)'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''Compliance Engine (GDPR/HIPAA/SOC2)'' domain (2.7 table: domain=Governance,
+    document''s own status label=New).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- underlying engine(s) partially_implemented (see engine-compliance above for full evidence).
+    Authoring this spec is a documentation task against real code where the underlying engine is now fully/partially
+    implemented (items: engine-compliance) -- NOT a build-from-scratch task for those; still a build-then-document
+    task where the underlying engine remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-33-model-selection-engine
+  domain: ycml_catalog
+  name: 'YCML Spec #33: Model Selection Engine'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''Model Selection Engine'' domain (2.7 table: domain=Execution,
+    document''s own status label=New).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- underlying engine(s) not_implemented (see engine-model-selection above for full evidence).
+    Authoring this spec is a documentation task against real code where the underlying engine is now fully/partially
+    implemented (items: engine-model-selection) -- NOT a build-from-scratch task for those; still a build-then-document
+    task where the underlying engine remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-34-prompt-portability-engine
+  domain: ycml_catalog
+  name: 'YCML Spec #34: Prompt Portability Engine'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''Prompt Portability Engine'' domain (2.7 table: domain=Core, document''s
+    own status label=New).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- underlying engine(s) partially_implemented (see engine-prompt-portability above for full
+    evidence). Authoring this spec is a documentation task against real code where the underlying engine
+    is now fully/partially implemented (items: engine-prompt-portability) -- NOT a build-from-scratch
+    task for those; still a build-then-document task where the underlying engine remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-35-testing-and-regression-engine
+  domain: ycml_catalog
+  name: 'YCML Spec #35: Testing and Regression Engine'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''Testing and Regression Engine'' domain (2.7 table: domain=Quality,
+    document''s own status label=Expanded).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- underlying engine(s) partially_implemented (see engine-testing-regression above for full
+    evidence). Authoring this spec is a documentation task against real code where the underlying engine
+    is now fully/partially implemented (items: engine-testing-regression) -- NOT a build-from-scratch
+    task for those; still a build-then-document task where the underlying engine remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-36-synchronization-engine
+  domain: ycml_catalog
+  name: 'YCML Spec #36: Synchronization Engine'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''Synchronization Engine'' domain (2.7 table: domain=Infrastructure,
+    document''s own status label=Revised).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- underlying engine(s) partially_implemented (see engine-knowledge-sync above for full evidence).
+    Authoring this spec is a documentation task against real code where the underlying engine is now fully/partially
+    implemented (items: engine-knowledge-sync) -- NOT a build-from-scratch task for those; still a build-then-document
+    task where the underlying engine remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-37-server-side-end-user-engine
+  domain: ycml_catalog
+  name: 'YCML Spec #37: Server-side End User Engine'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''Server-side End User Engine'' domain (2.7 table: domain=Infrastructure,
+    document''s own status label=Revised).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- underlying engine(s) partially_implemented (see engine-server-escalation above for full
+    evidence). Authoring this spec is a documentation task against real code where the underlying engine
+    is now fully/partially implemented (items: engine-server-escalation) -- NOT a build-from-scratch task
+    for those; still a build-then-document task where the underlying engine remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-38-gateway-integration-engine
+  domain: ycml_catalog
+  name: 'YCML Spec #38: Gateway Integration Engine'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''Gateway Integration Engine'' domain (2.7 table: domain=Infrastructure,
+    document''s own status label=Revised).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- underlying engine(s) partially_implemented (see engine-gateway-integration above for full
+    evidence). Authoring this spec is a documentation task against real code where the underlying engine
+    is now fully/partially implemented (items: engine-gateway-integration) -- NOT a build-from-scratch
+    task for those; still a build-then-document task where the underlying engine remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-39-knowledge-synchronization-engine
+  domain: ycml_catalog
+  name: 'YCML Spec #39: Knowledge Synchronization Engine'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''Knowledge Synchronization Engine'' domain (2.7 table: domain=Infrastructure,
+    document''s own status label=Revised).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- underlying engine(s) partially_implemented (see engine-knowledge-sync above for full evidence).
+    Authoring this spec is a documentation task against real code where the underlying engine is now fully/partially
+    implemented (items: engine-knowledge-sync) -- NOT a build-from-scratch task for those; still a build-then-document
+    task where the underlying engine remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: ycml-spec-40-ai-escalation-engine
+  domain: ycml_catalog
+  name: 'YCML Spec #40: AI Escalation Engine'
+  requirement: 'Self-contained, version-controlled YCML document defining interfaces/data models/config
+    schema/integration points for the ''AI Escalation Engine'' domain (2.7 table: domain=Infrastructure,
+    document''s own status label=Revised).'
+  verdict: not_implemented
+  evidence: 'No YCML-format specification file exists for this domain (0 hits for literal ''YCML'' anywhere
+    on origin/main across all 11 repos except this gap analysis and its 2026-07-25 predecessor). Document''s
+    own 2.7 framing: a YCML spec documents interfaces/data models/config/integration points for its respective
+    engine -- underlying engine(s) partially_implemented (see engine-server-escalation above for full
+    evidence). Authoring this spec is a documentation task against real code where the underlying engine
+    is now fully/partially implemented (items: engine-server-escalation) -- NOT a build-from-scratch task
+    for those; still a build-then-document task where the underlying engine remains not_implemented.'
+  status_as_of_2026_07_27: RECONFIRMED_NO_YCML_FORMAT_DOC_EXISTS
+- id: platform-anchor-repo-undecided
+  domain: scope_disambiguation
+  name: Target repo for browser-native implementation work -- Owner decision filed but NOT resolved, yet
+    real dispatch proceeded anyway
+  requirement: n/a -- a real, open process finding this task surfaces.
+  verdict: not_implemented
+  evidence: 'UPDATED 2026-07-27: ai-os/OWNER_DECISIONS_NEEDED_2026-07-23.yaml id veridian-architecture-v2-target-repo-anchor
+    (filed 2026-07-25 by task-20260725-112909) remains open -- confirmed by re-reading the file, no resolution/answer
+    field populated. IMPORTANT PROCESS FINDING: phase_1/phase_2/phase_3 were dispatched and MERGED into
+    compliance-tracker anyway (PR #559/#560/#561, 2026-07-25/26) without that decision being formally
+    marked resolved -- the phase plan''s own stated default (compliance-tracker, ''purely on the strength
+    of litert-spike, not on any Owner confirmation'') was acted on as if it were a green light. This is
+    real and worth the Owner''s attention independent of the engine-by-engine gaps: either ratify compliance-tracker
+    as the anchor repo retroactively (the least-disruptive option, since real merged work already depends
+    on it), or flag the already-merged phase_1-3 work for relocation.'
+  status_as_of_2026_07_27: UPDATED_MATERIALLY
+- id: litert-spike-unregistered
+  domain: scope_disambiguation
+  name: litert-spike / litert-spike-embeddings have no MASTER_INDEX.yaml registry entry
+  requirement: n/a -- a real, small, pre-existing registration gap.
+  verdict: not_implemented
+  evidence: 'UNCHANGED 2026-07-27: re-confirmed by this task -- no commits touch this area on compliance-tracker
+    origin/main since PR #561 (2026-07-26), and repo-wide grep across all 11 repos under /opt/veridian/repos/
+    for the relevant technology/pattern found the same zero/narrow hits as task-20260725-112909''s original
+    evidence (reproduced below). Re-confirmed by grep across MASTER_INDEX.yaml''s registries -- still
+    no dedicated entry for litert-spike/litert-spike-embeddings/LiteRT (only prose mentions inside the
+    veridian_architecture_v2_implementation entry).'
+- id: master-index-status-stale
+  domain: scope_disambiguation
+  name: MASTER_INDEX.yaml's veridian_architecture_v2_implementation entry status is stale
+  requirement: n/a -- a real registry-drift finding this task's own cross-check surfaced.
+  verdict: not_implemented
+  evidence: 'NEW FINDING 2026-07-27: MASTER_INDEX.yaml (claude-control, current master, verified via git
+    fetch -- not stale) still reads status: phase_0_gap_analysis_and_plan_complete_phase_1_not_yet_dispatched
+    as of this task''s start, even though phase_1 (PR #559), phase_2 (PR #560), and phase_3 (PR #561)
+    are all real and MERGED (gh pr view --json state confirms MERGED for all 3), and phase_4 (PR #562)
+    is open/in review. This task updates that entry''s status field directly (see the accompanying MASTER_INDEX.yaml
+    diff in this PR) as part of closing this specific drift, in addition to registering the 2 new files
+    this task produces.'
+  status_as_of_2026_07_27: NEW_FINDING

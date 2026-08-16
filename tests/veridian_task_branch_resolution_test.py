@@ -207,8 +207,193 @@ def test_branch_resolution_noop_when_still_on_original_branch():
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+def test_branch_resolution_not_corrupted_to_default_branch_before_first_push():
+    """Real root cause found live (2026-07-27) against 2 stuck rca- tasks whose
+    task.yaml ended up with branch: master, which then made
+    supervisor-entrypoint.sh fail with "supervisor could not resolve a real PR
+    for branch 'master'": cmd_create's real invocation
+    (`git worktree add -b <branch> workspace origin/<default>`) checks the new
+    branch out FROM a remote-tracking ref, and git's own
+    branch.autoSetupMerge default means that new branch's @{upstream} points
+    at origin/<default> from the INSTANT it is created -- before any commit or
+    push. Any checkpoint that runs before the first real `git push -u origin
+    <branch>` (e.g. the very first in_progress checkpoint, or any checkpoint on
+    a task that never gets past pre-flight, exactly what happened to both real
+    stuck instances) must not mistake that default fork-point tracking ref for
+    a real, already-pushed branch name."""
+    tmp = tempfile.mkdtemp(prefix="branch_resolution_test_")
+    try:
+        ai_os_root = os.path.join(tmp, "ai_os")
+        task_id = "task-fake-fresh-branch-never-pushed"
+        task_dir = os.path.join(ai_os_root, "tasks", task_id)
+        workspace = os.path.join(task_dir, "workspace")
+        os.makedirs(workspace)
+
+        # Real remote with a "master" default branch (matches this repo's own
+        # real default branch, and the exact literal observed live).
+        remote_dir = os.path.join(tmp, "remote.git")
+        _git("init", "-q", "--bare", remote_dir, cwd=tmp)
+        seed = os.path.join(tmp, "seed")
+        os.makedirs(seed)
+        _git("init", "-q", cwd=seed)
+        _git("config", "user.email", "test@example.com", cwd=seed)
+        _git("config", "user.name", "Test", cwd=seed)
+        with open(os.path.join(seed, "README.md"), "w") as f:
+            f.write("initial\n")
+        _git("add", "-A", cwd=seed)
+        _git("commit", "-q", "-m", "initial", cwd=seed)
+        _git("branch", "-M", "master", cwd=seed)
+        _git("remote", "add", "origin", remote_dir, cwd=seed)
+        _git("push", "-q", "origin", "master", cwd=seed)
+
+        # Mirrors cmd_create exactly: `git worktree add -b <branch> workspace
+        # origin/<default>` off a real clone (not a plain local checkout) --
+        # this remote-tracking start point is what triggers
+        # branch.autoSetupMerge, which the prior fixture (_make_fixture, a
+        # plain local `checkout -b` with no remote at all) never exercised.
+        _git("clone", "-q", remote_dir, workspace, cwd=tmp)
+        _git("remote", "set-head", "origin", "master", cwd=workspace)
+        original_branch = f"worker/{task_id}"
+        _git("checkout", "-q", "-b", original_branch, "origin/master", cwd=workspace)
+
+        # No commit, no push -- exactly the state of a task whose worker never
+        # got past pre-flight (both real stuck instances: 3-5 consecutive
+        # PRE-FLIGHT REJECTED checkpoints, zero real commits, zero pushes).
+
+        task = {
+            "id": task_id,
+            "title": "fake rca task, never got past pre-flight",
+            "status": "failed",
+            "repo": "compliance-tracker",
+            "branch": original_branch,
+            "workspace": workspace,
+            "task_dir": task_dir,
+            "service": f"veridian-worker@{task_id}.service",
+            "created_at": "2026-07-27T00:00:00+00:00",
+            "last_checkpoint_at": None,
+            "completed_steps": [],
+            "remaining_steps": [],
+            "files_modified": [],
+            "checkpoints": [],
+            "execution_seconds": 0,
+            "restart_count": 0,
+            "token_usage": None,
+            "hold_for_owner_signoff": False,
+        }
+        with open(os.path.join(task_dir, "task.yaml"), "w") as f:
+            yaml.safe_dump(task, f, sort_keys=False)
+        with open(os.path.join(ai_os_root, "CONTROLLER.yaml"), "w") as f:
+            yaml.safe_dump({"server": "TEST", "tasks": []}, f)
+
+        mod = _load_module()
+        _run_checkpoint(mod, ai_os_root, task_id, "failed",
+                         "PRE-FLIGHT REJECTED (crontab_unauthorized_change, transient): no model call made")
+
+        with open(os.path.join(task_dir, "task.yaml")) as f:
+            saved = yaml.safe_load(f)
+
+        assert saved["branch"] == original_branch, (
+            f"expected task.yaml branch to stay the real worker branch "
+            f"'{original_branch}', got '{saved['branch']}' -- if this is 'master' "
+            f"(the repo's own default branch), that is exactly the live bug: git's "
+            f"default fork-point tracking ref was mistaken for a real pushed branch "
+            f"before any push ever happened."
+        )
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def _load_watchdog_bound_to_governor_fixture(tmp_path, monkeypatch, module_name):
+    """2026-07-27 (SERVER RESOURCE GOVERNOR): escalate() now calls
+    resource_governor.submit() -- a plain `import resource_governor` inside
+    veridian-task-watchdog.py, since both files share scripts/ -- instead of
+    invoking subprocess.run directly. That plain import is cached process-wide
+    in sys.modules, so each test here must force a fresh import bound to ITS
+    OWN throwaway env (popping any stale cached module first), otherwise a
+    second test in the same pytest session would silently keep writing to the
+    first test's already-torn-down tmp_path DB."""
+    import sys as _sys
+    for stale in ("resource_governor", "dispatch_core_governor", "superboss_register_governor"):
+        _sys.modules.pop(stale, None)
+
+    ai_os = tmp_path / "ai-os"
+    (ai_os / "locks").mkdir(parents=True, exist_ok=True)
+    monkeypatch.setenv("VERIDIAN_ROOT", str(tmp_path))
+    monkeypatch.setenv("VERIDIAN_AI_OS_DIR", str(ai_os))
+    monkeypatch.setenv("VERIDIAN_SCRIPTS_DIR", os.path.join(REPO_ROOT, "scripts"))
+    monkeypatch.setenv("VERIDIAN_DISPATCH_LOCK_DIR", str(ai_os / "locks"))
+    monkeypatch.setenv("SUPERBOSS_REGISTER_DB", str(ai_os / "test-superboss.sqlite"))
+
+    import importlib.util as _ilu
+    watchdog_path = os.path.join(REPO_ROOT, "scripts", "veridian-task-watchdog.py")
+    spec = _ilu.spec_from_file_location(module_name, watchdog_path)
+    wd = _ilu.module_from_spec(spec)
+    spec.loader.exec_module(wd)
+    return wd
+
+
+def _umr_inputs_for_identity(task_identity):
+    import json
+    import sqlite3
+    conn = sqlite3.connect(os.environ["SUPERBOSS_REGISTER_DB"])
+    conn.row_factory = sqlite3.Row
+    row = conn.execute(
+        "SELECT inputs_json FROM umr_tasks WHERE task_identity=? ORDER BY ts_submitted DESC LIMIT 1",
+        (task_identity,),
+    ).fetchone()
+    conn.close()
+    assert row is not None, f"escalate() never submitted a umr_tasks row for task_identity={task_identity!r}"
+    return json.loads(row["inputs_json"])
+
+
+def test_escalate_passes_stalled_tasks_real_repo_not_hardcoded_claude_control(tmp_path, monkeypatch):
+    """Real bug confirmed live in the deployed veridian-task-watchdog.py:
+    escalate() hardcoded --repo claude-control for every auto-escalated rca-
+    task regardless of the stalled task's own real repo -- confirmed against 2
+    historical instances whose stalled task's real repo was compliance-tracker.
+    escalate() must read the stalled task's own already-loaded task.yaml
+    'repo' field instead. escalate() now submits (via resource_governor.py,
+    ai-os/SERVER_RESOURCE_GOVERNOR_2026-07-27.md) rather than calling
+    veridian-task.py create directly -- this asserts the real repo made it
+    into the queued task_spec's inputs."""
+    wd = _load_watchdog_bound_to_governor_fixture(tmp_path, monkeypatch, "veridian_task_watchdog_under_test")
+
+    stalled_task = {
+        "id": "task-20260726-172000-hr-performance-error-handling---payroll",
+        "repo": "compliance-tracker",
+        "branch": "worker/task-20260726-172000-hr-performance-error-handling---payroll",
+        "status": "blocked",
+    }
+    result_msg = wd.escalate("task-20260726-172000-hr-performance-error-handling---payroll",
+                              stalled_task, "some failure signature")
+    assert "escalation queued via resource governor" in result_msg, result_msg
+
+    inputs = _umr_inputs_for_identity("rca-task-20260726-172000-hr-performance-error-handling---payroll")
+    assert inputs["repo"] == "compliance-tracker", (
+        f"expected escalate() to pass the stalled task's own real repo "
+        f"'compliance-tracker', got {inputs.get('repo')!r} -- this is exactly the live "
+        f"hardcoded-claude-control bug"
+    )
+
+
+def test_escalate_falls_back_to_claude_control_when_repo_unknown(tmp_path, monkeypatch):
+    """Defensive fallback: if the stalled task's own task.yaml is somehow
+    unreadable/missing a 'repo' field, escalate() must still queue a valid
+    repo (the pre-fix default) rather than crash or pass repo=None."""
+    wd = _load_watchdog_bound_to_governor_fixture(tmp_path, monkeypatch, "veridian_task_watchdog_under_test_fallback")
+
+    result_msg = wd.escalate("task-with-unreadable-yaml", None, "some failure signature")
+    assert "escalation queued via resource governor" in result_msg, result_msg
+
+    inputs = _umr_inputs_for_identity("rca-task-with-unreadable-yaml")
+    assert inputs["repo"] == "claude-control"
+
+
 if __name__ == "__main__":
     test_branch_resolution_reflects_real_worker_pushed_branch()
     test_branch_resolution_prefers_upstream_over_local_alias()
     test_branch_resolution_noop_when_still_on_original_branch()
+    test_branch_resolution_not_corrupted_to_default_branch_before_first_push()
+    test_escalate_passes_stalled_tasks_real_repo_not_hardcoded_claude_control()
+    test_escalate_falls_back_to_claude_control_when_repo_unknown()
     print("All branch_resolution scenarios passed.")

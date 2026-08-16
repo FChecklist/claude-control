@@ -1,0 +1,14 @@
+{
+  "crm-performance-under-load": "task-20260726-171957-crm-performance-under-load-indexes---loa",
+  "hr-performance-payroll": "task-20260726-172000-hr-performance-error-handling---payroll",
+  "delegation-expiry": "task-20260726-171939-delegation-expiry-enforcement-audit---te",
+  "cityline-ticketing-reverse-eng": "task-20260726-172013-cityline-ticketing-6-role-reverse-engine",
+  "mother-router-roster-memory": "task-20260726-172016-mother-router-and-roster-persistent-memo",
+  "e-invoicing-gstrt-irp": "task-20260726-172009-e-invoicing-per-line-gstrt-fix---irp-for",
+  "chat-context-terminology": "task-20260726-171946-chat-context---terminology---mode-pill-a",
+  "remove-anthropic-api-key": "task-20260726-171926-remove-anthropic-api-key-dead-code-path",
+  "storage-rls-backup-pitr": "task-20260726-171954-storage-rls---backup-pitr---supabase-mon",
+  "preview-deployment-spotcheck": "task-20260726-171950-preview-deployment-spot-check",
+  "search-performance-gin": "task-20260726-172004-search-performance-explain-analyze---gin",
+  "serverless-resource-limit": "task-20260726-171942-serverless-resource-limit-tradeoff-doc"
+}

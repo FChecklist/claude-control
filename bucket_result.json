@@ -1,0 +1,1505 @@
+{
+  "credit_accountant_rejected": [
+    {
+      "task_id": "task-20260718-062002-ai-cost-governance---finops--cost-monito",
+      "title": "AI Cost Governance & FinOps: Cost Monitoring & Forecasting",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.256226+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-062003-ai-cost-governance---finops--cost-visibi",
+      "title": "AI Cost Governance & FinOps: Cost Visibility & Attribution",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.654745+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-064002-ai-documentation--ai-readable-technical",
+      "title": "AI Documentation: AI-Readable Technical Documentation",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:16.654969+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-064004-ai-documentation--documentation-lifecycl",
+      "title": "AI Documentation: Documentation Lifecycle",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:17.137106+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-064006-ai-engineering-quality--ai-modification",
+      "title": "AI Engineering Quality: AI-Modification Readiness",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:15.501965+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-065002-ai-engineering-quality--code-structure",
+      "title": "AI Engineering Quality: Code Structure & Modularity",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:14.800778+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-065003-ai-engineering-quality--error-handling",
+      "title": "AI Engineering Quality: Error Handling & Logging",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:17.143374+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-065005-ai-engineering-quality--logic-separation",
+      "title": "AI Engineering Quality: Logic Separation & Determinism",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:14.365561+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-070002-ai-engineering-quality--overall-code-qua",
+      "title": "AI Engineering Quality: Overall Code Quality",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:14.534925+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-070004-ai-engineering-quality--technical-debt",
+      "title": "AI Engineering Quality: Technical Debt & Complexity",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:17.428078+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-070005-ai-maintainability--ai-safe-change-capab",
+      "title": "AI Maintainability: AI Safe-Change Capability",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:16.509578+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-071002-ai-maintainability--change-risk-manageme",
+      "title": "AI Maintainability: Change Risk Management",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:16.115518+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-071004-ai-model-lifecycle---benchmarking--depre",
+      "title": "AI Model Lifecycle & Benchmarking: Deprecation & Rollback",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:14.686310+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-071005-ai-model-lifecycle---benchmarking--evalu",
+      "title": "AI Model Lifecycle & Benchmarking: Evaluation & Promotion Process",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:18.511821+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-072002-ai-model-lifecycle---benchmarking--ongoi",
+      "title": "AI Model Lifecycle & Benchmarking: Ongoing Quality Monitoring",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:18.633147+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-072004-ai-platform--ai-platform---general",
+      "title": "AI Platform: AI Platform - General",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:16.245173+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-072006-api-governance--rate-limiting--versionin",
+      "title": "API Governance (Rate Limiting, Versioning, Webhooks): API Developer Experience",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:14.647033+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-073003-api-governance--rate-limiting--versionin",
+      "title": "API Governance (Rate Limiting, Versioning, Webhooks): Rate Limiting & Key Scopin",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:19.963827+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-073004-api-governance--rate-limiting--versionin",
+      "title": "API Governance (Rate Limiting, Versioning, Webhooks): Webhook Reliability & Secu",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:13.989397+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-073006-accessibility--wcag-compliance---accessi",
+      "title": "Accessibility (WCAG Compliance): Accessibility Testing",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:19.198943+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-074002-accessibility--wcag-compliance---assisti",
+      "title": "Accessibility (WCAG Compliance): Assistive Technology Support",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:19.140685+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-074004-accessibility--wcag-compliance---navigat",
+      "title": "Accessibility (WCAG Compliance): Navigation & Input Accessibility",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:18.693666+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-074005-accessibility--wcag-compliance---visual",
+      "title": "Accessibility (WCAG Compliance): Visual Accessibility",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:18.547666+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-075002-architecture---design--engineering-princ",
+      "title": "Architecture & Design: Engineering Principles",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.245389+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-075004-architecture---design--reusability-acros",
+      "title": "Architecture & Design: Reusability Across Scope",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:16.651390+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-075006-audit---governance--complete-audit-stamp",
+      "title": "Audit & Governance: Complete Audit Stamp",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:18.739539+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-080002-audit---governance--conversation-audit-l",
+      "title": "Audit & Governance: Conversation Audit Logging",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:18.203237+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-080004-business-rules-engine--rule-governance",
+      "title": "Business Rules Engine: Rule Governance & Quality",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:14.394369+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-080006-business-rules-engine--rule-lifecycle-ma",
+      "title": "Business Rules Engine: Rule Lifecycle Management",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.650595+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-081003-crm---sales-modules--accounts---contacts",
+      "title": "CRM & Sales Modules: Accounts & Contacts",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:17.693631+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-081005-crm---sales-modules--leads",
+      "title": "CRM & Sales Modules: Leads",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:15.715762+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-081006-crm---sales-modules--opportunities",
+      "title": "CRM & Sales Modules: Opportunities",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:15.650382+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-082002-crm---sales-modules--sales-dashboard",
+      "title": "CRM & Sales Modules: Sales Dashboard",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.570915+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-082004-crm---sales-modules--sales-pipeline",
+      "title": "CRM & Sales Modules: Sales Pipeline",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:18.032337+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-083002-crm---sales-modules--veri-reward--gamifi",
+      "title": "CRM & Sales Modules: VERI Reward (Gamification & Referral)",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:14.874145+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-083004-cache---synchronization--cache-integrity",
+      "title": "Cache & Synchronization: Cache Integrity & Security",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:17.174795+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-083006-cache---synchronization--cache-utilizati",
+      "title": "Cache & Synchronization: Cache Utilization & Prediction",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:16.347162+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-095002-retry-0--ai-cost-governance---finops--c",
+      "title": "[retry 0] AI Cost Governance & FinOps: Cost Monitoring & Forecasting",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:18.739343+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-100002-retry-0--ai-cost-governance---finops--c",
+      "title": "[retry 0] AI Cost Governance & FinOps: Cost Visibility & Attribution",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.727372+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-101002-retry-0--ai-documentation--ai-readable",
+      "title": "[retry 0] AI Documentation: AI-Readable Technical Documentation",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.097797+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-105002-retry-1--ai-cost-governance---finops--c",
+      "title": "[retry 1] AI Cost Governance & FinOps: Cost Monitoring & Forecasting",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:19.717129+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-105004-retry-1--ai-cost-governance---finops--c",
+      "title": "[retry 1] AI Cost Governance & FinOps: Cost Visibility & Attribution",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.363906+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-105006-retry-1--ai-documentation--ai-readable",
+      "title": "[retry 1] AI Documentation: AI-Readable Technical Documentation",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:19.901137+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-110002-retry-2--ai-cost-governance---finops--c",
+      "title": "[retry 2] AI Cost Governance & FinOps: Cost Monitoring & Forecasting",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.280553+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-110004-retry-2--ai-cost-governance---finops--c",
+      "title": "[retry 2] AI Cost Governance & FinOps: Cost Visibility & Attribution",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:19.950802+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-110006-retry-2--ai-documentation--ai-readable",
+      "title": "[retry 2] AI Documentation: AI-Readable Technical Documentation",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:16.985889+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-111003-retry-0--ai-documentation--documentatio",
+      "title": "[retry 0] AI Documentation: Documentation Lifecycle",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:19.559272+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-111005-retry-0--ai-engineering-quality--ai-mod",
+      "title": "[retry 0] AI Engineering Quality: AI-Modification Readiness",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.579135+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-111007-retry-0--ai-engineering-quality--code-s",
+      "title": "[retry 0] AI Engineering Quality: Code Structure & Modularity",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:14.690893+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-112002-retry-1--ai-documentation--documentatio",
+      "title": "[retry 1] AI Documentation: Documentation Lifecycle",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.183814+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-112004-retry-1--ai-engineering-quality--ai-mod",
+      "title": "[retry 1] AI Engineering Quality: AI-Modification Readiness",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:17.901268+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-112006-retry-1--ai-engineering-quality--code-s",
+      "title": "[retry 1] AI Engineering Quality: Code Structure & Modularity",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.058647+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-113002-retry-2--ai-documentation--documentatio",
+      "title": "[retry 2] AI Documentation: Documentation Lifecycle",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:16.519363+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-113004-retry-2--ai-engineering-quality--ai-mod",
+      "title": "[retry 2] AI Engineering Quality: AI-Modification Readiness",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:18.527763+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-113005-retry-2--ai-engineering-quality--code-s",
+      "title": "[retry 2] AI Engineering Quality: Code Structure & Modularity",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.613524+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-114002-retry-0--ai-engineering-quality--error",
+      "title": "[retry 0] AI Engineering Quality: Error Handling & Logging",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:16.012629+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-114004-retry-0--ai-engineering-quality--logic",
+      "title": "[retry 0] AI Engineering Quality: Logic Separation & Determinism",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:18.911311+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-114006-retry-0--ai-engineering-quality--overal",
+      "title": "[retry 0] AI Engineering Quality: Overall Code Quality",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:16.424260+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-115002-retry-1--ai-engineering-quality--error",
+      "title": "[retry 1] AI Engineering Quality: Error Handling & Logging",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:16.776898+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-115004-retry-1--ai-engineering-quality--logic",
+      "title": "[retry 1] AI Engineering Quality: Logic Separation & Determinism",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.422404+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-115006-retry-1--ai-engineering-quality--overal",
+      "title": "[retry 1] AI Engineering Quality: Overall Code Quality",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:19.432410+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-120002-retry-2--ai-engineering-quality--error",
+      "title": "[retry 2] AI Engineering Quality: Error Handling & Logging",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:19.411480+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-120004-retry-2--ai-engineering-quality--logic",
+      "title": "[retry 2] AI Engineering Quality: Logic Separation & Determinism",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:19.518179+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-120006-retry-2--ai-engineering-quality--overal",
+      "title": "[retry 2] AI Engineering Quality: Overall Code Quality",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:15.848722+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-121002-retry-0--ai-engineering-quality--techni",
+      "title": "[retry 0] AI Engineering Quality: Technical Debt & Complexity",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:14.989759+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-121004-retry-0--ai-maintainability--ai-safe-ch",
+      "title": "[retry 0] AI Maintainability: AI Safe-Change Capability",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.088977+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-121006-retry-0--ai-maintainability--change-ris",
+      "title": "[retry 0] AI Maintainability: Change Risk Management",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:19.166864+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-122002-retry-1--ai-engineering-quality--techni",
+      "title": "[retry 1] AI Engineering Quality: Technical Debt & Complexity",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.358728+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-122004-retry-1--ai-maintainability--ai-safe-ch",
+      "title": "[retry 1] AI Maintainability: AI Safe-Change Capability",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.226402+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-122006-retry-1--ai-maintainability--change-ris",
+      "title": "[retry 1] AI Maintainability: Change Risk Management",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:18.607337+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-123002-retry-2--ai-engineering-quality--techni",
+      "title": "[retry 2] AI Engineering Quality: Technical Debt & Complexity",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.395370+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-123004-retry-2--ai-maintainability--ai-safe-ch",
+      "title": "[retry 2] AI Maintainability: AI Safe-Change Capability",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.330822+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-123006-retry-2--ai-maintainability--change-ris",
+      "title": "[retry 2] AI Maintainability: Change Risk Management",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.029486+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-124002-retry-0--ai-model-lifecycle---benchmark",
+      "title": "[retry 0] AI Model Lifecycle & Benchmarking: Deprecation & Rollback",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.113107+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-124004-retry-0--ai-model-lifecycle---benchmark",
+      "title": "[retry 0] AI Model Lifecycle & Benchmarking: Evaluation & Promotion Process",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:18.597133+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-124006-retry-0--ai-model-lifecycle---benchmark",
+      "title": "[retry 0] AI Model Lifecycle & Benchmarking: Ongoing Quality Monitoring",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:19.699021+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-125003-retry-1--ai-model-lifecycle---benchmark",
+      "title": "[retry 1] AI Model Lifecycle & Benchmarking: Deprecation & Rollback",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.275014+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-125005-retry-1--ai-model-lifecycle---benchmark",
+      "title": "[retry 1] AI Model Lifecycle & Benchmarking: Evaluation & Promotion Process",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:18.965199+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-125007-retry-1--ai-model-lifecycle---benchmark",
+      "title": "[retry 1] AI Model Lifecycle & Benchmarking: Ongoing Quality Monitoring",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:18.233839+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-130002-retry-2--ai-model-lifecycle---benchmark",
+      "title": "[retry 2] AI Model Lifecycle & Benchmarking: Deprecation & Rollback",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:18.458724+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-130005-retry-2--ai-model-lifecycle---benchmark",
+      "title": "[retry 2] AI Model Lifecycle & Benchmarking: Evaluation & Promotion Process",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.364282+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-130006-retry-2--ai-model-lifecycle---benchmark",
+      "title": "[retry 2] AI Model Lifecycle & Benchmarking: Ongoing Quality Monitoring",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:18.935500+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-131002-retry-0--ai-platform--ai-platform---gen",
+      "title": "[retry 0] AI Platform: AI Platform - General",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.231718+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-131005-retry-0--api-governance--rate-limiting",
+      "title": "[retry 0] API Governance (Rate Limiting, Versioning, Webhooks): API Developer Ex",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:19.472357+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-131006-retry-0--api-governance--rate-limiting",
+      "title": "[retry 0] API Governance (Rate Limiting, Versioning, Webhooks): Rate Limiting & ",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.579396+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-132003-retry-1--ai-platform--ai-platform---gen",
+      "title": "[retry 1] AI Platform: AI Platform - General",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.129121+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-132005-retry-1--api-governance--rate-limiting",
+      "title": "[retry 1] API Governance (Rate Limiting, Versioning, Webhooks): API Developer Ex",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:16.721830+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-132007-retry-1--api-governance--rate-limiting",
+      "title": "[retry 1] API Governance (Rate Limiting, Versioning, Webhooks): Rate Limiting & ",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:18.778536+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-133002-retry-2--ai-platform--ai-platform---gen",
+      "title": "[retry 2] AI Platform: AI Platform - General",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:18.940747+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-133004-retry-2--api-governance--rate-limiting",
+      "title": "[retry 2] API Governance (Rate Limiting, Versioning, Webhooks): API Developer Ex",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.202262+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-133006-retry-2--api-governance--rate-limiting",
+      "title": "[retry 2] API Governance (Rate Limiting, Versioning, Webhooks): Rate Limiting & ",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:19.957800+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-134002-retry-0--api-governance--rate-limiting",
+      "title": "[retry 0] API Governance (Rate Limiting, Versioning, Webhooks): Webhook Reliabil",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:15.622770+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-134004-retry-0--accessibility--wcag-compliance",
+      "title": "[retry 0] Accessibility (WCAG Compliance): Accessibility Testing",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:18.562259+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-134006-retry-0--accessibility--wcag-compliance",
+      "title": "[retry 0] Accessibility (WCAG Compliance): Assistive Technology Support",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.255135+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-135002-retry-1--api-governance--rate-limiting",
+      "title": "[retry 1] API Governance (Rate Limiting, Versioning, Webhooks): Webhook Reliabil",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:16.003777+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-135004-retry-1--accessibility--wcag-compliance",
+      "title": "[retry 1] Accessibility (WCAG Compliance): Accessibility Testing",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:19.927978+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-135006-retry-1--accessibility--wcag-compliance",
+      "title": "[retry 1] Accessibility (WCAG Compliance): Assistive Technology Support",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.418073+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-140002-retry-2--api-governance--rate-limiting",
+      "title": "[retry 2] API Governance (Rate Limiting, Versioning, Webhooks): Webhook Reliabil",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.075918+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-140004-retry-2--accessibility--wcag-compliance",
+      "title": "[retry 2] Accessibility (WCAG Compliance): Accessibility Testing",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.322767+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-140006-retry-2--accessibility--wcag-compliance",
+      "title": "[retry 2] Accessibility (WCAG Compliance): Assistive Technology Support",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.314508+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-141002-retry-0--accessibility--wcag-compliance",
+      "title": "[retry 0] Accessibility (WCAG Compliance): Navigation & Input Accessibility",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.255615+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-141004-retry-0--accessibility--wcag-compliance",
+      "title": "[retry 0] Accessibility (WCAG Compliance): Visual Accessibility",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:15.569858+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-141006-retry-0--architecture---design--enginee",
+      "title": "[retry 0] Architecture & Design: Engineering Principles",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:16.519202+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-142002-retry-1--accessibility--wcag-compliance",
+      "title": "[retry 1] Accessibility (WCAG Compliance): Navigation & Input Accessibility",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:19.597847+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-142004-retry-1--accessibility--wcag-compliance",
+      "title": "[retry 1] Accessibility (WCAG Compliance): Visual Accessibility",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.454741+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-142006-retry-1--architecture---design--enginee",
+      "title": "[retry 1] Architecture & Design: Engineering Principles",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:19.033180+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-143002-retry-2--accessibility--wcag-compliance",
+      "title": "[retry 2] Accessibility (WCAG Compliance): Navigation & Input Accessibility",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:19.694063+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-143004-retry-2--accessibility--wcag-compliance",
+      "title": "[retry 2] Accessibility (WCAG Compliance): Visual Accessibility",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.229146+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-143006-retry-2--architecture---design--enginee",
+      "title": "[retry 2] Architecture & Design: Engineering Principles",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.252410+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-144002-retry-0--architecture---design--reusabi",
+      "title": "[retry 0] Architecture & Design: Reusability Across Scope",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:19.650712+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-144005-retry-0--audit---governance--complete-a",
+      "title": "[retry 0] Audit & Governance: Complete Audit Stamp",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:19.091699+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-144007-retry-0--audit---governance--conversati",
+      "title": "[retry 0] Audit & Governance: Conversation Audit Logging",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.136055+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-145002-retry-1--architecture---design--reusabi",
+      "title": "[retry 1] Architecture & Design: Reusability Across Scope",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:19.167344+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-145004-retry-1--audit---governance--complete-a",
+      "title": "[retry 1] Audit & Governance: Complete Audit Stamp",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.224384+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-145007-retry-1--audit---governance--conversati",
+      "title": "[retry 1] Audit & Governance: Conversation Audit Logging",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:19.703752+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-150002-retry-2--architecture---design--reusabi",
+      "title": "[retry 2] Architecture & Design: Reusability Across Scope",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.187990+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-150004-retry-2--audit---governance--complete-a",
+      "title": "[retry 2] Audit & Governance: Complete Audit Stamp",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.246285+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-150006-retry-2--audit---governance--conversati",
+      "title": "[retry 2] Audit & Governance: Conversation Audit Logging",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:18.297981+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-151002-retry-0--business-rules-engine--rule-go",
+      "title": "[retry 0] Business Rules Engine: Rule Governance & Quality",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.189880+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-151004-retry-0--business-rules-engine--rule-li",
+      "title": "[retry 0] Business Rules Engine: Rule Lifecycle Management",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:19.351505+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-151006-retry-0--crm---sales-modules--accounts",
+      "title": "[retry 0] CRM & Sales Modules: Accounts & Contacts",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.622376+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-152002-retry-1--business-rules-engine--rule-go",
+      "title": "[retry 1] Business Rules Engine: Rule Governance & Quality",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.404346+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-152004-retry-1--business-rules-engine--rule-li",
+      "title": "[retry 1] Business Rules Engine: Rule Lifecycle Management",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:19.714231+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-152006-retry-1--crm---sales-modules--accounts",
+      "title": "[retry 1] CRM & Sales Modules: Accounts & Contacts",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:19.278388+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-153002-retry-2--business-rules-engine--rule-go",
+      "title": "[retry 2] Business Rules Engine: Rule Governance & Quality",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.235065+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-153005-retry-2--business-rules-engine--rule-li",
+      "title": "[retry 2] Business Rules Engine: Rule Lifecycle Management",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:19.706119+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-153007-retry-2--crm---sales-modules--accounts",
+      "title": "[retry 2] CRM & Sales Modules: Accounts & Contacts",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:19.727236+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-154002-retry-0--crm---sales-modules--leads",
+      "title": "[retry 0] CRM & Sales Modules: Leads",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:19.548145+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-154005-retry-0--crm---sales-modules--opportuni",
+      "title": "[retry 0] CRM & Sales Modules: Opportunities",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.413819+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-154007-retry-0--crm---sales-modules--sales-das",
+      "title": "[retry 0] CRM & Sales Modules: Sales Dashboard",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:18.653113+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-155002-retry-1--crm---sales-modules--leads",
+      "title": "[retry 1] CRM & Sales Modules: Leads",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:19.556632+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-155004-retry-1--crm---sales-modules--opportuni",
+      "title": "[retry 1] CRM & Sales Modules: Opportunities",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.296925+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-155006-retry-1--crm---sales-modules--sales-das",
+      "title": "[retry 1] CRM & Sales Modules: Sales Dashboard",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.415466+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-160002-retry-2--crm---sales-modules--leads",
+      "title": "[retry 2] CRM & Sales Modules: Leads",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.243882+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-160004-retry-2--crm---sales-modules--opportuni",
+      "title": "[retry 2] CRM & Sales Modules: Opportunities",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.244958+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-160006-retry-2--crm---sales-modules--sales-das",
+      "title": "[retry 2] CRM & Sales Modules: Sales Dashboard",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.386507+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-161003-retry-0--crm---sales-modules--sales-pip",
+      "title": "[retry 0] CRM & Sales Modules: Sales Pipeline",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.079566+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-161005-retry-0--crm---sales-modules--veri-rewa",
+      "title": "[retry 0] CRM & Sales Modules: VERI Reward (Gamification & Referral)",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:19.551489+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-161007-retry-0--cache---synchronization--cache",
+      "title": "[retry 0] Cache & Synchronization: Cache Integrity & Security",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:19.260686+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-162002-retry-1--crm---sales-modules--sales-pip",
+      "title": "[retry 1] CRM & Sales Modules: Sales Pipeline",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.313090+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-162004-retry-1--crm---sales-modules--veri-rewa",
+      "title": "[retry 1] CRM & Sales Modules: VERI Reward (Gamification & Referral)",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:19.685909+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-162006-retry-1--cache---synchronization--cache",
+      "title": "[retry 1] Cache & Synchronization: Cache Integrity & Security",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.277395+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-163002-retry-2--crm---sales-modules--sales-pip",
+      "title": "[retry 2] CRM & Sales Modules: Sales Pipeline",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.314592+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-163005-retry-2--crm---sales-modules--veri-rewa",
+      "title": "[retry 2] CRM & Sales Modules: VERI Reward (Gamification & Referral)",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.213033+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-163007-retry-2--cache---synchronization--cache",
+      "title": "[retry 2] Cache & Synchronization: Cache Integrity & Security",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:18.659018+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-164002-retry-0--cache---synchronization--cache",
+      "title": "[retry 0] Cache & Synchronization: Cache Utilization & Prediction",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.427192+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-164005-cloud-deployment--deployment-automation",
+      "title": "Cloud Deployment: Deployment Automation",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.062581+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-164007-cloud-deployment--deployment-operations",
+      "title": "Cloud Deployment: Deployment Operations",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.096276+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-165002-retry-1--cache---synchronization--cache",
+      "title": "[retry 1] Cache & Synchronization: Cache Utilization & Prediction",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:19.263010+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-165004-retry-1--cloud-deployment--deployment-a",
+      "title": "[retry 1] Cloud Deployment: Deployment Automation",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:19.838615+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-165006-retry-1--cloud-deployment--deployment-o",
+      "title": "[retry 1] Cloud Deployment: Deployment Operations",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.555100+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-170002-retry-2--cache---synchronization--cache",
+      "title": "[retry 2] Cache & Synchronization: Cache Utilization & Prediction",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.242849+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-170004-retry-2--cloud-deployment--deployment-a",
+      "title": "[retry 2] Cloud Deployment: Deployment Automation",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.533608+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-170006-retry-2--cloud-deployment--deployment-o",
+      "title": "[retry 2] Cloud Deployment: Deployment Operations",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.426013+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-171002-cognitive-architecture--cognitive-consis",
+      "title": "Cognitive Architecture: Cognitive Consistency & Maturity",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.298665+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-171005-cognitive-architecture--deterministic-fi",
+      "title": "Cognitive Architecture: Deterministic-First Principles",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.617799+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-171007-commercial--subscription---pricing-model",
+      "title": "Commercial: Subscription & Pricing Model",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:19.579604+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-172003-retry-1--cognitive-architecture--cognit",
+      "title": "[retry 1] Cognitive Architecture: Cognitive Consistency & Maturity",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.356371+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-172005-retry-1--cognitive-architecture--determ",
+      "title": "[retry 1] Cognitive Architecture: Deterministic-First Principles",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.634213+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-172007-retry-1--commercial--subscription---pri",
+      "title": "[retry 1] Commercial: Subscription & Pricing Model",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:19.981435+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-173003-retry-2--cognitive-architecture--cognit",
+      "title": "[retry 2] Cognitive Architecture: Cognitive Consistency & Maturity",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.529537+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-173005-retry-2--cognitive-architecture--determ",
+      "title": "[retry 2] Cognitive Architecture: Deterministic-First Principles",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.430843+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260718-173007-retry-2--commercial--subscription---pri",
+      "title": "[retry 2] Commercial: Subscription & Pricing Model",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T18:43:20.013369+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): OpenRouter balance $-0.0676 below $0.1 floor -- real money problem, not a code gap"
+    },
+    {
+      "task_id": "task-20260720-044002-superboss-v2-plan--delegation-expiry-enf",
+      "title": "SUPERBOSS_V2_PLAN: Delegation expiry enforcement audit + test",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-21T06:00:07.157055+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): existing software/mechanism already covers this (system_index match) -- use it instead of spending AI credits"
+    },
+    {
+      "task_id": "task-20260720-045002-retry-1--superboss-v2-plan--delegation",
+      "title": "[retry 1] SUPERBOSS_V2_PLAN: Delegation expiry enforcement audit + test",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-21T06:00:07.399829+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): existing software/mechanism already covers this (system_index match) -- use it instead of spending AI credits"
+    },
+    {
+      "task_id": "task-20260720-045004-superboss-v2-plan--serverless-resource-l",
+      "title": "SUPERBOSS_V2_PLAN: Serverless resource-limit tradeoff doc + heavy-workload audit",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-21T06:00:07.397784+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): existing software/mechanism already covers this (system_index match) -- use it instead of spending AI credits"
+    },
+    {
+      "task_id": "task-20260720-045007-superboss-v2-plan--chat-context---termin",
+      "title": "SUPERBOSS_V2_PLAN: Chat context + terminology + mode-pill analytics",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-21T06:00:07.623219+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): existing software/mechanism already covers this (system_index match) -- use it instead of spending AI credits"
+    },
+    {
+      "task_id": "task-20260720-045009-superboss-v2-plan--preview-deployment-sp",
+      "title": "SUPERBOSS_V2_PLAN: Preview deployment spot-check",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-21T06:00:07.612497+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): existing software/mechanism already covers this (system_index match) -- use it instead of spending AI credits"
+    },
+    {
+      "task_id": "task-20260720-050004-retry-1--superboss-v2-plan--serverless",
+      "title": "[retry 1] SUPERBOSS_V2_PLAN: Serverless resource-limit tradeoff doc + heavy-work",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-21T06:00:07.824441+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): existing software/mechanism already covers this (system_index match) -- use it instead of spending AI credits"
+    },
+    {
+      "task_id": "task-20260720-050006-retry-1--superboss-v2-plan--chat-contex",
+      "title": "[retry 1] SUPERBOSS_V2_PLAN: Chat context + terminology + mode-pill analytics",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-21T06:00:08.048357+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): existing software/mechanism already covers this (system_index match) -- use it instead of spending AI credits"
+    },
+    {
+      "task_id": "task-20260720-050008-retry-1--superboss-v2-plan--preview-dep",
+      "title": "[retry 1] SUPERBOSS_V2_PLAN: Preview deployment spot-check",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-21T06:00:07.964901+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): existing software/mechanism already covers this (system_index match) -- use it instead of spending AI credits"
+    },
+    {
+      "task_id": "task-20260720-050010-superboss-v2-plan--storage-rls---backup",
+      "title": "SUPERBOSS_V2_PLAN: Storage RLS + backup PITR + Supabase monitoring audit",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-21T06:00:08.367409+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): existing software/mechanism already covers this (system_index match) -- use it instead of spending AI credits"
+    },
+    {
+      "task_id": "task-20260720-051008-retry-1--superboss-v2-plan--storage-rls",
+      "title": "[retry 1] SUPERBOSS_V2_PLAN: Storage RLS + backup PITR + Supabase monitoring aud",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-21T06:00:08.432175+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): existing software/mechanism already covers this (system_index match) -- use it instead of spending AI credits"
+    },
+    {
+      "task_id": "task-20260720-051011-superboss-v2-plan--crm-performance-under",
+      "title": "SUPERBOSS_V2_PLAN: CRM performance-under-load indexes + load-test harness",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-21T06:00:08.503435+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): existing software/mechanism already covers this (system_index match) -- use it instead of spending AI credits"
+    },
+    {
+      "task_id": "task-20260720-052004-retry-1--superboss-v2-plan--crm-perform",
+      "title": "[retry 1] SUPERBOSS_V2_PLAN: CRM performance-under-load indexes + load-test harn",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-21T06:00:08.323271+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): existing software/mechanism already covers this (system_index match) -- use it instead of spending AI credits"
+    },
+    {
+      "task_id": "task-20260720-052006-superboss-v2-plan--hr-performance-error",
+      "title": "SUPERBOSS_V2_PLAN: HR performance/error-handling + payroll rate audit",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-21T06:00:08.254280+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): existing software/mechanism already covers this (system_index match) -- use it instead of spending AI credits"
+    },
+    {
+      "task_id": "task-20260720-052008-superboss-v2-plan--multi-office-selector",
+      "title": "SUPERBOSS_V2_PLAN: Multi-office selector correctness audit",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-21T06:00:08.540965+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): existing software/mechanism already covers this (system_index match) -- use it instead of spending AI credits"
+    },
+    {
+      "task_id": "task-20260720-052011-superboss-v2-plan--prompt---cache-real-p",
+      "title": "SUPERBOSS_V2_PLAN: Prompt & Cache real production metrics",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-21T06:00:08.405684+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): existing software/mechanism already covers this (system_index match) -- use it instead of spending AI credits"
+    },
+    {
+      "task_id": "task-20260720-053004-retry-1--superboss-v2-plan--hr-performa",
+      "title": "[retry 1] SUPERBOSS_V2_PLAN: HR performance/error-handling + payroll rate audit",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-21T06:00:08.509833+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): existing software/mechanism already covers this (system_index match) -- use it instead of spending AI credits"
+    },
+    {
+      "task_id": "task-20260720-053007-retry-1--superboss-v2-plan--multi-offic",
+      "title": "[retry 1] SUPERBOSS_V2_PLAN: Multi-office selector correctness audit",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-21T06:00:08.527405+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): existing software/mechanism already covers this (system_index match) -- use it instead of spending AI credits"
+    },
+    {
+      "task_id": "task-20260720-053009-retry-1--superboss-v2-plan--prompt---ca",
+      "title": "[retry 1] SUPERBOSS_V2_PLAN: Prompt & Cache real production metrics",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-21T06:00:08.669739+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): existing software/mechanism already covers this (system_index match) -- use it instead of spending AI credits"
+    },
+    {
+      "task_id": "task-20260720-053011-superboss-v2-plan--search-performance-ex",
+      "title": "SUPERBOSS_V2_PLAN: Search performance EXPLAIN ANALYZE + GIN index",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-21T06:00:08.668323+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): existing software/mechanism already covers this (system_index match) -- use it instead of spending AI credits"
+    },
+    {
+      "task_id": "task-20260720-054009-retry-1--superboss-v2-plan--search-perf",
+      "title": "[retry 1] SUPERBOSS_V2_PLAN: Search performance EXPLAIN ANALYZE + GIN index",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-21T06:00:08.917615+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): existing software/mechanism already covers this (system_index match) -- use it instead of spending AI credits"
+    },
+    {
+      "task_id": "task-20260720-054011-superboss-v2-plan--e-invoicing-per-line",
+      "title": "SUPERBOSS_V2_PLAN: E-invoicing per-line GstRt fix + IRP format scaffolding",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-21T06:00:08.739641+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): existing software/mechanism already covers this (system_index match) -- use it instead of spending AI credits"
+    },
+    {
+      "task_id": "task-20260720-054314-canary-zero-waste-pipeline-test",
+      "title": "CANARY zero-waste-pipeline test",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-21T06:00:08.721878+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): existing software/mechanism already covers this (system_index match) -- use it instead of spending AI credits"
+    },
+    {
+      "task_id": "task-20260720-055004-retry-1--superboss-v2-plan--e-invoicing",
+      "title": "[retry 1] SUPERBOSS_V2_PLAN: E-invoicing per-line GstRt fix + IRP format scaffol",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-21T06:00:08.772773+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): existing software/mechanism already covers this (system_index match) -- use it instead of spending AI credits"
+    },
+    {
+      "task_id": "task-20260720-060747-billstack-bharatnet-reverse-engineering",
+      "title": "Billstack bharatnet reverse-engineering",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-21T06:00:08.880952+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): existing software/mechanism already covers this (system_index match) -- use it instead of spending AI credits"
+    },
+    {
+      "task_id": "task-20260720-060749-cityline-crm-billstack-reverse-engineeri",
+      "title": "Cityline CRM+Billstack reverse-engineering",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-21T06:00:08.839122+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): existing software/mechanism already covers this (system_index match) -- use it instead of spending AI credits"
+    },
+    {
+      "task_id": "task-20260720-060750-cityline-contracts-reverse-engineering",
+      "title": "Cityline Contracts reverse-engineering",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-21T06:00:08.862791+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): existing software/mechanism already covers this (system_index match) -- use it instead of spending AI credits"
+    },
+    {
+      "task_id": "task-20260720-060752-cityline-ticketing-6-role-reverse-engine",
+      "title": "Cityline Ticketing 6-role reverse-engineering",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-21T06:00:08.813046+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): existing software/mechanism already covers this (system_index match) -- use it instead of spending AI credits"
+    },
+    {
+      "task_id": "task-20260721-044724-wave-1--crm-schema---service-gaps--lost",
+      "title": "Wave 1: CRM schema + service gaps (lost reason, activities, campaigns, CRUD audit)",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-21T04:47:29.174138+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): existing software/mechanism already covers this (system_index match) -- use it instead of spending AI credits"
+    },
+    {
+      "task_id": "task-20260721-050239-wave-1-v2--crm-schema---service-gaps--lo",
+      "title": "Wave 1 v2: CRM schema + service gaps (lost reason, activities, campaigns, CRUD audit)",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-21T05:02:44.169474+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): existing software/mechanism already covers this (system_index match) -- use it instead of spending AI credits"
+    },
+    {
+      "task_id": "task-20260721-051357-wave-1-v3--crm-schema---service-gaps--lo",
+      "title": "Wave 1 v3: CRM schema + service gaps (lost reason, activities, campaigns, CRUD audit)",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-21T05:14:12.392137+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): accountant call failed, failing closed: claude -p reported is_error: "
+    },
+    {
+      "task_id": "task-20260722-073927-mother-router-and-roster-persistent-memo",
+      "title": "mother-router-and-roster-persistent-memory",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-22T07:39:34.835288+00:00",
+      "note": "PRE-FLIGHT HARD STOP (credit_accountant_rejected): existing software/mechanism already covers this (system_index match) -- use it instead of spending AI credits"
+    }
+  ],
+  "openrouter_balance_exhausted": [
+    {
+      "task_id": "task-20260720-022700-superboss-v2-plan--finish-the-uae-countr",
+      "title": "SUPERBOSS_V2_PLAN: Finish the UAE country pack (Multi-Country pluggability proof",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T11:23:17.551365+00:00",
+      "note": "PRE-FLIGHT HARD STOP (openrouter_balance_exhausted): OpenRouter account has $-0.0676 remaining ($40.07 used of $40.00 credits) -- below the $0.1 safety floor. This is the REAL, live account balance, not this proxy's own internal spend tracker. Add credits at https://openrouter.ai/settings/credits before retrying -- this is a real money problem, not a code bug, and retrying will not help until the balance is restored."
+    },
+    {
+      "task_id": "task-20260720-022708-superboss-v2-plan--shared-cross-repo-pro",
+      "title": "SUPERBOSS_V2_PLAN: Shared cross-repo prompt-pattern module",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T11:23:17.552157+00:00",
+      "note": "PRE-FLIGHT HARD STOP (openrouter_balance_exhausted): OpenRouter account has $-0.0676 remaining ($40.07 used of $40.00 credits) -- below the $0.1 safety floor. This is the REAL, live account balance, not this proxy's own internal spend tracker. Add credits at https://openrouter.ai/settings/credits before retrying -- this is a real money problem, not a code bug, and retrying will not help until the balance is restored."
+    },
+    {
+      "task_id": "task-20260720-022710-superboss-v2-plan--byob-bring-your-own-a",
+      "title": "SUPERBOSS_V2_PLAN: BYOB bring-your-own-AI-model",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T11:24:31.324720+00:00",
+      "note": "PRE-FLIGHT HARD STOP (openrouter_balance_exhausted): OpenRouter account has $-0.0676 remaining ($40.07 used of $40.00 credits) -- below the $0.1 safety floor. This is the REAL, live account balance, not this proxy's own internal spend tracker. Add credits at https://openrouter.ai/settings/credits before retrying -- this is a real money problem, not a code bug, and retrying will not help until the balance is restored."
+    },
+    {
+      "task_id": "task-20260720-031002-superboss-v2-plan--persistent-vercel-sta",
+      "title": "SUPERBOSS_V2_PLAN: Persistent Vercel staging env + per-env var scoping",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T11:24:31.175325+00:00",
+      "note": "PRE-FLIGHT HARD STOP (openrouter_balance_exhausted): OpenRouter account has $-0.0676 remaining ($40.07 used of $40.00 credits) -- below the $0.1 safety floor. This is the REAL, live account balance, not this proxy's own internal spend tracker. Add credits at https://openrouter.ai/settings/credits before retrying -- this is a real money problem, not a code bug, and retrying will not help until the balance is restored."
+    },
+    {
+      "task_id": "task-20260720-035002-superboss-v2-plan--surface-loop-derived",
+      "title": "SUPERBOSS_V2_PLAN: Surface loop-derived insights conversationally",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T11:24:30.321545+00:00",
+      "note": "PRE-FLIGHT HARD STOP (openrouter_balance_exhausted): OpenRouter account has $-0.0676 remaining ($40.07 used of $40.00 credits) -- below the $0.1 safety floor. This is the REAL, live account balance, not this proxy's own internal spend tracker. Add credits at https://openrouter.ai/settings/credits before retrying -- this is a real money problem, not a code bug, and retrying will not help until the balance is restored."
+    },
+    {
+      "task_id": "task-20260720-050001-retry-2--superboss-v2-plan--delegation",
+      "title": "[retry 2] SUPERBOSS_V2_PLAN: Delegation expiry enforcement audit + test",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T11:24:30.460747+00:00",
+      "note": "PRE-FLIGHT HARD STOP (openrouter_balance_exhausted): OpenRouter account has $-0.0676 remaining ($40.07 used of $40.00 credits) -- below the $0.1 safety floor. This is the REAL, live account balance, not this proxy's own internal spend tracker. Add credits at https://openrouter.ai/settings/credits before retrying -- this is a real money problem, not a code bug, and retrying will not help until the balance is restored."
+    },
+    {
+      "task_id": "task-20260720-051002-retry-2--superboss-v2-plan--serverless",
+      "title": "[retry 2] SUPERBOSS_V2_PLAN: Serverless resource-limit tradeoff doc + heavy-work",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T11:24:30.690598+00:00",
+      "note": "PRE-FLIGHT HARD STOP (openrouter_balance_exhausted): OpenRouter account has $-0.0676 remaining ($40.07 used of $40.00 credits) -- below the $0.1 safety floor. This is the REAL, live account balance, not this proxy's own internal spend tracker. Add credits at https://openrouter.ai/settings/credits before retrying -- this is a real money problem, not a code bug, and retrying will not help until the balance is restored."
+    },
+    {
+      "task_id": "task-20260720-051004-retry-2--superboss-v2-plan--chat-contex",
+      "title": "[retry 2] SUPERBOSS_V2_PLAN: Chat context + terminology + mode-pill analytics",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T11:24:31.080273+00:00",
+      "note": "PRE-FLIGHT HARD STOP (openrouter_balance_exhausted): OpenRouter account has $-0.0676 remaining ($40.07 used of $40.00 credits) -- below the $0.1 safety floor. This is the REAL, live account balance, not this proxy's own internal spend tracker. Add credits at https://openrouter.ai/settings/credits before retrying -- this is a real money problem, not a code bug, and retrying will not help until the balance is restored."
+    },
+    {
+      "task_id": "task-20260720-051006-retry-2--superboss-v2-plan--preview-dep",
+      "title": "[retry 2] SUPERBOSS_V2_PLAN: Preview deployment spot-check",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T11:24:30.951405+00:00",
+      "note": "PRE-FLIGHT HARD STOP (openrouter_balance_exhausted): OpenRouter account has $-0.0676 remaining ($40.07 used of $40.00 credits) -- below the $0.1 safety floor. This is the REAL, live account balance, not this proxy's own internal spend tracker. Add credits at https://openrouter.ai/settings/credits before retrying -- this is a real money problem, not a code bug, and retrying will not help until the balance is restored."
+    },
+    {
+      "task_id": "task-20260720-052001-retry-2--superboss-v2-plan--storage-rls",
+      "title": "[retry 2] SUPERBOSS_V2_PLAN: Storage RLS + backup PITR + Supabase monitoring aud",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T11:24:31.267628+00:00",
+      "note": "PRE-FLIGHT HARD STOP (openrouter_balance_exhausted): OpenRouter account has $-0.0676 remaining ($40.07 used of $40.00 credits) -- below the $0.1 safety floor. This is the REAL, live account balance, not this proxy's own internal spend tracker. Add credits at https://openrouter.ai/settings/credits before retrying -- this is a real money problem, not a code bug, and retrying will not help until the balance is restored."
+    },
+    {
+      "task_id": "task-20260720-053002-retry-2--superboss-v2-plan--crm-perform",
+      "title": "[retry 2] SUPERBOSS_V2_PLAN: CRM performance-under-load indexes + load-test harn",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T11:24:31.327323+00:00",
+      "note": "PRE-FLIGHT HARD STOP (openrouter_balance_exhausted): OpenRouter account has $-0.0676 remaining ($40.07 used of $40.00 credits) -- below the $0.1 safety floor. This is the REAL, live account balance, not this proxy's own internal spend tracker. Add credits at https://openrouter.ai/settings/credits before retrying -- this is a real money problem, not a code bug, and retrying will not help until the balance is restored."
+    },
+    {
+      "task_id": "task-20260720-054001-retry-2--superboss-v2-plan--hr-performa",
+      "title": "[retry 2] SUPERBOSS_V2_PLAN: HR performance/error-handling + payroll rate audit",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T11:24:31.459641+00:00",
+      "note": "PRE-FLIGHT HARD STOP (openrouter_balance_exhausted): OpenRouter account has $-0.0676 remaining ($40.07 used of $40.00 credits) -- below the $0.1 safety floor. This is the REAL, live account balance, not this proxy's own internal spend tracker. Add credits at https://openrouter.ai/settings/credits before retrying -- this is a real money problem, not a code bug, and retrying will not help until the balance is restored."
+    },
+    {
+      "task_id": "task-20260720-054004-retry-2--superboss-v2-plan--multi-offic",
+      "title": "[retry 2] SUPERBOSS_V2_PLAN: Multi-office selector correctness audit",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T11:24:31.705308+00:00",
+      "note": "PRE-FLIGHT HARD STOP (openrouter_balance_exhausted): OpenRouter account has $-0.0676 remaining ($40.07 used of $40.00 credits) -- below the $0.1 safety floor. This is the REAL, live account balance, not this proxy's own internal spend tracker. Add credits at https://openrouter.ai/settings/credits before retrying -- this is a real money problem, not a code bug, and retrying will not help until the balance is restored."
+    },
+    {
+      "task_id": "task-20260720-054006-retry-2--superboss-v2-plan--prompt---ca",
+      "title": "[retry 2] SUPERBOSS_V2_PLAN: Prompt & Cache real production metrics",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T11:24:31.461390+00:00",
+      "note": "PRE-FLIGHT HARD STOP (openrouter_balance_exhausted): OpenRouter account has $-0.0676 remaining ($40.07 used of $40.00 credits) -- below the $0.1 safety floor. This is the REAL, live account balance, not this proxy's own internal spend tracker. Add credits at https://openrouter.ai/settings/credits before retrying -- this is a real money problem, not a code bug, and retrying will not help until the balance is restored."
+    },
+    {
+      "task_id": "task-20260720-055002-retry-2--superboss-v2-plan--search-perf",
+      "title": "[retry 2] SUPERBOSS_V2_PLAN: Search performance EXPLAIN ANALYZE + GIN index",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T11:24:31.554733+00:00",
+      "note": "PRE-FLIGHT HARD STOP (openrouter_balance_exhausted): OpenRouter account has $-0.0676 remaining ($40.07 used of $40.00 credits) -- below the $0.1 safety floor. This is the REAL, live account balance, not this proxy's own internal spend tracker. Add credits at https://openrouter.ai/settings/credits before retrying -- this is a real money problem, not a code bug, and retrying will not help until the balance is restored."
+    },
+    {
+      "task_id": "task-20260720-055007-superboss-v2-plan--executive-reporting-d",
+      "title": "SUPERBOSS_V2_PLAN: Executive reporting drill-down + cadence scheduled job",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T11:24:31.573405+00:00",
+      "note": "PRE-FLIGHT HARD STOP (openrouter_balance_exhausted): OpenRouter account has $-0.0676 remaining ($40.07 used of $40.00 credits) -- below the $0.1 safety floor. This is the REAL, live account balance, not this proxy's own internal spend tracker. Add credits at https://openrouter.ai/settings/credits before retrying -- this is a real money problem, not a code bug, and retrying will not help until the balance is restored."
+    },
+    {
+      "task_id": "task-20260720-055009-superboss-v2-plan--remove-anthropic-api",
+      "title": "SUPERBOSS_V2_PLAN: Remove ANTHROPIC_API_KEY dead code path",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T11:24:31.437403+00:00",
+      "note": "PRE-FLIGHT HARD STOP (openrouter_balance_exhausted): OpenRouter account has $-0.0676 remaining ($40.07 used of $40.00 credits) -- below the $0.1 safety floor. This is the REAL, live account balance, not this proxy's own internal spend tracker. Add credits at https://openrouter.ai/settings/credits before retrying -- this is a real money problem, not a code bug, and retrying will not help until the balance is restored."
+    },
+    {
+      "task_id": "task-20260720-055011-superboss-v2-plan--crm-contacts-list-rou",
+      "title": "SUPERBOSS_V2_PLAN: CRM Contacts list route + page (the one genuinely-missing Wav",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T11:24:31.484299+00:00",
+      "note": "PRE-FLIGHT HARD STOP (openrouter_balance_exhausted): OpenRouter account has $-0.0676 remaining ($40.07 used of $40.00 credits) -- below the $0.1 safety floor. This is the REAL, live account balance, not this proxy's own internal spend tracker. Add credits at https://openrouter.ai/settings/credits before retrying -- this is a real money problem, not a code bug, and retrying will not help until the balance is restored."
+    },
+    {
+      "task_id": "task-20260720-060002-retry-2--superboss-v2-plan--e-invoicing",
+      "title": "[retry 2] SUPERBOSS_V2_PLAN: E-invoicing per-line GstRt fix + IRP format scaffol",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T11:24:31.591431+00:00",
+      "note": "PRE-FLIGHT HARD STOP (openrouter_balance_exhausted): OpenRouter account has $-0.0676 remaining ($40.07 used of $40.00 credits) -- below the $0.1 safety floor. This is the REAL, live account balance, not this proxy's own internal spend tracker. Add credits at https://openrouter.ai/settings/credits before retrying -- this is a real money problem, not a code bug, and retrying will not help until the balance is restored."
+    },
+    {
+      "task_id": "task-20260720-060006-superboss-v2-plan--continue-the-autonomo",
+      "title": "SUPERBOSS_V2_PLAN: Continue the autonomous gap_queue (system-driven, NOT a manua",
+      "status": "blocked",
+      "last_checkpoint_at": "2026-07-20T11:24:31.565576+00:00",
+      "note": "PRE-FLIGHT HARD STOP (openrouter_balance_exhausted): OpenRouter account has $-0.0676 remaining ($40.07 used of $40.00 credits) -- below the $0.1 safety floor. This is the REAL, live account balance, not this proxy's own internal spend tracker. Add credits at https://openrouter.ai/settings/credits before retrying -- this is a real money problem, not a code bug, and retrying will not help until the balance is restored."
+    }
+  ],
+  "errors": []
+}

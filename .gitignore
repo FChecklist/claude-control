@@ -10,3 +10,4 @@ __pycache__/
 # checkpoint history (task.yaml, read via `veridian-task.py resume-context`), which
 # already parses this file straight off disk and does not depend on git tracking it.
 PROGRESS.md
+.scratch/

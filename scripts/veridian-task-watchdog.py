@@ -92,7 +92,6 @@ import argparse
 import glob
 import json
 import os
-import re
 import sqlite3
 import subprocess
 import sys
@@ -106,12 +105,33 @@ WATCHDOG_LOG = f"{LOGS_DIR}/watchdog.jsonl"
 ATTENTION_PATH = f"{LOGS_DIR}/ATTENTION.md"
 DB_PATH = "/opt/veridian/ai-os/memory/superboss-register.sqlite"
 SUPERBOSS_REGISTER = "/opt/veridian/scripts/superboss-register.py"
-VERIDIAN_TASK = "/opt/veridian/scripts/veridian-task.py"
 
 STALL_MINUTES = 20
 LOOP_COUNT = 3
 RECHECK_DELAY_SECONDS = 60
 SIGNATURE_LEN = 60
+
+# 2026-07-27, SERVER RESOURCE GOVERNOR (ai-os/SERVER_RESOURCE_GOVERNOR_2026-07-27.md):
+# every real spawn call site below now submits through resource_governor.submit()
+# instead of calling systemctl/veridian-task.py directly -- the specific,
+# concrete fix for the 2026-07-27 watchdog-timer incident (9h18m of unstopped
+# 60s-interval firing with no "already in flight for this task_id" check).
+# Tiers per the design doc's tier-mapping table: FIX_ACTIONS (get an
+# already-stalled worker moving again) outrank a brand-new RCA escalation
+# (investigative work spawned in response to a stall that, by definition, is
+# already stuck and not made worse by a short queue delay).
+GOVERNOR_TIER_FIX_ACTION = 2
+GOVERNOR_TIER_ESCALATION = 4
+
+
+def _governor():
+    """Plain import (both files share scripts/, no hyphen in the module
+    name) -- lazy, so a dry-run/import of this module never requires
+    resource_governor.py's own dependencies (dispatch_core.py,
+    superboss-register.py) to be importable unless a real fix/escalation
+    path actually runs."""
+    import resource_governor
+    return resource_governor
 
 LOOP_EXCLUDED_NOTES = {
     "periodic checkpoint",
@@ -257,22 +277,49 @@ def record_fix_applied(signature, fix_action):
 
 def _fix_restart_unit(task_id):
     unit = f"veridian-worker@{task_id}.service"
-    subprocess.run(["systemctl", "--user", "restart", unit], capture_output=True, text=True)
-    return f"restarted {unit}"
+    result = _governor().submit(
+        {"task_identity": task_id, "task_kind": "systemctl_action", "unit_name": unit,
+         "inputs": {"action": "restart"}},
+        GOVERNOR_TIER_FIX_ACTION, source_trigger="veridian-task-watchdog:restart_unit",
+    )
+    return f"submitted restart of {unit} to resource governor (umr_id={result['umr_id']}): {result['reason']}"
 
 
 def _fix_reset_failed_and_start(task_id):
-    # same two-call sequence as recover-failed-workers.py's recovered path
     unit = f"veridian-worker@{task_id}.service"
-    subprocess.run(["systemctl", "--user", "reset-failed", unit], capture_output=True)
-    subprocess.run(["systemctl", "--user", "start", unit], capture_output=True)
-    return f"reset-failed + started {unit}"
+    result = _governor().submit(
+        {"task_identity": task_id, "task_kind": "systemctl_action", "unit_name": unit,
+         "inputs": {"action": "reset_failed_and_start"}},
+        GOVERNOR_TIER_FIX_ACTION, source_trigger="veridian-task-watchdog:reset_failed_and_start",
+    )
+    return f"submitted reset-failed+start of {unit} to resource governor (umr_id={result['umr_id']}): {result['reason']}"
+
+
+def _fix_skip_escalation_when_activating(task_id):
+    return (
+        "no automated system action taken -- 'skip_escalation_when_activating' is the "
+        "intentional no-op fix action for a signature that is already understood and "
+        "already fixed at its real root cause elsewhere (e.g. the benign 'periodic "
+        "checkpoint' heartbeat during a legitimately long quality-gate phase, whose "
+        "underlying unbounded-hang defect is separately bounded by quality-gate.sh's "
+        "own GATE_STEP_TIMEOUT_SECONDS wrapper); escalating again for the same "
+        "already-fixed signature would only spawn a duplicate, redundant RCA task"
+    )
 
 
 FIX_ACTIONS = {
     "restart_unit": _fix_restart_unit,
     "reset_failed_and_start": _fix_reset_failed_and_start,
+    "skip_escalation_when_activating": _fix_skip_escalation_when_activating,
 }
+
+# fix_actions in this set never resolve the raw stall/loop condition (they take no
+# system action, by design -- see _fix_skip_escalation_when_activating above), so
+# process_task()'s normal "recheck after RECHECK_DELAY_SECONDS, escalate if still
+# stalled" fallback would deterministically escalate every single time and defeat
+# the entire point of registering a known fix for this signature. A recognized
+# fix_action in this set short-circuits straight to "no escalation" instead.
+NO_ESCALATE_ON_RECHECK = {"skip_escalation_when_activating"}
 
 
 def apply_known_fix(task_id, fix_action):
@@ -328,25 +375,37 @@ def rca_already_in_flight(task_id):
     return False, None
 
 
-def escalate(task_id, signature, dry_run=False):
+def escalate(task_id, task, signature, dry_run=False):
     title = f"rca-{task_id}"
     prompt = RCA_PROMPT_TEMPLATE.format(original_task_id=task_id, signature=signature)
-    cmd = ["python3", VERIDIAN_TASK, "create", "--title", title, "--repo", "claude-control", "--prompt", prompt]
+    # Real fix (2026-07-27): this used to hardcode --repo claude-control for
+    # every escalated rca- task regardless of the stalled task's own real
+    # repo -- confirmed live against 2 historical instances where the
+    # stalled task's real repo was compliance-tracker, not claude-control.
+    # task.yaml's own 'repo' field (already loaded via load_task_yaml() by
+    # the caller, passed in here) is the real, known-at-escalation-time repo
+    # the RCA worker actually needs to investigate/fix in -- fall back to
+    # claude-control only if the stalled task's own task.yaml is somehow
+    # unreadable/missing that field.
+    repo = (task or {}).get("repo") or "claude-control"
     if dry_run:
-        return f"DRY_RUN would escalate: {' '.join(cmd[:6])} ... (title={title})"
+        return f"DRY_RUN would escalate via resource governor: title={title} repo={repo}"
 
-    r = subprocess.run(cmd, capture_output=True, text=True)
-    if r.returncode != 0:
-        return f"escalation FAILED (create exit={r.returncode}): {r.stderr[:300]}"
-
-    m = re.search(r"^CREATED: (\S+)", r.stdout, re.MULTILINE)
-    new_task_id = m.group(1) if m else None
-    if new_task_id:
-        # cmd_create already starts the unit; explicit start here is a
-        # documented no-op safety net, matching the spec's literal step_3.
-        subprocess.run(["systemctl", "--user", "start", f"veridian-worker@{new_task_id}.service"], capture_output=True)
-        return f"escalated: created and started {new_task_id}"
-    return f"escalated: create ran (exit=0) but new task_id not parsed from stdout: {r.stdout[:200]}"
+    # 2026-07-27: routes through resource_governor.submit() instead of calling
+    # veridian-task.py create + systemctl start directly (see GOVERNOR_TIER_*
+    # docstring above) -- task_identity=title (the "rca-<task_id>" string)
+    # means a second escalation attempt for the SAME stalled task_id, fired by
+    # ANY trigger while the first is still queued/dispatched/running, is
+    # rejected as a duplicate rather than creating a second RCA task. This is
+    # the concrete fix for the 2026-07-27 watchdog-timer incident.
+    result = _governor().submit(
+        {"task_identity": title, "task_kind": "veridian_task_create",
+         "inputs": {"title": title, "repo": repo, "prompt": prompt}},
+        GOVERNOR_TIER_ESCALATION, source_trigger="veridian-task-watchdog:escalate",
+    )
+    if not result["accepted"]:
+        return f"escalation NOT queued (resource governor): {result['reason']}"
+    return f"escalation queued via resource governor: umr_id={result['umr_id']} title={title}"
 
 
 def process_task(task_id, task, dry_run_escalation=False):
@@ -366,32 +425,45 @@ def process_task(task_id, task, dry_run_escalation=False):
 
     signature = signature_of(last_note)
     found, source = search_prior_occurrence(signature)
-    known_fix = lookup_known_fix(signature) if found else None
+    # step_2 (known_fixes lookup) must run regardless of step_1's outcome -- step_1
+    # only searches the much more volatile ATTENTION.md/task_audits text, while
+    # known_fixes is the permanent, purpose-built record for exactly this signature.
+    # Gating step_2 behind step_1 previously meant a real known_fixes row could be
+    # 100% correct and still never get consulted, because the specific signature
+    # text simply never happened to appear in ATTENTION.md/task_audits (confirmed
+    # live for "periodic checkpoint": zero occurrences in either, despite a real,
+    # already-registered known_fixes row for it).
+    known_fix = lookup_known_fix(signature)
 
-    if found and known_fix:
-        applied_desc = apply_known_fix(task_id, known_fix["fix_action"])
-        record_fix_applied(signature, known_fix["fix_action"])
+    if known_fix:
+        fix_action = known_fix["fix_action"]
+        applied_desc = apply_known_fix(task_id, fix_action)
+        record_fix_applied(signature, fix_action)
+        if fix_action in NO_ESCALATE_ON_RECHECK:
+            entry["action_taken"] = f"step_2: {applied_desc}; known no-op fix for this signature, escalation intentionally skipped"
+            return entry
         time.sleep(RECHECK_DELAY_SECONDS)
         recheck_task = load_task_yaml(task_id)
         still_bad, still_loop, _ = evaluate(recheck_task, task_id)
+        seen_desc = f"seen before via {source}" if found else "no step_1 match, but a known_fixes row exists"
         if not (still_bad or still_loop):
-            entry["action_taken"] = f"step_2: {applied_desc} (signature seen before via {source}); recheck after {RECHECK_DELAY_SECONDS}s: recovered"
+            entry["action_taken"] = f"step_2: {applied_desc} (signature {seen_desc}); recheck after {RECHECK_DELAY_SECONDS}s: recovered"
             return entry
-        entry["action_taken"] = f"step_2: {applied_desc} (signature seen before via {source}); recheck after {RECHECK_DELAY_SECONDS}s: still stalled/looping -> "
+        entry["action_taken"] = f"step_2: {applied_desc} (signature {seen_desc}); recheck after {RECHECK_DELAY_SECONDS}s: still stalled/looping -> "
         in_flight, in_flight_id = rca_already_in_flight(task_id)
         if in_flight:
             entry["action_taken"] += f"step_3 SKIPPED: RCA already in flight ({in_flight_id})"
             return entry
-        esc = escalate(task_id, signature, dry_run=dry_run_escalation)
+        esc = escalate(task_id, task, signature, dry_run=dry_run_escalation)
         entry["action_taken"] += f"step_3: {esc}"
         return entry
 
-    reason = "no prior occurrence found (step_1)" if not found else "prior occurrence found but no known_fixes entry (step_2 not applicable)"
+    reason = "no prior occurrence found (step_1)" if not found else "prior occurrence found but no known_fixes entry (step_2)"
     in_flight, in_flight_id = rca_already_in_flight(task_id)
     if in_flight:
         entry["action_taken"] = f"step_1: {reason} -> step_3 SKIPPED: RCA already in flight ({in_flight_id})"
         return entry
-    esc = escalate(task_id, signature, dry_run=dry_run_escalation)
+    esc = escalate(task_id, task, signature, dry_run=dry_run_escalation)
     entry["action_taken"] = f"step_1: {reason} -> step_3: {esc}"
     return entry
 

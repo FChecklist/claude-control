@@ -88,7 +88,9 @@ from engine.prompt_engine import PromptEngine
 from engine.context_engine import ContextManager
 from engine.snip_engine import SnipEngine
 from engine import document_engine
+from engine.layer0_router import classify_layer0  # noqa: E402 -- task-20260730-owner-engine-layer0
 from workflow_contract import has_all_required_sections  # noqa: E402
+import gateway_persistence  # noqa: E402 -- task-20260730-owner-engine-layer0
 # The real, single "software could not tell -> ask the Owner" decision
 # procedure (OWNER_ENGINE_MANDATORY_GATE_IMPLEMENTATION_2026-07-25.yaml,
 # step_3) -- imported and reused here, not re-implemented, so --mode
@@ -115,6 +117,38 @@ DEFAULT_REPO = "claude-control"
 STATUS_QUERY_WORDS_RE = re.compile(
     r"\b(status|progress|done|complete|completed|finished|finish)\b", re.IGNORECASE
 )
+
+# task-20260730-owner-engine-layer0: the real, justified confidence-gate
+# threshold for step 3 of that task (do not silently drop a low-confidence
+# classification that Layer 0 also failed to recognize).
+#
+# NOT the "60-70%" figure generic literature on production intent routers
+# suggests -- that figure assumes a calibrated probability from a model
+# trained/scored so that ~60-70% really does mean "usually right". This
+# classifier (engine/classifier.py ChatClassifier.classify()) is a
+# keyword-ratio + flat pattern-bonus score, not a calibrated probability:
+# running its own __main__ self-test suite (six clearly-correct, humanly-
+# unambiguous example messages) live on 2026-07-30 produced confidences of
+# 0.0514, 0.2316, 0.0514, 0.1286, 0.0667, 0.2333 -- every one of them well
+# under even 0.30, let alone 0.60. A 60-70% threshold on THIS scoring scheme
+# would flag every genuine short Owner instruction as low-confidence, which
+# is a worse regression than the bug being fixed.
+# The real failing input this task exists to fix (gateway_output_20260730.
+# json) scored 0.3263 -- already higher than every one of those six clearly-
+# correct examples, despite being a completely unrelated governance
+# paragraph that only won QUERY by incidental "how will..." keyword/pattern
+# overlap. 0.40 is set just above that real failing value and comfortably
+# above the real correct-classification ceiling observed above, so it
+# catches exactly the "long, keyword-dense, wrong-category" failure shape
+# without re-flagging genuine short instructions.
+REVIEW_CONFIDENCE_THRESHOLD = 0.40
+# Categories excluded from the confidence-gate: TASK already gets a real
+# downstream destination via determine_lifecycle_route's submit/start
+# action; GENERAL and GOVERNANCE are gateway.py's own designated buckets
+# for "nothing further to dispatch" (GENERAL) and "already persisted as a
+# directive by Layer 0 or this same gate below" (GOVERNANCE) -- flagging
+# either for a SECOND review record would be pure noise, not a real gap.
+REVIEW_GATE_EXCLUDED_CATEGORIES = {"TASK", "GENERAL", "GOVERNANCE"}
 
 
 # =============================================================================
@@ -402,6 +436,100 @@ class TaskGateway:
 
         # === STEP 2: Classify (software, not AI) ===
         analysis = self.classifier.full_analysis(raw_text)
+
+        # === STEP 2a: Layer 0 deterministic router (task-20260730-owner-engine-layer0) ===
+        # Real root cause this closes: gateway_output_20260730.json / KE-20260730-
+        # 041850-63cf -- a real governance instruction scored category=QUERY,
+        # confidence=0.3263 under the scoring above, and had no lifecycle-route
+        # branch to go to, so it was saved to CHATS_DIR and nowhere else.
+        # classify_layer0() is a pure function of raw_text only (see
+        # engine/layer0_router.py) -- called after full_analysis() purely so
+        # entity/token/word-count extraction above runs exactly once regardless
+        # of outcome; it does not consult or change WHAT Layer 0 decides.
+        layer0_result = classify_layer0(raw_text)
+        governance_record = None
+        reuse_check = None
+        status_lookup = None
+        review_flag = None
+
+        if layer0_result and layer0_result["layer0_category"] == "GOVERNANCE_DIRECTIVE":
+            analysis["classification"]["category"] = "GOVERNANCE"
+            analysis["classification"]["confidence"] = 1.0
+            analysis["intent"] = self.classifier.extract_intent(raw_text)
+            governance_record = gateway_persistence.insert_instruction(
+                text=raw_text, source="owner", medium="owner_engine_layer0_governance_directive",
+                campaign=session_id or "", session_id=session_id or chat_id,
+                metadata={
+                    "chat_id": chat_id, "layer0_category": "GOVERNANCE_DIRECTIVE",
+                    "matched_pattern": layer0_result["matched_pattern"],
+                    "matched_text": layer0_result["matched_text"],
+                    "requires_protocol_incorporation": True,
+                },
+                response_summary="Captured by prompt_gateway Layer 0 as a governance/policy "
+                                  "directive; not yet incorporated into PROTOCOL_OWNER_AI.yaml "
+                                  "-- see PENDING_OWNER_REVIEW.md.",
+            )
+            gateway_persistence.append_pending_review(
+                chat_id,
+                f"GOVERNANCE DIRECTIVE captured by prompt_gateway Layer 0 "
+                f"(matched: '{layer0_result['matched_text']}'). Needs a human/Claude session "
+                f"to draft the next dated addendum in "
+                f"ai-os/OWNER_DIRECTIVES/PROTOCOL_OWNER_AI.yaml. "
+                f"instruction_id={governance_record.get('instruction_id')}",
+            )
+            logger.info(f"Layer0 GOVERNANCE_DIRECTIVE matched, persisted: {governance_record}")
+
+        elif layer0_result and layer0_result["layer0_category"] == "TASK_DISPATCH":
+            analysis["classification"]["category"] = "TASK"
+            analysis["classification"]["confidence"] = 1.0
+            analysis["intent"] = self.classifier.extract_intent(raw_text)
+            # task step 4: real reuse-check BEFORE any new task record gets created.
+            # Calls the same superboss-register.py lookup-capability primitive
+            # plan_generator.py's own _lookup_capability() wraps -- see
+            # gateway_persistence.py's module docstring for why this calls that
+            # primitive directly rather than plan_generator.py's own CLI.
+            reuse_check = gateway_persistence.lookup_capability_reuse(raw_text)
+            logger.info(f"Layer0 TASK_DISPATCH matched, reuse_check found={reuse_check.get('found')}")
+
+        elif layer0_result and layer0_result["layer0_category"] == "STATUS_QUERY":
+            analysis["classification"]["category"] = "STATUS_QUERY_LAYER0"
+            analysis["classification"]["confidence"] = 1.0
+            analysis["intent"] = "QUERY"
+            # task step 2b: zero-AI-cost read-only lookup, no task_id required
+            # (gateway.py's existing STATUS_QUERY_WORDS_RE path in
+            # determine_lifecycle_route only fires when a TASK_ID entity is
+            # already present in the message).
+            status_lookup = gateway_persistence.search_status(raw_text)
+            logger.info("Layer0 STATUS_QUERY matched, zero-AI-cost lookup performed")
+
+        else:
+            # task step 3: real confidence gate on the EXISTING classifier's own
+            # output. See REVIEW_CONFIDENCE_THRESHOLD's definition above for why
+            # 0.40, not the generic 60-70% figure, is the real justified number
+            # for THIS classifier's scoring scheme.
+            _cat = analysis["classification"]["category"]
+            _conf = analysis["classification"]["confidence"]
+            if (_cat not in REVIEW_GATE_EXCLUDED_CATEGORIES
+                    and _conf is not None and _conf < REVIEW_CONFIDENCE_THRESHOLD):
+                review_flag = gateway_persistence.insert_instruction(
+                    text=raw_text, source="owner", medium="owner_engine_low_confidence_queue",
+                    campaign=session_id or "", session_id=session_id or chat_id,
+                    metadata={
+                        "chat_id": chat_id, "category": _cat, "confidence": _conf,
+                        "intent": analysis["intent"], "review_needed": True,
+                        "review_reason": "LOW_CLASSIFICATION_CONFIDENCE_NO_LAYER0_MATCH",
+                    },
+                    response_summary=f"confidence={_conf} < {REVIEW_CONFIDENCE_THRESHOLD} threshold, "
+                                      f"category={_cat}; flagged for review instead of silently dropped.",
+                )
+                gateway_persistence.append_pending_review(
+                    chat_id,
+                    f"LOW-CONFIDENCE classification ({_cat}, confidence={_conf}) not recognized "
+                    f"by Layer 0 and not auto-dispatchable -- needs Owner/AI review. "
+                    f"instruction_id={review_flag.get('instruction_id')}",
+                )
+                logger.info(f"Confidence gate: flagged for review, {review_flag}")
+
         category = analysis["classification"]["category"]
         intent = analysis["intent"]
         confidence = analysis["classification"]["confidence"]
@@ -475,12 +603,47 @@ class TaskGateway:
             "snippets_used": snippet_names,
             "final_output": final_output,
             "pipeline_timestamp_utc": pipeline_end.isoformat(),
+            # task-20260730-owner-engine-layer0: real, disclosed trace of what
+            # Layer 0 / the confidence gate decided and persisted for THIS run,
+            # in addition to the unconditional _save_chat_record() below.
+            "layer0": {
+                "matched": bool(layer0_result),
+                "layer0_category": (layer0_result or {}).get("layer0_category"),
+                "matched_pattern": (layer0_result or {}).get("matched_pattern"),
+                "governance_directive_recorded": governance_record,
+                "reuse_check": reuse_check,
+                "status_lookup": status_lookup,
+                "low_confidence_review_flagged": review_flag,
+            },
         }
 
         logger.info(f"Pipeline complete in {processing_ms:.1f}ms. Token reduction: {token_reduction}%")
 
-        # === STEP 7: Save chat record ===
+        # === STEP 7: Save chat record (existing, unconditional, per-chat JSON) ===
         self._save_chat_record(chat_id, result)
+
+        # === STEP 7b: real, queryable decision-history record (task step 5) ===
+        # The pre-existing per-chat JSON above already persists this run, but
+        # only under CHATS_DIR -- disconnected from the same FTS-backed
+        # `instructions` store the rest of the system searches/audits through
+        # (superboss-register.py search / check-duplicate). This closes that
+        # gap: one row per real gateway.py run, regardless of which path
+        # above fired, so gateway.py's own decision history is traceable the
+        # same way chat-service.ts's recordOrchestraExecution() makes every
+        # AI reply traceable.
+        gateway_persistence.insert_instruction(
+            text=raw_text, source="ai_agent", medium="owner_engine_gateway_decision_log",
+            campaign=session_id or "", session_id=session_id or chat_id,
+            metadata={
+                "chat_id": chat_id, "category": category, "intent": intent,
+                "confidence": confidence, "layer0_matched": bool(layer0_result),
+                "layer0_category": (layer0_result or {}).get("layer0_category"),
+                "governance_directive_instruction_id": (governance_record or {}).get("instruction_id"),
+                "low_confidence_review_instruction_id": (review_flag or {}).get("instruction_id"),
+            },
+            response_summary=f"gateway.py process_chat run for {chat_id}: category={category}, "
+                              f"confidence={confidence}, layer0={bool(layer0_result)}",
+        )
 
         return result
 

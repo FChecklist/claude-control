@@ -1,0 +1,25 @@
+## OBJECTIVE
+Close two real, recurring gaps in the EXISTING TASK/STATUS/COMPLETE-IT lifecycle software (scripts/supervisor-entrypoint.sh + scripts/veridian-task.py + scripts/task-gateway.py, already built and in daily use) by extending them, not by building parallel new infrastructure.
+
+## KNOWN_CONTEXT
+Read scripts/supervisor-entrypoint.sh in full first.
+
+## SCOPE
+1. Fix gap (1): resolve the real branch a worker pushed to, not the stale creation-time task.yaml branch field.
+2. Fix gap (2): add a real, enforced HOLD_FOR_OWNER_SIGNOFF field.
+3. Do not create a new script, a new task type, or a new parallel pipeline for either fix.
+4. Add regression tests for both fixes.
+
+## SUCCESS_CRITERIA
+- `python3 -m pytest tests/ -k "branch_resolution or hold_for_signoff" -v` exits 0 with both new regression tests passing.
+- `grep -n "HOLD_FOR_OWNER_SIGNOFF" scripts/tight_task_validation.py scripts/supervisor-entrypoint.sh` shows the new field is read in both the parser and the merge-decision point.
+- `grep -n "rev-parse --abbrev-ref HEAD\|task.yaml.*branch" scripts/veridian-task.py` shows the branch field now reflects real completion-time state rather than only creation-time state.
+
+## EXPECTED_OUTPUT
+A real PR against claude-control with both fixes and the regression tests.
+
+## CONSTRAINTS
+Do not merge yourself.
+
+## COMPLEXITY_TIER
+judgment

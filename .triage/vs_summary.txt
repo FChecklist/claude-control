@@ -1,0 +1,64 @@
+=== veridian-scripts ===
+SUPERSEDED (full diff vs main empty): 0
+OBSOLETE-CANDIDATE (all remaining diffs are files missing on main): 2
+  #62 feat: gtm_certification_categories schema, 25 real rows under OCID-020  missing_files=['migrate_2026-08-05_gtm_certification_categories.py']
+  #190 chore(scripts): preserve session_metadata_sync.py + sweep_awaiting_app  missing_files=['session_metadata_sync.py', 'sweep_awaiting_approval.py']
+STILL-REAL (has real content diff in existing files): 57
+  #8 feat: add entity/relation coordination graph to superboss-register.py  n_real_content_diff=2
+  #24 Deterministic canonical database path resolution for superboss-registe  n_real_content_diff=1
+  #28 PM decision, merge PR 21 real recovered hotfixes  n_real_content_diff=1
+  #60 docs(OCID-069): independent re-verification -- methodology extension a  n_real_content_diff=1
+  #61 feat(OCID Master Standard v6 Phase 2): lifecycle state machine + regis  n_real_content_diff=2
+  #65 feat: real deterministic GTM check scripts -- database, API, governanc  n_real_content_diff=3
+  #71 docs(OCID-068): independent re-verification -- UTR/UMR taxonomy alread  n_real_content_diff=1
+  #72 Close a real fabrication loophole, not_applicable_confirmed must come   n_real_content_diff=3
+  #74 Clarification, real precise search key for UMR-20260805-115044-b481  n_real_content_diff=1
+  #75 docs: PROGRESS.md checkpoint -- OCID-020 GTM certification session sta  n_real_content_diff=1
+  #78 feat(OCID-020 cat19): sqlite_daily_backup.py + systemd unit (built+tes  n_real_content_diff=1
+  #79 feat(OCID-020 GTM): category 5 (UI testing) + category 6 (E2E testing)  n_real_content_diff=3
+  #80 Urgent, real database lock contention blocking all queries, investigat  n_real_content_diff=1
+  #81 feat(OCID-020 GTM): category 7 (regression testing) real check script  n_real_content_diff=2
+  #83 Verify no OCID canonical registry corruption occurred; clarify audit s  n_real_content_diff=3
+  #84 feat(OCID-020 GTM): category 9 (performance testing) + category 24 (li  n_real_content_diff=3
+  #89 docs: reconcile OCID-020 GTM cert PM-decision SPEC against live state   n_real_content_diff=1
+  #90 docs(OCID-020): re-verify PR #954 adoption cycle SPEC -- all 6 items a  n_real_content_diff=1
+  #93 docs(OCID-020): re-verify standalone GTM-schema SPEC -- items 2 & 3 fa  n_real_content_diff=1
+  #94 docs: reconcile OCID-020 GTM schema-build SPEC against live state (no   n_real_content_diff=1
+  #99 docs: owner directive report -- sqlite3 recovery (stopped, real reason  n_real_content_diff=1
+  #101 docs: verify not-a-real-collision clarification independently; decline  n_real_content_diff=1
+  #108 Extend superboss-register.py with pm_decisions_pending insert/resolve   n_real_content_diff=3
+  #113 Corruption recovery unblocked, resume the safety sequence from step th  n_real_content_diff=1
+  #118 fix: repair live file_inventory corruption (UMR-20260806-042004-e22f /  n_real_content_diff=1
+  #169 fix(hooks): real PreToolUse guard rejecting unbounded find / walks (UM  n_real_content_diff=2
+  #182 Complete the unfinished disk retention steps six and seven from UMR-20  n_real_content_diff=1
+  #183 Deduplicate the disk retention work, one owner only  n_real_content_diff=1
+  #184 fix(dispatch): gate blind resume/dispatch of hours-stale queued/interr  n_real_content_diff=3
+  #196 fix(resource-governor): aggregate STALE-QUEUED pm_decisions_pending ro  n_real_content_diff=4
+  #198 feat(pm-report): add tracked-PR merge state + recent owner-UMR status   n_real_content_diff=3
+  #200 feat(wiring-health-check): real, standing, deterministic wiring health  n_real_content_diff=2
+  #203 Real found match, reuse engine-02 context.ts for prompt assembly, loca  n_real_content_diff=1
+  #204 test: first real batch of load-bearing script tests (47/148 -> 57/150)  n_real_content_diff=2
+  #205 feat(superboss-register): steps one/two/four of the deterministic-firs  n_real_content_diff=2
+  #207 feat(orchestrator): close 3 real gaps -- submission contract, independ  n_real_content_diff=2
+  #209 Mandatory real study, all twenty engines, all of superboss, every scri  n_real_content_diff=1
+  #213 fix(orchestrator): mirror prompt-os-resolver.ts + orchestra-execution-  n_real_content_diff=2
+  #215 Real disk emergency remediation root filesystem at 100 percent  n_real_content_diff=1
+  #216 Precise correction based on real direct study, reuse pruned_code_searc  n_real_content_diff=2
+  #219 Single deterministic orchestrator: one entrance, one exit, boolean out  n_real_content_diff=1
+  #220 OWNER DECISION: free capacity now, then directly execute the 3 sanctio  n_real_content_diff=1
+  #222 Phase 0: real stale-backlog reconciliation, 767 stuck tasks confirmed   n_real_content_diff=1
+  #223 Diagnose real running-count discrepancy: 32 DB rows vs 3 real workers,  n_real_content_diff=1
+  #225 docs: verified SPEC premise stale/false, directive-resubmission flood   n_real_content_diff=1
+  #226 docs: verified SPEC premise false, reused-umr_id resume is intentional  n_real_content_diff=1
+  #229 docs: PM ruling relayed but stale -- cat15/16 creds already self-provi  n_real_content_diff=1
+  #232 test(quality-gate): prove build-lock requeue is bounded (SPEC premise   n_real_content_diff=1
+  #233 Merges must run inside a real worker unit, not the interactive session  n_real_content_diff=1
+  #236 docs: diagnose UMR-20260806-135632-329e false stall premise + find liv  n_real_content_diff=1
+  #239 Resume and finish task-20260806-192052: commit, push, record-completio  n_real_content_diff=1
+  #240 CRITICAL: real corruption confirmed in wiring_registry table, safe rec  n_real_content_diff=1
+  #243 CORRECTION: wiring_registry corruption NOT resolved, Step 5 rebuild is  n_real_content_diff=1
+  #244 docs: verify wiring_registry re-escalation SPEC is false-premise (5th   n_real_content_diff=1
+  #247 feat: real embedding/vector-similarity semantic search over capability  n_real_content_diff=1
+  #266 Register the real 965-issue resolution matrix in capability_registry  n_real_content_diff=1
+  #267 Fix PR 256 real audit FAIL: memoize owner_priority_sequence member che  n_real_content_diff=1
+MIXED/UNCLEAR: 0

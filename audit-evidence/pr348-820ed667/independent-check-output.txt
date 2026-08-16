@@ -1,0 +1,17 @@
+=== Scenario A: genuinely OVER-LIMIT worker (20 prior invocations, cap 20) must still be stopped ===
+PASS: over-limit worker: script exits 0 (stopped, systemd will NOT retry) (got 0)
+PASS: over-limit worker: execution stopped exactly at the cap check
+PASS: over-limit worker: lifetime counter untouched, still 20 (no extra charge)
+PASS: over-limit worker: blocked checkpoint recorded (PREVENTION CAP HIT)
+PASS: over-limit worker: systemd unit disabled
+
+=== Scenario B: NORMAL, well-under-cap worker (5 prior invocations, cap 20) with a PASSING preflight must proceed and be charged ===
+PASS: normal worker: script exits 0 (falls through, continues to real work) (got 0)
+PASS: normal worker: reached main body with NEW_COUNT=6 (charged exactly once)
+PASS: normal worker: lifetime counter file now reads 6 (5 prior + 1 charge)
+PASS: normal worker: infra-rejection counter untouched on clean pass
+
+================================================================
+INDEPENDENT AUDIT CHECK RESULTS: 9 passed, 0 failed
+================================================================
+independent check exit=0

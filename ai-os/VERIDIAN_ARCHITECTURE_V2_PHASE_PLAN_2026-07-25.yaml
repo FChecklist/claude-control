@@ -309,7 +309,7 @@ phases:
   depends_on:
   - phase_2_compiler_pipeline_intelligence_engines
   external_depends_on: []
-  status: not_started
+  status: done
   success_criteria:
   - 'python3 scripts/superboss-register.py query-knowledge "veridian_v2_defense_in_depth"
     --tag domain:veridian_architecture_v2  # found=1 -- VERIFIED: artifact_id KE-20260726-045214-5b9a.'
@@ -326,9 +326,10 @@ phases:
   target_repo_note: 'repos/compliance-tracker (repo: compliance-tracker, not claude-control)
     -- guardrail library installation and pipeline wiring is application code in that
     repo.'
-  evidence: 'CORRECTED 2026-07-26: previous status=done was a false self-report written
+  evidence: 'compliance-tracker PR #562 merged 2026-07-27T09:10:43Z (auto-backfilled by backfill_phase_self_report.py)'
     by the worker task itself citing an unmerged branch, not a real merged PR (compliance-tracker
     PR #562 is OPEN, mergeStateStatus=DIRTY/CONFLICTING). Reverted to accurate state.'
+  completed_by_task: task-20260726-043023-phase4-defense-in-depth-prompt-security
 - id: phase_5_browser_execution_tiers
   name: Browser Execution/Lite-LLM/NPU/Built-in-AI/MCP/Function/Worker/Transformers
     Engines + Browser Compute/Parallelism tech stack

@@ -1,0 +1,1747 @@
+[
+  {
+    "number": 8,
+    "title": "feat: add entity/relation coordination graph to superboss-register.py",
+    "updated_at": "2026-08-06T13:47:40Z",
+    "head_ref": "feat/coordination-graph-entity-relation",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/8",
+    "merge_base": "75830c4da4b2c42eaacea8f26d6c0966c593c53c",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "backfill_active_claims.py",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "check-conflict-before-pr.sh",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "dispatch-owner-task.sh",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "82a258b13a2d8d126464462a60ff38def97f074f"
+      },
+      {
+        "path": "superboss-register.py",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "82a258b13a2d8d126464462a60ff38def97f074f"
+      }
+    ]
+  },
+  {
+    "number": 24,
+    "title": "Deterministic canonical database path resolution for superboss-register",
+    "updated_at": "2026-08-04T19:46:02Z",
+    "head_ref": "worker/task-20260804-193850-deterministic-canonical-database-path-re",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/24",
+    "merge_base": "199e73c77ed614dfbf3e8af2365d24a99d508b71",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      }
+    ]
+  },
+  {
+    "number": 28,
+    "title": "PM decision, merge PR 21 real recovered hotfixes",
+    "updated_at": "2026-08-04T20:24:19Z",
+    "head_ref": "worker/task-20260804-201659-pm-decision--merge-pr-21-real-recovered",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/28",
+    "merge_base": "c35e62d7cc7f4cac869489043f2780ee5ed7eb30",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      }
+    ]
+  },
+  {
+    "number": 60,
+    "title": "docs(OCID-069): independent re-verification -- methodology extension already correct",
+    "updated_at": "2026-08-06T08:18:09Z",
+    "head_ref": "worker/task-20260805-131404-extend-ocid-canonical-mapping-methodolog",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/60",
+    "merge_base": "63abc39d56504396cb9c2a9b3ce9d8363af2267e",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "OCID_069_METHODOLOGY_EXTENSION_REVERIFICATION_2026-08-05.md",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      }
+    ]
+  },
+  {
+    "number": 61,
+    "title": "feat(OCID Master Standard v6 Phase 2): lifecycle state machine + registry integrity checks",
+    "updated_at": "2026-08-06T08:19:33Z",
+    "head_ref": "feat/ocid-master-standard-v6-phase2-lifecycle-registry-integrity",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/61",
+    "merge_base": "5b1fd3724b4c4f5ab4cfbf578387744b5dc94c0e",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "OCID_MASTER_STANDARD_V6_PHASE2_2026-08-05.md",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      },
+      {
+        "path": "superboss-register.py",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "82a258b13a2d8d126464462a60ff38def97f074f"
+      },
+      {
+        "path": "tests/test_ocid_master_standard_phase2.py",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      }
+    ]
+  },
+  {
+    "number": 62,
+    "title": "feat: gtm_certification_categories schema, 25 real rows under OCID-020",
+    "updated_at": "2026-08-05T15:26:53Z",
+    "head_ref": "feat/gtm-certification-categories-schema-umr20260805145042",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/62",
+    "merge_base": "5730231d636854e9bad8c882bb52709e96145fa4",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "migrate_2026-08-05_gtm_certification_categories.py",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      }
+    ]
+  },
+  {
+    "number": 65,
+    "title": "feat: real deterministic GTM check scripts -- database, API, governance testing",
+    "updated_at": "2026-08-05T15:44:56Z",
+    "head_ref": "feat/gtm-checks-db-api-governance-umr20260805153813",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/65",
+    "merge_base": "c8a147e6ae08f5b35ae9f2d3261d55efe85ab62d",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "gtm_check_api_testing.py",
+        "pr_status": "A",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "8349c1f66941a081ea9b80db31e3dab2138bdc2c"
+      },
+      {
+        "path": "gtm_check_database_testing.py",
+        "pr_status": "A",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "8349c1f66941a081ea9b80db31e3dab2138bdc2c"
+      },
+      {
+        "path": "gtm_check_governance_testing.py",
+        "pr_status": "A",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "8349c1f66941a081ea9b80db31e3dab2138bdc2c"
+      },
+      {
+        "path": "gtm_write_category_result.py",
+        "pr_status": "A",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": true,
+        "main_last_commit": "b9b8f9c3ad05921e59a8e66d9a6279bee6f50119"
+      }
+    ]
+  },
+  {
+    "number": 71,
+    "title": "docs(OCID-068): independent re-verification -- UTR/UMR taxonomy already recorded at DB source + addendum, bookkeeping corrected",
+    "updated_at": "2026-08-05T16:28:29Z",
+    "head_ref": "worker/task-20260805-161241-document-the-real-utr--umr--and-single-s",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/71",
+    "merge_base": "c8a147e6ae08f5b35ae9f2d3261d55efe85ab62d",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "OCID_068_UTR_UMR_TAXONOMY_INDEPENDENT_VERIFICATION_2026-08-05.md",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      }
+    ]
+  },
+  {
+    "number": 72,
+    "title": "Close a real fabrication loophole, not_applicable_confirmed must come from a real re-runnable audit script, never an AI narrative",
+    "updated_at": "2026-08-06T08:20:02Z",
+    "head_ref": "worker/task-20260805-161157-close-a-real-fabrication-loophole--not-a",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/72",
+    "merge_base": "c8a147e6ae08f5b35ae9f2d3261d55efe85ab62d",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "OCID_068_PHASE_2_LIVE_REAUDIT_EXECUTION_AND_MERGE_SAFETY_CORRECTION_2026-08-05.md",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      },
+      {
+        "path": "audit_ocid_canonical_registry.py",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "81e2d0ad69d1e10fc03b5c4d1a06be9e71a2c823"
+      },
+      {
+        "path": "tests/test_audit_ocid_canonical_registry.py",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "81e2d0ad69d1e10fc03b5c4d1a06be9e71a2c823"
+      }
+    ]
+  },
+  {
+    "number": 74,
+    "title": "Clarification, real precise search key for UMR-20260805-115044-b481",
+    "updated_at": "2026-08-06T08:18:02Z",
+    "head_ref": "worker/task-20260805-165226-clarification--real-precise-search-key-f",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/74",
+    "merge_base": "bf32b41f6ea51660c2df21f1cb80057a16af14e3",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      }
+    ]
+  },
+  {
+    "number": 75,
+    "title": "docs: PROGRESS.md checkpoint -- OCID-020 GTM certification session state",
+    "updated_at": "2026-08-05T16:57:47Z",
+    "head_ref": "docs/progress-checkpoint-umr20260805165254",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/75",
+    "merge_base": "bf32b41f6ea51660c2df21f1cb80057a16af14e3",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      }
+    ]
+  },
+  {
+    "number": 78,
+    "title": "feat(OCID-020 cat19): sqlite_daily_backup.py + systemd unit (built+tested against synthetic data, disabled)",
+    "updated_at": "2026-08-05T17:31:40Z",
+    "head_ref": "feat/ocid020-sqlite-daily-backup-generator-umr20260805165909-4d8b",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/78",
+    "merge_base": "87a5b0b2924d9eb4b16e5bf67211a9133cb42300",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      },
+      {
+        "path": "sqlite_daily_backup.py",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "systemd/veridian-cron-sqlite-daily-backup.service",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "systemd/veridian-cron-sqlite-daily-backup.timer",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "tests/test_sqlite_daily_backup.py",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      }
+    ]
+  },
+  {
+    "number": 79,
+    "title": "feat(OCID-020 GTM): category 5 (UI testing) + category 6 (E2E testing) real check scripts",
+    "updated_at": "2026-08-05T17:32:37Z",
+    "head_ref": "feat/gtm-checks-ui-e2e-testing",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/79",
+    "merge_base": "87a5b0b2924d9eb4b16e5bf67211a9133cb42300",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      },
+      {
+        "path": "gtm_check_e2e_testing.py",
+        "pr_status": "A",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "8349c1f66941a081ea9b80db31e3dab2138bdc2c"
+      },
+      {
+        "path": "gtm_check_ui_testing.py",
+        "pr_status": "A",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "8349c1f66941a081ea9b80db31e3dab2138bdc2c"
+      },
+      {
+        "path": "gtm_write_category_result.py",
+        "pr_status": "A",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": true,
+        "main_last_commit": "b9b8f9c3ad05921e59a8e66d9a6279bee6f50119"
+      }
+    ]
+  },
+  {
+    "number": 80,
+    "title": "Urgent, real database lock contention blocking all queries, investigate and clear it",
+    "updated_at": "2026-08-06T08:18:34Z",
+    "head_ref": "worker/task-20260805-172722-urgent--real-database-lock-contention-bl",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/80",
+    "merge_base": "87a5b0b2924d9eb4b16e5bf67211a9133cb42300",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      }
+    ]
+  },
+  {
+    "number": 81,
+    "title": "feat(OCID-020 GTM): category 7 (regression testing) real check script",
+    "updated_at": "2026-08-05T17:34:31Z",
+    "head_ref": "feat/gtm-checks-regression-testing",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/81",
+    "merge_base": "87a5b0b2924d9eb4b16e5bf67211a9133cb42300",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      },
+      {
+        "path": "gtm_check_regression_testing.py",
+        "pr_status": "A",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "8349c1f66941a081ea9b80db31e3dab2138bdc2c"
+      },
+      {
+        "path": "gtm_write_category_result.py",
+        "pr_status": "A",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": true,
+        "main_last_commit": "b9b8f9c3ad05921e59a8e66d9a6279bee6f50119"
+      }
+    ]
+  },
+  {
+    "number": 83,
+    "title": "Verify no OCID canonical registry corruption occurred; clarify audit script dry-run output",
+    "updated_at": "2026-08-06T08:18:42Z",
+    "head_ref": "worker/task-20260805-172718-urgent--real-data-corruption-in-ocid-can",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/83",
+    "merge_base": "87a5b0b2924d9eb4b16e5bf67211a9133cb42300",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "OCID_CANONICAL_REGISTRY_DATA_CORRUPTION_FALSE_ALARM_VERIFICATION_2026-08-05T173527Z.md",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      },
+      {
+        "path": "audit_ocid_canonical_registry.py",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "81e2d0ad69d1e10fc03b5c4d1a06be9e71a2c823"
+      },
+      {
+        "path": "tests/test_audit_ocid_canonical_registry.py",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "81e2d0ad69d1e10fc03b5c4d1a06be9e71a2c823"
+      }
+    ]
+  },
+  {
+    "number": 84,
+    "title": "feat(OCID-020 GTM): category 9 (performance testing) + category 24 (lighthouse audit) real check scripts",
+    "updated_at": "2026-08-05T17:37:38Z",
+    "head_ref": "feat/gtm-checks-performance-lighthouse",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/84",
+    "merge_base": "87a5b0b2924d9eb4b16e5bf67211a9133cb42300",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      },
+      {
+        "path": "gtm_check_lighthouse_audit.py",
+        "pr_status": "A",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "8349c1f66941a081ea9b80db31e3dab2138bdc2c"
+      },
+      {
+        "path": "gtm_check_performance_testing.py",
+        "pr_status": "A",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "8349c1f66941a081ea9b80db31e3dab2138bdc2c"
+      },
+      {
+        "path": "gtm_write_category_result.py",
+        "pr_status": "A",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": true,
+        "main_last_commit": "b9b8f9c3ad05921e59a8e66d9a6279bee6f50119"
+      }
+    ]
+  },
+  {
+    "number": 89,
+    "title": "docs: reconcile OCID-020 GTM cert PM-decision SPEC against live state (no false-premise writes)",
+    "updated_at": "2026-08-06T08:18:05Z",
+    "head_ref": "worker/task-20260805-175304-ocid-020-gtm-certification--pm-decision",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/89",
+    "merge_base": "fa9bb9be074b39f19393be52348c09acd9e3af11",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      }
+    ]
+  },
+  {
+    "number": 90,
+    "title": "docs(OCID-020): re-verify PR #954 adoption cycle SPEC -- all 6 items already done or false",
+    "updated_at": "2026-08-06T08:19:11Z",
+    "head_ref": "worker/task-20260805-175309-ocid-020-cycle-decision--adopt-pr-954-on",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/90",
+    "merge_base": "fa9bb9be074b39f19393be52348c09acd9e3af11",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "OCID_020_CYCLE_DECISION_PR954_ADOPTION_REVERIFICATION_2026-08-05.md",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      }
+    ]
+  },
+  {
+    "number": 93,
+    "title": "docs(OCID-020): re-verify standalone GTM-schema SPEC -- items 2 & 3 false, no duplicate build",
+    "updated_at": "2026-08-05T19:01:59Z",
+    "head_ref": "worker/task-20260805-185211-ocid-020-gtm-schema-build--standalone-to",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/93",
+    "merge_base": "58b9f17158f54668c59da6cd78ff5ec1046e89c2",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "OCID_020_GTM_SCHEMA_STANDALONE_TASK_VERIFICATION_2026-08-05.md",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      }
+    ]
+  },
+  {
+    "number": 94,
+    "title": "docs: reconcile OCID-020 GTM schema-build SPEC against live state (no false-premise writes)",
+    "updated_at": "2026-08-05T19:04:18Z",
+    "head_ref": "worker/task-20260805-185207-ocid-020-gtm-certification--build-the-re",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/94",
+    "merge_base": "58b9f17158f54668c59da6cd78ff5ec1046e89c2",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      }
+    ]
+  },
+  {
+    "number": 99,
+    "title": "docs: owner directive report -- sqlite3 recovery (stopped, real reason) + item F (premise was false, no cutover needed)",
+    "updated_at": "2026-08-06T08:18:39Z",
+    "head_ref": "worker/task-20260806-030104-owner-directive--source-proper-sqlite3-b",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/99",
+    "merge_base": "f6014e586849d0d1c23d186bf716aa07c4ce72da",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      },
+      {
+        "path": "pr_url.txt",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      }
+    ]
+  },
+  {
+    "number": 101,
+    "title": "docs: verify not-a-real-collision clarification independently; decline duplicate item 1-5 implementation",
+    "updated_at": "2026-08-06T08:17:59Z",
+    "head_ref": "worker/task-20260806-032356-clarification--not-a-real-collision--bot",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/101",
+    "merge_base": "6890c3265181003b308483f7cd9c98556c6f2d79",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      }
+    ]
+  },
+  {
+    "number": 108,
+    "title": "Extend superboss-register.py with pm_decisions_pending insert/resolve functions (v2, corrected design, real relaunch)",
+    "updated_at": "2026-08-06T03:44:37Z",
+    "head_ref": "feat/pm-decisions-pending-writer-umr20260806-031558-4dbd",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/108",
+    "merge_base": "a077b3f0e4175fbae447f2d82f25ba9a7a5deae0",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      },
+      {
+        "path": "superboss-register.py",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "82a258b13a2d8d126464462a60ff38def97f074f"
+      },
+      {
+        "path": "tests/test_pm_decisions_pending.py",
+        "pr_status": "A",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "daf9d3ecf17cad73e9b2255c5c52e0b10f3f17b2"
+      }
+    ]
+  },
+  {
+    "number": 113,
+    "title": "Corruption recovery unblocked, resume the safety sequence from step three",
+    "updated_at": "2026-08-06T04:20:17Z",
+    "head_ref": "worker/task-20260806-041150-corruption-recovery-unblocked--resume-th",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/113",
+    "merge_base": "3c955805cf8abea1c98a918700c05132fe07388b",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      }
+    ]
+  },
+  {
+    "number": 118,
+    "title": "fix: repair live file_inventory corruption (UMR-20260806-042004-e22f / proposal id=5)",
+    "updated_at": "2026-08-06T08:20:08Z",
+    "head_ref": "worker/task-20260806-042805-pm-approves-proposal-5--fresh-clean-corr",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/118",
+    "merge_base": "3c955805cf8abea1c98a918700c05132fe07388b",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      },
+      {
+        "path": "repair_file_inventory_20260806.py",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      }
+    ]
+  },
+  {
+    "number": 169,
+    "title": "fix(hooks): real PreToolUse guard rejecting unbounded find / walks (UMR-20260806-121825-8ece)",
+    "updated_at": "2026-08-06T13:27:16Z",
+    "head_ref": "fix/find-root-walk-guard-umr20260806121825-8ece",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/169",
+    "merge_base": "ccc5346b28c82c236c197452bc9730071e5ee729",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "hooks/find_root_walk_guard.py",
+        "pr_status": "A",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "055b6ca7bf97ecf09b82b6a1dda4d6d6c12e0d35"
+      },
+      {
+        "path": "tests/test_find_root_walk_guard.py",
+        "pr_status": "A",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "055b6ca7bf97ecf09b82b6a1dda4d6d6c12e0d35"
+      }
+    ]
+  },
+  {
+    "number": 182,
+    "title": "Complete the unfinished disk retention steps six and seven from UMR-20260806-084306-f599",
+    "updated_at": "2026-08-06T15:22:52Z",
+    "head_ref": "worker/task-20260806-151752-complete-the-unfinished-disk-retention-s",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/182",
+    "merge_base": "3498d8ae5c54f834bb983909c8660f4c237917ad",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      }
+    ]
+  },
+  {
+    "number": 183,
+    "title": "Deduplicate the disk retention work, one owner only",
+    "updated_at": "2026-08-06T15:23:33Z",
+    "head_ref": "worker/task-20260806-151757-deduplicate-the-disk-retention-work--one",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/183",
+    "merge_base": "3498d8ae5c54f834bb983909c8660f4c237917ad",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      }
+    ]
+  },
+  {
+    "number": 184,
+    "title": "fix(dispatch): gate blind resume/dispatch of hours-stale queued/interrupted work (UMR-20260806-151638-48cc)",
+    "updated_at": "2026-08-06T15:36:05Z",
+    "head_ref": "fix/resume-and-dispatch-staleness-gate-umr20260806151638-48cc",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/184",
+    "merge_base": "dcf4137d535c1456a081cbe70e1a681c9ba32e08",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "dispatch-tick.py",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "64ab1d7b027c8ad2daba20de6b87395cb74b74a1"
+      },
+      {
+        "path": "resource_governor.py",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "599aeec138c3021a42be19ef2420bb57a85cf257"
+      },
+      {
+        "path": "tests/test_ocid_evidence_supersession.py",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "e5fab201b1e038c2fc3dcfab7c7e20c6032a9250"
+      },
+      {
+        "path": "tests/test_resume_stale_task_flagged_not_replayed.py",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      }
+    ]
+  },
+  {
+    "number": 190,
+    "title": "chore(scripts): preserve session_metadata_sync.py + sweep_awaiting_approval.py found during scripts-dir reconciliation",
+    "updated_at": "2026-08-06T16:05:29Z",
+    "head_ref": "preserve/scripts-dir-reconciliation-umr20260806160208-2482",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/190",
+    "merge_base": "a86c2b88ba6988e3c8ab26ab4eafaa89e1ce7e0f",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "session_metadata_sync.py",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "sweep_awaiting_approval.py",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      }
+    ]
+  },
+  {
+    "number": 196,
+    "title": "fix(resource-governor): aggregate STALE-QUEUED pm_decisions_pending rows into one row (UMR-20260806-163738-4323)",
+    "updated_at": "2026-08-06T16:50:37Z",
+    "head_ref": "fix/stale-queued-decision-aggregation-umr20260806163738-4323",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/196",
+    "merge_base": "59a60a7f7b9a922309493532673f0c980f655f95",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "resource_governor.py",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "599aeec138c3021a42be19ef2420bb57a85cf257"
+      },
+      {
+        "path": "superboss-register.py",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "82a258b13a2d8d126464462a60ff38def97f074f"
+      },
+      {
+        "path": "tests/test_flag_stale_queued_tasks.py",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "b0a2516098b24a4a8881474e5215530fe9fdf76e"
+      },
+      {
+        "path": "tests/test_pm_decisions_pending.py",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "daf9d3ecf17cad73e9b2255c5c52e0b10f3f17b2"
+      }
+    ]
+  },
+  {
+    "number": 198,
+    "title": "feat(pm-report): add tracked-PR merge state + recent owner-UMR status sections (Sections 16-17)",
+    "updated_at": "2026-08-06T17:18:33Z",
+    "head_ref": "worker/task-20260806-165917-extend-deterministic-report-to-cover-pr",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/198",
+    "merge_base": "59a60a7f7b9a922309493532673f0c980f655f95",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      },
+      {
+        "path": "TRACKED_PRS.json",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "generate_pm_report_v3.py",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "f1540e1b33688ee731b13d8c992730940e7b9486"
+      },
+      {
+        "path": "test_generate_pm_report_v3.py",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "f1540e1b33688ee731b13d8c992730940e7b9486"
+      }
+    ]
+  },
+  {
+    "number": 200,
+    "title": "feat(wiring-health-check): real, standing, deterministic wiring health check",
+    "updated_at": "2026-08-06T17:31:40Z",
+    "head_ref": "worker/task-20260806-165908-build-real-proactive-system-wiring-healt",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/200",
+    "merge_base": "59a60a7f7b9a922309493532673f0c980f655f95",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      },
+      {
+        "path": "generate_pm_report_v3.py",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "f1540e1b33688ee731b13d8c992730940e7b9486"
+      },
+      {
+        "path": "test_wiring_health_check.py",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "wiring_health_check.py",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      }
+    ]
+  },
+  {
+    "number": 203,
+    "title": "Real found match, reuse engine-02 context.ts for prompt assembly, locate snip component via the unregistered sweep",
+    "updated_at": "2026-08-06T19:44:17Z",
+    "head_ref": "worker/task-20260806-181159-real-found-match--reuse-engine-02-contex",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/203",
+    "merge_base": "ab898ecfc4b7a70296afdb4c5c5695aba8c869e9",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      }
+    ]
+  },
+  {
+    "number": 204,
+    "title": "test: first real batch of load-bearing script tests (47/148 -> 57/150), UMR-20260806-175915-8f47",
+    "updated_at": "2026-08-06T18:24:11Z",
+    "head_ref": "worker/umr8f47-test-batch-load-bearing",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/204",
+    "merge_base": "7f44e242cf4313a1c251004de406742cf8d4cfc2",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PLATFORM_COMPLETION_CHECKLIST.json",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "7d409af2afeb1d2fb78a387d4227a1aba0716dc4"
+      },
+      {
+        "path": "PLATFORM_COMPLETION_CHECKLIST.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "7d409af2afeb1d2fb78a387d4227a1aba0716dc4"
+      },
+      {
+        "path": "test_gtm_write_category_result.py",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "test_metadata_reconciliation.py",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "test_owner_status.py",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "test_recover_failed_workers.py",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "test_resource_governor_tick_loop.py",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "test_supervisor_sweep.py",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "test_worker_entrypoint_and_docworker_entrypoint_guards.py",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      }
+    ]
+  },
+  {
+    "number": 205,
+    "title": "feat(superboss-register): steps one/two/four of the deterministic-first task gate (UMR-20260806-124654-a8d6)",
+    "updated_at": "2026-08-07T08:55:10Z",
+    "head_ref": "worker/task-20260806-181146-critical-amendment--every-task-must-sear",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/205",
+    "merge_base": "ab898ecfc4b7a70296afdb4c5c5695aba8c869e9",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      },
+      {
+        "path": "superboss-register.py",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "82a258b13a2d8d126464462a60ff38def97f074f"
+      },
+      {
+        "path": "tests/test_capability_graduation.py",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      }
+    ]
+  },
+  {
+    "number": 207,
+    "title": "feat(orchestrator): close 3 real gaps -- submission contract, independent re-verification, general input/output validation",
+    "updated_at": "2026-08-07T08:56:01Z",
+    "head_ref": "worker/task-20260806-181155-amendment--close-three-real-gaps--submis",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/207",
+    "merge_base": "ab898ecfc4b7a70296afdb4c5c5695aba8c869e9",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      },
+      {
+        "path": "superboss-register.py",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "82a258b13a2d8d126464462a60ff38def97f074f"
+      },
+      {
+        "path": "tests/test_unified_orchestrator.py",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "unified_orchestrator.py",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      }
+    ]
+  },
+  {
+    "number": 209,
+    "title": "Mandatory real study, all twenty engines, all of superboss, every script, before the orchestrator build is accepted as complete",
+    "updated_at": "2026-08-06T19:38:20Z",
+    "head_ref": "worker/task-20260806-192038-mandatory-real-study--all-twenty-engines",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/209",
+    "merge_base": "ab898ecfc4b7a70296afdb4c5c5695aba8c869e9",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      }
+    ]
+  },
+  {
+    "number": 213,
+    "title": "fix(orchestrator): mirror prompt-os-resolver.ts + orchestra-execution-logger.ts + direct find_code.sh call",
+    "updated_at": "2026-08-06T19:48:34Z",
+    "head_ref": "worker/task-20260806-192043-precise-correction-based-on-real-direct",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/213",
+    "merge_base": "ab898ecfc4b7a70296afdb4c5c5695aba8c869e9",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      },
+      {
+        "path": "PROGRESS_PR207_task-181155.md",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "superboss-register.py",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "82a258b13a2d8d126464462a60ff38def97f074f"
+      },
+      {
+        "path": "tests/test_unified_orchestrator.py",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "unified_orchestrator.py",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      }
+    ]
+  },
+  {
+    "number": 215,
+    "title": "Real disk emergency remediation root filesystem at 100 percent",
+    "updated_at": "2026-08-06T19:54:59Z",
+    "head_ref": "worker/task-20260806-151402-real-disk-emergency-remediation-root-fil",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/215",
+    "merge_base": "3498d8ae5c54f834bb983909c8660f4c237917ad",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      }
+    ]
+  },
+  {
+    "number": 216,
+    "title": "Precise correction based on real direct study, reuse pruned_code_search, mirror prompt-os-resolver and orchestra-execution-logger patterns",
+    "updated_at": "2026-08-06T19:55:33Z",
+    "head_ref": "worker/task-20260806-192043-precise-correction-based-on-real-direct",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/216",
+    "merge_base": "ab898ecfc4b7a70296afdb4c5c5695aba8c869e9",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      },
+      {
+        "path": "PROGRESS_PR207_task-181155.md",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "superboss-register.py",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "82a258b13a2d8d126464462a60ff38def97f074f"
+      },
+      {
+        "path": "tests/test_unified_orchestrator.py",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "unified_orchestrator.py",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      }
+    ]
+  },
+  {
+    "number": 219,
+    "title": "Single deterministic orchestrator: one entrance, one exit, boolean output contract for VERIDIAN",
+    "updated_at": "2026-08-06T20:26:08Z",
+    "head_ref": "worker/task-20260806-201941-single-deterministic-orchestrator--one-e",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/219",
+    "merge_base": "8c3a1a1c3eebec4f5e2cfacdb66199e03f298b0c",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      }
+    ]
+  },
+  {
+    "number": 220,
+    "title": "OWNER DECISION: free capacity now, then directly execute the 3 sanctioned UMRs",
+    "updated_at": "2026-08-06T20:27:03Z",
+    "head_ref": "worker/task-20260806-201931-owner-decision--free-capacity-now--then",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/220",
+    "merge_base": "8c3a1a1c3eebec4f5e2cfacdb66199e03f298b0c",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      }
+    ]
+  },
+  {
+    "number": 222,
+    "title": "Phase 0: real stale-backlog reconciliation, 767 stuck tasks confirmed live",
+    "updated_at": "2026-08-06T21:00:27Z",
+    "head_ref": "worker/task-20260806-205156-phase-0--real-stale-backlog-reconciliati",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/222",
+    "merge_base": "75f4c131a754a02ce8cf1cd18201174d2b2c2789",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      }
+    ]
+  },
+  {
+    "number": 223,
+    "title": "Diagnose real running-count discrepancy: 32 DB rows vs 3 real workers, capacity fix UMR-20260806-162019-4b4f still stuck",
+    "updated_at": "2026-08-06T21:04:20Z",
+    "head_ref": "worker/task-20260806-205205-diagnose-real-running-count-discrepancy",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/223",
+    "merge_base": "75f4c131a754a02ce8cf1cd18201174d2b2c2789",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      }
+    ]
+  },
+  {
+    "number": 225,
+    "title": "docs: verified SPEC premise stale/false, directive-resubmission flood already fixed (UMR-20260806-092209-7a2e)",
+    "updated_at": "2026-08-07T00:30:37Z",
+    "head_ref": "worker/task-20260806-212444-stop-the-directive-resubmission-flood-po",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/225",
+    "merge_base": "5ebc095fa870c9709679b0df72611b4f9e2568ac",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      }
+    ]
+  },
+  {
+    "number": 226,
+    "title": "docs: verified SPEC premise false, reused-umr_id resume is intentional (UMR-20260806-093654-7566)",
+    "updated_at": "2026-08-06T22:08:47Z",
+    "head_ref": "worker/task-20260806-212456-narrow-umr-20260806-092722-e526--pr-153",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/226",
+    "merge_base": "1110091a6608ee0eee272c5e9b42202e90c24e66",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      }
+    ]
+  },
+  {
+    "number": 229,
+    "title": "docs: PM ruling relayed but stale -- cat15/16 creds already self-provisioned (hard rule 6/8 violation); directive_engine.py premise reconfirmed false",
+    "updated_at": "2026-08-06T22:42:05Z",
+    "head_ref": "worker/task-20260806-223034-pm-decision-on-categories-15-and-16-cred",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/229",
+    "merge_base": "d41ff9b55b749561ef597f2d25515bf641da6f41",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      }
+    ]
+  },
+  {
+    "number": 232,
+    "title": "test(quality-gate): prove build-lock requeue is bounded (SPEC premise verified stale -- proposal 62 already merged PR #168/#172)",
+    "updated_at": "2026-08-06T23:56:11Z",
+    "head_ref": "worker/task-20260806-234542-pm-approval-of-proposal-62--implement-th",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/232",
+    "merge_base": "b6c7be4cb16c15b44a6d64cb9bda74bdde74694f",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      },
+      {
+        "path": "SPEC_VERIFICATION_2026-08-06T234542Z.md",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "tests/test_build_lock_spin_bound.py",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      }
+    ]
+  },
+  {
+    "number": 233,
+    "title": "Merges must run inside a real worker unit, not the interactive session, complete PR 169 167 165",
+    "updated_at": "2026-08-06T23:59:46Z",
+    "head_ref": "worker/task-20260806-234552-merges-must-run-inside-a-real-worker-uni",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/233",
+    "merge_base": "b6c7be4cb16c15b44a6d64cb9bda74bdde74694f",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      },
+      {
+        "path": "SPEC_VERIFICATION_2026-08-06T235757Z.md",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      }
+    ]
+  },
+  {
+    "number": 236,
+    "title": "docs: diagnose UMR-20260806-135632-329e false stall premise + find live DB corruption",
+    "updated_at": "2026-08-07T00:40:32Z",
+    "head_ref": "worker/task-20260807-002858-diagnose-real-stall--umr-20260806-135632",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/236",
+    "merge_base": "5ebc095fa870c9709679b0df72611b4f9e2568ac",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      }
+    ]
+  },
+  {
+    "number": 239,
+    "title": "Resume and finish task-20260806-192052: commit, push, record-completion only",
+    "updated_at": "2026-08-07T00:48:53Z",
+    "head_ref": "worker/task-20260807-002904-resume-and-finish-task-20260806-192052",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/239",
+    "merge_base": "5ebc095fa870c9709679b0df72611b4f9e2568ac",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      }
+    ]
+  },
+  {
+    "number": 240,
+    "title": "CRITICAL: real corruption confirmed in wiring_registry table, safe recovery required",
+    "updated_at": "2026-08-07T00:53:25Z",
+    "head_ref": "worker/task-20260807-003146-critical--real-corruption-confirmed-in-w",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/240",
+    "merge_base": "5ebc095fa870c9709679b0df72611b4f9e2568ac",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      }
+    ]
+  },
+  {
+    "number": 243,
+    "title": "CORRECTION: wiring_registry corruption NOT resolved, Step 5 rebuild is required not optional",
+    "updated_at": "2026-08-07T05:21:58Z",
+    "head_ref": "worker/task-20260807-051409-correction--wiring-registry-corruption-n",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/243",
+    "merge_base": "3bc8a9c3922b6757f7d523c15b1ff2f9ea1420a4",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      }
+    ]
+  },
+  {
+    "number": 244,
+    "title": "docs: verify wiring_registry re-escalation SPEC is false-premise (5th duplicate)",
+    "updated_at": "2026-08-07T05:28:35Z",
+    "head_ref": "worker/task-20260807-052031-rca-confirmed---interference-removed--no",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/244",
+    "merge_base": "3bc8a9c3922b6757f7d523c15b1ff2f9ea1420a4",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "FINDING_wiring_registry_reescalation_loop_2026-08-07.md",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      }
+    ]
+  },
+  {
+    "number": 247,
+    "title": "feat: real embedding/vector-similarity semantic search over capability_registry + wiring_registry (UMR-20260806-124055-bc80)",
+    "updated_at": "2026-08-07T05:46:06Z",
+    "head_ref": "worker/task-20260807-053223-upgrade-script-and-capability-search-to",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/247",
+    "merge_base": "e9ba22e878ff667617379af9566848c8d1e193bd",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      },
+      {
+        "path": "capability_semantic_search.py",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "capability_semantic_search_capability_record.json",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      },
+      {
+        "path": "test_capability_semantic_search.py",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      }
+    ]
+  },
+  {
+    "number": 266,
+    "title": "Register the real 965-issue resolution matrix in capability_registry",
+    "updated_at": "2026-08-07T14:39:32Z",
+    "head_ref": "worker/task-20260807-142924-register-the-real-965-issue-resolution-m",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/266",
+    "merge_base": "30ffa4e2ccd26ba74d73b7428669821daf578594",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      },
+      {
+        "path": "umr_5767_issue_resolution_matrix_capability_record.json",
+        "pr_status": "A",
+        "exists_on_main": false,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": null
+      }
+    ]
+  },
+  {
+    "number": 267,
+    "title": "Fix PR 256 real audit FAIL: memoize owner_priority_sequence member checks",
+    "updated_at": "2026-08-07T14:40:11Z",
+    "head_ref": "worker/task-20260807-142156-fix-pr-256-real-audit-fail--memoize-owne",
+    "url": "https://github.com/FChecklist/veridian-scripts/pull/267",
+    "merge_base": "7f27fb5dfbfb3b5215a5f0e4971f1599fc4f7a19",
+    "full_diff_empty": false,
+    "files": [
+      {
+        "path": "PROGRESS.md",
+        "pr_status": "M",
+        "exists_on_main": true,
+        "exists_on_pr_head": true,
+        "identical_to_main": false,
+        "main_last_commit": "27ff2220462908ee06aa413728f0f5966cf9b9a6"
+      }
+    ]
+  }
+]

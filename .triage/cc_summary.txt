@@ -1,0 +1,16 @@
+=== claude-control ===
+SUPERSEDED (full diff vs main empty): 0
+OBSOLETE-CANDIDATE (all remaining diffs are files missing on main): 2
+  #91 Resolve PR89 merge conflict (Phase 2 policy unification)  missing_files=['pr89-work']
+  #102 Add plan_backlog_completion.py: real backlog dedup+PR-state planner  missing_files=['ai-os/DEDUP_MISMATCH_MANUAL_REVIEW_2026-07-27.yaml', 'scripts/execute_backlog_plan.py', 'scripts/plan_backlog_completion.py', 'tests/execute_backlog_plan_test.py', 'tests/fixtures/dedup_083946_incident/task-20260726-083946-fix-task-lifecycle--real-branch-resoluti/prompt.txt', 'tests/fixtures/dedup_083946_incident/task-20260726-083946-fix-task-lifecycle--real-branch-resoluti/task.yaml', 'tests/fixtures/dedup_083946_incident/task-20260726-195236-rca-task-20260726-083946-fix-task-lifecy/task.yaml', 'tests/fixtures/dedup_083946_incident/task-20260727-034446-rca-task-20260726-083946-fix-task-lifecy/task.yaml', 'tests/fixtures/dedup_prose_only_criteria/task-20260101-000000-example-prose-only-crit/prompt.txt', 'tests/fixtures/dedup_prose_only_criteria/task-20260101-000000-example-prose-only-crit/task.yaml', 'tests/plan_backlog_completion_dedup_test.py']
+STILL-REAL (has real content diff in existing files): 9
+  #72 Amend phase_2/phase_5 scope for Owner-clarified two-stage SOFTWARE FIR  n_real_content_diff=1
+  #75 phase_2: mark compiler pipeline/intelligence engines done  n_real_content_diff=1
+  #83 Re-verify 20-engine inventory (2 days stale) + report Auditor Engine s  n_real_content_diff=2
+  #98 Round 5: close native git/gh command-alias bypass of the interactive-s  n_real_content_diff=2
+  #111 phase_5_browser_execution_tiers: register litert-spike in MASTER_INDEX  n_real_content_diff=1
+  #113 phase_8 increment 1: DSPy decision + engine-ai-learning evidence + 5-e  n_real_content_diff=1
+  #114 rca-task-20260726-171926-remove-anthropic-api-key-dead-code-path  n_real_content_diff=1
+  #116 Fix watchdog step_2 known_fixes gating + wire skip_escalation_when_act  n_real_content_diff=2
+  #125 docs(MASTER_INDEX): live 2026-08-06 GitHub/Vercel census refresh (UMR-  n_real_content_diff=1
+MIXED/UNCLEAR: 0

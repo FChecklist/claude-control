@@ -1,0 +1,747 @@
+"""Tests for scripts/resource_governor.py (SERVER RESOURCE GOVERNOR, Owner
+directive 2026-07-27). Run with:
+    python3 -m pytest tests/ -k resource_governor -v
+
+Covers, per this task's own SUCCESS_CRITERIA: duplicate-submission rejection
+(the count-based-cap-insufficient scenario -- rapid-fire duplicate
+submissions of the same issue within a short window must produce exactly one
+queued/running entry, not N), a real per-metric-99%-freezes-queue scenario
+(all 4 metrics independently), the stuck-task SIGTERM/SIGKILL escalation
+timing, and the UMR migration-against-pre-existing-schema test. Also covers
+dynamic realignment (anti-starvation aging) and the emergency fail-safe
+cascade (shed-load + hard-stop), plus one real end-to-end dispatch proving
+dispatch_core.py's shared lock/cap/record_dispatch_event integration still
+fires for real, not stubbed out.
+"""
+import concurrent.futures
+import importlib.util
+import json
+import os
+import sqlite3
+import sys
+from datetime import datetime, timedelta, timezone
+
+import pytest
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _resource_governor_fixtures import build_governor_fixture_tree, run_script  # noqa: E402
+
+
+def _load_resource_governor(work, env, monkeypatch):
+    for k, v in env.items():
+        monkeypatch.setenv(k, v)
+    spec = importlib.util.spec_from_file_location("resource_governor_test", str(work / "scripts" / "resource_governor.py"))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _table_names(db_path):
+    conn = sqlite3.connect(db_path)
+    names = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+    conn.close()
+    return names
+
+
+def _umr_statuses(db_path, task_identity):
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    rows = conn.execute("SELECT status FROM umr_tasks WHERE task_identity=?", (task_identity,)).fetchall()
+    conn.close()
+    return [r["status"] for r in rows]
+
+
+# ---------------------------------------------------------------------------
+# UMR migration against a REAL pre-existing (non-fresh) schema
+# ---------------------------------------------------------------------------
+
+def test_umr_migration_against_pre_existing_schema(tmp_path, monkeypatch):
+    """Regression-shaped test for the exact mistake PR #101 already had to fix
+    once (schema-mismatch bug: a bare CREATE TABLE IF NOT EXISTS is a no-op
+    against an already-existing DB that predates the new table/column).
+    Simulates "this DB was created before the UMR migration existed" by
+    suppressing _ensure_umr_table during a real init_db() run -- every OTHER
+    real tree (instructions/work_items/actions/wiring_registry/
+    knowledge_engine/capability_registry/route_replay) is created exactly as
+    production's DB has them today, seeded with one real pre-existing row --
+    then restores the real function and runs the real _migrate_schema()."""
+    work, env = build_governor_fixture_tree(tmp_path)
+    for k, v in env.items():
+        monkeypatch.setenv(k, v)
+    spec = importlib.util.spec_from_file_location("sbr_premigration_test", str(work / "scripts" / "superboss-register.py"))
+    sbr = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(sbr)
+
+    real_ensure_umr = sbr._ensure_umr_table
+    sbr._ensure_umr_table = lambda conn: None
+    sbr.init_db()
+
+    conn = sbr._connect()
+    conn.execute(
+        "INSERT INTO knowledge_engine (artifact_id, ts, artifact_path, content_hash, artifact_type, purpose, "
+        "entity_relationships, last_verified_ts, verification_status, metadata_json) VALUES "
+        "('ART-preexisting', '2026-07-01T00:00:00+00:00', 'ai-os/some.yaml', 'deadbeef', 'canonical', "
+        "'pre-existing row proving real data survives the migration', '[]', '2026-07-01T00:00:00+00:00', "
+        "'VERIFIED_MATCH', '{}')"
+    )
+    conn.commit()
+    conn.close()
+
+    tables_before = _table_names(env["SUPERBOSS_REGISTER_DB"])
+    assert "umr_tasks" not in tables_before, "fixture setup bug: umr_tasks must not exist yet in the pre-migration DB"
+    assert "knowledge_engine" in tables_before
+
+    sbr._ensure_umr_table = real_ensure_umr  # restore the real migration
+    conn = sbr._connect()
+    sbr._migrate_schema(conn)  # the real idempotent-migration path
+    conn.close()
+
+    tables_after = _table_names(env["SUPERBOSS_REGISTER_DB"])
+    assert "umr_tasks" in tables_after, "umr_tasks was not created by the real migration against a pre-existing DB"
+
+    conn = sbr._connect()
+    preexisting = conn.execute(
+        "SELECT artifact_id FROM knowledge_engine WHERE artifact_id='ART-preexisting'"
+    ).fetchone()
+    assert preexisting is not None, "migration must not disturb real pre-existing data in unrelated trees"
+
+    umr_id = sbr.upsert_umr_task(conn, {
+        "task_identity": "task-post-migration", "tier": 2, "status": "queued",
+        "source_trigger": "test", "unit_name": "veridian-worker@task-post-migration.service",
+    })
+    conn.commit()
+    row = conn.execute("SELECT * FROM umr_tasks WHERE umr_id=?", (umr_id,)).fetchone()
+    conn.close()
+    assert row is not None, "a real row must be insertable into umr_tasks immediately after migration"
+
+    # Idempotency: running the migration again against the now-migrated DB must not raise or duplicate.
+    conn = sbr._connect()
+    sbr._migrate_schema(conn)
+    conn.close()
+    assert _table_names(env["SUPERBOSS_REGISTER_DB"]) == tables_after
+
+
+# ---------------------------------------------------------------------------
+# Duplicate-submission rejection -- the specific fix for the watchdog incident
+# ---------------------------------------------------------------------------
+
+def test_submit_dedup_rejects_rapid_fire_duplicate_submissions(tmp_path, monkeypatch):
+    """The count-based-cap-insufficient scenario from this task's own SCOPE:
+    dispatch_core.py's shared cap only ever sees concurrent unit COUNT, so a
+    trigger firing 10 times within a short window for the SAME task_identity
+    (exactly what veridian-task-watchdog.timer did every 60s for 9h18m) must
+    still produce exactly one queued/running entry, never N."""
+    work, env = build_governor_fixture_tree(tmp_path)
+    rg = _load_resource_governor(work, env, monkeypatch)
+
+    task_spec = {
+        "task_identity": "task-watchdog-incident",
+        "task_kind": "systemctl_action",
+        "unit_name": "veridian-worker@task-watchdog-incident.service",
+        "inputs": {"action": "restart"},
+    }
+    results = [rg.submit(task_spec, tier=2, source_trigger="veridian-task-watchdog") for _ in range(10)]
+
+    accepted = [r for r in results if r["accepted"]]
+    rejected = [r for r in results if not r["accepted"]]
+    assert len(accepted) == 1, f"expected exactly 1 accepted of 10 rapid-fire duplicates, got {len(accepted)}"
+    assert len(rejected) == 9
+    assert all("duplicate submission rejected" in r["reason"] for r in rejected)
+
+    statuses = _umr_statuses(env["SUPERBOSS_REGISTER_DB"], "task-watchdog-incident")
+    assert len(statuses) == 10, "rejected duplicates must be LOGGED as real rows, never silently dropped"
+    assert statuses.count("queued") == 1
+    assert statuses.count("rejected_duplicate") == 9
+
+
+def test_submit_does_not_dedup_across_different_task_identities(tmp_path, monkeypatch):
+    work, env = build_governor_fixture_tree(tmp_path)
+    rg = _load_resource_governor(work, env, monkeypatch)
+
+    r1 = rg.submit({"task_identity": "task-a", "task_kind": "systemctl_action", "unit_name": "u-a",
+                     "inputs": {"action": "restart"}}, tier=2, source_trigger="test")
+    r2 = rg.submit({"task_identity": "task-b", "task_kind": "systemctl_action", "unit_name": "u-b",
+                     "inputs": {"action": "restart"}}, tier=2, source_trigger="test")
+    assert r1["accepted"] and r2["accepted"]
+
+
+def test_submit_allows_resubmission_once_prior_entry_reaches_a_terminal_state(tmp_path, monkeypatch):
+    """De-dup only blocks ACTIVE (queued/dispatched/running) entries -- once a
+    prior submission for the same identity has reached completed/failed/
+    killed/rejected_duplicate, a fresh real recovery attempt must not be
+    permanently locked out."""
+    work, env = build_governor_fixture_tree(tmp_path)
+    rg = _load_resource_governor(work, env, monkeypatch)
+    sbr = rg._superboss_register()
+
+    r1 = rg.submit({"task_identity": "task-c", "task_kind": "systemctl_action", "unit_name": "u-c",
+                     "inputs": {"action": "restart"}}, tier=2, source_trigger="test")
+    assert r1["accepted"]
+
+    conn = sbr._connect()
+    with sbr._write_lock():
+        sbr.update_umr_task(conn, r1["umr_id"], status="completed")
+        conn.commit()
+    conn.close()
+
+    r2 = rg.submit({"task_identity": "task-c", "task_kind": "systemctl_action", "unit_name": "u-c",
+                     "inputs": {"action": "restart"}}, tier=2, source_trigger="test")
+    assert r2["accepted"], "a resubmission after the prior entry reached a terminal state must be allowed"
+
+
+# ---------------------------------------------------------------------------
+# Duplicate-resubmission loop hard cap -- the real fix for the 49%-of-fleet-
+# capacity incident (PM sentinel evidence, resource_governor.py --query-umr,
+# 2026-08-14T01:51-07:47Z: 59/120 rows rejected_duplicate against a handful
+# of long-dead, already-RCA'd task identities).
+# ---------------------------------------------------------------------------
+
+def test_duplication_blocked_identity_is_retired_and_never_resubmitted_again(tmp_path, monkeypatch):
+    """Reproduces the real incident shape: a resume/requeue caller (e.g.
+    veridian-task-watchdog.py's step_2/step_3 fix/escalate paths) keeps
+    calling submit() for the SAME task_identity every tick. Proves (1)
+    rejected_duplicate attempts are counted against the identity and, once
+    the hard cap is hit, the identity is retired with a real terminal status
+    instead of rejected_duplicate, and (2) critically, even after the
+    ORIGINAL blocking row itself later reaches a terminal state too (the
+    literal "already-terminal task identity" resubmission bug), the very
+    next submit() call for that identity -- simulating the next dispatch
+    tick's resume attempt -- is refused immediately with NO new umr_tasks
+    row written, so the identity can never again be resubmitted."""
+    work, env = build_governor_fixture_tree(tmp_path)
+    env["VERIDIAN_GOVERNOR_MAX_DUPLICATE_ATTEMPTS"] = "3"
+    rg = _load_resource_governor(work, env, monkeypatch)
+    sbr = rg._superboss_register()
+
+    task_spec = {
+        "task_identity": "task-20260807-052027",
+        "task_kind": "systemctl_action",
+        "unit_name": "veridian-worker@task-20260807-052027.service",
+        "inputs": {"action": "restart"},
+    }
+
+    r1 = rg.submit(task_spec, tier=2, source_trigger="veridian-task-watchdog:restart_unit")
+    assert r1["accepted"]
+
+    r2 = rg.submit(task_spec, tier=2, source_trigger="veridian-task-watchdog:restart_unit")
+    assert not r2["accepted"]
+    assert "duplicate submission rejected" in r2["reason"]
+
+    # 3rd submission is the 2nd rejected_duplicate attempt -- still under cap=3.
+    r3 = rg.submit(task_spec, tier=2, source_trigger="veridian-task-watchdog:restart_unit")
+    assert not r3["accepted"]
+    assert "duplicate submission rejected" in r3["reason"]
+
+    # 4th submission is the 3rd rejected_duplicate attempt -- hits cap=3, gets retired.
+    r4 = rg.submit(task_spec, tier=2, source_trigger="veridian-task-watchdog:restart_unit")
+    assert not r4["accepted"]
+    assert "retired permanently" in r4["reason"]
+
+    statuses_after_retirement = _umr_statuses(env["SUPERBOSS_REGISTER_DB"], "task-20260807-052027")
+    assert statuses_after_retirement.count("queued") == 1
+    assert statuses_after_retirement.count("rejected_duplicate") == 2
+    assert statuses_after_retirement.count(rg.RETIRED_STATUS) == 1
+
+    # The underlying task is now confirmed long-dead (RCA concluded
+    # correctly-killed) -- the ORIGINAL row that used to block de-dup also
+    # reaches a terminal state. Before this fix, this is exactly the moment
+    # a fresh submit() would see NO active row and create a brand new
+    # "queued" entry, resetting the loop forever.
+    conn = sbr._connect()
+    with sbr._write_lock():
+        sbr.update_umr_task(conn, r1["umr_id"], status="killed")
+        conn.commit()
+    conn.close()
+
+    rows_before_next_tick = len(sbr.query_umr_tasks(
+        sbr._connect(), status=None, task_identity="task-20260807-052027", limit=1000))
+
+    # "Next tick": the resume/requeue caller fires again for the exact same
+    # already-terminal task_identity.
+    r5 = rg.submit(task_spec, tier=2, source_trigger="veridian-task-watchdog:restart_unit")
+    assert not r5["accepted"], "a permanently retired identity must never be resubmitted again"
+    assert "permanently retired" in r5["reason"]
+    assert r5["umr_id"] == r4["umr_id"], "retirement short-circuit must return the SAME retired row, not write a new one"
+
+    conn = sbr._connect()
+    rows_after_next_tick = len(sbr.query_umr_tasks(conn, status=None, task_identity="task-20260807-052027", limit=1000))
+    conn.close()
+    assert rows_after_next_tick == rows_before_next_tick, (
+        "a retired identity's next-tick resubmission attempt must write NO new umr_tasks row -- "
+        f"had {rows_before_next_tick} rows, now {rows_after_next_tick}"
+    )
+
+    statuses_final = _umr_statuses(env["SUPERBOSS_REGISTER_DB"], "task-20260807-052027")
+    assert statuses_final.count("queued") == 0, "no brand-new queued row must ever be created for a retired identity"
+    assert statuses_final.count("killed") == 1, "the original row's own terminal transition must be untouched"
+    assert statuses_final.count(rg.RETIRED_STATUS) == 1
+
+
+def test_rapid_fire_duplicate_burst_stays_under_the_retirement_cap(tmp_path, monkeypatch):
+    """The existing rapid-fire dedup scenario (10 submissions in one tight
+    loop) must NOT accidentally retire the identity -- the default
+    MAX_DUPLICATE_ATTEMPTS_PER_IDENTITY is comfortably above a normal single
+    burst, only a sustained real loop across many ticks should ever retire
+    one."""
+    work, env = build_governor_fixture_tree(tmp_path)
+    rg = _load_resource_governor(work, env, monkeypatch)
+    assert rg.MAX_DUPLICATE_ATTEMPTS_PER_IDENTITY > 10
+
+    task_spec = {"task_identity": "task-burst", "task_kind": "systemctl_action",
+                 "unit_name": "u-burst", "inputs": {"action": "restart"}}
+    results = [rg.submit(task_spec, tier=2, source_trigger="test") for _ in range(10)]
+    assert sum(1 for r in results if r["accepted"]) == 1
+    assert all(r["accepted"] or r["reason"].startswith("duplicate submission rejected") for r in results)
+
+    statuses = _umr_statuses(env["SUPERBOSS_REGISTER_DB"], "task-burst")
+    assert rg.RETIRED_STATUS not in statuses
+
+
+# ---------------------------------------------------------------------------
+# Real per-metric 99% hard cap -- any ONE metric freezes the queue
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("metric", ["cpu", "ram", "disk_io", "network"])
+def test_any_single_metric_at_99_percent_freezes_the_queue(tmp_path, monkeypatch, metric):
+    work, env = build_governor_fixture_tree(tmp_path)
+    rg = _load_resource_governor(work, env, monkeypatch)
+
+    metrics = {"cpu": 10.0, "ram": 10.0, "disk_io": 10.0, "network": 10.0}
+    metrics[metric] = 99.5
+    monkeypatch.setattr(rg, "sample_metrics", lambda now=None, persist=True: metrics)
+
+    submitted = rg.submit(
+        {"task_identity": "task-frozen", "task_kind": "systemctl_action",
+         "unit_name": "veridian-worker@task-frozen.service", "inputs": {"action": "start"}},
+        tier=2, source_trigger="test",
+    )
+    assert submitted["accepted"]
+
+    result = rg.dispatch_one()
+    assert result["action"] == "frozen"
+    assert metric in result["detail"]
+
+    statuses = _umr_statuses(env["SUPERBOSS_REGISTER_DB"], "task-frozen")
+    assert statuses == ["queued"], "a frozen tick must never dispatch the queued item"
+
+
+def test_all_metrics_under_threshold_does_not_freeze(tmp_path, monkeypatch):
+    work, env = build_governor_fixture_tree(tmp_path)
+    rg = _load_resource_governor(work, env, monkeypatch)
+    monkeypatch.setattr(rg, "sample_metrics", lambda now=None, persist=True: {"cpu": 98.9, "ram": 1.0, "disk_io": 1.0, "network": 1.0})
+    assert rg.over_threshold_metrics(rg.sample_metrics()) == []
+
+
+def test_dispatch_proceeds_via_real_dispatch_core_when_metrics_are_clear(tmp_path, monkeypatch):
+    """Proves the governor's dispatch path is a real integration with
+    dispatch_core.py -- not stubbed out -- when nothing is frozen: the real
+    shared lock/cap gate a real systemctl start, and record_dispatch_event()
+    writes a real wiring_registry row exactly as every other consolidated
+    tick script's own dispatch call site does."""
+    work, env = build_governor_fixture_tree(tmp_path)
+    units_file = work / "units.txt"
+    units_file.write_text("")
+    env["MOCK_RUNNING_UNITS_FILE"] = str(units_file)
+    rg = _load_resource_governor(work, env, monkeypatch)
+    monkeypatch.setattr(rg, "sample_metrics", lambda now=None, persist=True: {"cpu": 5.0, "ram": 5.0, "disk_io": 5.0, "network": 5.0})
+
+    rg.submit({"task_identity": "task-clear", "task_kind": "systemctl_action",
+               "unit_name": "veridian-worker@task-clear.service", "inputs": {"action": "start"}},
+              tier=2, source_trigger="test")
+
+    result = rg.dispatch_one()
+    assert result["action"] == "dispatched"
+    assert result["result"]["status"] == "running"
+    assert "veridian-worker@task-clear.service" in units_file.read_text()
+
+    conn = sqlite3.connect(env["SUPERBOSS_REGISTER_DB"])
+    conn.row_factory = sqlite3.Row
+    row = conn.execute("SELECT status, unit_name FROM umr_tasks WHERE task_identity='task-clear'").fetchone()
+    wiring = conn.execute("SELECT entity_id FROM wiring_registry WHERE entity_id LIKE 'dispatch_event-%'").fetchall()
+    conn.close()
+    assert row["status"] == "running"
+    assert len(wiring) == 1, "dispatch_core.record_dispatch_event must fire for a real governor dispatch"
+
+
+# ---------------------------------------------------------------------------
+# Stuck-task SIGTERM/SIGKILL escalation timing
+# ---------------------------------------------------------------------------
+
+def test_stuck_task_sigterm_then_sigkill_escalation_timing(tmp_path, monkeypatch):
+    work, env = build_governor_fixture_tree(tmp_path)
+    kill_log = work / "kills.log"
+    ts_file = work / "unit_timestamps.txt"
+    env["MOCK_KILL_LOG"] = str(kill_log)
+    env["MOCK_UNIT_TIMESTAMPS_FILE"] = str(ts_file)
+    env["VERIDIAN_GOVERNOR_STUCK_TIMEOUT_S"] = "600"
+    env["VERIDIAN_GOVERNOR_SIGKILL_GRACE_S"] = "60"
+    rg = _load_resource_governor(work, env, monkeypatch)
+    assert rg.STUCK_TASK_TIMEOUT_SECONDS == 600
+    assert rg.SIGTERM_TO_SIGKILL_GRACE_SECONDS == 60
+
+    unit = "veridian-worker@task-stuck.service"
+    started_at = datetime(2026, 7, 27, 0, 0, 0, tzinfo=timezone.utc)
+    ts_file.write_text(f"{unit}=2026-07-27 00:00:00 UTC\n")
+
+    sbr = rg._superboss_register()
+    conn = sbr._connect()
+    sbr._ensure_umr_table(conn)
+    umr_id = sbr.upsert_umr_task(conn, {
+        "task_identity": "task-stuck", "tier": 2, "status": "running",
+        "source_trigger": "test", "unit_name": unit, "ts_dispatched": started_at.isoformat(),
+    })
+    conn.commit()
+    conn.close()
+
+    # Before the timeout: nothing happens.
+    actions = rg.scan_stuck_tasks(now=started_at + timedelta(seconds=300))
+    assert actions == []
+    assert not kill_log.exists()
+
+    # At/after the timeout: real SIGTERM.
+    actions = rg.scan_stuck_tasks(now=started_at + timedelta(seconds=600))
+    assert len(actions) == 1 and actions[0]["action"] == "SIGTERM"
+    assert f"SIGTERM {unit}" in kill_log.read_text()
+
+    conn = sbr._connect()
+    row = conn.execute("SELECT status, ts_sigterm FROM umr_tasks WHERE umr_id=?", (umr_id,)).fetchone()
+    conn.close()
+    assert row["status"] == "sigterm_sent"
+    ts_sigterm = datetime.fromisoformat(row["ts_sigterm"])
+
+    # Within the 60s grace period: no SIGKILL yet.
+    actions = rg.scan_stuck_tasks(now=ts_sigterm + timedelta(seconds=30))
+    assert actions == []
+    assert "SIGKILL" not in kill_log.read_text()
+
+    # After the grace period: real SIGKILL.
+    actions = rg.scan_stuck_tasks(now=ts_sigterm + timedelta(seconds=61))
+    assert len(actions) == 1 and actions[0]["action"] == "SIGKILL"
+    assert f"SIGKILL {unit}" in kill_log.read_text()
+
+    conn = sbr._connect()
+    row = conn.execute("SELECT status FROM umr_tasks WHERE umr_id=?", (umr_id,)).fetchone()
+    conn.close()
+    assert row["status"] == "killed"
+
+
+# ---------------------------------------------------------------------------
+# Dynamic realignment (anti-starvation aging)
+# ---------------------------------------------------------------------------
+
+def test_effective_priority_ages_a_stale_low_tier_item_toward_higher_priority(tmp_path, monkeypatch):
+    work, env = build_governor_fixture_tree(tmp_path)
+    env["VERIDIAN_GOVERNOR_AGING_INTERVAL_S"] = "900"  # 15 min
+    rg = _load_resource_governor(work, env, monkeypatch)
+
+    now = datetime(2026, 7, 27, 12, 0, 0, tzinfo=timezone.utc)
+    fresh = {"tier": 3, "ts_submitted": now.isoformat()}
+    aged_45min = {"tier": 3, "ts_submitted": (now - timedelta(minutes=45)).isoformat()}
+
+    assert rg.effective_priority(fresh, now=now) == 3
+    assert rg.effective_priority(aged_45min, now=now) == 0  # 3 intervals of promotion, floored at TIER_MIN
+
+
+def test_next_queued_task_prefers_aged_low_tier_over_fresh_high_tier_once_promoted(tmp_path, monkeypatch):
+    work, env = build_governor_fixture_tree(tmp_path)
+    env["VERIDIAN_GOVERNOR_AGING_INTERVAL_S"] = "900"
+    rg = _load_resource_governor(work, env, monkeypatch)
+    sbr = rg._superboss_register()
+
+    now = datetime(2026, 7, 27, 12, 0, 0, tzinfo=timezone.utc)
+    conn = sbr._connect()
+    sbr._ensure_umr_table(conn)
+    old_ts = (now - timedelta(minutes=45)).isoformat()
+    sbr.upsert_umr_task(conn, {"task_identity": "stale-maintenance", "tier": 3, "status": "queued",
+                                "source_trigger": "test", "ts_submitted": old_ts})
+    sbr.upsert_umr_task(conn, {"task_identity": "fresh-standard", "tier": 2, "status": "queued",
+                                "source_trigger": "test", "ts_submitted": now.isoformat()})
+    conn.commit()
+
+    winner = rg.next_queued_task(conn, now=now)
+    conn.close()
+    assert winner["task_identity"] == "stale-maintenance", (
+        "a tier-3 item queued 45 minutes ago (3 aging promotions -> effective tier 0) must win over a "
+        "fresh tier-2 item -- anti-starvation aging is not working"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Emergency fail-safe cascade
+# ---------------------------------------------------------------------------
+
+def test_emergency_cascade_sheds_load_then_hard_stops_on_sustained_overload(tmp_path, monkeypatch):
+    work, env = build_governor_fixture_tree(tmp_path)
+    kill_log = work / "kills.log"
+    env["MOCK_KILL_LOG"] = str(kill_log)
+    env["VERIDIAN_GOVERNOR_EMERGENCY_SHED_TICKS"] = "3"
+    env["VERIDIAN_GOVERNOR_EMERGENCY_HARDSTOP_TICKS"] = "6"
+    rg = _load_resource_governor(work, env, monkeypatch)
+    sbr = rg._superboss_register()
+
+    conn = sbr._connect()
+    sbr._ensure_umr_table(conn)
+    sbr.upsert_umr_task(conn, {"task_identity": "task-victim", "tier": 4, "status": "running",
+                                "source_trigger": "test", "unit_name": "veridian-worker@task-victim.service"})
+    conn.commit()
+    conn.close()
+
+    assert not os.path.exists(rg.EMERGENCY_STOP_PATH)
+
+    for _ in range(2):
+        rg._record_emergency_tick(["cpu"])
+    assert not kill_log.exists() or "SIGTERM" not in kill_log.read_text()
+
+    rg._record_emergency_tick(["cpu"])  # 3rd consecutive tick -> shed load
+    assert "SIGTERM veridian-worker@task-victim.service" in kill_log.read_text()
+    assert not os.path.exists(rg.EMERGENCY_STOP_PATH)
+
+    for _ in range(3):
+        rg._record_emergency_tick(["cpu"])  # ticks 4,5,6 -> hard stop at 6
+    assert os.path.exists(rg.EMERGENCY_STOP_PATH)
+
+    # A tick with the metric back under threshold resets the counter and clearing removes the sentinel.
+    rg.clear_emergency_stop()
+    assert not os.path.exists(rg.EMERGENCY_STOP_PATH)
+
+
+def test_emergency_stop_blocks_all_dispatch_including_tier_0_until_cleared(tmp_path, monkeypatch):
+    work, env = build_governor_fixture_tree(tmp_path)
+    rg = _load_resource_governor(work, env, monkeypatch)
+    rg._save_json(rg.EMERGENCY_STOP_PATH, {"ts": "test", "state": {}})
+
+    rg.submit({"task_identity": "task-emergency", "task_kind": "systemctl_action", "unit_name": "u",
+               "inputs": {"action": "start"}}, tier=0, source_trigger="test")
+
+    result = rg.dispatch_one()
+    assert result["action"] == "emergency_stopped"
+
+    rg.clear_emergency_stop()
+    monkeypatch.setattr(rg, "sample_metrics", lambda now=None, persist=True: {"cpu": 1.0, "ram": 1.0, "disk_io": 1.0, "network": 1.0})
+    result = rg.dispatch_one()
+    assert result["action"] != "emergency_stopped"
+
+
+# ---------------------------------------------------------------------------
+# resource_threshold_block_reason() / --check-task-start-gate
+# (UMR-20260813-042708-e592): the real, shared stop-work gate exposed for a
+# caller OUTSIDE dispatch_one()'s own queue -- task-gateway.py's cmd_start.
+# ---------------------------------------------------------------------------
+
+def test_resource_threshold_block_reason_blocked_by_emergency_stop_sentinel(tmp_path, monkeypatch):
+    work, env = build_governor_fixture_tree(tmp_path)
+    rg = _load_resource_governor(work, env, monkeypatch)
+    rg._save_json(rg.EMERGENCY_STOP_PATH, {"ts": "test", "state": {}})
+
+    blocked, detail, metrics = rg.resource_threshold_block_reason()
+    assert blocked is True
+    assert "EMERGENCY_STOP" in detail
+    assert metrics is None, "sample_metrics() must never run once already blocked by the sentinel"
+
+
+def test_resource_threshold_block_reason_blocked_by_metric_over_threshold(tmp_path, monkeypatch):
+    work, env = build_governor_fixture_tree(tmp_path)
+    rg = _load_resource_governor(work, env, monkeypatch)
+    monkeypatch.setattr(rg, "sample_metrics", lambda now=None, persist=True: {"cpu": 99.5, "ram": 1.0, "disk_io": 1.0, "network": 1.0})
+
+    blocked, detail, metrics = rg.resource_threshold_block_reason()
+    assert blocked is True
+    assert "cpu" in detail
+    assert metrics["cpu"] == 99.5
+
+
+def test_resource_threshold_block_reason_clear_when_nothing_over_and_no_sentinel(tmp_path, monkeypatch):
+    work, env = build_governor_fixture_tree(tmp_path)
+    rg = _load_resource_governor(work, env, monkeypatch)
+    monkeypatch.setattr(rg, "sample_metrics", lambda now=None, persist=True: {"cpu": 1.0, "ram": 1.0, "disk_io": 1.0, "network": 1.0})
+
+    blocked, detail, metrics = rg.resource_threshold_block_reason()
+    assert blocked is False
+    assert detail is None
+    assert metrics == {"cpu": 1.0, "ram": 1.0, "disk_io": 1.0, "network": 1.0}
+
+
+def test_resource_threshold_block_reason_never_corrupts_emergency_tick_counters(tmp_path, monkeypatch):
+    """Deliberately does NOT call _record_emergency_tick() -- calling on-demand,
+    non-periodic cmd_start checks would corrupt dispatch_one()'s own
+    consecutive-ticks-over-threshold escalation counter (see the function's
+    own docstring)."""
+    work, env = build_governor_fixture_tree(tmp_path)
+    rg = _load_resource_governor(work, env, monkeypatch)
+    monkeypatch.setattr(rg, "sample_metrics", lambda now=None, persist=True: {"cpu": 99.5, "ram": 1.0, "disk_io": 1.0, "network": 1.0})
+
+    for _ in range(10):
+        rg.resource_threshold_block_reason()
+
+    assert not os.path.exists(rg.EMERGENCY_STATE_PATH), (
+        "resource_threshold_block_reason() must never itself write emergency-tick state"
+    )
+    assert not os.path.exists(rg.EMERGENCY_STOP_PATH)
+
+
+def test_check_task_start_gate_cli_reports_blocked_true_with_detail(tmp_path, monkeypatch):
+    work, env = build_governor_fixture_tree(tmp_path)
+    rg = _load_resource_governor(work, env, monkeypatch)  # only to compute EMERGENCY_STOP_PATH under this env
+    rg._save_json(rg.EMERGENCY_STOP_PATH, {"ts": "test", "state": {}})
+
+    proc = run_script(work, env, "resource_governor.py",
+                       ["--check-task-start-gate", "--task-identity", "task-x", "--title", "some title"])
+    assert proc.returncode == 0, proc.stderr
+    result = json.loads(proc.stdout)
+    assert result["blocked"] is True
+    assert "EMERGENCY_STOP" in result["detail"]
+
+
+def test_check_task_start_gate_cli_reports_blocked_false_when_clear(tmp_path, monkeypatch):
+    work, env = build_governor_fixture_tree(tmp_path)
+    env["VERIDIAN_GOVERNOR_METRIC_THRESHOLD"] = "1000000"  # real host load must never fail this test
+
+    proc = run_script(work, env, "resource_governor.py",
+                       ["--check-task-start-gate", "--task-identity", "task-x", "--title", "some title"])
+    assert proc.returncode == 0, proc.stderr
+    result = json.loads(proc.stdout)
+    assert result["blocked"] is False
+    assert result["detail"] is None
+
+
+# ---------------------------------------------------------------------------
+# sample_metrics(persist=False) / resource_threshold_block_reason(persist=False)
+# (UMR-20260814-085900, PR#219 AUDIT:FAIL corrective fix): task-gateway.py
+# cmd_start's on-demand, high-frequency gate check must never overwrite the
+# single shared METRIC_STATE_PATH baseline dispatch_one()'s own periodic
+# --tick loop deltas its disk_io/network rate math against.
+# ---------------------------------------------------------------------------
+
+def test_sample_metrics_persist_false_never_writes_metric_state_file(tmp_path, monkeypatch):
+    work, env = build_governor_fixture_tree(tmp_path)
+    rg = _load_resource_governor(work, env, monkeypatch)
+
+    assert not os.path.exists(rg.METRIC_STATE_PATH)
+    rg.sample_metrics(persist=False)
+    assert not os.path.exists(rg.METRIC_STATE_PATH), (
+        "a read-only sample_metrics(persist=False) call must never create/overwrite METRIC_STATE_PATH"
+    )
+
+
+def test_sample_metrics_persist_false_leaves_existing_baseline_untouched(tmp_path, monkeypatch):
+    work, env = build_governor_fixture_tree(tmp_path)
+    rg = _load_resource_governor(work, env, monkeypatch)
+
+    now = datetime(2026, 8, 14, 0, 0, 0, tzinfo=timezone.utc)
+    rg.sample_metrics(now=now, persist=True)
+    baseline_after_first_real_tick = rg._load_json(rg.METRIC_STATE_PATH)
+    assert baseline_after_first_real_tick is not None
+
+    # Simulate many high-frequency, on-demand cmd_start-style calls happening
+    # between two real periodic ticks -- none of them may move the baseline.
+    for i in range(25):
+        rg.sample_metrics(now=now + timedelta(seconds=i + 1), persist=False)
+
+    assert rg._load_json(rg.METRIC_STATE_PATH) == baseline_after_first_real_tick, (
+        "persist=False calls must never advance the baseline dispatch_one()'s next real tick deltas against"
+    )
+
+
+def test_resource_threshold_block_reason_persist_false_never_writes_metric_state_file(tmp_path, monkeypatch):
+    work, env = build_governor_fixture_tree(tmp_path)
+    rg = _load_resource_governor(work, env, monkeypatch)
+
+    blocked, detail, metrics = rg.resource_threshold_block_reason(persist=False)
+    assert metrics is not None
+    assert not os.path.exists(rg.METRIC_STATE_PATH), (
+        "resource_threshold_block_reason(persist=False) (task-gateway.py cmd_start's gate check) must "
+        "never write METRIC_STATE_PATH"
+    )
+
+
+def test_check_task_start_gate_cli_never_mutates_shared_metric_state_file(tmp_path, monkeypatch):
+    """End-to-end reproduction of the exact PR#219 AUDIT:FAIL scenario:
+    task-gateway.py cmd_start calls resource_governor.py
+    --check-task-start-gate as a subprocess on every task start. Before this
+    fix, that subprocess's own resource_threshold_block_reason() ->
+    sample_metrics() call unconditionally overwrote METRIC_STATE_PATH --
+    corrupting the baseline dispatch_one()'s own periodic --tick delta
+    calculation relies on. Proves many high-frequency CLI gate checks leave
+    that shared file exactly as dispatch_one()'s own real tick left it."""
+    work, env = build_governor_fixture_tree(tmp_path)
+    env["VERIDIAN_GOVERNOR_METRIC_THRESHOLD"] = "1000000"  # real host load must never fail this test
+    rg = _load_resource_governor(work, env, monkeypatch)
+
+    # A real periodic dispatch_one() tick establishes the shared baseline,
+    # exactly as the live --tick loop does.
+    rg.dispatch_one()
+    baseline_after_real_tick = rg._load_json(rg.METRIC_STATE_PATH)
+    assert baseline_after_real_tick is not None
+
+    # Many high-frequency cmd_start-style CLI gate checks happen in between --
+    # this is the shape of the real bug: cmd_start is the primary entrypoint
+    # for starting any task, called far more often than the periodic tick.
+    for _ in range(10):
+        proc = run_script(work, env, "resource_governor.py",
+                           ["--check-task-start-gate", "--task-identity", "task-x", "--title", "t"])
+        assert proc.returncode == 0, proc.stderr
+        assert json.loads(proc.stdout)["blocked"] is False
+
+    assert rg._load_json(rg.METRIC_STATE_PATH) == baseline_after_real_tick, (
+        "--check-task-start-gate must never corrupt the shared baseline dispatch_one()'s periodic tick "
+        "delta (disk_io/network rate) math relies on"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Concurrent dispatch -- the real TOCTOU race the round-2 audit reproduced:
+# dispatch_one() used to select the next queued row BEFORE acquiring
+# dispatch_core.acquire_dispatch_lock(), so two concurrent callers could both
+# select and spawn the SAME queued row.
+# ---------------------------------------------------------------------------
+
+def test_concurrent_dispatch_never_double_dispatches_the_same_queued_row(tmp_path, monkeypatch):
+    """Two REAL subprocess `--tick` invocations (not just two threads inside
+    one interpreter -- this is how the real cron/timer callers actually
+    overlap) racing against the same fixture DB and the same dispatch_core
+    lock file must produce exactly one real spawn for the one queued row:
+    the other must observe it already claimed, never fire the real systemctl
+    call a second time."""
+    work, env = build_governor_fixture_tree(tmp_path)
+    units_file = work / "units.txt"
+    units_file.write_text("")
+    systemctl_log = work / "systemctl.log"
+    env["MOCK_RUNNING_UNITS_FILE"] = str(units_file)
+    env["MOCK_SYSTEMCTL_LOG"] = str(systemctl_log)
+    # Set unreachably high so real host load on the test box can never freeze
+    # the queue -- the concurrency race is the only thing under test here.
+    env["VERIDIAN_GOVERNOR_METRIC_THRESHOLD"] = "1000000"
+
+    rg = _load_resource_governor(work, env, monkeypatch)
+    rg.submit(
+        {"task_identity": "task-race", "task_kind": "systemctl_action",
+         "unit_name": "veridian-worker@task-race.service", "inputs": {"action": "start"}},
+        tier=2, source_trigger="test",
+    )
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+        futures = [pool.submit(run_script, work, env, "resource_governor.py", ["--tick"]) for _ in range(2)]
+        results = [f.result(timeout=60) for f in futures]
+
+    for r in results:
+        assert r.returncode == 0, f"--tick subprocess failed: {r.stderr}"
+
+    ticks = [json.loads(r.stdout) for r in results]
+    race_dispatches = [
+        d for tick in ticks for d in tick["dispatches"]
+        if d["action"] == "dispatched" and d["result"].get("unit_name") == "veridian-worker@task-race.service"
+    ]
+    assert len(race_dispatches) == 1, (
+        f"expected exactly 1 real dispatch of task-race across 2 concurrent --tick invocations, "
+        f"got {len(race_dispatches)}: {race_dispatches}"
+    )
+
+    start_calls = [line for line in systemctl_log.read_text().splitlines()
+                   if "start veridian-worker@task-race.service" in line]
+    assert len(start_calls) == 1, (
+        f"the real systemctl start call for task-race fired {len(start_calls)} times across the "
+        f"concurrent tick -- the TOCTOU race was not closed: {systemctl_log.read_text()!r}"
+    )
+
+    statuses = _umr_statuses(env["SUPERBOSS_REGISTER_DB"], "task-race")
+    assert statuses == ["running"], f"expected exactly one umr_tasks row left in status=running, got {statuses}"

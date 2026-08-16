@@ -44,6 +44,18 @@ PROMPT_GATEWAY = f"{SCRIPTS}/prompt_gateway/gateway.py"
 POSTFLIGHT = f"{AI_OS}/scripts/postflight_audit_gate.py"
 TIGHT_VALIDATION = f"{SCRIPTS}/tight_task_validation.py"
 DDL_AUTHORIZATION_CHECK = f"{SCRIPTS}/ddl_authorization_check.py"
+# UMR-20260813-042708-e592 (governing chain UMR-20260806-171945-5767): real,
+# confirmed gap -- cmd_start spawned a real systemd unit synchronously with
+# zero reference anywhere in this file to resource_governor.py/dispatch_one,
+# while resource_governor.py's own dispatch_one() already gates every queued
+# row behind its real EMERGENCY_STOP-sentinel + 4-metric-threshold "stop
+# work" check (resource_threshold_block_reason()). Wired below via
+# run_task_start_gate(), calling the already-live, already-real
+# resource_governor.py --check-task-start-gate flag (same absolute-path
+# subprocess convention every other constant above already uses -- this file
+# never reimplements a wrapped script's own logic) so cmd_start's direct,
+# synchronous spawn gets the identical real protection.
+RESOURCE_GOVERNOR = f"{SCRIPTS}/resource_governor.py"
 DB_PATH = f"{AI_OS}/memory/superboss-register.sqlite"
 MASTER_INDEX_REGISTRIES_SYNC = f"{AI_OS}/scripts/sync_master_index_registries.py"
 
@@ -79,6 +91,37 @@ def run_json(cmd, step):
     except json.JSONDecodeError:
         fail(f"{step} did not return parseable JSON", command=cmd,
              stdout=proc.stdout[-2000:], stderr=proc.stderr[-2000:])
+
+
+def run_task_start_gate(task_identity, title):
+    """UMR-20260813-042708-e592: the single enforced entrypoint for cmd_start's
+    real stop-work check, so the same real protection dispatch_one() already
+    applies to every queued row (via resource_threshold_block_reason()) also
+    covers this file's own synchronous, direct-spawn cmd_start path. Calls
+    resource_governor.py --check-task-start-gate as a subprocess -- same
+    composition convention this file already uses for every other wrapped
+    script (SUPERBOSS/TIGHT_VALIDATION/DDL_AUTHORIZATION_CHECK/
+    CREDIT_ACCOUNTANT) -- rather than reimplementing or importing that
+    module's internal gate logic directly. Returns the parsed
+    {"blocked": bool, "detail": str|None, "metrics": dict|None} dict; raises
+    via fail() (like every other real wrapper-level failure in this file) if
+    resource_governor.py itself doesn't exit 0 with parseable JSON -- a
+    broken governor is a real gate failure here, never silently skipped."""
+    cmd = ["python3", RESOURCE_GOVERNOR, "--check-task-start-gate",
+           "--task-identity", task_identity, "--title", title]
+    return run_json(cmd, "resource_governor.py --check-task-start-gate")
+
+
+def _slugify_title(title):
+    """MUST exactly mirror veridian-task.py cmd_create's own slug computation
+    (task_id = f"task-{ts}-{slug}") -- this is what makes task_key a real
+    predictor of collisions on the eventual task_id, not an independent
+    guess. Two concurrent --title collisions get different timestamped
+    task_ids (task_id can never collide by construction) but the identical
+    slug, which is exactly what task_key (task-20260731-074406's structural
+    duplicate-task constraint, claimed via superboss-register.py's
+    claim-task-key / UNIQUE(task_key) index) is built to catch."""
+    return "".join(c if c.isalnum() else "-" for c in title.lower())[:40].strip("-")
 
 
 def run_owner_engine_gate(text, session_id):
@@ -235,6 +278,18 @@ def cmd_submit(args):
     log_result = run_json(log_cmd, "log-instruction")
     instruction_id = log_result.get("instruction_id")
 
+    # Structural duplicate-task constraint (task-20260731-074406), advisory
+    # half: submit only ever has --text, never a real --title (that's
+    # cmd_start's job, where the actual atomic claim-task-key happens below
+    # in cmd_start) -- so this is a read-only check-task-key lookup against
+    # the same slug this text's keywords would produce, surfaced alongside
+    # the existing fuzzy check-duplicate/search below, not a hard block.
+    task_key_candidate = _slugify_title(keyword_str)
+    task_key_check = run_json(
+        ["python3", SUPERBOSS, "check-task-key", "--task-key", task_key_candidate],
+        "check-task-key",
+    )
+
     dup_result = run_json(
         ["python3", SUPERBOSS, "check-duplicate", keyword_str],
         "check-duplicate",
@@ -300,6 +355,9 @@ def cmd_submit(args):
             "request": capability_request,
             "response": capability_response,
         },
+        "task_key_candidate": task_key_candidate,
+        "task_key_already_claimed": task_key_check.get("already_claimed", False),
+        "task_key_existing_task_id": task_key_check.get("existing_task_id"),
         "duplicate_found": bool(dup_result.get("found", 0) > 0),
         "duplicate_evidence": dup_result.get("matches", []),
         "prior_search_results": search_result,
@@ -363,12 +421,74 @@ def cmd_start(args):
         fail("ddl_authorization_check.py did not return parseable JSON",
              stdout=ddl_proc.stdout, stderr=ddl_proc.stderr)
     if not ddl_result.get("valid", False):
+        # Category B (UMR-20260803-025317-0c64): if a CATEGORY-B-DETERMINISTIC-RECOVERY
+        # block was present but didn't satisfy all 10 conditions, surface the real
+        # per-condition breakdown here too -- so a rejection reported to the dispatcher
+        # says plainly which specific condition failed, not just that DDL was found.
         fail(
             "ddl_authorization_check.py rejected this prompt-file -- dispatch blocked "
-            "until an explicit, citable Owner approval is added",
+            "until an explicit, citable Owner approval (Category A) or a fully-satisfied "
+            "deterministic recovery evidence block (Category B) is added",
             reason=ddl_result.get("reason"),
             guidance=ddl_result.get("guidance"),
+            category_b_conditions=ddl_result.get("category_b_conditions"),
             prompt_file=args.prompt_file,
+        )
+    elif ddl_result.get("category") == "B":
+        # Real, deterministic Category B authorization -- not narrated, not a
+        # human/PM/AI judgment call. Logged here (not just inside
+        # ddl_authorization_check.py's own return value) so task-gateway.py's own
+        # stdout/dispatch log carries which conditions were verified and how, for
+        # whoever reviews this task's real dispatch record later.
+        print(json.dumps({
+            "category_b_authorized": True,
+            "conditions": ddl_result.get("category_b_conditions"),
+        }, default=str), file=sys.stderr)
+
+    # Structural duplicate-task constraint (task-20260731-074406, real
+    # #634-vs-#639 / #641-vs-#629 duplicate-dispatch incidents this session):
+    # task_key is the SAME title-derived slug veridian-task.py's cmd_create
+    # uses for task_id (see _slugify_title) -- task_id itself can never
+    # collide (timestamp-prefixed), so it was never what caught these.
+    # Claimed here, immediately before veridian-task.py create actually
+    # spends real resources (worktree/branch/systemd unit) on this task, via
+    # superboss-register.py's atomic UNIQUE(task_key) insert -- a genuine
+    # duplicate now fails loudly before any of that is spent, instead of
+    # silently duplicating an already-in-flight task.
+    task_key = _slugify_title(args.title)
+    claim_proc = run(["python3", SUPERBOSS, "claim-task-key",
+                       "--task-key", task_key, "--title", args.title,
+                       "--source", "ai_agent"])
+    try:
+        claim_result = json.loads(claim_proc.stdout)
+    except json.JSONDecodeError:
+        fail("claim-task-key did not return parseable JSON",
+             stdout=claim_proc.stdout, stderr=claim_proc.stderr)
+    if not claim_result.get("claimed", False):
+        fail(
+            "duplicate task_key -- an earlier task already claimed this exact "
+            "title-derived key, dispatch blocked before any resources were spent",
+            task_key=task_key,
+            existing_task_id=claim_result.get("existing_task_id"),
+            existing_title=claim_result.get("existing_title"),
+            existing_ts=claim_result.get("existing_ts"),
+            guidance="if this is a genuine new task, give it a title that isn't "
+                     "identical (after lowercasing/slugifying to 40 chars) to the prior one",
+        )
+
+    # Real gate (UMR-20260813-042708-e592) -- see run_task_start_gate()'s own
+    # docstring. Runs immediately after the duplicate-task-key claim (cheap,
+    # no real resources spent yet) and before veridian-task.py create below
+    # (the real spawn -- worktree/branch/systemd unit), so a task blocked by
+    # the real stop-work gate never reaches that point, matching what
+    # resource_governor.py's own dispatch_one() already enforces for every
+    # queued row.
+    gate_result = run_task_start_gate(task_key, args.title)
+    if gate_result.get("blocked"):
+        fail(
+            "blocked by resource_governor.py's real stop-work gate -- the same real "
+            "protection dispatch_one() applies to every queued task",
+            detail=gate_result.get("detail"),
         )
 
     # Real, machine-readable hold-for-signoff (2026-07-26, root-caused against
