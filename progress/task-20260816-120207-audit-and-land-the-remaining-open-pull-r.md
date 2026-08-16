@@ -95,8 +95,12 @@ shows PR #247 CONFLICTING now -- re-derived live list wins per instructions):
   interactive-session write gate, ships regression test suite). Docs-only=NO (real code+tests).
   Auto-merged 2026-08-16T12:13:59Z, confirmed MERGED via gh. **MERGED.**
 
+- **PR 186**: verdict=**reject** tier1 -- docs-only RCA file, but its central conclusion is stale/false:
+  it claims veridian-scripts#305 is "correctly not merged" (completed_unmerged), but live verification
+  (gh api + git merge-base) shows #305 was fixed at a new head and actually merged ~1.5h after this
+  RCA's own commit timestamp. Real FAIL (factually incorrect docs). **NOT MERGED**, blocked.
+
 ## Remaining
-- [ ] PR 186 -- audit still running (pending_review)
 - [ ] PR 114 -- audit still running (pending_review)
 - [ ] Verify head-SHA match + merge status for all completed ones above once caught up
 - [ ] Final report table
