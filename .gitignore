@@ -11,3 +11,13 @@ __pycache__/
 # already parses this file straight off disk and does not depend on git tracking it.
 PROGRESS.md
 .scratch/
+
+# Retired shared-scratch filenames -- see reports/incidents/RCA_20260813_UMR-20260813-060311-6eea.md
+# and reports/audits/STATUS_REPORT_20260814_part1-4-status.md for why these repeatedly caused
+# PR collisions (RCA.md rewritten 7x, STATUS_REPORT.md 18x). New reports must use the dated
+# TYPE_YYYYMMDD_ID convention under reports/{incidents,merges,audits}/ instead -- enforced by
+# the veridian-ops-plugin PreToolUse hook (plugin/veridian-ops/hooks/no_duplicate_report_guard.py).
+.tmp/
+.triage/
+commit-msg*.txt
+commitmsg.txt

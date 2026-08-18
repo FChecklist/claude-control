@@ -10,11 +10,22 @@ rather than asserting a governance setup that doesn't exist here yet.
 ## What this repo actually is
 
 claude-control is the cross-project requirements & decision catalog and orchestration control
-repo for VERIDIAN's AI OS — see `README.md` and `CONTROLLER.yaml`. It holds `ai-os/` (the
-constitution, memory, capability/wiring registries, dispatch tooling under `ai-os-scripts/`),
-`scripts/` (including `superboss-register.py`, a duplicate of the canonical copy in
-`veridian-scripts` — see that repo's own note on this), progress logs, RCAs, and audit
-reports for work dispatched across this and other VERIDIAN repos.
+repo for VERIDIAN's AI OS — see `README.md` and `CONTROLLER.yaml` (the single always-consult
+ledger; read it before starting work on any tracked project). It holds `ai-os/` (constitution,
+memory, capability/wiring registries, dispatch tooling under `ai-os-scripts/`), `scripts/`
+(including `superboss-register.py`, a duplicate of the canonical copy in `veridian-scripts` —
+see that repo's own note on this), and dated report archives under `reports/`.
+
+## Where the rest of the operating docs live (on-demand, not duplicated here)
+
+This file is intentionally the ONLY always-loaded instruction file.
+- **Dispatch mechanics, tier classification, retry policy** → `SUPERBOSS_DISPATCH_PROMPT.md`
+  (also `CONTROLLER.yaml` entry `SUPERBOSS-PROMPT-01`). Read before running a dispatch cycle.
+- **Draft, unbuilt model-routing spec (historical only)** → `archive/drafts/AI_AGENT_INSTRUCTION_MANUAL_DRAFT_2026-07-19.md`.
+  Superseded in practice by the single-model policy actually shipped.
+- **Repo map / what already exists** → run the `inventory` skill instead of re-exploring by hand.
+- **CA/auditor compliance checklist** → the `veridian-audit` skill (`/veridian-audit`; does not
+  auto-trigger).
 
 ## Evidence of how this repo has been built so far
 
@@ -34,6 +45,20 @@ exist for claude-control, because this repo has no `repository_dispatch`-trigger
 mechanism to authorize agents *into*. This document establishes the governance discipline
 below so that whenever such infrastructure is added here, it has rules to build under from
 day one — not so it can claim the roster already exists.
+
+## Report filing rules — Added 2026-08-18 (stops the RCA/STATUS_REPORT bleed)
+
+Two RCAs diagnosed this problem correctly (see the 2026-08-18 cleanup audit) but their fixes
+were never wired into this repo's own scripts. The `veridian-ops-plugin`'s `PreToolUse` hook
+now enforces this mechanically, not just this paragraph:
+
+1. New incident/merge/audit reports go under `reports/{incidents,merges,audits}/`, named
+   `<TYPE>_<YYYYMMDD>_<UMR-id-or-slug>.md`.
+2. Generic shared filenames (`RCA.md`, `STATUS_REPORT.md`, `report.md`, `summary.md`, ...) are
+   blocked for new file creation — they caused repeated PR collisions and at least one
+   discarded PR.
+3. A second report for the same id requires an explicit suffix (`_second_pass`, `_addendum`) —
+   the hook blocks a same-id file without one and names the existing file to update instead.
 
 ## Operating Rules
 
