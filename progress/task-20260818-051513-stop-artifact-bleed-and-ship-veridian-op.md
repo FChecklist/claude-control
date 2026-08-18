@@ -51,18 +51,62 @@ worker ran). Executing the Owner-approved reorg + plugin-scaffold plan verbatim 
       root with anything artificial to hit the number -- the actual repo had fewer genuinely
       root-level instruction/report files than the planning session estimated.
 
-## Remaining
+- [x] Scaffolded `plugin/veridian-ops/` in full: `.claude-plugin/plugin.json`, `settings.json`
+      (`{"model":"sonnet","effortLevel":"high"}`), `agents/log-triage.md` (haiku, read-only
+      tools), `agents/spec-reviewer.md` (sonnet, read-only tools, checks requirements /
+      named-duplication / scope-only, explicitly excludes style), `skills/inventory/SKILL.md`
+      (model-invocable), `skills/veridian-audit/SKILL.md` (`disable-model-invocation: true`,
+      pass/fail table output), `hooks/hooks.json` (PreToolUse matcher `Write` ->
+      `no_duplicate_report_guard.py`, `Stop` -> `verify_gate.py`),
+      `hooks/no_duplicate_report_guard.py`, `hooks/verify_gate.py`.
+- [x] Scaffolded `.claude-plugin/marketplace.json` (one plugin entry, `veridian-ops-plugin`,
+      source `./plugin/veridian-ops`).
+- [x] Validated all 4 new JSON files with `python3 -m json.tool` + a schema-content check
+      script; `python3 -m py_compile` on both hook scripts.
+- [x] Ran `no_duplicate_report_guard.py` against 3 hand-built stdin fixtures (workspace-local,
+      since the sandbox blocks writes to `/tmp` -- documented in PR description):
+      1. `{"tool_input":{"file_path":"RCA.md"}}` -> exit 2, non-empty stderr reason naming the
+         banned-filename rule.
+      2. `{"tool_input":{"file_path":"reports/incidents/RCA_20260818_UMR-20260818-051513-a1b2.md"}}`
+         (genuinely new, correctly-named) -> exit 0, no output.
+      3. `{"tool_input":{"file_path":"reports/audits/RCA_20260813_UMR-20260813-060311-6eea.md"}}`
+         (same TYPE+ID as an existing tracked file, different path, no suffix) -> exit 2,
+         stderr names the existing file (`reports/incidents/RCA_20260813_UMR-20260813-060311-6eea.md`).
+- [x] Ran `verify_gate.py` with no `.claude/verify-config.json` present -> exit 0, stderr
+      informational note, no block. Temporarily created a throwaway `.claude/verify-config.json`
+      with a deliberately failing `test` command to confirm both the block-JSON path and the
+      `stop_hook_active` loop-avoidance path, then deleted it immediately -- never committed;
+      confirmed via `git status` that no repo's `verify-config.json` exists in this diff.
+- [x] Verified `git diff --name-status -M origin/master...HEAD`: 102 renames (99 at R100,
+      3 at R075-R095 for the batch45 scripts whose relative paths were edited during the move
+      -- still classified as renames by git, `git log --follow` reaches original history),
+      11 adds (10 plugin files + this progress file), 4 deletes (the confirmed-zero-ref
+      scratch files), 2 modifies (`AGENTS.md`, `.gitignore`).
+- [x] Committed in 2 units (`c6aba06` reorg, `64ba13f` plugin scaffold) and pushed both to
+      `worker/task-20260818-051513-stop-artifact-bleed-and-ship-veridian-op`.
+- [x] `record-completion` write-back to UMR-20260818-051442-ab1c.
 
-- [ ] Scaffold `plugin/veridian-ops/` (plugin.json, settings.json, agents/log-triage.md,
-      agents/spec-reviewer.md, skills/inventory/SKILL.md, skills/veridian-audit/SKILL.md,
-      hooks/hooks.json, hooks/no_duplicate_report_guard.py, hooks/verify_gate.py).
-- [ ] Scaffold `.claude-plugin/marketplace.json`.
-- [ ] Build and run the two stdin fixtures against `no_duplicate_report_guard.py` (banned-name
-      exit 2, valid-new-name exit 0); include both fixtures + the exact check in the PR body.
-- [ ] Validate all new JSON files with `python3 -m json.tool`.
-- [ ] Commit + push incrementally.
-- [ ] Write PR description enumerating every git mv/rm/new file explicitly, flagging the 3
-      explicit NOT-done items (verify-config.json, plugin install, b6fa second-pass split).
-- [ ] `record-completion` write-back to UMR-20260818-051442-ab1c.
-- [ ] Do NOT run `gh pr create` -- pipeline opens the PR automatically since this diff contains
-      real source/config changes.
+## Remaining (explicitly NOT done in this PR, per SCOPE/EXPECTED_OUTPUT)
+
+- [ ] Populating any repo's `.claude/verify-config.json` -- no typecheck/test command has been
+      confirmed to work in any of the 6 repos; not invented here.
+- [ ] Actually installing/registering the plugin anywhere -- `/plugin install` has not been run
+      against a real session.
+- [ ] Splitting the RCA `..._b6fa` second-pass file's unrelated PR #297 content into its own
+      AUDIT_ file -- noted as a follow-up, not done here.
+- [ ] Opening the PR -- per protocol, the automated pipeline opens it since this diff contains
+      real source/config changes (not progress-only); I did not run `gh pr create`.
+
+## Judgment calls flagged for the Owner
+
+- Real repo inventory had 26 `RCA_*.md` files + `RCA.md` (27 incident reports), not the 25
+  estimated in KNOWN_CONTEXT, and one extra tracked root file, `report_body.md` (genuine
+  single-commit Tier-3 triage report output of `gen_report.py`, not scratch), not listed in
+  KNOWN_CONTEXT's inventory at all. Moved it to `reports/audits/report_body.md` (git mv,
+  unrenamed) on the same "git-mv'd as-is" pattern as the other audit reports, since renaming
+  it wasn't one of the two explicit rename cases and its content is a real audit-style report.
+- Final root file count (`find . -maxdepth 1 -type f`) is 8 (7 tracked + untracked
+  `PROGRESS.md`), below the "roughly 10-14" estimate in SUCCESS_CRITERIA. This reflects the
+  real repo having fewer genuinely root-level files than the planning session estimated, not
+  a missed relocation -- every file in KNOWN_CONTEXT's FILE_PATHS and the proposed directory
+  layout was accounted for. Not padded artificially to hit the estimate.
