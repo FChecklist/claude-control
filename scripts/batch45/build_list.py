@@ -1,7 +1,9 @@
 import json, yaml, os
 
 TASKS_ROOT = "/opt/veridian/ai-os/tasks"
-audit = json.load(open('ai-os/TASK_COMPLETION_AUDIT_2026-07-26.json'))
+# NOTE: this script now lives in scripts/batch45/ (moved 2026-08-18, see AGENTS.md
+# "Report filing rules"); repo-root-relative paths below were updated accordingly.
+audit = json.load(open('../../ai-os/TASK_COMPLETION_AUDIT_2026-07-26.json'))
 ids = {r['task_id']: r for r in audit['rows']}
 bucket = json.load(open('bucket_result.json'))
 

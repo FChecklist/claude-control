@@ -1,0 +1,7 @@
+{
+  "name": "veridian-ops-plugin",
+  "displayName": "VERIDIAN Ops",
+  "version": "0.1.0",
+  "description": "Standing operating policy for VERIDIAN repos.",
+  "author": { "name": "Rajat Agarwal", "email": "raajat.agarwal@gmail.com" }
+}

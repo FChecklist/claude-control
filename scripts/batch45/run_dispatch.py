@@ -5,17 +5,21 @@ sys.path.insert(0, ".")
 from classifications import CLASSIFICATIONS
 from build_dispatch_prompts import REPO_MAP
 
-os.makedirs("dispatch_logs", exist_ok=True)
+# NOTE: this script now lives in scripts/batch45/ (moved 2026-08-18); dispatch_prompts/ and
+# dispatch_logs/ stay at repo root, so these paths are relative to that, not to this script's
+# own directory. objectives_45.json / classifications.py / build_dispatch_prompts.py above
+# stay true siblings of this script, so those references are unchanged.
+os.makedirs("../../dispatch_logs", exist_ok=True)
 
 def run_submit(key):
-    prompt = open(f"dispatch_prompts/{key}.md").read()
+    prompt = open(f"../../dispatch_prompts/{key}.md").read()
     session_id = f"tier3-relevance-triage-2026-07-26-{key}"
     proc = subprocess.run(
         ["python3", "/opt/veridian/scripts/task-gateway.py", "submit",
          "--text", prompt, "--source", "ai_agent", "--session-id", session_id],
         capture_output=True, text=True,
     )
-    with open(f"dispatch_logs/{key}.submit.log", "w") as f:
+    with open(f"../../dispatch_logs/{key}.submit.log", "w") as f:
         f.write("RC: %d\n" % proc.returncode)
         f.write("STDOUT:\n" + proc.stdout + "\n")
         f.write("STDERR:\n" + proc.stderr + "\n")
@@ -31,14 +35,14 @@ def run_submit(key):
 def run_start(key, instruction_id):
     repo = REPO_MAP[key]
     title = CLASSIFICATIONS[key]["title"][:120]
-    prompt_file = f"dispatch_prompts/{key}.md"
+    prompt_file = f"../../dispatch_prompts/{key}.md"
     proc = subprocess.run(
         ["python3", "/opt/veridian/scripts/task-gateway.py", "start",
          "--instruction-id", str(instruction_id), "--title", title,
          "--repo", repo, "--prompt-file", prompt_file],
         capture_output=True, text=True,
     )
-    with open(f"dispatch_logs/{key}.start.log", "w") as f:
+    with open(f"../../dispatch_logs/{key}.start.log", "w") as f:
         f.write("RC: %d\n" % proc.returncode)
         f.write("STDOUT:\n" + proc.stdout + "\n")
         f.write("STDERR:\n" + proc.stderr + "\n")
@@ -60,7 +64,7 @@ if __name__ == "__main__":
     rc1, iid = run_submit(key)
     print(f"[{key}] submit rc={rc1} instruction_id={iid}")
     if rc1 != 0 or not iid:
-        print("SUBMIT FAILED, see dispatch_logs/%s.submit.log" % key)
+        print("SUBMIT FAILED, see ../../dispatch_logs/%s.submit.log" % key)
         sys.exit(1)
     rc2, tid, tail_out, tail_err = run_start(key, iid)
     print(f"[{key}] start rc={rc2} task_id={tid}")
@@ -68,5 +72,5 @@ if __name__ == "__main__":
         print("START TAIL STDOUT:", tail_out)
         print("START TAIL STDERR:", tail_err)
     result = {"key": key, "instruction_id": iid, "start_rc": rc2, "task_id": tid}
-    with open(f"dispatch_logs/{key}.result.json", "w") as f:
+    with open(f"../../dispatch_logs/{key}.result.json", "w") as f:
         json.dump(result, f, indent=2)

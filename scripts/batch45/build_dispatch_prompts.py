@@ -20,7 +20,9 @@ REPO_MAP = {
 
 open_keys = [k for k, v in CLASSIFICATIONS.items() if v["classification"] == "GENUINELY_STILL_OPEN"]
 
-os.makedirs("dispatch_prompts", exist_ok=True)
+# NOTE: this script now lives in scripts/batch45/ (moved 2026-08-18); dispatch_prompts/
+# stays at repo root, so this path is relative to that, not to this script's own directory.
+os.makedirs("../../dispatch_prompts", exist_ok=True)
 
 VERIFY_CMD = {
     "delegation-expiry": '''bash -c 'grep -rln "isDelegated(\\|isDelegationActive(" src --include=*.ts | grep -v "delegation-service"'  # must be non-empty: a real authorization checkpoint outside delegation-service.ts now calls the shared expiry check''',
@@ -104,7 +106,7 @@ ALREADY_DONE_ELSEWHERE items in ai-os/TIER3_RELEVANCE_TRIAGE_REPORT_2026-07-26.m
 ## COMPLEXITY_TIER
 judgment
 """
-    path = f"dispatch_prompts/{key}.md"
+    path = f"../../dispatch_prompts/{key}.md"
     with open(path, "w") as f:
         f.write(text)
     print(key, "->", path, len(text), "chars, repo:", repo)

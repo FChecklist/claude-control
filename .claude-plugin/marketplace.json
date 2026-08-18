@@ -1,0 +1,11 @@
+{
+  "name": "veridian-ops",
+  "owner": { "name": "Rajat Agarwal", "email": "raajat.agarwal@gmail.com" },
+  "plugins": [
+    {
+      "name": "veridian-ops-plugin",
+      "source": "./plugin/veridian-ops",
+      "description": "Standing operating policy for VERIDIAN repos: default model/effort, no-duplicate-report guard, verification-gated Stop hook, log-triage and spec-reviewer subagents, repo inventory + compliance-audit skills."
+    }
+  ]
+}
